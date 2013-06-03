@@ -10,9 +10,9 @@
         <servlet-name>Vaadin</servlet-name>
         <servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
         <init-param>
-            <description>Vaadin UI to display</description>
+            <description>OpenNMS provisioning dashboard</description>
             <param-name>UI</param-name>
-            <param-value>com.vaadin.tutorial.addressbook.AddressbookUI</param-value>
+            <param-value>org.opennms.vaadin.provision.dashboard.ProvisiondashboardUI</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>

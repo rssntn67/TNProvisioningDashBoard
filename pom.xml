@@ -2,18 +2,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.vaadin.tutorial</groupId>
-	<artifactId>addressbook</artifactId>
+	<groupId>org.opennms</groupId>
+	<artifactId>provisiondashboard</artifactId>
 	<packaging>war</packaging>
 	<version>1.0</version>
-	<name>Vaadin Web Application</name>
+	<name>Provisioning Dashboard Web Application</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<vaadin.version>7.0.0</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
+		<opennms.model.version>1.8.17</opennms.model.version>
+		<opennms.jersey.version>1.11.90</opennms.jersey.version>
 	</properties>
 	<repositories>
+        <repository>
+            <id>opennms-repo</id>
+            <name>OpenNMS Repository</name>
+            <url>http://maven.opennms.org/content/groups/opennms.org-release</url>
+        </repository>
 		<repository>
 			<id>vaadin-addons</id>
 			<url>http://maven.vaadin.com/vaadin-addons</url>
@@ -63,12 +70,29 @@
 			<artifactId>vaadin-themes</artifactId>
 			<version>${vaadin.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-model</artifactId>
+			<version>${opennms.model.version}</version>
+        </dependency>
+  <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-provision-persistence</artifactId>
+			<version>${opennms.model.version}</version>
+    </dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>2.4</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+            <groupId>org.opennms.dependencies</groupId>
+            <artifactId>jersey-dependencies</artifactId>
+    		<version>${opennms.jersey.version}</version>
+            <type>pom</type>
+        </dependency>
+		
 	</dependencies>
 
 	<build>
