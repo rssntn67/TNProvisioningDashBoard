@@ -51,6 +51,7 @@ public class ProvisiondashboardUI extends UI {
 	private FieldGroup m_editorFields = new FieldGroup();
 	private ComboBox m_primaryComboBox = new ComboBox("Select Categories");
 		
+	private String m_searchText = null;
 	private static final String LABEL = "label";
 	private static final String FOREIGNSOURCE = "foreign source";
 	private static final String CATEGORIES = "categories";
@@ -92,14 +93,14 @@ public class ProvisiondashboardUI extends UI {
 			m_primaryComboBox.addItem(categories);
 		}
 		m_primaryComboBox.setInvalidAllowed(false);
-		m_primaryComboBox.setNullSelectionAllowed(false);		
+		m_primaryComboBox.setNullSelectionAllowed(true);		
 		m_primaryComboBox.setImmediate(true);
 		m_primaryComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				contactContainer.removeAllContainerFilters();
-				contactContainer.addContainerFilter(new CategoriesFilter(m_primaryComboBox.getValue()));
+				contactContainer.addContainerFilter(new NodeFilter(m_searchText, m_primaryComboBox.getValue()));
 			}
 		});
 		
@@ -195,7 +196,7 @@ public class ProvisiondashboardUI extends UI {
 				/* Reset the filter for the contactContainer. */
 				contactContainer.removeAllContainerFilters();
 				contactContainer.addContainerFilter(new NodeFilter(event
-						.getText()));
+						.getText(),m_primaryComboBox.getValue()));
 			}
 		});
 	}
@@ -205,36 +206,20 @@ public class ProvisiondashboardUI extends UI {
 	 * contactContainer.
 	 */
 	private class NodeFilter implements Filter {
-		private String needle;
+		private String needle1="";
+		private String needle2="";
 
-		public NodeFilter(Object o) {
-			this.needle = (String) o;
+		public NodeFilter(Object o, Object c) {
+			if ( o != null)
+				this.needle1 = (String) o;
+			if ( c != null)
+				this.needle2 = (String) c;
 		}
 
 		public boolean passesFilter(Object itemId, Item item) {
-			String haystack = ("" + item.getItemProperty(LABEL).getValue());
-			return haystack.contains(needle);
-		}
-
-		public boolean appliesToProperty(Object id) {
-			return true;
-		}
-	}
-
-	/*
-	 * A custom filter for searching categories in the
-	 * contactContainer.
-	 */
-	private class CategoriesFilter implements Filter {
-		private String needle;
-
-		public CategoriesFilter(Object o) {
-			this.needle = (String)o;
-		}
-
-		public boolean passesFilter(Object itemId, Item item) {
-			String haystack = ("" + item.getItemProperty(CATEGORIES).getValue());
-			return haystack.contains(needle);
+			String haystack1 = ("" + item.getItemProperty(LABEL).getValue());
+			String haystack2 = ("" + item.getItemProperty(CATEGORIES).getValue());
+			return (haystack1.contains(needle1) && haystack2.contains(needle2));
 		}
 
 		public boolean appliesToProperty(Object id) {
@@ -311,7 +296,7 @@ public class ProvisiondashboardUI extends UI {
 	private static IndexedContainer getNodeList() {
 	    m_nodeService = new JerseyNodesService();
 	    JerseyClientImpl jerseyClient = new JerseyClientImpl(
-	                                                         "http://devopennms.noc.tnnet.it:8980/opennms/rest/","admin","admin2001");
+	                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
 	    m_nodeService.setJerseyClient(jerseyClient);
 	 	IndexedContainer ic = new IndexedContainer();
 
@@ -326,6 +311,7 @@ public class ProvisiondashboardUI extends UI {
 			ic.getContainerProperty(id, FOREIGNSOURCE).setValue(node.getForeignSource());
 			String categories = "";
 			for (OnmsCategory category: node.getCategories()) {
+				categorieslist.add(category.getName());
 				categories += category.getName()+"-";
 			}
 			ic.getContainerProperty(id, CATEGORIES).setValue(categories);
