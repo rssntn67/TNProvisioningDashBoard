@@ -49,14 +49,17 @@ public class ProvisiondashboardUI extends UI {
 	private Button m_removeContactButton = new Button("Remove this Node");
 	private FormLayout m_editorLayout = new FormLayout();
 	private FieldGroup m_editorFields = new FieldGroup();
-	private ComboBox m_primaryComboBox = new ComboBox("Select Categories");
+	private ComboBox m_fsComboBox = new ComboBox("Select Foreign Source");
+	private ComboBox m_catComboBox = new ComboBox("Select Categories");
 		
 	private String m_searchText = null;
 	private static final String LABEL = "label";
 	private static final String FOREIGNSOURCE = "foreign source";
+	private static final String FOREIGNID = "foreign id";
 	private static final String CATEGORIES = "categories";
-	private static final String[] fieldNames = new String[] { LABEL, FOREIGNSOURCE, CATEGORIES};
-	private static final Collection<String> categorieslist = new HashSet();
+	private static final String[] fieldNames = new String[] { LABEL, FOREIGNSOURCE, FOREIGNID, CATEGORIES};
+	private Collection<String> categorieslist = new HashSet();
+	private Collection<String> foreignsourcelist = new HashSet();
 
 	private static JerseyNodesService m_nodeService;
 	/*
@@ -88,31 +91,41 @@ public class ProvisiondashboardUI extends UI {
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		setContent(splitPanel);
 
+		for (String foreignsouce: foreignsourcelist) {
+			m_fsComboBox.addItem(foreignsouce);
+		}
+		m_fsComboBox.setInvalidAllowed(false);
+		m_fsComboBox.setNullSelectionAllowed(false);
+		
 		/* Build the component tree */
 		for (String categories: categorieslist) {
-			m_primaryComboBox.addItem(categories);
+			m_catComboBox.addItem(categories);
 		}
-		m_primaryComboBox.setInvalidAllowed(false);
-		m_primaryComboBox.setNullSelectionAllowed(true);		
-		m_primaryComboBox.setImmediate(true);
-		m_primaryComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		m_catComboBox.setInvalidAllowed(false);
+		m_catComboBox.setNullSelectionAllowed(true);		
+		m_catComboBox.setImmediate(true);
+		m_catComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				contactContainer.removeAllContainerFilters();
-				contactContainer.addContainerFilter(new NodeFilter(m_searchText, m_primaryComboBox.getValue()));
+				contactContainer.addContainerFilter(new NodeFilter(m_searchText, m_catComboBox.getValue()));
 			}
 		});
 		
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);
 		splitPanel.addComponent(m_editorLayout);
-		leftLayout.addComponent(m_primaryComboBox);
+		
+		HorizontalLayout topLeftLayout = new HorizontalLayout();
+		topLeftLayout.addComponent(m_fsComboBox);
+		topLeftLayout.addComponent(m_catComboBox);
+		leftLayout.addComponent(topLeftLayout);
 
 		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
-		leftLayout.addComponent(bottomLeftLayout);
 		bottomLeftLayout.addComponent(m_searchField);
 		bottomLeftLayout.addComponent(m_addNewContactButton);
+		leftLayout.addComponent(bottomLeftLayout);
 		
 		leftLayout.addComponent(m_contactList);
 
@@ -196,7 +209,7 @@ public class ProvisiondashboardUI extends UI {
 				/* Reset the filter for the contactContainer. */
 				contactContainer.removeAllContainerFilters();
 				contactContainer.addContainerFilter(new NodeFilter(event
-						.getText(),m_primaryComboBox.getValue()));
+						.getText(),m_catComboBox.getValue()));
 			}
 		});
 	}
@@ -293,7 +306,7 @@ public class ProvisiondashboardUI extends UI {
 	 * we could be using SQLContainer, JPAContainer or some other to persist the
 	 * data.
 	 */
-	private static IndexedContainer getNodeList() {
+	private IndexedContainer getNodeList() {
 	    m_nodeService = new JerseyNodesService();
 	    JerseyClientImpl jerseyClient = new JerseyClientImpl(
 	                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
@@ -308,13 +321,21 @@ public class ProvisiondashboardUI extends UI {
 		for (OnmsNode node : m_nodeService.getAll() ) {
 			Object id = ic.addItem();
 			ic.getContainerProperty(id, LABEL).setValue(node.getLabel());
+			ic.getContainerProperty(id, FOREIGNID).setValue(node.getForeignId());
 			ic.getContainerProperty(id, FOREIGNSOURCE).setValue(node.getForeignSource());
+			if (node.getForeignSource() != null && !node.getForeignSource().equals("")) {
+				foreignsourcelist.add(node.getForeignSource());
+			}
 			String categories = "";
 			for (OnmsCategory category: node.getCategories()) {
-				categorieslist.add(category.getName());
-				categories += category.getName()+"-";
+				if (category != null && !category.getName().equals("")) {
+					categorieslist.add(category.getName());
+					categories += category.getName()+"-";
+				}
 			}
 			ic.getContainerProperty(id, CATEGORIES).setValue(categories);
+			if (categories.equals(""))
+				continue;
 			categorieslist.add(categories);
 		}
 
