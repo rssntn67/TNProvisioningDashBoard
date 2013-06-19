@@ -2,13 +2,16 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
+import org.opennms.rest.client.JerseyProvisionRequisitionService;
 
+import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
@@ -27,11 +30,11 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -40,34 +43,42 @@ import com.vaadin.ui.VerticalLayout;
  * embed your UI to an existing web page. 
  */
 @Title("TrentinoNetwork Provision Dashboard")
+@Theme("runo")
 public class ProvisiondashboardUI extends UI {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5948892618258879832L;
+
+	protected final static String FOREIGN_SOURCE = "TrentinoNetwork";
+	
 	/* User interface components are stored in session. */
-	private Table m_contactList = new Table();
+	private Table m_requisitionNodeList = new Table();
 	private TextField m_searchField = new TextField();
 	private Button m_addNewContactButton = new Button("New Requisition Node");
 	private Button m_removeContactButton = new Button("Remove this Node");
 	private FormLayout m_editorLayout = new FormLayout();
 	private FieldGroup m_editorFields = new FieldGroup();
-	private ComboBox m_fsComboBox = new ComboBox("Select Foreign Source");
 	private ComboBox m_catComboBox = new ComboBox("Select Categories");
 		
 	private String m_searchText = null;
 	private static final String LABEL = "label";
-	private static final String FOREIGNSOURCE = "foreign source";
+	//private static final String FOREIGNSOURCE = "foreign source";
 	private static final String FOREIGNID = "foreign id";
 	private static final String CATEGORIES = "categories";
-	private static final String[] fieldNames = new String[] { LABEL, FOREIGNSOURCE, FOREIGNID, CATEGORIES};
-	private Collection<String> categorieslist = new HashSet();
-	private Collection<String> foreignsourcelist = new HashSet();
+//	private static final String[] fieldNames = new String[] { LABEL, FOREIGNSOURCE, FOREIGNID, CATEGORIES};
+	private static final String[] fieldNames = new String[] { LABEL, FOREIGNID, CATEGORIES};
+	private Collection<String> categorieslist = new HashSet<String>();
+    private JerseyClientImpl m_jerseyClient = new JerseyClientImpl(
+            "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
 
-	private static JerseyNodesService m_nodeService;
 	/*
 	 * Any component can be bound to an external data source. This example uses
 	 * just a dummy in-memory list, but there are many more practical
 	 * implementations.
 	 */
-	IndexedContainer contactContainer = getNodeList();
+	IndexedContainer contactContainer = getProvisionNodeList();
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
@@ -90,12 +101,6 @@ public class ProvisiondashboardUI extends UI {
 		/* Root of the user interface component tree is set */
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		setContent(splitPanel);
-
-		for (String foreignsouce: foreignsourcelist) {
-			m_fsComboBox.addItem(foreignsouce);
-		}
-		m_fsComboBox.setInvalidAllowed(false);
-		m_fsComboBox.setNullSelectionAllowed(false);
 		
 		/* Build the component tree */
 		for (String categories: categorieslist) {
@@ -106,6 +111,11 @@ public class ProvisiondashboardUI extends UI {
 		m_catComboBox.setImmediate(true);
 		m_catComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -3559078865783782719L;
+
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				contactContainer.removeAllContainerFilters();
@@ -117,18 +127,19 @@ public class ProvisiondashboardUI extends UI {
 		splitPanel.addComponent(leftLayout);
 		splitPanel.addComponent(m_editorLayout);
 		
-		HorizontalLayout topLeftLayout = new HorizontalLayout();
-		topLeftLayout.addComponent(m_fsComboBox);
+		VerticalLayout topLeftLayout = new VerticalLayout();
 		topLeftLayout.addComponent(m_catComboBox);
+		topLeftLayout.addComponent(m_searchField);
+		
 		leftLayout.addComponent(topLeftLayout);
 
+		leftLayout.addComponent(m_requisitionNodeList);
+
 		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
-		bottomLeftLayout.addComponent(m_searchField);
 		bottomLeftLayout.addComponent(m_addNewContactButton);
+		
 		leftLayout.addComponent(bottomLeftLayout);
 		
-		leftLayout.addComponent(m_contactList);
-
 		/* Set the contents in the left of the split panel to use all the space */
 		leftLayout.setSizeFull();
 
@@ -136,17 +147,12 @@ public class ProvisiondashboardUI extends UI {
 		 * On the left side, expand the size of the contactList so that it uses
 		 * all the space left after from bottomLeftLayout
 		 */
-		leftLayout.setExpandRatio(m_contactList, 1);
-		m_contactList.setSizeFull();
+		leftLayout.setExpandRatio(m_requisitionNodeList, 1);
+		m_requisitionNodeList.setSizeFull();
 
-		/*
-		 * In the bottomLeftLayout, searchField takes all the width there is
-		 * after adding addNewContactButton. The height of the layout is defined
-		 * by the tallest component.
-		 */
-		bottomLeftLayout.setWidth("100%");
-		m_searchField.setWidth("100%");
-		bottomLeftLayout.setExpandRatio(m_searchField, 1);
+		topLeftLayout.setWidth("100%");
+		m_searchField.setWidth("50%");
+		//topLeftLayout.setExpandRatio(m_searchField, 1);
 
 		/* Put a little margin around the fields in the right side editor */
 		m_editorLayout.setMargin(true);
@@ -204,6 +210,11 @@ public class ProvisiondashboardUI extends UI {
 		 * up to you.
 		 */
 		m_searchField.addTextChangeListener(new TextChangeListener() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void textChange(final TextChangeEvent event) {
 
 				/* Reset the filter for the contactContainer. */
@@ -219,6 +230,10 @@ public class ProvisiondashboardUI extends UI {
 	 * contactContainer.
 	 */
 	private class NodeFilter implements Filter {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private String needle1="";
 		private String needle2="";
 
@@ -242,6 +257,12 @@ public class ProvisiondashboardUI extends UI {
 
 	private void initAddRemoveButtons() {
 		m_addNewContactButton.addClickListener(new ClickListener() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
 
 				/*
@@ -255,36 +276,46 @@ public class ProvisiondashboardUI extends UI {
 				 * Each Item has a set of Properties that hold values. Here we
 				 * set a couple of those.
 				 */
-				m_contactList.getContainerProperty(contactId, LABEL).setValue(
+				m_requisitionNodeList.getContainerProperty(contactId, LABEL).setValue(
 						"New");
-				m_contactList.getContainerProperty(contactId, FOREIGNSOURCE).setValue(
-						"Contact");
+//				m_contactList.getContainerProperty(contactId, FOREIGNSOURCE).setValue(
+//						"Contact");
 
-				m_contactList.getContainerProperty(contactId, CATEGORIES).setValue(
+				m_requisitionNodeList.getContainerProperty(contactId, CATEGORIES).setValue(
 						"Categories");
 
 				/* Lets choose the newly created contact to edit it. */
-				m_contactList.select(contactId);
+				m_requisitionNodeList.select(contactId);
 			}
 		});
 
 		m_removeContactButton.addClickListener(new ClickListener() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void buttonClick(ClickEvent event) {
-				Object contactId = m_contactList.getValue();
-				m_contactList.removeItem(contactId);
+				Object contactId = m_requisitionNodeList.getValue();
+				m_requisitionNodeList.removeItem(contactId);
 			}
 		});
 	}
 
 	private void initContactList() {
-		m_contactList.setContainerDataSource(contactContainer);
-		m_contactList.setVisibleColumns(new String[] { LABEL, FOREIGNSOURCE,CATEGORIES });
-		m_contactList.setSelectable(true);
-		m_contactList.setImmediate(true);
+		m_requisitionNodeList.setContainerDataSource(contactContainer);
+		m_requisitionNodeList.setVisibleColumns(new String[] { LABEL });
+		m_requisitionNodeList.setSelectable(true);
+		m_requisitionNodeList.setImmediate(true);
 
-		m_contactList.addValueChangeListener(new Property.ValueChangeListener() {
+		m_requisitionNodeList.addValueChangeListener(new Property.ValueChangeListener() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public void valueChange(ValueChangeEvent event) {
-				Object contactId = m_contactList.getValue();
+				Object contactId = m_requisitionNodeList.getValue();
 
 				/*
 				 * When a contact is selected from the list, we want to show
@@ -293,7 +324,7 @@ public class ProvisiondashboardUI extends UI {
 				 * Properties in our contact at once.
 				 */
 				if (contactId != null)
-					m_editorFields.setItemDataSource(m_contactList
+					m_editorFields.setItemDataSource(m_requisitionNodeList
 							.getItem(contactId));
 				
 				m_editorLayout.setVisible(contactId != null);
@@ -306,26 +337,21 @@ public class ProvisiondashboardUI extends UI {
 	 * we could be using SQLContainer, JPAContainer or some other to persist the
 	 * data.
 	 */
+	@SuppressWarnings({ "unchecked", "unused" })
 	private IndexedContainer getNodeList() {
-	    m_nodeService = new JerseyNodesService();
-	    JerseyClientImpl jerseyClient = new JerseyClientImpl(
-	                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
-	    m_nodeService.setJerseyClient(jerseyClient);
+		JerseyNodesService nodeService = new JerseyNodesService();
+	    nodeService.setJerseyClient(m_jerseyClient);
 	 	IndexedContainer ic = new IndexedContainer();
 
 		for (String p : fieldNames) {
 			ic.addContainerProperty(p, String.class, "");
 		}
 
-		int i=0;
-		for (OnmsNode node : m_nodeService.getAll() ) {
+		for (OnmsNode node : nodeService.getAll() ) {
 			Object id = ic.addItem();
 			ic.getContainerProperty(id, LABEL).setValue(node.getLabel());
 			ic.getContainerProperty(id, FOREIGNID).setValue(node.getForeignId());
-			ic.getContainerProperty(id, FOREIGNSOURCE).setValue(node.getForeignSource());
-			if (node.getForeignSource() != null && !node.getForeignSource().equals("")) {
-				foreignsourcelist.add(node.getForeignSource());
-			}
+//			ic.getContainerProperty(id, FOREIGNSOURCE).setValue(node.getForeignSource());
 			String categories = "";
 			for (OnmsCategory category: node.getCategories()) {
 				if (category != null && !category.getName().equals("")) {
@@ -340,6 +366,37 @@ public class ProvisiondashboardUI extends UI {
 		}
 
 		return ic;
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	private IndexedContainer getProvisionNodeList() {
+	 	JerseyProvisionRequisitionService provisionService = new JerseyProvisionRequisitionService();
+	 	provisionService.setJerseyClient(m_jerseyClient);
+	 	IndexedContainer ic = new IndexedContainer();
+
+		for (String p : fieldNames) {
+			ic.addContainerProperty(p, String.class, "");
+		}
+
+	 	for (RequisitionNode node: provisionService.getNodes(FOREIGN_SOURCE)) {
+			Object id = ic.addItem();
+			ic.getContainerProperty(id, LABEL).setValue(node.getNodeLabel());
+			ic.getContainerProperty(id, FOREIGNID).setValue(node.getForeignId());
+			String categories = "";
+			for (RequisitionCategory category: node.getCategories()) {
+				if (category != null && !category.getName().equals("")) {
+					categorieslist.add(category.getName());
+					categories += category.getName()+"-";
+				}
+			}
+			ic.getContainerProperty(id, CATEGORIES).setValue(categories);
+			if (categories.equals(""))
+				continue;
+			categorieslist.add(categories);
+		}
+	 		
+	 	return ic;
 	}
 
 }
