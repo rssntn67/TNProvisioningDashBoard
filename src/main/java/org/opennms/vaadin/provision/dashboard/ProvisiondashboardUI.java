@@ -126,6 +126,7 @@ public class ProvisiondashboardUI extends UI {
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);
 		splitPanel.addComponent(m_editorLayout);
+		splitPanel.setSplitPosition(25,Unit.PERCENTAGE);
 		
 		VerticalLayout topLeftLayout = new VerticalLayout();
 		topLeftLayout.addComponent(m_catComboBox);
