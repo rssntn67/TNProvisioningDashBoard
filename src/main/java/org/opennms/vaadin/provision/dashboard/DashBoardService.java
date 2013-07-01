@@ -11,7 +11,7 @@ import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 
-import com.vaadin.data.Container;
+import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
 
@@ -30,8 +30,8 @@ public class DashBoardService {
 	}
 
 
-	public static final String LABEL = "label";
-	public static final String FOREIGNID = "foreign id";
+	public static final String LABEL = "nodeLabel";
+	public static final String FOREIGNID = "foreignId";
 	public static final String CATEGORIES = "categories";
 	
 	public static final String[] fieldNames = new String[] { LABEL, FOREIGNID, CATEGORIES};
@@ -51,11 +51,23 @@ public class DashBoardService {
 	    m_nodeService.setJerseyClient(m_jerseyClient);
 	}
 
-	public Container getRequisitionNodes(String foreignSource) {
+	public BeanItemContainer<RequisitionNode> getRequisitionNodes(String foreignSource) {
 		
 		BeanItemContainer<RequisitionNode> nodes = new BeanItemContainer<RequisitionNode>(RequisitionNode.class);
 		
-		for (RequisitionNode node : getProvisionService().get(foreignSource).getNodes()) {
+		for (RequisitionNode node : m_provisionService.get(foreignSource).getNodes()) {
+			nodes.addBean(node);
+		}
+		
+		return nodes;
+	}
+
+	public BeanContainer<String,RequisitionNode> getContainerRequisitionNodes(String foreignSource) {
+		
+		BeanContainer<String,RequisitionNode> nodes = new BeanContainer<String,RequisitionNode>(RequisitionNode.class);
+		nodes.setBeanIdProperty(FOREIGNID);
+		
+		for (RequisitionNode node : m_provisionService.get(foreignSource).getNodes()) {
 			nodes.addBean(node);
 		}
 		
@@ -126,19 +138,17 @@ public class DashBoardService {
 	 	return ic;
 	}
 
+	public void check() {
+		m_nodeService.getWithDefaultsQueryParams();
+	}
+	
 	protected JerseyProvisionRequisitionService getProvisionService() {
 		return m_provisionService;
 	}
-
 
 	protected JerseyNodesService getNodeService() {
 		return m_nodeService;
 	}
 
-
-	public void check() {
-		getNodeService().getWithDefaultsQueryParams();
-	}
-	
     
 }

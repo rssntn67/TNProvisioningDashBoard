@@ -22,17 +22,11 @@ public class DashboardTabSheet extends CustomComponent implements
     	loginbox = new LoginBox(urls,tabsheet,m_service);
 		setCompositionRoot(tabsheet);
 		
-		// Listen for changes in tab selection.
 		tabsheet.addSelectedTabChangeListener(this);
 		
-		 // First tab contains a button, for which we
-        // listen button click events.
-		
-		// This will cause a selectedTabChange() call.
         tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
-
         for (int i=0; i<tabs.length;i++) {
-        	ProvisionGroupPanel tab=new ProvisionGroupPanel(tabs[i],m_service);
+        	ProvisionGroupPanelNew tab=new ProvisionGroupPanelNew(tabs[i],m_service);
         	tabsheet.addTab(tab, tabs[i], new ThemeResource("icons/16/users.png"));
         	tabsheet.getTab(tab).setEnabled(false);
         }        
