@@ -1,0 +1,51 @@
+package org.opennms.vaadin.provision.dashboard;
+
+import com.vaadin.server.ThemeResource;
+import com.vaadin.ui.CustomComponent;
+import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
+import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
+
+public class DashboardTabSheet extends CustomComponent implements
+		SelectedTabChangeListener {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4835992723502900986L;
+	TabSheet tabsheet = new TabSheet();
+    LoginBox loginbox;
+    DashBoardService m_service;
+    
+    DashboardTabSheet(String[] tabs, String[] urls,DashBoardService service) {
+    	m_service = service;
+    	loginbox = new LoginBox(urls,tabsheet,m_service);
+		setCompositionRoot(tabsheet);
+		
+		// Listen for changes in tab selection.
+		tabsheet.addSelectedTabChangeListener(this);
+		
+		 // First tab contains a button, for which we
+        // listen button click events.
+		
+		// This will cause a selectedTabChange() call.
+        tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
+
+        for (int i=0; i<tabs.length;i++) {
+        	ProvisionNodeTable tab=new ProvisionNodeTable(tabs[i],m_service);
+        	tabsheet.addTab(tab, tabs[i], new ThemeResource("icons/16/users.png"));
+        	tabsheet.getTab(tab).setEnabled(false);
+        }        
+	}
+	
+	@Override
+	public void selectedTabChange(SelectedTabChangeEvent event) {
+		final TabSheet source = (TabSheet) event.getSource();
+		if (source == tabsheet) {
+			if (source.getSelectedTab() != loginbox) {
+				((ProvisionNodeTable)source.getSelectedTab()).load();
+			}
+		}
+	}
+
+}
