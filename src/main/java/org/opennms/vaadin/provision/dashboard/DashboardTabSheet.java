@@ -32,7 +32,7 @@ public class DashboardTabSheet extends CustomComponent implements
         tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
 
         for (int i=0; i<tabs.length;i++) {
-        	ProvisionNodeTable tab=new ProvisionNodeTable(tabs[i],m_service);
+        	ProvisionGroupPanel tab=new ProvisionGroupPanel(tabs[i],m_service);
         	tabsheet.addTab(tab, tabs[i], new ThemeResource("icons/16/users.png"));
         	tabsheet.getTab(tab).setEnabled(false);
         }        
@@ -43,7 +43,7 @@ public class DashboardTabSheet extends CustomComponent implements
 		final TabSheet source = (TabSheet) event.getSource();
 		if (source == tabsheet) {
 			if (source.getSelectedTab() != loginbox) {
-				((ProvisionNodeTable)source.getSelectedTab()).load();
+				((ProvisionGroup)source.getSelectedTab()).load();
 			}
 		}
 	}

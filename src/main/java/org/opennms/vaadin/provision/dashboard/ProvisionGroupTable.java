@@ -1,7 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
-import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Table;
 
 /* 
@@ -10,7 +9,7 @@ import com.vaadin.ui.Table;
  * app a web page showing your UI is automatically generated. Or you may choose to 
  * embed your UI to an existing web page. 
  */
-public class ProvisionNodeTable extends CustomComponent {
+public class ProvisionGroupTable extends ProvisionGroup {
 
 	/**
 	 * 
@@ -23,30 +22,22 @@ public class ProvisionNodeTable extends CustomComponent {
 	/* User interface components are stored in session. */
 	private Table m_requisitionNodeList = new Table();
 
-	private String m_group;
-	private DashBoardService m_service;
 	private boolean loaded=false;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	ProvisionNodeTable(String group,DashBoardService service) {
-		m_group = group;
-		m_service = service;
+	ProvisionGroupTable(String foreignsource,DashBoardService service) {
+		super(foreignsource, service);
 		setCompositionRoot(m_requisitionNodeList);
 	}
 
 	public void load() {
 		if (loaded)
 			return;
-		m_requisitionNodeList.setContainerDataSource(m_service.getRequisitionNodes(getGroup()));
+		m_requisitionNodeList.setContainerDataSource(getService().getRequisitionNodes(getForeignSource()));
 		loaded=true;
 	}
-
-	public String getGroup() {
-		return m_group;
-	}
-	
 
 }

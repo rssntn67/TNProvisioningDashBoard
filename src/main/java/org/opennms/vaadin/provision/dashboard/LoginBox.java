@@ -74,7 +74,9 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	private void restlogout() {
 		m_username.setValue("");
 		m_password.setValue("");
+		m_panel.setCaption("Log In");
 		m_service.setJerseyClient(null);
+		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
 	    while (ite.hasNext()) {
 	    	Component comp = ite.next();

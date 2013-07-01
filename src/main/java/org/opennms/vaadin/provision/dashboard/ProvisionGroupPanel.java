@@ -1,15 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-import org.opennms.netmgt.model.OnmsCategory;
-import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.rest.client.JerseyClientImpl;
-import org.opennms.rest.client.JerseyNodesService;
-import org.opennms.rest.client.JerseyProvisionRequisitionService;
+import java.util.Set;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -21,7 +12,6 @@ import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -32,9 +22,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.VerticalSplitPanel;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -44,15 +32,13 @@ import com.vaadin.ui.VerticalSplitPanel;
  */
 @Title("TrentinoNetwork Provision Dashboard")
 @Theme("runo")
-public class TNProvisionNode extends UI {
+public class ProvisionGroupPanel extends ProvisionGroup {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5948892618258879832L;
 
-	protected final static String FOREIGN_SOURCE = "TrentinoNetwork";
-	
 	/* User interface components are stored in session. */
 	private Table m_requisitionNodeList = new Table();
 	private TextField m_searchField = new TextField();
@@ -63,47 +49,35 @@ public class TNProvisionNode extends UI {
 	private ComboBox m_catComboBox = new ComboBox("Select Categories");
 		
 	private String m_searchText = null;
-	private static final String LABEL = "label";
-	//private static final String FOREIGNSOURCE = "foreign source";
-	private static final String FOREIGNID = "foreign id";
-	private static final String CATEGORIES = "categories";
-//	private static final String[] fieldNames = new String[] { LABEL, FOREIGNSOURCE, FOREIGNID, CATEGORIES};
-	private static final String[] fieldNames = new String[] { LABEL, FOREIGNID, CATEGORIES};
-	private Collection<String> categorieslist = new HashSet<String>();
-    private JerseyClientImpl m_jerseyClient = new JerseyClientImpl(
-            "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
 
-	/*
-	 * Any component can be bound to an external data source. This example uses
-	 * just a dummy in-memory list, but there are many more practical
-	 * implementations.
-	 */
-	IndexedContainer contactContainer = getProvisionNodeList();
+	IndexedContainer contactContainer;
+	
+	private boolean loaded=false;
 
-	/*
-	 * After UI class is created, init() is executed. You should build and wire
-	 * up your user interface here.
-	 */
-	protected void init(VaadinRequest request) {
+
+	public ProvisionGroupPanel(String foreignsource, DashBoardService service) {
+
+		super(foreignsource, service);
+	}
+
+	public void load() {
+		if (loaded)
+			return;
+		contactContainer = getProvisionNodeList();
 		initLayout();
 		initContactList();
 		initEditor();
 		initSearch();
 		initAddRemoveButtons();
+		loaded=true;
 	}
 
-	/*
-	 * In this example layouts are programmed in Java. You may choose use a
-	 * visual editor, CSS or HTML templates for layout instead.
-	 */
 	private void initLayout() {
 
-		/* Root of the user interface component tree is set */
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		setContent(splitPanel);
+		setCompositionRoot(splitPanel);
 		
-		/* Build the component tree */
-		for (String categories: categorieslist) {
+		for (String categories: getCategorylist()) {
 			m_catComboBox.addItem(categories);
 		}
 		m_catComboBox.setInvalidAllowed(false);
@@ -165,7 +139,7 @@ public class TNProvisionNode extends UI {
 		m_editorLayout.addComponent(m_removeContactButton);
 
 		/* User interface can be created dynamically to reflect underlying data. */
-		for (String fieldName : fieldNames) {
+		for (String fieldName : DashBoardService.fieldNames) {
 			TextField field = new TextField(fieldName);
 			m_editorLayout.addComponent(field);
 			field.setWidth("100%");
@@ -246,8 +220,8 @@ public class TNProvisionNode extends UI {
 		}
 
 		public boolean passesFilter(Object itemId, Item item) {
-			String haystack1 = ("" + item.getItemProperty(LABEL).getValue());
-			String haystack2 = ("" + item.getItemProperty(CATEGORIES).getValue());
+			String haystack1 = ("" + item.getItemProperty(DashBoardService.LABEL).getValue());
+			String haystack2 = ("" + item.getItemProperty(DashBoardService.CATEGORIES).getValue());
 			return (haystack1.contains(needle1) && haystack2.contains(needle2));
 		}
 
@@ -277,12 +251,10 @@ public class TNProvisionNode extends UI {
 				 * Each Item has a set of Properties that hold values. Here we
 				 * set a couple of those.
 				 */
-				m_requisitionNodeList.getContainerProperty(contactId, LABEL).setValue(
+				m_requisitionNodeList.getContainerProperty(contactId, DashBoardService.LABEL).setValue(
 						"New");
-//				m_contactList.getContainerProperty(contactId, FOREIGNSOURCE).setValue(
-//						"Contact");
 
-				m_requisitionNodeList.getContainerProperty(contactId, CATEGORIES).setValue(
+				m_requisitionNodeList.getContainerProperty(contactId, DashBoardService.CATEGORIES).setValue(
 						"Categories");
 
 				/* Lets choose the newly created contact to edit it. */
@@ -305,7 +277,7 @@ public class TNProvisionNode extends UI {
 
 	private void initContactList() {
 		m_requisitionNodeList.setContainerDataSource(contactContainer);
-		m_requisitionNodeList.setVisibleColumns(new String[] { LABEL });
+		m_requisitionNodeList.setVisibleColumns(new String[] { DashBoardService.LABEL });
 		m_requisitionNodeList.setSelectable(true);
 		m_requisitionNodeList.setImmediate(true);
 
@@ -332,72 +304,13 @@ public class TNProvisionNode extends UI {
 			}
 		});
 	}
-
-	/*
-	 * Generate some in-memory example data to play with. In a real application
-	 * we could be using SQLContainer, JPAContainer or some other to persist the
-	 * data.
-	 */
-	@SuppressWarnings({ "unchecked", "unused" })
-	private IndexedContainer getNodeList() {
-		JerseyNodesService nodeService = new JerseyNodesService();
-	    nodeService.setJerseyClient(m_jerseyClient);
-	 	IndexedContainer ic = new IndexedContainer();
-
-		for (String p : fieldNames) {
-			ic.addContainerProperty(p, String.class, "");
-		}
-
-		for (OnmsNode node : nodeService.getAll() ) {
-			Object id = ic.addItem();
-			ic.getContainerProperty(id, LABEL).setValue(node.getLabel());
-			ic.getContainerProperty(id, FOREIGNID).setValue(node.getForeignId());
-//			ic.getContainerProperty(id, FOREIGNSOURCE).setValue(node.getForeignSource());
-			String categories = "";
-			for (OnmsCategory category: node.getCategories()) {
-				if (category != null && !category.getName().equals("")) {
-					categorieslist.add(category.getName());
-					categories += category.getName()+"-";
-				}
-			}
-			ic.getContainerProperty(id, CATEGORIES).setValue(categories);
-			if (categories.equals(""))
-				continue;
-			categorieslist.add(categories);
-		}
-
-		return ic;
+	
+	protected IndexedContainer getProvisionNodeList() {
+		return getService().getProvisionNodeList(getForeignSource());
 	}
 	
-	
-	@SuppressWarnings("unchecked")
-	private IndexedContainer getProvisionNodeList() {
-	 	JerseyProvisionRequisitionService provisionService = new JerseyProvisionRequisitionService();
-	 	provisionService.setJerseyClient(m_jerseyClient);
-	 	IndexedContainer ic = new IndexedContainer();
-
-		for (String p : fieldNames) {
-			ic.addContainerProperty(p, String.class, "");
-		}
-
-	 	for (RequisitionNode node: provisionService.getNodes(FOREIGN_SOURCE)) {
-			Object id = ic.addItem();
-			ic.getContainerProperty(id, LABEL).setValue(node.getNodeLabel());
-			ic.getContainerProperty(id, FOREIGNID).setValue(node.getForeignId());
-			String categories = "";
-			for (RequisitionCategory category: node.getCategories()) {
-				if (category != null && !category.getName().equals("")) {
-					categorieslist.add(category.getName());
-					categories += category.getName()+"-";
-				}
-			}
-			ic.getContainerProperty(id, CATEGORIES).setValue(categories);
-			if (categories.equals(""))
-				continue;
-			categorieslist.add(categories);
-		}
-	 		
-	 	return ic;
+	protected Set<String> getCategorylist() {
+		return getService().getCategorieslist();
 	}
-
+	
 }
