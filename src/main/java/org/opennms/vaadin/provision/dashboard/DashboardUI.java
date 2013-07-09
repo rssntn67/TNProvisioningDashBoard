@@ -14,7 +14,7 @@ import com.vaadin.ui.UI;
  */
 @Title("Trentino Network Opennms Provision Dashboard")
 @Theme("runo")
-public class ProvisiondashboardUI extends UI {
+public class DashboardUI extends UI {
 
 	/**
 	 * 
@@ -25,10 +25,11 @@ public class ProvisiondashboardUI extends UI {
 		"SI","SIVirtualNodes"};
 
 	protected final static String[] URL_LIST = new String[] {
-		"http://demo.arsinfo.it/opennms/rest"
+		"http://demo.arsinfo.it/opennms/rest",
+		"http://demo.arsinfo.it:8980/opennms/rest"
 	};
 	
-	DashBoardService m_service = new DashBoardService();
+	DashboardService m_service = new DashboardService();
 
 	protected void init(VaadinRequest request) {
 		setContent(new DashboardTabSheet(FOREIGN_SOURCE_LIST, URL_LIST,m_service));

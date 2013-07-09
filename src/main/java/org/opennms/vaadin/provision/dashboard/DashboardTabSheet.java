@@ -15,9 +15,9 @@ public class DashboardTabSheet extends CustomComponent implements
 	private static final long serialVersionUID = -4835992723502900986L;
 	TabSheet tabsheet = new TabSheet();
     LoginBox loginbox;
-    DashBoardService m_service;
+    DashboardService m_service;
     
-    DashboardTabSheet(String[] tabs, String[] urls,DashBoardService service) {
+    DashboardTabSheet(String[] tabs, String[] urls,DashboardService service) {
     	m_service = service;
     	loginbox = new LoginBox(urls,tabsheet,m_service);
 		setCompositionRoot(tabsheet);
@@ -26,7 +26,7 @@ public class DashboardTabSheet extends CustomComponent implements
 		
         tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
         for (int i=0; i<tabs.length;i++) {
-        	ProvisionGroupPanelNew tab=new ProvisionGroupPanelNew(tabs[i],m_service);
+        	TrentinoNetworkTab tab=new TrentinoNetworkTab(tabs[i],m_service);
         	tabsheet.addTab(tab, tabs[i], new ThemeResource("icons/16/users.png"));
         	tabsheet.getTab(tab).setEnabled(false);
         }        
@@ -37,7 +37,7 @@ public class DashboardTabSheet extends CustomComponent implements
 		final TabSheet source = (TabSheet) event.getSource();
 		if (source == tabsheet) {
 			if (source.getSelectedTab() != loginbox) {
-				((ProvisionGroup)source.getSelectedTab()).load();
+				((DashboardTab)source.getSelectedTab()).load();
 			}
 		}
 	}

@@ -20,7 +20,7 @@ import com.vaadin.ui.Button.ClickListener;
 
 public class LoginBox extends CustomComponent implements ClickListener {
 
-	private DashBoardService m_service;
+	private DashboardService m_service;
 
 	/**
 	 * 
@@ -35,7 +35,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private Button m_logout = new Button("Logout");
     private TabSheet m_tabs;
     
-    public LoginBox (String[] urls, TabSheet tabs,DashBoardService service) {
+    public LoginBox (String[] urls, TabSheet tabs,DashboardService service) {
     	m_tabs=tabs;
     	m_service = service;
     	m_login.setImmediate(true);
