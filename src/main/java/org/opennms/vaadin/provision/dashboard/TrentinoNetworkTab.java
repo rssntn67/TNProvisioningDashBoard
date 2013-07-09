@@ -84,8 +84,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
 	private Button m_removeNodeButton  = new Button("Elimina Nodo");
 
-	private ComboBox m_vrfsComboBox = new ComboBox("VRF");
-	private ComboBox m_parentComboBox = new ComboBox("Parent Node");
+	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
+	private ComboBox m_parentComboBox = new ComboBox("Dipende da");
 	private ComboBox m_networkCatComboBox = new ComboBox("Network Category");
 	private ComboBox m_notifCatComboBox   = new ComboBox("Notification Category");
 	private ComboBox m_threshCatComboBox  = new ComboBox("Threshold Category");
@@ -245,18 +245,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);
 		
-		m_editRequisitionNodeLayout.addComponent(new Label("Informazioni Generali"));
 		HorizontalLayout generalInfo = new HorizontalLayout();
-		generalInfo.setMargin(true);
-		VerticalLayout leftGeneralInfo = new VerticalLayout();
-		leftGeneralInfo.setMargin(true);
+		FormLayout leftGeneralInfo = new FormLayout();
+		leftGeneralInfo.addComponent(new Label("Informazioni Generali"));
 		TextField descr = new TextField("Descrizione");
 		descr.setSizeFull();
+		descr.setWidth(8, Unit.CM);
+		descr.setHeight(6, Unit.MM);
 		m_editorFields.bind(descr, DESCR);
 		leftGeneralInfo.addComponent(descr);
 		
 		TextField hostname = new TextField("Hostname");
 		hostname.setSizeFull();
+		hostname.setWidth(4, Unit.CM);
+		hostname.setHeight(6, Unit.MM);
 		hostname.setRequired(true);
 		hostname.setRequiredError("Deve essere un nome valido per bind9: non contiene '_' vedi RFCxxxx");
 		m_editorFields.bind(hostname, HOST);
@@ -277,26 +279,28 @@ public class TrentinoNetworkTab extends DashboardTab {
 		generalInfo.addComponent(leftGeneralInfo);
 
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
-		centerGeneralInfo.setMargin(true);
 		generalInfo.addComponent(centerGeneralInfo);
 
 		m_secondaryTable.setCaption("Altri ip da monitorare");
 		m_secondaryTable.setEditable(true);
 		m_secondaryTable.setSelectable(true);
-		m_secondaryTable.setHeight(50,Unit.PIXELS);
-		VerticalLayout rightGeneralInfo = new VerticalLayout();
-		rightGeneralInfo.setMargin(true);
+		m_secondaryTable.setHeight(180,Unit.PIXELS);
+		m_secondaryTable.setWidth(130,Unit.PIXELS);
+		
+		FormLayout rightGeneralInfo = new FormLayout();
 		rightGeneralInfo.addComponent(m_secondaryTable);
 		generalInfo.addComponent(rightGeneralInfo);
 
 		generalInfo.setExpandRatio(leftGeneralInfo, 3);
 		generalInfo.setExpandRatio(centerGeneralInfo, 1);
 		generalInfo.setExpandRatio(rightGeneralInfo, 3);
+		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
 
-		m_editRequisitionNodeLayout.addComponent(generalInfo);
-
-		m_editRequisitionNodeLayout.addComponent(new Label("Categorie"));
+		FormLayout categoryInfo = new FormLayout();
+		categoryInfo.addComponent(new Label("Categorie"));
 		
+		HorizontalLayout catLayout = new HorizontalLayout();
+		catLayout.setSizeFull();
 		for (String[] categories: m_network_categories) {
 			m_networkCatComboBox.addItem(categories);
 			m_networkCatComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
@@ -319,37 +323,51 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_threshCatComboBox.setNullSelectionAllowed(false);
 		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
 		
-		
-		HorizontalLayout catLayout = new HorizontalLayout();
 		catLayout.addComponent(m_networkCatComboBox);
 		catLayout.addComponent(m_notifCatComboBox);
 		catLayout.addComponent(m_threshCatComboBox);
-		m_editRequisitionNodeLayout.addComponent(catLayout);
+		categoryInfo.addComponent(catLayout);
+		m_editRequisitionNodeLayout.addComponent(new Panel(categoryInfo));
 
+
+		FormLayout snmpProfile = new FormLayout();
 		for (String snmp: m_snmp_profiles) {
 			m_snmpComboBox.addItem(snmp);
 		}
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
 		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
-		m_editRequisitionNodeLayout.addComponent(new Label("Credenziali SNMP per collezione dati"));
-        m_editRequisitionNodeLayout.addComponent(m_snmpComboBox);
-		
+		snmpProfile.addComponent(new Label("Credenziali SNMP per collezione dati"));
+		HorizontalLayout snmplayout = new HorizontalLayout();
+		snmplayout.addComponent(m_snmpComboBox);
+		snmpProfile.addComponent(snmplayout);
+        m_editRequisitionNodeLayout.addComponent(new Panel(snmpProfile));
+
+		FormLayout backupProfile = new FormLayout();
         for (String backup: m_backup_profiles) {
         	m_backupComboBox.addItem(backup);
         }
         m_backupComboBox.setInvalidAllowed(false);
         m_backupComboBox.setNullSelectionAllowed(false);
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
-        m_editRequisitionNodeLayout.addComponent(new Label("Credenziali accesso per backup configurazione"));
-        m_editRequisitionNodeLayout.addComponent(m_backupComboBox);
-		
-        m_editRequisitionNodeLayout.addComponent(new Label("Localizzazione"));
-		m_editRequisitionNodeLayout.addComponent(m_editorFields.buildAndBind(CITY));
+		backupProfile.addComponent(new Label("Credenziali accesso per backup configurazione"));
+		HorizontalLayout backuplayout = new HorizontalLayout();
+		backuplayout.addComponent(m_backupComboBox);
+		backupProfile.addComponent(backuplayout);
+		m_editRequisitionNodeLayout.addComponent(new Panel(backupProfile));
+
+		HorizontalLayout localizationInfo = new HorizontalLayout();
+		FormLayout localization = new FormLayout();
+		localization.addComponent(new Label("Localizzazione"));
+		localization.addComponent(m_editorFields.buildAndBind(CITY));
 		TextField address = new TextField("Indirizzo");
-		address.setSizeUndefined();
+		address.setWidth(8, Unit.CM);
+		address.setHeight(6, Unit.MM);
 		m_editorFields.bind(address, ADDRESS);
-		m_editRequisitionNodeLayout.addComponent(address);
+		localization.addComponent(address);
+		localizationInfo.addComponent(localization);
+		m_editRequisitionNodeLayout.addComponent(new Panel(localizationInfo));
+
 	}
 
 	private class NodeFilter implements Filter {
@@ -392,7 +410,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_updateNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);				
 		m_resetNodeButton.setEnabled(false);
-				
+		
+		//FIXME add new operation
 		m_addNewNodeButton.addClickListener(new ClickListener() {
 			/**
 			 * 
@@ -434,6 +453,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
+		//FIXME add update operation
 		m_updateNodeButton.addClickListener(new ClickListener() {
 			/**
 			 * 
@@ -450,6 +470,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
+		//FIXME add delete operation
 		m_removeNodeButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
@@ -463,6 +484,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 		
+		//FIXME add reset operation
 		m_resetNodeButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 

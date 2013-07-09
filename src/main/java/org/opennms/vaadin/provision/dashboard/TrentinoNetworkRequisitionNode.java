@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.dashboard;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
+import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
 
 public class TrentinoNetworkRequisitionNode {
@@ -193,7 +194,7 @@ public class TrentinoNetworkRequisitionNode {
 	protected String nodeLabel;
 	protected String vrf;
 	protected String primary;
-	protected IndexedContainer m_secondary = new IndexedContainer();
+	protected IndexedContainer secondary = new IndexedContainer();
 
 	protected String parent;
 
@@ -207,14 +208,16 @@ public class TrentinoNetworkRequisitionNode {
 	protected String city;
 	protected String address1;
 	
+	@SuppressWarnings("unchecked")
 	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode) {
 		m_requisitionNode = requisitionNode;
 		nodeLabel = m_requisitionNode.getNodeLabel();
 
 		parent = m_requisitionNode.getParentForeignId();
-		//FIXME
+		//FIXME add snmpProfile set
 		snmpProfile=m_snmp_profiles[0];
-		//FIXME
+
+		//FIXME add backupprofile set
 		backupProfile=m_backup_profiles[0];
 		
 		for (String vrf: m_vrfs) {
@@ -225,12 +228,14 @@ public class TrentinoNetworkRequisitionNode {
 			}
 		}
 
+		secondary.addContainerProperty("ip", String.class, null);
 		for (RequisitionInterface ip: m_requisitionNode.getInterfaces()) {
 			if (ip.getSnmpPrimary().equals("P")) {
 				primary = ip.getIpAddr();
 				descr = ip.getDescr();
 			} else {
-				m_secondary.addItem(ip); 
+				Item ipItem = secondary.getItem(secondary.addItem());
+				ipItem.getItemProperty("ip").setValue(ip.getIpAddr()); 
 			}
 		}
 		
@@ -319,11 +324,11 @@ public class TrentinoNetworkRequisitionNode {
 	}
 
 	public IndexedContainer getSecondary() {
-		return m_secondary;
+		return secondary;
 	}
 
 	public void setSecondary(IndexedContainer secondary) {
-		this.m_secondary = secondary;
+		this.secondary = secondary;
 	}
 
 	public String getSnmpProfile() {
