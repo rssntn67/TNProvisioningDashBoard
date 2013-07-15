@@ -13,9 +13,7 @@ public class DashboardService {
 	private JerseyClientImpl m_jerseyClient;
     
 	private JerseyProvisionRequisitionService m_provisionService;
-    
 	private JerseyNodesService m_nodeService;
-	
 	private JerseySnmpInfoService m_snmpInfoService;
 
 	public static final String FOREIGNID = "foreignId";
@@ -23,6 +21,7 @@ public class DashboardService {
     public DashboardService() {
     	m_provisionService = new JerseyProvisionRequisitionService();
     	m_nodeService = new JerseyNodesService();
+    	m_snmpInfoService = new JerseySnmpInfoService();
     }
     
 	public JerseyClientImpl getJerseyClient() {
@@ -31,8 +30,8 @@ public class DashboardService {
 
 	public void setJerseyClient(JerseyClientImpl jerseyClient) {
 		m_jerseyClient = jerseyClient;
-		m_provisionService.setJerseyClient(m_jerseyClient);
 	    m_nodeService.setJerseyClient(m_jerseyClient);
+		m_provisionService.setJerseyClient(m_jerseyClient);
 	    m_snmpInfoService.setJerseyClient(m_jerseyClient);
 	}
 
@@ -45,20 +44,17 @@ public class DashboardService {
 	}
 
 	public void check() {
-		m_nodeService.getWithDefaultsQueryParams();
+		m_snmpInfoService.get("127.0.0.1");
 	}
 	
 	public void add(String foreignSource, RequisitionNode node) {
-		m_provisionService.addOrReplace(foreignSource, node);
+		m_provisionService.add(foreignSource, node);
 	}
 
 	public void delete(String foreignSource, RequisitionNode node) {
-		m_provisionService.deleteRequisitionNode(foreignSource, node.getForeignId());
+		m_provisionService.delete(foreignSource, node);
 	}
-
-	public void update(String foreignSource, RequisitionNode node) {
-		m_provisionService.update(foreignSource, node);
-	}
+	
 	protected JerseyProvisionRequisitionService getProvisionService() {
 		return m_provisionService;
 	}

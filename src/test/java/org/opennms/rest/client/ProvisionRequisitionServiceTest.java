@@ -33,7 +33,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCollection;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -46,7 +51,7 @@ public class ProvisionRequisitionServiceTest {
         MockLogAppender.setupLogging(true, "DEBUG");
         m_requisitionservice = new JerseyProvisionRequisitionService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.opennms.org/opennms/rest/","demo","demo");
+                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
         m_requisitionservice.setJerseyClient(jerseyClient);
     }
 
@@ -57,14 +62,69 @@ public class ProvisionRequisitionServiceTest {
     
     @Test
     public void testList() throws Exception {
-        
-        
-        
         RequisitionCollection nodelist = m_requisitionservice.getAll();
-        for (Requisition node: nodelist){
-        	System.out.println(node);
-        }
-          
-    }
+        assertEquals(3, nodelist.size());
+        
+        Requisition SI = m_requisitionservice.get("SI");
+        assertEquals(154, SI.getNodeCount());
 
+        Requisition TN = m_requisitionservice.get("TrentinoNetwork");
+        assertEquals(3076, TN.getNodeCount());
+
+    }
+    
+    @Test
+    public void addRequisition() {
+    	Requisition home = new Requisition("Home");
+    	RequisitionNode node = new RequisitionNode();
+    	node.setCity("Positano");
+    	node.setForeignId("rssntn67");
+    	node.setNodeLabel("rssntn67.arsinfo.it");
+    	home.putNode(node);
+    	m_requisitionservice.add(home);
+
+    	RequisitionNode nodeA = new RequisitionNode();
+    	nodeA.setCity("Positano");
+    	nodeA.setForeignId("roberta");
+    	nodeA.setNodeLabel("roberta.arsinfo.it");
+    	m_requisitionservice.add("Home",nodeA);
+
+    	RequisitionCategory category = new RequisitionCategory("CasaDolceCasa");
+    	m_requisitionservice.add("Home", "roberta", category);
+    	m_requisitionservice.add("Home", "rssntn67", category);
+
+    	RequisitionAsset asset = new RequisitionAsset("connection", "telnet");
+    	m_requisitionservice.add("Home", "roberta", asset);
+    	m_requisitionservice.add("Home", "rssntn67", asset);    	
+
+    	RequisitionInterface iface = new RequisitionInterface();
+    	iface.setDescr("Manually added by Antonio to test");
+    	iface.setIpAddr("10.10.10.1");
+    	iface.setSnmpPrimary("P");
+    	m_requisitionservice.add("Home", "roberta", iface);
+    	RequisitionInterface iface2 = new RequisitionInterface();
+    	iface2.setDescr("Manually added by Antonio to test");
+    	iface2.setIpAddr("10.10.10.2");
+    	iface2.setSnmpPrimary("P");
+       	m_requisitionservice.add("Home", "rssntn67", iface2);
+      	RequisitionInterface iface3 = new RequisitionInterface();
+    	iface3.setDescr("Manually added by Antonio to test");
+    	iface3.setIpAddr("10.10.10.3");
+    	iface3.setSnmpPrimary("S");
+       	m_requisitionservice.add("Home", "rssntn67", iface3);
+
+       	RequisitionMonitoredService icmp = new RequisitionMonitoredService("ICMP");
+    	m_requisitionservice.add("Home", "rssntn67", "10.10.10.2", icmp);
+    	m_requisitionservice.add("Home", "rssntn67", "10.10.10.3", icmp);
+    	m_requisitionservice.add("Home", "roberta", "10.10.10.1", icmp);
+    	RequisitionMonitoredService http = new RequisitionMonitoredService("HTTP");
+    	m_requisitionservice.add("Home", "roberta", "10.10.10.1", http);
+
+    	m_requisitionservice.delete("Home", "roberta", "10.10.10.1", http);
+   	    m_requisitionservice.delete("Home", "rssntn67", iface3);
+   	    m_requisitionservice.delete("Home", "rssntn67", category);
+   	    m_requisitionservice.delete("Home", "rssntn67", asset);
+    	m_requisitionservice.delete("Home", node);
+    	m_requisitionservice.delete("Home");
+    }
 }

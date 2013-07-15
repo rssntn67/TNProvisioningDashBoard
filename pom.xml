@@ -12,7 +12,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<vaadin.version>7.0.0</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
-		<opennms.model.version>1.8.17-SNAPSHOT</opennms.model.version>
+		<opennms.model.version>1.8.17</opennms.model.version>
 		<opennms.jersey.version>1.11.90</opennms.jersey.version>
 	</properties>
 	<repositories>

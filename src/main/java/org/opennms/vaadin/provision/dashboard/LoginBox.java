@@ -20,6 +20,12 @@ import com.vaadin.ui.Button.ClickListener;
 
 public class LoginBox extends CustomComponent implements ClickListener {
 
+	protected final static String[] URL_LIST = new String[] {
+		"http://demo.arsinfo.it/opennms/rest",
+		"http://demo.arsinfo.it:8980/opennms/rest",
+		"http://localhost:8980/opennms/rest"
+	};
+
 	private DashboardService m_service;
 
 	/**
@@ -35,15 +41,15 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private Button m_logout = new Button("Logout");
     private TabSheet m_tabs;
     
-    public LoginBox (String[] urls, TabSheet tabs,DashboardService service) {
+    public LoginBox (TabSheet tabs,DashboardService service) {
     	m_tabs=tabs;
     	m_service = service;
     	m_login.setImmediate(true);
     	m_login.addClickListener(this);
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
-    	for (int i=0;i<urls.length;i++)
-    		m_select.addItem(urls[i]);
+    	for (String url: URL_LIST)
+    		m_select.addItem(url);
 
     	init();
         
@@ -90,18 +96,21 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			m_service.setJerseyClient(
 					new JerseyClientImpl(
 		            m_select.getValue().toString(),m_username.getValue(),m_password.getValue()));
-		    m_service.check();
-		    m_panel.setCaption("Logged in");
-		    m_panel.setContent(m_logout);
-		    Iterator<Component> ite = m_tabs.getComponentIterator();
-		    while (ite.hasNext()) {
-		    	m_tabs.getTab(ite.next()).setEnabled(true);
-		    }
+			if (m_service.getJerseyClient() != null ) {
+			    m_service.check();
+			}
 		} catch (Exception e) {
 			Notification.show("Login Failed", "Check Username and Password", Notification.Type.ERROR_MESSAGE);
 			m_username.setValue("");
 			m_password.setValue("");
+			return;
 		}
+	    m_panel.setCaption("Logged in");
+	    m_panel.setContent(m_logout);
+	    Iterator<Component> ite = m_tabs.getComponentIterator();
+	    while (ite.hasNext()) {
+	    	m_tabs.getTab(ite.next()).setEnabled(true);
+	    }
 	}
 		
 	

@@ -107,11 +107,6 @@ public class JerseyProvisionForeignSourceService extends JerseyAbstractService
 	}
 
 	@Override
-	public void update(ForeignSource foreignSource) {
-		getJerseyClient().put(ForeignSource.class, foreignSource, buildForeignSourcePath(foreignSource.getName()));
-	}
-
-	@Override
 	public void deleteForeignSource(String foreignSource) {
 		getJerseyClient().delete(buildForeignSourcePath(foreignSource));
 	}

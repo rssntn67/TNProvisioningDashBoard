@@ -1,6 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import javax.xml.bind.UnmarshalException;
 
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
@@ -11,9 +10,6 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
@@ -248,41 +244,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);
 		m_editorFields.setBuffered(true);
-		m_editorFields.addCommitHandler(new CommitHandler() {
-			
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void preCommit(CommitEvent commitEvent) throws CommitException {
-				try {
-					update(m_editorFields.getItemDataSource().getBean().getRequisitionNode());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-/*
-				try {
-					delete(m_editorFields.getItemDataSource().getBean().getRequisitionNode());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				try {
-					add(m_editorFields.getItemDataSource().getBean().getRequisitionNode());
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				*/
-
-			}
-			
-			@Override
-			public void postCommit(CommitEvent commitEvent) throws CommitException {
-			}
-		});
 
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		FormLayout leftGeneralInfo = new FormLayout();
@@ -368,16 +329,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 		categoryInfo.addComponent(catLayout);
 		m_editRequisitionNodeLayout.addComponent(new Panel(categoryInfo));
 
-
 		FormLayout snmpProfile = new FormLayout();
+		snmpProfile.addComponent(new Label("Credenziali SNMP per collezione dati"));
+		HorizontalLayout snmplayout = new HorizontalLayout();
 		for (String[] snmp: m_snmp_profiles) {
 			m_snmpComboBox.addItem(snmp[0]);
 		}
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
-		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
-		snmpProfile.addComponent(new Label("Credenziali SNMP per collezione dati"));
-		HorizontalLayout snmplayout = new HorizontalLayout();
 		snmplayout.addComponent(m_snmpComboBox);
 		snmpProfile.addComponent(snmplayout);
         m_editRequisitionNodeLayout.addComponent(new Panel(snmpProfile));
@@ -501,11 +460,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
+				Notification.show("Update", "Operation not yet supported", Type.WARNING_MESSAGE);
+				/*
 				try {
 					m_editorFields.commit();
 				} catch (CommitException e) {
 					e.printStackTrace();
 				}
+				*/
 				m_editRequisitionNodeLayout.setVisible(false);
 				m_updateNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
@@ -560,6 +522,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 				if (contactId != null) {
 					TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)m_requisitionTable
 						.getItem(contactId)).getBean();
+					node.setSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
+					m_snmpComboBox.select(node.getSnmpProfile());
+
 					m_editorFields.setItemDataSource(node);
 					m_secondaryTable.setContainerDataSource(node.getSecondary());
 					m_editRequisitionNodeLayout.setVisible(true);
@@ -581,17 +546,4 @@ public class TrentinoNetworkTab extends DashboardTab {
 		return nodes;
 	}
 	
-	
-	private void add(RequisitionNode node) throws UnmarshalException {
-		getService().add(getForeignSource(), node);
-	}
-	
-	private void delete(RequisitionNode node) throws UnmarshalException {
-		getService().delete(getForeignSource(), node);
-	}
-
-	private void update(RequisitionNode node) throws UnmarshalException {
-		getService().update(getForeignSource(), node);
-	}
-
 }

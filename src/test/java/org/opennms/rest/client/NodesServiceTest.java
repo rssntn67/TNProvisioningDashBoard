@@ -45,7 +45,7 @@ public class NodesServiceTest {
         MockLogAppender.setupLogging(true, "DEBUG");
         m_nodesservice = new JerseyNodesService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.arsinfo.it/opennms/rest/","admin","admin");
+                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
         m_nodesservice.setJerseyClient(jerseyClient);
     }
 
@@ -56,24 +56,12 @@ public class NodesServiceTest {
     
     @Test
     public void testNodes() throws Exception {
-        
-        
-        
         OnmsNodeList nodeslist = m_nodesservice.getAll();
         assertEquals(0, nodeslist.getCount());
         assertEquals(0,nodeslist.getTotalCount());
         for (OnmsNode node: nodeslist){
         	System.out.println(node);
         }
-          
-    }
-
-    @Test
-    public void testNode() throws Exception {
-        
-        OnmsNode node = m_nodesservice.get(40);
-        assertEquals(null, node);
-          
     }
 
 }

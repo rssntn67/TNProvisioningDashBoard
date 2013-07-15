@@ -21,7 +21,6 @@ public interface ProvisionForeignSourceService extends RestFilterService{
 
     public ForeignSourceCollection getAllDeployed();
 
-
     public ForeignSource get(String foreignSource);    
 
     public DetectorCollection getDetectors(String name);
@@ -38,8 +37,6 @@ public interface ProvisionForeignSourceService extends RestFilterService{
     
     public void addOrReplace(String name, PolicyWrapper policy);
     
-    public void update(ForeignSource foreignSource);
-        
     public void deleteForeignSource(String foreignSource);
     
     public void deleteDetector(String name, String detectorname);

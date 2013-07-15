@@ -21,18 +21,8 @@ public class DashboardUI extends UI {
 	 */
 	private static final long serialVersionUID = -5948892618258879832L;
 
-	protected final static String[] FOREIGN_SOURCE_LIST = new String[] {"TrentinoNetwork",
-		"SI","SIVirtualNodes"};
-
-	protected final static String[] URL_LIST = new String[] {
-		"http://demo.arsinfo.it/opennms/rest",
-		"http://demo.arsinfo.it:8980/opennms/rest"
-	};
-	
-	DashboardService m_service = new DashboardService();
-
 	protected void init(VaadinRequest request) {
-		setContent(new DashboardTabSheet(FOREIGN_SOURCE_LIST, URL_LIST,m_service));
+		setContent(new DashboardTabSheet());
 	}
 
 }

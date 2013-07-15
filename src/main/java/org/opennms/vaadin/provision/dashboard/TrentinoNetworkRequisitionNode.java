@@ -288,16 +288,6 @@ public class TrentinoNetworkRequisitionNode {
 			if (ip.getSnmpPrimary().equals("P")) {
 				primary = ip.getIpAddr();
 				descr = ip.getDescr();
-				SnmpInfo info = service.getSnmpInfo(primary);
-				for (String[] snmpdata: m_snmp_profiles) {
-					if (info.getRetries() == 1 && info.getPort() == 161 
-					  && info.getCommunity().equals(snmpdata[1]) 
-					  && info.getVersion().equals(snmpdata[2])
-					  && info.getTimeout() == Integer.parseInt(snmpdata[3])) {
-						snmpProfile=snmpdata[0];
-						break;
-					}
-				}
 			} else {
 				Item ipItem = secondary.getItem(secondary.addItem());
 				ipItem.getItemProperty("ip").setValue(ip.getIpAddr()); 
@@ -413,8 +403,16 @@ public class TrentinoNetworkRequisitionNode {
 		return snmpProfile;
 	}
 
-	public void setSnmpProfile(String snmpProfile) {
-		this.snmpProfile = snmpProfile;
+	public void setSnmpProfile(SnmpInfo info) {
+		for (String[] snmpdata: m_snmp_profiles) {
+			if (info.getRetries() == 1 && info.getPort() == 161 
+			  && info.getCommunity().equals(snmpdata[1]) 
+			  && info.getVersion().equals(snmpdata[2])
+			  && info.getTimeout() == Integer.parseInt(snmpdata[3])) {
+				snmpProfile=snmpdata[0];
+				break;
+			}
+		}
 	}
 
 	public String getBackupProfile() {

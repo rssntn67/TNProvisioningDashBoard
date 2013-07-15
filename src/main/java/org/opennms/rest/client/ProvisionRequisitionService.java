@@ -48,38 +48,32 @@ public interface ProvisionRequisitionService extends RestFilterService{
     
     public void add(Requisition requisition);
     
-    public void addOrReplace(String name, RequisitionNode rnode);
+    public void add(String foreignSource, RequisitionNode rnode);
     
-    public void addOrReplace(String name, String foreignid, RequisitionInterface rinterface);
+    public void add(String foreignSource, String foreignid, RequisitionInterface rinterface);
     
-    public void addOrReplace(String name, String foreignid, String inet, RequisitionMonitoredService rservice);
+    public void add(String foreignSource, String foreignid, String inet, RequisitionMonitoredService rservice);
     
-    public void addOrReplace(String name, String foreignid, RequisitionCategory rcategory);
+    public void add(String foreignSource, String foreignid, RequisitionCategory rcategory);
     
-    public void addOrReplace(String name, String foreignid, RequisitionAsset rasset);
+    public void add(String foreignSource, String foreignid, RequisitionAsset rasset);
     
-    public void sync(String name);
+    public void sync(String foreignSource);
     
-    public void syncWithOutScanning(String name);
-
-    public void update(Requisition requisition);
+    public void syncWithOutScanning(String foreignSource);
     
-    public void update(String name, RequisitionNode rnode);
+    public void delete(String foreignSource);
     
-    public void update(String name, String foreignid, RequisitionInterface rinterface);
+    public void deleteDeployed(String foreignSource);
     
-    public void deleteRequisition(String name);
+    public void delete(String foreignSource, RequisitionNode node);
     
-    public void deleteDeployedRequisition(String name);
+    public void delete(String foreignSource, String foreignid, RequisitionInterface inet);
     
-    public void deleteRequisitionNode(String name, String foreignid);
+    public void delete(String foreignSource, String foreignid, String inet, RequisitionMonitoredService service);
     
-    public void deleteRequisitionInterface(String name, String foreignid, String inet);
+    public void delete(String foreignSource, String foreignid, RequisitionCategory category);
     
-    public void deleteRequisitionService(String name, String foreignid, String inet,String service);
-    
-    public void deleteRequisitionCategory(String name, String foreignid, String category);
-    
-    public void deleteRequisitionAsset(String name, String foreignid, String assetfieldname);
+    public void delete(String foreignSource, String foreignid, RequisitionAsset assetfieldname);
        
 }

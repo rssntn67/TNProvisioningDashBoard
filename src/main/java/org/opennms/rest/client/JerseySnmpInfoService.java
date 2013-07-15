@@ -1,5 +1,9 @@
 package org.opennms.rest.client;
 
+import javax.ws.rs.core.MultivaluedMap;
+
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 public class JerseySnmpInfoService extends JerseyAbstractService implements SnmpInfoService {
 
     private final static String SNMP_REST_PATH = "snmpConfig/";
@@ -25,7 +29,22 @@ public class JerseySnmpInfoService extends JerseyAbstractService implements Snmp
 
 	@Override
 	public void set(String ip, SnmpInfo snmpInfo) {
-		getJerseyClient().put(SnmpInfo.class, snmpInfo, getPath(ip));
+		getJerseyClient().put(getMap(snmpInfo), getPath(ip));
+	}
+	
+	private MultivaluedMap<String,String> getMap(SnmpInfo snmpinfo) {
+		MultivaluedMap< String, String> form = new MultivaluedMapImpl();
+		if (snmpinfo.getCommunity() != null)
+			form.add("community", snmpinfo.getCommunity());
+		if (snmpinfo.getVersion() != null )
+			form.add("version", snmpinfo.getVersion());
+		if (snmpinfo.getTimeout() > 0)
+			form.add("timeout", Integer.toString(snmpinfo.getTimeout()));
+		if (snmpinfo.getPort() > 0 ) 
+			form.add("port", Integer.toString(snmpinfo.getPort()));
+		if (snmpinfo.getRetries() > 0) 
+			form.add("retries", Integer.toString(snmpinfo.getRetries()));
+		return form;
 	}
 
 

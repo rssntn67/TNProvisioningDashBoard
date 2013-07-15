@@ -58,8 +58,8 @@ public class JerseyClientImpl {
     	return m_webResource.path(relativePath).type(MediaType.APPLICATION_XML_TYPE).post(new GenericType<T>(clazz),o);
     }
     
-    public <T> T put(Class<T> clazz,Object o, String relativePath) {
-    	return m_webResource.path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(new GenericType<T>(clazz),o);
+    public void put(MultivaluedMap<String,String> o, String relativePath) {
+    	m_webResource.path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(o);
     }
     
     public void delete(String relativePath) {

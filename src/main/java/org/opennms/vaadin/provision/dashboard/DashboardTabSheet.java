@@ -9,25 +9,28 @@ import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 public class DashboardTabSheet extends CustomComponent implements
 		SelectedTabChangeListener {
 
+	protected final static String[] FOREIGN_SOURCE_LIST = new String[] {"TrentinoNetwork"};
+	//,
+	//	"SI","SIVirtualNodes"};
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -4835992723502900986L;
 	TabSheet tabsheet = new TabSheet();
     LoginBox loginbox;
-    DashboardService m_service;
+    DashboardService m_service = new DashboardService();
     
-    DashboardTabSheet(String[] tabs, String[] urls,DashboardService service) {
-    	m_service = service;
-    	loginbox = new LoginBox(urls,tabsheet,m_service);
+    DashboardTabSheet() {
+
+    	loginbox = new LoginBox(tabsheet,m_service);
 		setCompositionRoot(tabsheet);
 		
 		tabsheet.addSelectedTabChangeListener(this);
-		
         tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
-        for (int i=0; i<tabs.length;i++) {
-        	TrentinoNetworkTab tab=new TrentinoNetworkTab(tabs[i],m_service);
-        	tabsheet.addTab(tab, tabs[i], new ThemeResource("icons/16/users.png"));
+        for (String foreignSource: FOREIGN_SOURCE_LIST) {
+        	TrentinoNetworkTab tab=new TrentinoNetworkTab(foreignSource,m_service);
+        	tabsheet.addTab(tab, foreignSource, new ThemeResource("icons/16/users.png"));
         	tabsheet.getTab(tab).setEnabled(false);
         }        
 	}

@@ -87,7 +87,7 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	private String buildServicePath(String name, String foreignid, String inet, String service) {
-		return buildServicePath(name, foreignid, inet, service);
+		return buildServicesPath(name, foreignid, inet)+"/"+service;
 	}
 
 	@Override
@@ -174,99 +174,83 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 
 	@Override
 	public void add(Requisition requisition) {
-		getJerseyClient().post(Requisition.class, requisition, buildRequisitionPath(requisition.getForeignSource()));
+		getJerseyClient().post(Requisition.class, requisition, REQUISITIONS_PATH);
 	}
 
 	@Override
-	public void addOrReplace(String name, RequisitionNode rnode) {
+	public void add(String name, RequisitionNode rnode) {
 		getJerseyClient().post(Requisition.class, rnode, buildNodesPath(name));
 	}
 
 	@Override
-	public void addOrReplace(String name, String foreignid, RequisitionInterface rinterface) {
+	public void add(String name, String foreignid, RequisitionInterface rinterface) {
 		getJerseyClient().post(Requisition.class, rinterface, buildInterfacesPath(name,foreignid));
 	}
 
 	@Override
-	public void addOrReplace(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
+	public void add(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
 		getJerseyClient().post(Requisition.class, rservice, buildServicesPath(name,foreignid,inet));
 	}
 
 	@Override
-	public void addOrReplace(String name, String foreignid, RequisitionCategory rcategory) {
+	public void add(String name, String foreignid, RequisitionCategory rcategory) {
 		getJerseyClient().post(Requisition.class, rcategory, buildCategoriesPath(name,foreignid));
 
 	}
 
 	@Override
-	public void addOrReplace(String name, String foreignid, RequisitionAsset rasset) {
+	public void add(String name, String foreignid, RequisitionAsset rasset) {
 		getJerseyClient().post(Requisition.class, rasset, buildAssetsPath(name,foreignid));
 	}
 
 	@Override
 	public void sync(String name) {
-		getJerseyClient().put(null, null, buildImportPath(name));
+		getJerseyClient().put(null, buildImportPath(name));
 	}
 
 	@Override
 	public void syncWithOutScanning(String name) {
-		getJerseyClient().put(null, null, buildImportNoScanPath(name));
+		getJerseyClient().put(null, buildImportNoScanPath(name));
 	}
 
 	@Override
-	public void update(Requisition requisition) {
-		getJerseyClient().put(Requisition.class, requisition, buildRequisitionPath(requisition.getForeignSource()));
-	}
-
-	@Override
-	public void update(String name, RequisitionNode rnode) {
-		getJerseyClient().put(RequisitionNode.class, rnode, buildNodesPath(name));
-	}
-
-	@Override
-	public void update(String name, String foreignid,RequisitionInterface rinterface) {
-		getJerseyClient().put(RequisitionInterface.class, rinterface, buildInterfacesPath(name,foreignid));
-	}
-
-	@Override
-	public void deleteRequisition(String name) {
+	public void delete(String name) {
 		getJerseyClient().delete(buildRequisitionPath(name));
 	}
 
 	@Override
-	public void deleteDeployedRequisition(String name) {
+	public void deleteDeployed(String name) {
 		getJerseyClient().delete(buildRequisitionDeployedPath(name));
 	}
 
 	@Override
-	public void deleteRequisitionNode(String name, String foreignid) {
-		getJerseyClient().delete(buildNodePath(name, foreignid));
+	public void delete(String name, RequisitionNode foreignid) {
+		getJerseyClient().delete(buildNodePath(name, foreignid.getForeignId()));
 	}
 
 	@Override
-	public void deleteRequisitionInterface(String name, String foreignid,
-			String inet) {
-		getJerseyClient().delete(buildInterfacePath(name, foreignid, inet));
+	public void delete(String name, String foreignid,
+			RequisitionInterface inet) {
+		getJerseyClient().delete(buildInterfacePath(name, foreignid, inet.getIpAddr()));
 
 	}
 
 	@Override
-	public void deleteRequisitionService(String name, String foreignid,
-			String inet, String service) {
-		getJerseyClient().delete(buildServicePath(name, foreignid, inet, service));
+	public void delete(String name, String foreignid,
+			String inet, RequisitionMonitoredService service) {
+		getJerseyClient().delete(buildServicePath(name, foreignid, inet, service.getServiceName()));
 	}
 
 	@Override
-	public void deleteRequisitionCategory(String name, String foreignid,
-			String category) {
-		getJerseyClient().delete(buildCategoryPath(name, foreignid, category));
+	public void delete(String name, String foreignid,
+			RequisitionCategory category) {
+		getJerseyClient().delete(buildCategoryPath(name, foreignid, category.getName()));
 	}
 
 	@Override
-	public void deleteRequisitionAsset(String name, String foreignid,
-			String assetfieldname) {
-		getJerseyClient().delete(buildAssetPath(name, foreignid, assetfieldname));
-
+	public void delete(String name, String foreignid,
+			RequisitionAsset assetfieldname) {
+		getJerseyClient().delete(buildAssetPath(name, foreignid, assetfieldname.getName()));
 	}
 
 }
