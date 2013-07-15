@@ -2,6 +2,7 @@ package org.opennms.vaadin.provision.dashboard;
 
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.rest.client.SnmpInfo;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
@@ -175,16 +176,75 @@ public class TrentinoNetworkRequisitionNode {
 		"wl.tnnet.it"
 	};
 	
-	protected final static String[] m_snmp_profiles = {
-		"winet_v2c",
-		"bb_v2c",
-		"?"
+	protected final static String[][] m_snmp_profiles = {
+		{"FP1"          ,"*frizen*"        ,"v1" ,"5000"},
+		{"FP2"          ,"frizen3"         ,"v1" ,"5000"},
+		{"IP1"          ,"Ieb5Saitoe3oofiG","v2c","5000"},
+		{"WP_v1_3000"   ,"WL01tnes02ro"    ,"v1" ,"3000"},
+		{"WP_v1_5000"   ,"WL01tnes02ro"    ,"v1" ,"5000"},
+		{"WP_v2c_3000"  ,"WL01tnes02ro"    ,"v2c","3000"},
+		{"WP_v2c_5000"  ,"WL01tnes02ro"    ,"v2c","5000"},
+		{"AP1"          ,"admin"           ,"v2c","3000"},
+		{"CP_v1"        ,"cisco"           ,"v1" ,"3000"},
+		{"CP_v2c"       ,"cisco"           ,"v2c","3000"},
+		{"IP"           ,"infotnro"        ,"v2c","5000"},
+		{"MT1_v1_1800"  ,"mT9gq"           ,"v1" ,"1800"},
+		{"MT2_v1_5000"  ,"mt9gq"           ,"v1" ,"5000"},
+		{"MP_v1_1800"   ,"ma14na165ge"     ,"v1" ,"1800"},
+		{"MP_v1_3000"   ,"ma14na165ge"     ,"v1" ,"3000"},
+		{"MP_v1_5000"   ,"ma14na165ge"     ,"v1" ,"5000"},
+		{"MP_v1_8000"   ,"ma14na165ge"     ,"v1" ,"8000"},
+		{"MP_v2c_1800"  ,"ma14na165ge"     ,"v2c","1800"},
+		{"MP_v2c_3000"  ,"ma14na165ge"     ,"v2c","3000"},
+		{"MP_v2c_5000"  ,"ma14na165ge"     ,"v2c","5000"},
+		{"KP_v1_5000"   ,"ma918na2116ge"   ,"v1" ,"5000"},
+		{"KP_v2c_1800"  ,"ma918na2116ge"   ,"v2c","1800"},
+		{"KP_v2c_3000"  ,"ma918na2116ge"   ,"v2c","3000"},
+		{"KP_v2c_5000"  ,"ma918na2116ge"   ,"v2c","5000"},
+		{"PP1_v1"       ,"private"         ,"v1" ,"5000"},
+		{"PP2_v1"       ,"public"          ,"v1" ,"5000"},
+		{"PP2_v2c"      ,"public"          ,"v2c","5000"},
+		{"VP_10000"     ,"verVZserVZ12"    ,"v2c","10000"},
+		{"VP_1800"      ,"verVZserVZ12"    ,"v2c","1800"},
+		{"VP_3000"      ,"verVZserVZ12"    ,"v2c","3000"},
+		{"VP_5000"      ,"verVZserVZ12"    ,"v2c","5000"},
+		{"WIP_v1_3000"  ,"w732pub"         ,"v1" ,"3000"},
+		{"WIP_v1_5000"  ,"w732pub"         ,"v1" ,"5000"},
+		{"WIP_v2c_5000" ,"w732pub"         ,"v2c","5000"},
+		{"WLP"          ,"wl01tnes02ro"    ,"v2c","5000"}
 	};
 	
-	protected final static String[] m_backup_profiles = {
-		"switch_winet",
-		"router_winet",
-		"aaa"
+	protected final static String[][] m_backup_profiles = {
+		{"A1","admin","default","notused","A","ssh"},
+		{"A2","admin","default","notused","A","telnet"},
+		{"B1","backupradius","torrone_morbido","notused","A","telnet"},
+		{"I1","itn","civ27itn","civ27ena","","telnet"},
+		{"I2","itn","civ27itn","notused","A","telnet"},
+		{"H1","notused","ena21apss","notused","A","http"},
+		{"O1","operator","o","notused","A","telnet"},
+		{"O2","operator","tn07patnet","","","telnet"},
+		{"R1","root","default","notused","A","ssh"},
+		{"R2","root","default","notused","A","telnet"},
+		{"T1","tnnepat07","tn07patnet","","","telnet"},
+		{"T2","tnnepat07","tn07patnet","notused","A","telnet"},
+		{"T3","tnnet","tnet01lan08","notused","A","telnet"},
+		{"T4","tnnet","tnet2013!","","","telnet"},
+		{"T5","tnnetbk07","bknet09tn","notused","A","telnet"},
+		{"T6","tnnetbk07","bknet09tn","tn07enbknet","","telnet"},
+		{"T7","tnnetbk07","tn07bknet","notused","A","telnet"},
+		{"T8","tnnetbk07","tn07bknet","tn07enbknet","","telnet"},
+		{"T9","tnnetpat07","tn07patnet","ena25pat","","telnet"},
+		{"T10","tnnetpat07","tn07patnet","notused","A","telnet"},
+		{"U1","user","cisco","notused","A","telnet"},
+		{"U2","user","pass","enapass","","telnet"},
+		{"U3","user","pass","notused","A","telnet"},
+		{"U4","user","public","mT9gq","","tftp"},
+		{"U5","user","public","notused","A","telnet"},
+		{"U6","user","public","private","","tftp"},
+		{"U7","user","tn07patnet","enapass","","telnet"},
+		{"U8","user","tn07patnet","notused","A","telnet"},
+		{"U9","user","torrone_morbido","enapass","","telnet"},
+		{"U10","user","torrone_morbido","notused","A","telnet"}	
 	};
 
 	private RequisitionNode m_requisitionNode;
@@ -209,16 +269,11 @@ public class TrentinoNetworkRequisitionNode {
 	protected String address1;
 	
 	@SuppressWarnings("unchecked")
-	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode) {
+	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode, DashboardService service) {
 		m_requisitionNode = requisitionNode;
 		nodeLabel = m_requisitionNode.getNodeLabel();
 
 		parent = m_requisitionNode.getParentForeignId();
-		//FIXME add snmpProfile set
-		snmpProfile=m_snmp_profiles[0];
-
-		//FIXME add backupprofile set
-		backupProfile=m_backup_profiles[0];
 		
 		for (String vrf: m_vrfs) {
 			if (m_requisitionNode.getNodeLabel().endsWith("."+vrf)) {
@@ -233,6 +288,16 @@ public class TrentinoNetworkRequisitionNode {
 			if (ip.getSnmpPrimary().equals("P")) {
 				primary = ip.getIpAddr();
 				descr = ip.getDescr();
+				SnmpInfo info = service.getSnmpInfo(primary);
+				for (String[] snmpdata: m_snmp_profiles) {
+					if (info.getRetries() == 1 && info.getPort() == 161 
+					  && info.getCommunity().equals(snmpdata[1]) 
+					  && info.getVersion().equals(snmpdata[2])
+					  && info.getTimeout() == Integer.parseInt(snmpdata[3])) {
+						snmpProfile=snmpdata[0];
+						break;
+					}
+				}
 			} else {
 				Item ipItem = secondary.getItem(secondary.addItem());
 				ipItem.getItemProperty("ip").setValue(ip.getIpAddr()); 
@@ -260,6 +325,18 @@ public class TrentinoNetworkRequisitionNode {
 			}
 		}
 
+		for (String[] profile: m_backup_profiles) {
+			if (m_requisitionNode.getAsset("username") != null && m_requisitionNode.getAsset("username").getValue().equals(profile[1]) 
+		     && m_requisitionNode.getAsset("password") != null && m_requisitionNode.getAsset("password").getValue().equals(profile[2])
+			 && m_requisitionNode.getAsset("enable") != null && m_requisitionNode.getAsset("enable").getValue().equals(profile[3])
+			 && m_requisitionNode.getAsset("autoenable") != null && m_requisitionNode.getAsset("autoenable").getValue().equals(profile[4])
+			 && m_requisitionNode.getAsset("connection") != null && m_requisitionNode.getAsset("connection").getValue().equals(profile[5])
+					) {
+				backupProfile=profile[0];
+				break;
+			}
+		}
+		
 		city = requisitionNode.getCity();
 		if (m_requisitionNode.getAsset(ADDRESS) != null)
 			address1 = m_requisitionNode.getAsset(ADDRESS).getValue();
@@ -288,6 +365,7 @@ public class TrentinoNetworkRequisitionNode {
 
 	public void setCity(String city) {
 		this.city = city;
+		m_requisitionNode.setCity(city);
 	}
 
 	public String[] getNetworkCategory() {

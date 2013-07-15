@@ -11,6 +11,9 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
@@ -244,7 +247,43 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);
-		
+		m_editorFields.setBuffered(true);
+		m_editorFields.addCommitHandler(new CommitHandler() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void preCommit(CommitEvent commitEvent) throws CommitException {
+				try {
+					update(m_editorFields.getItemDataSource().getBean().getRequisitionNode());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+/*
+				try {
+					delete(m_editorFields.getItemDataSource().getBean().getRequisitionNode());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				try {
+					add(m_editorFields.getItemDataSource().getBean().getRequisitionNode());
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				*/
+
+			}
+			
+			@Override
+			public void postCommit(CommitEvent commitEvent) throws CommitException {
+			}
+		});
+
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		FormLayout leftGeneralInfo = new FormLayout();
 		leftGeneralInfo.addComponent(new Label("Informazioni Generali"));
@@ -331,8 +370,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 
 		FormLayout snmpProfile = new FormLayout();
-		for (String snmp: m_snmp_profiles) {
-			m_snmpComboBox.addItem(snmp);
+		for (String[] snmp: m_snmp_profiles) {
+			m_snmpComboBox.addItem(snmp[0]);
 		}
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
@@ -344,8 +383,8 @@ public class TrentinoNetworkTab extends DashboardTab {
         m_editRequisitionNodeLayout.addComponent(new Panel(snmpProfile));
 
 		FormLayout backupProfile = new FormLayout();
-        for (String backup: m_backup_profiles) {
-        	m_backupComboBox.addItem(backup);
+        for (String[] backup: m_backup_profiles) {
+        	m_backupComboBox.addItem(backup[0]);
         }
         m_backupComboBox.setInvalidAllowed(false);
         m_backupComboBox.setNullSelectionAllowed(false);
@@ -462,7 +501,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				Notification.show("Update", "Operation not yet supported", Type.WARNING_MESSAGE);
+				try {
+					m_editorFields.commit();
+				} catch (CommitException e) {
+					e.printStackTrace();
+				}
 				m_editRequisitionNodeLayout.setVisible(false);
 				m_updateNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
@@ -484,13 +527,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 		
-		//FIXME add reset operation
 		m_resetNodeButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
+				m_editorFields.discard();
 				m_requisitionContainer.removeAllContainerFilters();
-				Notification.show("Reset", "Operation not yet supported", Type.WARNING_MESSAGE);
 				m_editRequisitionNodeLayout.setVisible(false);
 				m_updateNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
@@ -533,14 +575,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 		BeanContainer<String,TrentinoNetworkRequisitionNode> nodes = new BeanContainer<String,TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 		nodes.setBeanIdProperty(HOST);
 		for (RequisitionNode node : getService().getRequisitionNodes(getForeignSource()).getNodes()) {
-			nodes.addBean(new TrentinoNetworkRequisitionNode(node));
+			nodes.addBean(new TrentinoNetworkRequisitionNode(node,getService()));
 			m_parentComboBox.addItem(node.getForeignId());
 		}
 		return nodes;
 	}
 	
+	
 	private void add(RequisitionNode node) throws UnmarshalException {
 		getService().add(getForeignSource(), node);
 	}
-		
+	
+	private void delete(RequisitionNode node) throws UnmarshalException {
+		getService().delete(getForeignSource(), node);
+	}
+
+	private void update(RequisitionNode node) throws UnmarshalException {
+		getService().update(getForeignSource(), node);
+	}
+
 }
