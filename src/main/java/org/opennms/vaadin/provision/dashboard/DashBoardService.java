@@ -5,6 +5,8 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
+import org.opennms.rest.client.JerseySnmpInfoService;
+import org.opennms.rest.client.SnmpInfo;
 
 public class DashboardService {
     
@@ -13,6 +15,8 @@ public class DashboardService {
 	private JerseyProvisionRequisitionService m_provisionService;
     
 	private JerseyNodesService m_nodeService;
+	
+	private JerseySnmpInfoService m_snmpInfoService;
 
 	public static final String FOREIGNID = "foreignId";
 	
@@ -29,10 +33,15 @@ public class DashboardService {
 		m_jerseyClient = jerseyClient;
 		m_provisionService.setJerseyClient(m_jerseyClient);
 	    m_nodeService.setJerseyClient(m_jerseyClient);
+	    m_snmpInfoService.setJerseyClient(m_jerseyClient);
 	}
 
 	public Requisition getRequisitionNodes(String foreignSource) {		
 		return m_provisionService.get(foreignSource);
+	}
+
+	public SnmpInfo getSnmpInfo(String ip) {
+		return m_snmpInfoService.get(ip);
 	}
 
 	public void check() {
@@ -43,6 +52,13 @@ public class DashboardService {
 		m_provisionService.addOrReplace(foreignSource, node);
 	}
 
+	public void delete(String foreignSource, RequisitionNode node) {
+		m_provisionService.deleteRequisitionNode(foreignSource, node.getForeignId());
+	}
+
+	public void update(String foreignSource, RequisitionNode node) {
+		m_provisionService.update(foreignSource, node);
+	}
 	protected JerseyProvisionRequisitionService getProvisionService() {
 		return m_provisionService;
 	}
