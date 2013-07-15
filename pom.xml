@@ -12,7 +12,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<vaadin.version>7.0.0</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
-		<opennms.model.version>1.8.17</opennms.model.version>
+		<opennms.model.version>1.8.17-SNAPSHOT</opennms.model.version>
 		<opennms.jersey.version>1.11.90</opennms.jersey.version>
 	</properties>
 	<repositories>
@@ -75,11 +75,11 @@
             <artifactId>opennms-model</artifactId>
 			<version>${opennms.model.version}</version>
         </dependency>
-  <dependency>
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-provision-persistence</artifactId>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-provision-persistence</artifactId>
 			<version>${opennms.model.version}</version>
-    </dependency>
+        </dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
@@ -92,7 +92,18 @@
     		<version>${opennms.jersey.version}</version>
             <type>pom</type>
         </dependency>
-		
+		<dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-test</artifactId>
+    		<version>${opennms.jersey.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.tests</groupId>
+      <artifactId>org.opennms.tests.mock-elements</artifactId>
+    		<version>${opennms.jersey.version}</version>
+      <scope>test</scope>
+    </dependency>
 	</dependencies>
 
 	<build>
