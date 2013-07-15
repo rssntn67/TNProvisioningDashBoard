@@ -179,28 +179,28 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 
 	@Override
 	public void addOrReplace(String name, RequisitionNode rnode) {
-		getJerseyClient().post(RequisitionNode.class, rnode, buildNodesPath(name));
+		getJerseyClient().post(Requisition.class, rnode, buildNodesPath(name));
 	}
 
 	@Override
 	public void addOrReplace(String name, String foreignid, RequisitionInterface rinterface) {
-		getJerseyClient().post(RequisitionInterface.class, rinterface, buildInterfacesPath(name,foreignid));
+		getJerseyClient().post(Requisition.class, rinterface, buildInterfacesPath(name,foreignid));
 	}
 
 	@Override
 	public void addOrReplace(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
-		getJerseyClient().post(RequisitionInterface.class, rservice, buildServicesPath(name,foreignid,inet));
+		getJerseyClient().post(Requisition.class, rservice, buildServicesPath(name,foreignid,inet));
 	}
 
 	@Override
 	public void addOrReplace(String name, String foreignid, RequisitionCategory rcategory) {
-		getJerseyClient().post(RequisitionCategory.class, rcategory, buildCategoriesPath(name,foreignid));
+		getJerseyClient().post(Requisition.class, rcategory, buildCategoriesPath(name,foreignid));
 
 	}
 
 	@Override
 	public void addOrReplace(String name, String foreignid, RequisitionAsset rasset) {
-		getJerseyClient().post(RequisitionInterface.class, rasset, buildAssetsPath(name,foreignid));
+		getJerseyClient().post(Requisition.class, rasset, buildAssetsPath(name,foreignid));
 	}
 
 	@Override
