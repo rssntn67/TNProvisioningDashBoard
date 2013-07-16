@@ -270,6 +270,10 @@ public class TrentinoNetworkRequisitionNode {
 	
 	@SuppressWarnings("unchecked")
 	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode, DashboardService service) {
+		
+		//FIXME add validation
+		//FIXME use external source for profiles snmp and backup
+		//FIXME add save changes in set Methods
 		m_requisitionNode = requisitionNode;
 		nodeLabel = m_requisitionNode.getNodeLabel();
 
@@ -403,7 +407,11 @@ public class TrentinoNetworkRequisitionNode {
 		return snmpProfile;
 	}
 
-	public void setSnmpProfile(SnmpInfo info) {
+	public void setSnmpProfile(String snmpProfile) {
+		this.snmpProfile = snmpProfile;
+	}
+
+	public void updateSnmpProfile(SnmpInfo info) {
 		for (String[] snmpdata: m_snmp_profiles) {
 			if (info.getRetries() == 1 && info.getPort() == 161 
 			  && info.getCommunity().equals(snmpdata[1]) 

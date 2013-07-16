@@ -337,6 +337,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		}
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
+		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
 		snmplayout.addComponent(m_snmpComboBox);
 		snmpProfile.addComponent(snmplayout);
         m_editRequisitionNodeLayout.addComponent(new Panel(snmpProfile));
@@ -505,6 +506,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 
 	private void initProvisionNodeList() {
+		// FIXME disable changes when provided by FAST
 		m_requisitionContainer = getProvisionNodeList();
 		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 		m_requisitionTable.setVisibleColumns(new String[] { LABEL });
@@ -522,7 +524,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				if (contactId != null) {
 					TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)m_requisitionTable
 						.getItem(contactId)).getBean();
-					node.setSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
+					node.updateSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
 					m_snmpComboBox.select(node.getSnmpProfile());
 
 					m_editorFields.setItemDataSource(node);
