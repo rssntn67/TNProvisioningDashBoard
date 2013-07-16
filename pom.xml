@@ -80,6 +80,11 @@
             <artifactId>opennms-provision-persistence</artifactId>
 			<version>${opennms.model.version}</version>
         </dependency>
+        <dependency>
+        	<groupId>postgresql</groupId>
+        	<artifactId>postgresql</artifactId>
+        	<version>9.0-801.jdbc3</version>
+      </dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
