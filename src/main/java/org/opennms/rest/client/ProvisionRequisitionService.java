@@ -1,5 +1,7 @@
 package org.opennms.rest.client;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAssetCollection;
@@ -75,5 +77,6 @@ public interface ProvisionRequisitionService extends RestFilterService{
     public void delete(String foreignSource, String foreignid, RequisitionCategory category);
     
     public void delete(String foreignSource, String foreignid, RequisitionAsset assetfieldname);
-       
+    
+    public void update(String foreignSource, String foreignid, MultivaluedMap<String, String> map);
 }

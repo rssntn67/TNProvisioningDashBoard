@@ -1,5 +1,7 @@
 package org.opennms.rest.client;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAssetCollection;
@@ -253,4 +255,9 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 		getJerseyClient().delete(buildAssetPath(name, foreignid, assetfieldname.getName()));
 	}
 
+	@Override
+	public void update(String foreignSource, String foreignid,
+			MultivaluedMap<String, String> map) {
+		getJerseyClient().put(map, buildNodePath(foreignSource, foreignid));
+	}
 }

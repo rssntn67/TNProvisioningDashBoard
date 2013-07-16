@@ -28,6 +28,8 @@
 
 package org.opennms.rest.client;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +42,8 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import static junit.framework.Assert.assertEquals;
 
 public class ProvisionRequisitionServiceTest {
@@ -51,7 +55,7 @@ public class ProvisionRequisitionServiceTest {
         MockLogAppender.setupLogging(true, "DEBUG");
         m_requisitionservice = new JerseyProvisionRequisitionService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
+                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
         m_requisitionservice.setJerseyClient(jerseyClient);
     }
 
@@ -72,7 +76,18 @@ public class ProvisionRequisitionServiceTest {
         assertEquals(3076, TN.getNodeCount());
 
     }
-    
+    @Test
+    public void testCityUpdate() {
+    	RequisitionNode node = m_requisitionservice.getNode("au-sardagna-cons", "TrentinoNetwork");
+    	assertEquals("Trento", node.getCity());
+		MultivaluedMap< String, String> form = new MultivaluedMapImpl();
+		form.add("city", "Positano");
+		m_requisitionservice.update("TrentinoNetwork", "au-sardagna-cons", form);
+    	RequisitionNode node2 = m_requisitionservice.getNode("au-sardagna-cons", "TrentinoNetwork");
+    	assertEquals("Positano", node2.getCity());
+		
+    }
+
     @Test
     public void addRequisition() {
     	Requisition home = new Requisition("Home");
