@@ -1,6 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
 import com.vaadin.annotations.Theme;
@@ -310,8 +309,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 					private static final long serialVersionUID = 1L;
 
 				@Override public void buttonClick(ClickEvent event) {
-			 
+					try {
+					m_editorFields.getItemDataSource().getBean().removeSecondaryInteface((String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
 			        source.getContainerDataSource().removeItem(itemId);
+					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
+					} catch (Exception e) {
+						Notification.show("Delete ip", "Failed", Type.ERROR_MESSAGE);
+						e.printStackTrace();
+					}
 			      }
 			    });
 			 
@@ -335,9 +340,16 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				if (secondaryipaddtextbox.getValue() != null) {
-					IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-					Item ipItem = secondary.getItem(secondary.addItem());
-					ipItem.getItemProperty("indirizzo ip").setValue(secondaryipaddtextbox.getValue().toString()); 
+					try {
+						m_editorFields.getItemDataSource().getBean().addSecondaryInterface(secondaryipaddtextbox.getValue().toString());
+						IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
+						Item ipItem = secondary.getItem(secondary.addItem());
+						ipItem.getItemProperty("indirizzo ip").setValue(secondaryipaddtextbox.getValue().toString()); 
+						Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
+					} catch (Exception e) {
+						Notification.show("Add ip", "Failed", Type.ERROR_MESSAGE);
+						e.printStackTrace();
+					}
 				}
 			}
 		});
@@ -559,7 +571,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 
 	private void initProvisionNodeList() {
-		// FIXME disable changes when provided by FAST
 		m_requisitionContainer = getProvisionNodeList();
 		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 		m_requisitionTable.setVisibleColumns(new String[] { LABEL });
@@ -576,7 +587,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	@SuppressWarnings("unchecked")
 	private void selectItem() {
-		m_secondaryIpAddressTable.removeAllItems();
 		Object contactId = m_requisitionTable.getValue();
 
 		if (contactId != null) {

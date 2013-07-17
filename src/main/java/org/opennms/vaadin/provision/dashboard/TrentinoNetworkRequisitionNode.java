@@ -5,15 +5,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 
 public class TrentinoNetworkRequisitionNode {
 
@@ -452,9 +450,6 @@ public class TrentinoNetworkRequisitionNode {
 	public IndexedContainer getSecondary() {
 		return secondary;
 	}
-	public void setSecondary(IndexedContainer secondary) {
-		this.secondary = secondary;
-	}
 	public String getSnmpProfile() {
 		return snmpProfile;
 	}
@@ -574,4 +569,21 @@ public class TrentinoNetworkRequisitionNode {
 	public String getNodeLabel() {
 		return m_requisitionNode.getNodeLabel();
     }
+	
+	public void addSecondaryInterface(String ipaddress) {
+		RequisitionInterface ipsecondary = new RequisitionInterface();
+		ipsecondary.setIpAddr(ipaddress);
+		ipsecondary.setSnmpPrimary("N");
+		ipsecondary.setDescr("Provided by Provision Dashboard");
+		ipsecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		m_service.add(TN, m_requisitionNode.getForeignId(), ipsecondary);
+		m_requisitionNode.putInterface(ipsecondary);
+	}
+	
+	public void removeSecondaryInteface(String ipaddress) {
+		RequisitionInterface ipsecondary = new RequisitionInterface();
+		ipsecondary.setIpAddr(ipaddress);
+		m_service.delete(TN, m_requisitionNode.getForeignId(), ipsecondary);
+		m_requisitionNode.deleteInterface(ipaddress);
+	}
 }
