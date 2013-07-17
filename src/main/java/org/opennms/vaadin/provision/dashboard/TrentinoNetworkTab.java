@@ -489,36 +489,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				/*
 				RequisitionNode node = new RequisitionNode();
-				node.setForeignId("prova");
-				node.setNodeLabel("prova.arsinfo.it");
-				node.setCity("Positano");
-				RequisitionInterface primary = new RequisitionInterface();
-				primary.setIpAddr("10.10.10.10");
-				primary.setDescr("Added by Provisioning Dashboard");
-				primary.setSnmpPrimary("P");
-				node.putInterface(primary);
-				node.putCategory(new RequisitionCategory("categoria1"));
-				node.putCategory(new RequisitionCategory("categoria2"));
-				node.putCategory(new RequisitionCategory("categoria3"));
-				node.putCategory(new RequisitionCategory("categoria4"));
-				
-				node.putAsset(new RequisitionAsset("enable", "notused"));
-				node.putAsset(new RequisitionAsset("connection", "notused"));
-				node.putAsset(new RequisitionAsset("autoenable", "notused"));
-				node.putAsset(new RequisitionAsset("username", "notused"));
-				node.putAsset(new RequisitionAsset("password", "notused"));
-				node.putAsset(new RequisitionAsset("description", "notused"));
-				node.putAsset(new RequisitionAsset("address1", "notused"));
-
-				try {
-					add(node);
-				} catch (UnmarshalException e) {
-					System.err.println(e.getMessage());
-				}*/
-				m_editRequisitionNodeLayout.setVisible(false);
-				Notification.show("New", "Operation not yet supported", Type.WARNING_MESSAGE);
+				node.setNodeLabel("hostname");
+				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0, new TrentinoNetworkRequisitionNode(node, getService()));
+				m_requisitionTable.select("hostname");
+				selectItem();
 			}
 		});
 
@@ -592,7 +567,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		if (contactId != null) {
 			TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)m_requisitionTable
 				.getItem(contactId)).getBean();
-			node.updateSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
+			if (node.getPrimary() != null)
+				node.updateSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
 			m_snmpComboBox.select(node.getSnmpProfile());
 
 			m_descrComboBox.removeAllItems();
@@ -618,7 +594,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 	private BeanContainer<String, TrentinoNetworkRequisitionNode> getProvisionNodeList() {
 		BeanContainer<String,TrentinoNetworkRequisitionNode> nodes = new BeanContainer<String,TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
-		nodes.setBeanIdProperty(HOST);
+		nodes.setBeanIdProperty(LABEL);
 		for (RequisitionNode node : getService().getRequisitionNodes(getForeignSource()).getNodes()) {
 			nodes.addBean(new TrentinoNetworkRequisitionNode(node,getService()));
 			m_parentComboBox.addItem(node.getForeignId());
