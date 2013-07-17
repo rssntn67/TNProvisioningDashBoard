@@ -2,7 +2,12 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
@@ -55,10 +60,30 @@ public class DashboardService {
 		return m_snmpInfoService.get(ip);
 	}
 
+	public void setSnmpInfo(String ip, SnmpInfo info) {
+		m_snmpInfoService.set(ip, info);
+	}
+
+	public void update(String foreignSource, String foreignId, MultivaluedMap<String, String> map) {
+		m_provisionService.update(foreignSource, foreignId, map);
+	}
+	
 	public void check() {
 		m_snmpInfoService.get("127.0.0.1");
 	}
-	
+
+	public void add(String foreignSource, String foreignid, RequisitionAsset asset) {
+		m_provisionService.add(foreignSource, foreignid, asset);
+	}
+
+	public void add(String foreignSource, String foreignid, RequisitionCategory category) {
+		m_provisionService.add(foreignSource, foreignid, category);
+	}
+
+	public void add(String foreignSource, String foreignid, RequisitionInterface riface) {
+		m_provisionService.add(foreignSource, foreignid, riface);
+	}
+
 	public void add(String foreignSource, RequisitionNode node) {
 		m_provisionService.add(foreignSource, node);
 	}
@@ -66,7 +91,15 @@ public class DashboardService {
 	public void delete(String foreignSource, RequisitionNode node) {
 		m_provisionService.delete(foreignSource, node);
 	}
-	
+
+	public void delete(String foreignSource, String foreignId, RequisitionCategory category) {
+		m_provisionService.delete(foreignSource, foreignId, category);
+	}
+
+	public void delete(String foreignSource, String foreignId, RequisitionInterface riface) {
+		m_provisionService.delete(foreignSource, foreignId, riface);
+	}
+
 	protected JerseyProvisionRequisitionService getProvisionService() {
 		return m_provisionService;
 	}

@@ -88,6 +88,15 @@ public class ProvisionRequisitionServiceTest {
 		
     }
 
+    @Test 
+    public void testAddAsset() {
+    	RequisitionAsset asset = new RequisitionAsset("address1", "prova antonio");
+    	m_requisitionservice.add("TrentinoNetwork", "au-sardagna-cons", asset);
+    	RequisitionNode node = m_requisitionservice.getNode("au-sardagna-cons", "TrentinoNetwork");
+    	assertEquals("prova antonio", node.getAsset("address1").getValue());
+    	m_requisitionservice.add("TrentinoNetwork", "au-sardagna-cons", new RequisitionAsset("address1", "Strada alla Funivia 66 Loc. Sardagna"));
+    }
+    
     @Test
     public void addRequisition() {
     	Requisition home = new Requisition("Home");
