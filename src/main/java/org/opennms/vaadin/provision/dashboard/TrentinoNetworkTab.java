@@ -58,6 +58,8 @@ import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionN
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.CITY;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.ADDRESS;
 
+import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.TN;
+
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
  * or VaadinPortlet by giving your UI class name a parameter. When you browse to your
@@ -81,7 +83,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private TextField m_searchField       = new TextField("Type Label Text");
 	private Table m_requisitionTable   	= new Table();
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
-	private Button m_updateNodeButton  = new Button("Salva Modifiche");
+	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
 	private Button m_removeNodeButton  = new Button("Elimina Nodo");
 
@@ -99,7 +101,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private VerticalLayout m_editRequisitionNodeLayout  = new VerticalLayout();
 	
 	private BeanFieldGroup<TrentinoNetworkRequisitionNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
-	
+	Integer newHost = 0;
 	
 	public TrentinoNetworkTab(String foreignsource, DashboardService service) {
 		super(foreignsource, service);
@@ -158,10 +160,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		HorizontalLayout bottomRightLayout = new HorizontalLayout();
 		bottomRightLayout.addComponent(m_removeNodeButton);
-		bottomRightLayout.addComponent(m_updateNodeButton);
+		bottomRightLayout.addComponent(m_saveNodeButton);
 		bottomRightLayout.addComponent(m_resetNodeButton);
 		bottomRightLayout.setComponentAlignment(m_removeNodeButton, Alignment.MIDDLE_LEFT);
-		bottomRightLayout.setComponentAlignment(m_updateNodeButton, Alignment.MIDDLE_CENTER);
+		bottomRightLayout.setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_CENTER);
 		bottomRightLayout.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
@@ -341,11 +343,16 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void buttonClick(ClickEvent event) {
 				if (secondaryipaddtextbox.getValue() != null) {
 					try {
-						m_editorFields.getItemDataSource().getBean().addSecondaryInterface(secondaryipaddtextbox.getValue().toString());
-						IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-						Item ipItem = secondary.getItem(secondary.addItem());
-						ipItem.getItemProperty("indirizzo ip").setValue(secondaryipaddtextbox.getValue().toString()); 
-						Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
+						TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+						if (node.getUpdate()) {
+							node.addSecondaryInterface(secondaryipaddtextbox.getValue().toString());
+							IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
+							Item ipItem = secondary.getItem(secondary.addItem());
+							ipItem.getItemProperty("indirizzo ip").setValue(secondaryipaddtextbox.getValue().toString()); 
+							Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
+						} else {
+							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
+						}
 					} catch (Exception e) {
 						Notification.show("Add ip", "Failed", Type.ERROR_MESSAGE);
 						e.printStackTrace();
@@ -476,11 +483,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 
 	private void initActionButtons() {
-		m_updateNodeButton.setEnabled(false);
+		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);				
 		m_resetNodeButton.setEnabled(false);
 		
-		//FIXME add new operation
 		m_addNewNodeButton.addClickListener(new ClickListener() {
 			/**
 			 * 
@@ -488,16 +494,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
+				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkRequisitionNode("notSavedHost"+newHost++,getService()));
 				m_requisitionContainer.removeAllContainerFilters();
-				RequisitionNode node = new RequisitionNode();
-				node.setNodeLabel("hostname");
-				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0, new TrentinoNetworkRequisitionNode(node, getService()));
-				m_requisitionTable.select("hostname");
+				m_requisitionTable.select(bean.getBean().getNodeLabel());
 				selectItem();
 			}
 		});
 
-		m_updateNodeButton.addClickListener(new ClickListener() {
+		m_saveNodeButton.addClickListener(new ClickListener() {
 			/**
 			 * 
 			 */
@@ -507,26 +511,38 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_requisitionContainer.removeAllContainerFilters();
 				try {
 					m_editorFields.commit();
-					Notification.show("Update", "Done", Type.HUMANIZED_MESSAGE);
+					m_editorFields.getItemDataSource().getBean().commit();
+					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
+					m_requisitionContainer.removeAllContainerFilters();
+					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (CommitException e) {
-					Notification.show("Update", "Failed", Type.ERROR_MESSAGE);
+					Notification.show("Save", "Failed", Type.ERROR_MESSAGE);
 					e.printStackTrace();
 				}
 				selectItem();
 			}
 		});
 
-		//FIXME add delete operation
 		m_removeNodeButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				Notification.show("Delete", "Operation not yet supported", Type.WARNING_MESSAGE);
-				m_editRequisitionNodeLayout.setVisible(false);
-				m_updateNodeButton.setEnabled(false);
-				m_removeNodeButton.setEnabled(false);
-				m_resetNodeButton.setEnabled(false);
+				try {
+					m_editRequisitionNodeLayout.setVisible(false);
+					m_saveNodeButton.setEnabled(false);
+					m_removeNodeButton.setEnabled(false);
+					m_resetNodeButton.setEnabled(false);
+					BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
+					if (node.getBean().getUpdate())
+						getService().delete(TN,node.getBean().getRequisitionNode());
+					if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
+						m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
+					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
+				} catch (Exception e) {
+					Notification.show("Delete", "Failed", Type.ERROR_MESSAGE);
+					e.printStackTrace();
+				}
 			}
 		});
 		
@@ -537,7 +553,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_editorFields.discard();
 				m_requisitionContainer.removeAllContainerFilters();
 				m_editRequisitionNodeLayout.setVisible(false);
-				m_updateNodeButton.setEnabled(false);
+				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
 			}
@@ -580,12 +596,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			m_editRequisitionNodeLayout.setVisible(true);
 			if (node.getDescr().contains("FAST")) {
-				m_updateNodeButton.setEnabled(false);
+				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
 				Notification.show("provided by FAST", "le modifiche ai nodi aggiunti da FAST non sono abilitate", Type.WARNING_MESSAGE);
 			} else {
-				m_updateNodeButton.setEnabled(true);
+				m_saveNodeButton.setEnabled(true);
 				m_removeNodeButton.setEnabled(true);
 				m_resetNodeButton.setEnabled(true);
 			}
