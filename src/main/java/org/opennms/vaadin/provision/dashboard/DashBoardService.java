@@ -1,6 +1,8 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -15,8 +17,11 @@ import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
 import org.opennms.rest.client.SnmpInfo;
 
+import com.vaadin.data.Container;
+import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
+import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 
 public class DashboardService {
     
@@ -26,14 +31,21 @@ public class DashboardService {
 	private JerseyNodesService m_nodeService;
 	private JerseySnmpInfoService m_snmpInfoService;
 
+	private Container m_snmpProfiles;
+	private Container m_backupProfiles;
+
 	private JDBCConnectionPool m_pool; 
 	public static final String FOREIGNID = "foreignId";
 	
+	@SuppressWarnings("deprecation")
     public DashboardService() {
     	try {
 			m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");
+	    	List<String> primarykeys = new ArrayList<String>();
+	    	primarykeys.add("name");
+			m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
+			m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	m_provisionService = new JerseyProvisionRequisitionService();
@@ -108,5 +120,12 @@ public class DashboardService {
 		return m_nodeService;
 	}
 
+	public Container getSnmpProfiles() {
+		return m_snmpProfiles;
+	}
+
+	public Container getBackupProfiles() {
+		return m_backupProfiles;
+	}
     
 }
