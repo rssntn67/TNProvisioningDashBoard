@@ -32,7 +32,14 @@ public class DashboardTabSheet extends CustomComponent implements
         	TrentinoNetworkTab tab=new TrentinoNetworkTab(foreignSource,m_service);
         	tabsheet.addTab(tab, foreignSource, new ThemeResource("icons/16/users.png"));
         	tabsheet.getTab(tab).setEnabled(false);
-        }        
+        }
+        SnmpProfileTab snmpTab = new SnmpProfileTab(null, m_service);
+        tabsheet.addTab(snmpTab, "Snmp Profiles",new ThemeResource("icons/16/users.png"));
+    	tabsheet.getTab(snmpTab).setEnabled(false);
+    	BackupProfileTab backupTab = new BackupProfileTab(null, m_service);
+        tabsheet.addTab(backupTab, "Backup Profiles",new ThemeResource("icons/16/users.png"));
+        tabsheet.getTab(backupTab).setEnabled(false);
+    	
 	}
 	
 	@Override

@@ -31,20 +31,13 @@ public class DashboardService {
 	private JerseyNodesService m_nodeService;
 	private JerseySnmpInfoService m_snmpInfoService;
 
-	private Container m_snmpProfiles;
-	private Container m_backupProfiles;
 
 	private JDBCConnectionPool m_pool; 
 	public static final String FOREIGNID = "foreignId";
 	
-	@SuppressWarnings("deprecation")
     public DashboardService() {
     	try {
 			m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");
-	    	List<String> primarykeys = new ArrayList<String>();
-	    	primarykeys.add("name");
-			m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
-			m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -120,12 +113,28 @@ public class DashboardService {
 		return m_nodeService;
 	}
 
+	@SuppressWarnings("deprecation")
 	public Container getSnmpProfiles() {
-		return m_snmpProfiles;
+    	List<String> primarykeys = new ArrayList<String>();
+    	primarykeys.add("name");
+		try {
+			return new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
+	@SuppressWarnings("deprecation")
 	public Container getBackupProfiles() {
-		return m_backupProfiles;
+    	List<String> primarykeys = new ArrayList<String>();
+    	primarykeys.add("name");
+		try {
+			return new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
     
 }
