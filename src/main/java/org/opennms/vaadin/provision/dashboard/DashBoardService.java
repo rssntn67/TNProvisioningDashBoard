@@ -34,7 +34,7 @@ public class DashboardService {
 
 	private JDBCConnectionPool m_pool; 
 	public static final String FOREIGNID = "foreignId";
-	
+	//FIXME add configuration file for postgresql connection
     public DashboardService() {
     	try {
 			m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");

@@ -274,15 +274,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 		}
 		m_vrfsComboBox.setInvalidAllowed(false);
 		m_vrfsComboBox.setNullSelectionAllowed(false);
+		m_vrfsComboBox.setRequired(true);
+		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
 		m_editorFields.bind(m_vrfsComboBox, VRF);
 		leftGeneralInfo.addComponent(m_vrfsComboBox);
-		leftGeneralInfo.addComponent(m_editorFields.buildAndBind(PRIMARY));
+		TextField primary = new TextField(PRIMARY);
+		primary.setRequired(true);
+		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
+		leftGeneralInfo.addComponent(primary);
+		m_editorFields.bind(primary,PRIMARY);
+		
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(false);
 		leftGeneralInfo.addComponent(m_parentComboBox);
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		generalInfo.addComponent(leftGeneralInfo);
 
+		//FIXME add a selectable list of ip address from the node
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
 		centerGeneralInfo.setMargin(true);
 		generalInfo.addComponent(centerGeneralInfo);
@@ -383,7 +391,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_networkCatComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
 		}
 		m_networkCatComboBox.setInvalidAllowed(false);
-		m_networkCatComboBox.setNullSelectionAllowed(false);		
+		m_networkCatComboBox.setNullSelectionAllowed(false);
+		m_networkCatComboBox.setRequired(true);
+		m_networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
 		m_editorFields.bind(m_networkCatComboBox, NETWORK_CATEGORY);
 		
 		for (String notif: m_notif_categories) {
@@ -391,6 +401,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		}
 		m_notifCatComboBox.setInvalidAllowed(false);
 		m_notifCatComboBox.setNullSelectionAllowed(false);
+		m_notifCatComboBox.setRequired(true);
+		m_notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 		m_editorFields.bind(m_notifCatComboBox, NOTIF_CATEGORY);
 
 		for (String threshold: m_thresh_categories) {
@@ -398,6 +410,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		}
 		m_threshCatComboBox.setInvalidAllowed(false);
 		m_threshCatComboBox.setNullSelectionAllowed(false);
+		m_threshCatComboBox.setRequired(true);
+		m_threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
 		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
 		
 		catLayout.addComponent(m_networkCatComboBox);
@@ -414,6 +428,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		}
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
+		m_snmpComboBox.setRequired(true);
+		m_snmpComboBox.setRequiredError("E' necessario scegliere una profilo snmp");
 		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
 		snmplayout.addComponent(m_snmpComboBox);
 		snmpProfile.addComponent(snmplayout);
@@ -425,6 +441,8 @@ public class TrentinoNetworkTab extends DashboardTab {
         }
         m_backupComboBox.setInvalidAllowed(false);
         m_backupComboBox.setNullSelectionAllowed(false);
+        m_backupComboBox.setRequired(true);
+        m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
 		backupProfile.addComponent(new Label("Credenziali accesso per backup configurazione"));
 		HorizontalLayout backuplayout = new HorizontalLayout();
@@ -435,12 +453,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 		HorizontalLayout localizationInfo = new HorizontalLayout();
 		FormLayout localization = new FormLayout();
 		localization.addComponent(new Label("Localizzazione"));
-		localization.addComponent(m_editorFields.buildAndBind(CITY));
+		
+		TextField city = new TextField("Citta'");
+		city.setWidth(8, Unit.CM);
+		city.setHeight(6, Unit.MM);
+		city.setRequired(true);
+		city.setRequiredError("E' necessario specificare la citta'");
+		m_editorFields.bind(city,CITY);
+		localization.addComponent(city);
+		
 		TextField address = new TextField("Indirizzo");
 		address.setWidth(8, Unit.CM);
 		address.setHeight(6, Unit.MM);
+		address.setRequired(true);
+		address.setRequiredError("E' necessario specificare l'indirizzo");
 		m_editorFields.bind(address, ADDRESS);
 		localization.addComponent(address);
+		
 		localizationInfo.addComponent(localization);
 		m_editRequisitionNodeLayout.addComponent(new Panel(localizationInfo));
 
