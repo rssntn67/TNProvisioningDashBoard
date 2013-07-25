@@ -12,6 +12,11 @@ import com.vaadin.ui.UI;
  * app a web page showing your UI is automatically generated. Or you may choose to 
  * embed your UI to an existing web page. 
  */
+//FIXME add validation
+//FIXME use external source for profiles snmp and backup
+//FIXME add list of ip interface on node
+//FIXME add configuration file for postgresql connection and urls
+//FIXME add a selectable list of ip address from the node
 @Title("Trentino Network Opennms Provision Dashboard")
 @Theme("runo")
 public class DashboardUI extends UI {

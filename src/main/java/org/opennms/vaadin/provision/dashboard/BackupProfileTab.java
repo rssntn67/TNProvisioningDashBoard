@@ -1,16 +1,21 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.sql.SQLException;
+
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Notification.Type;
 
 @Title("TrentinoNetwork Provision Dashboard - Trentino Network Requisition")
 @Theme("runo")
 public class BackupProfileTab extends DashboardTab {
 
-	private Table m_backupProfilesTable;;
+	private Table m_backupProfilesTable;
+	private boolean loaded = false;
 
 	/**
 	 * 
@@ -19,15 +24,26 @@ public class BackupProfileTab extends DashboardTab {
 
 	public BackupProfileTab(String foreignsource, DashboardService service) {
 		super(foreignsource, service);
-		m_backupProfilesTable = new Table("Profiles", service.getBackupProfiles());
 	}
 
 	@Override
 	public void load() {
+		if (loaded)
+			return;
+		try {
+			getService().loadBackupProfiles();
+		} catch (SQLException e) {
+			Notification.show("Backup Profile", "Load from db Failed", Type.WARNING_MESSAGE);
+			e.printStackTrace();
+			return;
+		}
+		
+		m_backupProfilesTable = new Table("Profiles", getService().getBackupProfiles());
 		VerticalLayout layout = new VerticalLayout();
 		layout.setMargin(true);
 		layout.addComponent(m_backupProfilesTable);
 		setCompositionRoot(new Panel(layout));
+		loaded = true;
 	}
 
 }

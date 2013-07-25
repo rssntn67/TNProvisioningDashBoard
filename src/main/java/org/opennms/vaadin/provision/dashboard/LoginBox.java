@@ -1,9 +1,8 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.sql.SQLException;
 import java.util.Iterator;
-
-import org.opennms.rest.client.JerseyClientImpl;
 
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -18,13 +17,8 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickListener;
 
-public class LoginBox extends CustomComponent implements ClickListener {
 
-	protected final static String[] URL_LIST = new String[] {
-		"http://demo.arsinfo.it/opennms/rest",
-		"http://demo.arsinfo.it:8980/opennms/rest",
-		"http://localhost:8980/opennms/rest"
-	};
+public class LoginBox extends CustomComponent implements ClickListener {
 
 	private DashboardService m_service;
 
@@ -42,47 +36,47 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private TabSheet m_tabs;
     
     public LoginBox (TabSheet tabs,DashboardService service) {
-    	m_tabs=tabs;
+        m_panel.setContent(getLoginBox());
+        setCompositionRoot(m_panel);
+
+        m_tabs=tabs;
     	m_service = service;
     	m_login.setImmediate(true);
     	m_login.addClickListener(this);
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
-    	for (String url: URL_LIST)
+    	for (String url: m_service.getUrls())
     		m_select.addItem(url);
 
-    	init();
-        
-    }
+	}
 
-	private void init() {
+ 
+    private Component getLoginBox() {
     	VerticalLayout layout = new VerticalLayout();
     	layout.setMargin(true);
         layout.addComponent(m_select);
         layout.addComponent(m_username);
         layout.addComponent(m_password);
         layout.addComponent(m_login);
-        m_panel.setContent(layout);
-        setCompositionRoot(m_panel);
-	}
-
+        return layout;
+    }
     
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_login) 
-			restlogin();
+			login();
 	    else if (event.getButton() == m_logout) {
-	    	restlogout();
-	    	init();
+	    	logout();
 	    }
 	}
 
-	private void restlogout() {
+	private void logout() {
 		m_username.setValue("");
 		m_password.setValue("");
 		m_panel.setCaption("Log In");
 		m_service.setJerseyClient(null);
 		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
+		m_panel.setContent(getLoginBox());
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
 	    while (ite.hasNext()) {
 	    	Component comp = ite.next();
@@ -91,18 +85,20 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    }
 	}
 	
-	private void restlogin() {	
+	private void login() {	
 		try {
-			m_service.setJerseyClient(
-					new JerseyClientImpl(
-		            m_select.getValue().toString(),m_username.getValue(),m_password.getValue()));
-			if (m_service.getJerseyClient() != null ) {
-			    m_service.check();
-			}
+		    m_service.login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
+		} catch (SQLException sqle) {
+			Notification.show("Login Failed", "Access to profile database failed", Notification.Type.ERROR_MESSAGE);
+			m_username.setValue("");
+			m_password.setValue("");
+			sqle.printStackTrace();
+			return;
 		} catch (Exception e) {
 			Notification.show("Login Failed", "Check Username and Password", Notification.Type.ERROR_MESSAGE);
 			m_username.setValue("");
 			m_password.setValue("");
+			e.printStackTrace();
 			return;
 		}
 	    m_panel.setCaption("Logged in");

@@ -12,10 +12,8 @@ import org.opennms.rest.client.SnmpInfo;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
+import com.vaadin.data.util.sqlcontainer.RowId;
 
-//FIXME add validation
-//FIXME use external source for profiles snmp and backup
-//FIXME add list of ip interface on node
 public class TrentinoNetworkRequisitionNode {
 
 	protected static final String DESCR = "descr";
@@ -187,50 +185,6 @@ public class TrentinoNetworkRequisitionNode {
 		"wl.tnnet.it"
 	};
 	
-	protected final static String[][] m_snmp_profiles = {
-		{"community1_v1"   ,"ma918na2116ge"   ,"v1" ,"5000"},
-		{"community1_v2"   ,"ma918na2116ge"   ,"v2c","1800"},
-		{"community2"      ,"mT9gq"           ,"v1" ,"5000"},
-		{"community3"      ,"*frizen*"        ,"v1" ,"5000"},
-		{"community4"      ,"frizen3"         ,"v1" ,"5000"},
-		{"community5"      ,"manage1234"      ,"v2c","5000"},
-		{"community6"      ,"Ieb5Saitoe3oofiG","v2c","5000"},
-		{"wifless_v1"      ,"WL01tnes02ro"    ,"v1" ,"5000"},
-		{"wifless_v2"      ,"WL01tnes02ro"    ,"v2c","5000"},
-		{"infotn"          ,"infotnro"        ,"v2c","5000"},
-		{"snmp_default_v1" ,"ma14na165ge"     ,"v1" ,"5000"},
-		{"snmp_default_v2" ,"ma14na165ge"     ,"v2c","5000"},
-		{"public_v1"       ,"public"          ,"v1" ,"5000"},
-		{"public_v2"       ,"public"          ,"v2c","5000"},
-		{"snmp_old_v1"     ,"w732pub"         ,"v1" ,"5000"},
-		{"snmp_old_v2"     ,"w732pub"         ,"v2c","5000"}
-	};
-	
-	protected final static String[][] m_backup_profiles = {
-		{"3comapss","notused","ena21apss","notused","","http"},
-		{"backbone_accesspoint_essentia_tftf","root","default","notused","A","tftp"},
-		{"backbone_accesspoint_alvarion_tftp","notused","public","private","","tftp"},
-		{"backbone_accesspoint_essentia_ssh","root","default","notused","A","ssh"},
-		{"backbone_0","tnnetbk07","tn07bknet","notused","A","telnet"},
-		{"backbone_1","tnnetbk07","tn07bknet","tn07enbknet","","telnet"},
-		{"backbone_6","tnnetbk09","tn07bknet","tn07enbknet","","telnet"},
-		{"backbone_6500_nord","tnnetbk07","bknet09tn","tn07enbknet","","telnet"},
-		{"backbone_2013","tnnet","tnet2013!","tnet2013!","","telnet"},
-		{"accesso_radius","backupradius","torrone_morbido","notused","A","telnet"},
-		{"nome1_3","operator","o","notused","A","telnet"},
-		{"backbone_accesspoint_essentia_telnet","root","default","notused","A","telnet"},
-		{"accesso_switch_pat","tnnetpat07","tn07patnet","ena25pat","","telnet"},
-		{"backbone_switch_alcalet","itn","civ27itn","civ27ena","","telnet"},
-		{"backbone_3","tnnetbk08","tn07bknet","tn07enbknet","","telnet"},
-		{"accesso_switch_alcatel_winet","admin","default","notused","A","telnet"},
-		{"backbone_4","itn","civ27itn","notused","A","telnet"},
-		{"default_cisco","","cisco","notused","A","telnet"},
-		{"backbone_5","tnnetbk07","tn07bknet","tn07enbknet","","telnet"},
-		{"backbone_accesspoint_alvarion_telnet","","public","private","","telnet"},
-		{"backbone_switch_pat_2","tnnetpat07","tn07patnet","ena25pat","","telnet"},
-		{"accesso_3com_telnet","support","support","notused","A","telnet"},
-		{"backbone_accesso_switch_pat","tnnetpat07","tn07patnet","notused","A","telnet"}
-	};
 
 	private RequisitionNode m_requisitionNode;
 
@@ -246,8 +200,8 @@ public class TrentinoNetworkRequisitionNode {
 	protected String notifCategory;
 	protected String threshCategory;
 
-	protected String snmpProfile;
-	protected String backupProfile;
+	protected RowId snmpProfile;
+	protected RowId backupProfile;
 
 	protected String city;
 	protected String address1;
@@ -313,15 +267,17 @@ public class TrentinoNetworkRequisitionNode {
 				break;
 			}
 		}
-
-		for (String[] profile: m_backup_profiles) {
-			if (m_requisitionNode.getAsset("username") != null && m_requisitionNode.getAsset("username").getValue().equals(profile[1]) 
-		     && m_requisitionNode.getAsset("password") != null && m_requisitionNode.getAsset("password").getValue().equals(profile[2])
-			 && m_requisitionNode.getAsset("enable") != null && m_requisitionNode.getAsset("enable").getValue().equals(profile[3])
-			 && m_requisitionNode.getAsset("autoenable") != null && m_requisitionNode.getAsset("autoenable").getValue().equals(profile[4])
-			 && m_requisitionNode.getAsset("connection") != null && m_requisitionNode.getAsset("connection").getValue().equals(profile[5])
+		
+		for (Object profileId: m_service.getBackupProfiles().getItemIds()) {
+			Item profile = m_service.getBackupProfiles().getItem(profileId);
+		
+			if (m_requisitionNode.getAsset("username") != null && m_requisitionNode.getAsset("username").getValue().equals(profile.getItemProperty("username").getValue()) 
+		     && m_requisitionNode.getAsset("password") != null && m_requisitionNode.getAsset("password").getValue().equals(profile.getItemProperty("password").getValue())
+			 && m_requisitionNode.getAsset("enable") != null && m_requisitionNode.getAsset("enable").getValue().equals(profile.getItemProperty("enable").getValue())
+			 && m_requisitionNode.getAsset("autoenable") != null && m_requisitionNode.getAsset("autoenable").getValue().equals(profile.getItemProperty("auto_enable").getValue())
+			 && m_requisitionNode.getAsset("connection") != null && m_requisitionNode.getAsset("connection").getValue().equals(profile.getItemProperty("connection").getValue())
 					) {
-				backupProfile=profile[0];
+				backupProfile=(RowId)profileId;
 				break;
 			}
 		}
@@ -457,70 +413,69 @@ public class TrentinoNetworkRequisitionNode {
 	public IndexedContainer getSecondary() {
 		return secondary;
 	}
-	public String getSnmpProfile() {
+	public RowId getSnmpProfile() {
 		return snmpProfile;
 	}
-	public void setSnmpProfile(String snmpProfile) {
-		if (this.snmpProfile == snmpProfile)
+	public void setSnmpProfile(RowId snmpProfile) {
+		if (this.snmpProfile != null && this.snmpProfile.equals(snmpProfile))
 			return;
 		if (update)
 			updateSnmpProfileOnServer(this.primary, snmpProfile);
 		this.snmpProfile = snmpProfile;
 	}
 	
-	private void updateSnmpProfileOnServer(String ip,String snmp) {
-		for (String[] profile: m_snmp_profiles) {
-			if (profile[0] == snmp) {
+	private void updateSnmpProfileOnServer(String ip,RowId snmp) {
+			Item profile = m_service.getSnmpProfiles().getItem(snmp);
+			if (profile != null) {
 				SnmpInfo info = new SnmpInfo();
-				info.setCommunity(profile[1]);
-				info.setVersion(profile[2]);
-				info.setTimeout(Integer.parseInt(profile[3]));
+				info.setCommunity(profile.getItemProperty("community").getValue().toString());
+				info.setVersion(profile.getItemProperty("version").getValue().toString());
+				info.setTimeout(Integer.parseInt(profile.getItemProperty("timeout").getValue().toString()));
 				m_service.setSnmpInfo(ip, info);
-				break;
 			}
-		}
 	}
 	public void updateSnmpProfile(SnmpInfo info) {
-		for (String[] snmpdata: m_snmp_profiles) {
+		for (Object profileId: m_service.getSnmpProfiles().getItemIds()) {
+			Item snmpdata = m_service.getSnmpProfiles().getItem(profileId);
 			if (info.getRetries() == 1 && info.getPort() == 161 
-			  && info.getCommunity().equals(snmpdata[1]) 
-			  && info.getVersion().equals(snmpdata[2])
-			  && info.getTimeout() == Integer.parseInt(snmpdata[3])) {
-				snmpProfile=snmpdata[0];
+			  && info.getCommunity().equals(snmpdata.getItemProperty("community").getValue().toString()) 
+			  && info.getVersion().equals(snmpdata.getItemProperty("version").getValue().toString())
+			  && info.getTimeout() == Integer.parseInt(snmpdata.getItemProperty("timeout").getValue().toString())) {
+				snmpProfile=(RowId)profileId;
 				break;
 			}
 		}
 	}
-	public String getBackupProfile() {
+	
+	public RowId getBackupProfile() {
 		return backupProfile;
 	}
-	public void setBackupProfile(String backupProfile) {
-		if (this.backupProfile == backupProfile)
+	public void setBackupProfile(RowId backupProfile) {
+		if (this.backupProfile != null && this.backupProfile.equals(backupProfile))
 			return;
-		for (String[] backup: m_backup_profiles) {
-			if (backup[0] == backupProfile) {
-				RequisitionAsset username = new RequisitionAsset("username", backup[1]);
-				RequisitionAsset password = new RequisitionAsset("password", backup[2]);
-				RequisitionAsset enable = new RequisitionAsset("enable", backup[3]);
-				RequisitionAsset autoenable = new RequisitionAsset("autoenable", backup[4]);
-				RequisitionAsset connection = new RequisitionAsset("connection", backup[5]);
-				if (update) {
-					m_service.add(TN, m_requisitionNode.getForeignId(), username);
-					m_service.add(TN, m_requisitionNode.getForeignId(), password);
-					m_service.add(TN, m_requisitionNode.getForeignId(), enable);
-					m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
-					m_service.add(TN, m_requisitionNode.getForeignId(), connection);
-				}
-				m_requisitionNode.putAsset(username);
-				m_requisitionNode.putAsset(password);
-				m_requisitionNode.putAsset(enable);
-				m_requisitionNode.putAsset(autoenable);
-				m_requisitionNode.putAsset(connection);
-				break;
+		Item backup = m_service.getBackupProfiles().getItem(backupProfile);
+		if (backup != null) {
+			RequisitionAsset username = new RequisitionAsset("username", backup.getItemProperty("username").getValue().toString());
+			RequisitionAsset password = new RequisitionAsset("password", backup.getItemProperty("password").getValue().toString());
+			RequisitionAsset enable = new RequisitionAsset("enable",backup.getItemProperty("enable").getValue().toString());
+			RequisitionAsset autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
+			RequisitionAsset connection = new RequisitionAsset("connection", backup.getItemProperty("connection").getValue().toString());
+			if (update) {
+				m_service.add(TN, m_requisitionNode.getForeignId(), username);
+				m_service.add(TN, m_requisitionNode.getForeignId(), password);
+				m_service.add(TN, m_requisitionNode.getForeignId(), enable);
+				m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
+				m_service.add(TN, m_requisitionNode.getForeignId(), connection);
 			}
+			m_requisitionNode.putAsset(username);
+			m_requisitionNode.putAsset(password);
+			m_requisitionNode.putAsset(enable);
+			m_requisitionNode.putAsset(autoenable);
+			m_requisitionNode.putAsset(connection);
 		}
 		this.backupProfile = backupProfile;
 	}
+
 	public String getAddress1() {
 		return address1;
 	}

@@ -1,5 +1,7 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.sql.SQLException;
+
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
 import com.vaadin.annotations.Theme;
@@ -32,9 +34,6 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_snmp_profiles;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_backup_profiles;
 
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_vrfs;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_network_categories;
@@ -110,6 +109,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 	public void load() {
 		if (loaded)
 			return;
+		try {
+			getService().loadSnmpProfiles();
+		} catch (SQLException e) {
+			Notification.show("Snmp Profile", "Load from db Failed", Type.WARNING_MESSAGE);
+			e.printStackTrace();
+			return;
+		}
+		try {
+			getService().loadBackupProfiles();
+		} catch (SQLException e) {
+			Notification.show("Backup Profile", "Load from db Failed", Type.WARNING_MESSAGE);
+			e.printStackTrace();
+			return;
+		}
 		initLayout();
 		initProvisionNodeList();
 		initEditor();
@@ -290,7 +303,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		generalInfo.addComponent(leftGeneralInfo);
 
-		//FIXME add a selectable list of ip address from the node
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
 		centerGeneralInfo.setMargin(true);
 		generalInfo.addComponent(centerGeneralInfo);
@@ -423,22 +435,18 @@ public class TrentinoNetworkTab extends DashboardTab {
 		FormLayout snmpProfile = new FormLayout();
 		snmpProfile.addComponent(new Label("Credenziali SNMP per collezione dati"));
 		HorizontalLayout snmplayout = new HorizontalLayout();
-		for (String[] snmp: m_snmp_profiles) {
-			m_snmpComboBox.addItem(snmp[0]);
-		}
+		m_snmpComboBox.setContainerDataSource(getService().getSnmpProfiles());
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
 		m_snmpComboBox.setRequired(true);
-		m_snmpComboBox.setRequiredError("E' necessario scegliere una profilo snmp");
+		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
 		snmplayout.addComponent(m_snmpComboBox);
 		snmpProfile.addComponent(snmplayout);
         m_editRequisitionNodeLayout.addComponent(new Panel(snmpProfile));
 
 		FormLayout backupProfile = new FormLayout();
-        for (String[] backup: m_backup_profiles) {
-        	m_backupComboBox.addItem(backup[0]);
-        }
+		m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
         m_backupComboBox.setInvalidAllowed(false);
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
