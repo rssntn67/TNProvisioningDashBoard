@@ -278,7 +278,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 		hostname.setWidth(4, Unit.CM);
 		hostname.setHeight(6, Unit.MM);
 		hostname.setRequired(true);
-		hostname.setRequiredError("Deve essere un nome valido per bind9: non contiene '_' vedi RFCxxxx");
+		hostname.setRequiredError("The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
+		" A domain name consists of one or more parts, technically called labels, that are conventionally concatenated, and delimited by dots, such asexample.com."
+				+ " Each label may contain up to 63 characters." +
+				" The full domain name may not exceed a total length of 253 characters in its external dotted-label specification." +
+				" The characters allowed in a label are a subset of the ASCII character set, and includes the characters a through z, A through Z, digits 0 through 9, the hyphen." +
+				" This rule is known as the LDH rule (letters, digits, hyphen). " +
+				" Labels may not start or end with a hyphen." +
+				" A hostname is a domain name that has at least one IP address associated.");
 		m_editorFields.bind(hostname, HOST);
 		leftGeneralInfo.addComponent(hostname);
 
