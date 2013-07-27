@@ -28,12 +28,19 @@
 
 package org.opennms.rest.client;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.model.OnmsNodeList;
+import org.opennms.rest.client.model.OnmsIpInterface;
+import org.opennms.rest.client.model.OnmsIpInterfaceList;
+import org.opennms.rest.client.model.OnmsNode;
+import org.opennms.rest.client.model.OnmsNodeList;
+
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import static junit.framework.Assert.assertEquals;
 
 public class NodesServiceTest {
@@ -57,11 +64,43 @@ public class NodesServiceTest {
     @Test
     public void testNodes() throws Exception {
         OnmsNodeList nodeslist = m_nodesservice.getAll();
-        assertEquals(0, nodeslist.getCount());
-        assertEquals(0,nodeslist.getTotalCount());
+        assertEquals(36, nodeslist.getCount());
+        assertEquals(36,nodeslist.getTotalCount());
         for (OnmsNode node: nodeslist){
         	System.out.println(node);
         }
     }
 
+    @Test
+    public void testGetNodesByNodelabel() throws Exception {
+    	MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+    	queryParams.add("label", "ASR9K-1.bb.tnnet.it");
+    	queryParams.add("foreignSource", "TrentinoNetworkTest");
+        OnmsNodeList nodeslist = m_nodesservice.find(queryParams);
+        assertEquals(1, nodeslist.getCount());
+        assertEquals(1,nodeslist.getTotalCount());
+        OnmsNode node = nodeslist.getFirst();
+        assertEquals(942, node.getId().intValue());
+    }
+
+    @Test
+    public void testGetNode() throws Exception {
+        OnmsNode node = m_nodesservice.get(942);
+        assertEquals(942, node.getId().intValue());
+        assertEquals("ASR9K-1.bb.tnnet.it", node.getLabel());
+        assertEquals("ASR9K-1", node.getForeignId());
+        assertEquals("TrentinoNetworkTest", node.getForeignSource());
+    }
+
+    @Test
+    public void testGetIpAddresses() throws Exception {
+    	OnmsIpInterfaceList ips = m_nodesservice.getIpInterfaces(942);
+    	assertEquals(14, ips.size());
+    	for (OnmsIpInterface ip: ips.getInterfaces()) {
+    		System.out.println(ip.getIpAddress());
+    		if (ip.getSnmpInterface() != null)
+    			System.out.println(ip.getSnmpInterface().getNetMask());
+    		System.out.println(ip.getIpHostName());
+    	}
+    }
 }

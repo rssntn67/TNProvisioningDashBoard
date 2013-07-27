@@ -32,6 +32,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
+import org.opennms.rest.client.snmpinfo.SnmpInfo;
+
 import static junit.framework.Assert.assertEquals;
 
 public class SnmpInfoServiceTest {

@@ -1,4 +1,6 @@
-package org.opennms.rest.client;
+package org.opennms.rest.client.snmpinfo;
+
+import org.opennms.rest.client.RestFilterService;
 
 public interface SnmpInfoService extends RestFilterService{
 

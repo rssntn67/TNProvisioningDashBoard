@@ -7,7 +7,7 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.rest.client.SnmpInfo;
+import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Item;

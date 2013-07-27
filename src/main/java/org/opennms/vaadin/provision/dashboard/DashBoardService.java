@@ -15,7 +15,7 @@ import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
-import org.opennms.rest.client.SnmpInfo;
+import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;

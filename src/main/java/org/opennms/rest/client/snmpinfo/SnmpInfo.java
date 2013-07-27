@@ -1,4 +1,4 @@
-package org.opennms.rest.client;
+package org.opennms.rest.client.snmpinfo;
 
 
 import javax.xml.bind.annotation.XmlRootElement;
