@@ -73,8 +73,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	private void logout() {
 		m_username.setValue("");
 		m_password.setValue("");
+		m_service.logout();
 		m_panel.setCaption("Log In");
-		m_service.setJerseyClient(null);
 		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
 		m_panel.setContent(getLoginBox());
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
@@ -89,16 +89,16 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		try {
 		    m_service.login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
 		} catch (SQLException sqle) {
-			Notification.show("Login Failed", "Access to profile database failed", Notification.Type.ERROR_MESSAGE);
+			Notification.show("Login Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
 			m_username.setValue("");
 			m_password.setValue("");
-			sqle.printStackTrace();
+			m_service.destroy();
 			return;
 		} catch (Exception e) {
-			Notification.show("Login Failed", "Check Username and Password", Notification.Type.ERROR_MESSAGE);
+			Notification.show("Login Failed", "Verificare Username e Password e che lo user abbia ROLE_PROVISIONING", Notification.Type.ERROR_MESSAGE);
 			m_username.setValue("");
 			m_password.setValue("");
-			e.printStackTrace();
+			m_service.destroy();
 			return;
 		}
 	    m_panel.setCaption("Logged in");

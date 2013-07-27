@@ -13,10 +13,11 @@ import com.vaadin.ui.UI;
  * embed your UI to an existing web page. 
  */
 //FIXME add configuration file for postgresql connection and urls
-//FIXME add a selectable list of ip address from the node
-//FIXME add other validation: duplicate nodelabel
-//FIXME add other validation: dns domain exists
-//FIXME add other validation: faoreignId Unique
+//FIXME add and delete foreign policy
+//FIXME add validation: duplicate nodelabel
+//FIXME add validation: dns domain exists
+//FIXME add validation: foreignId Unique
+//FIXME change color for not valid nodes
 @Title("Trentino Network Opennms Provision Dashboard")
 @Theme("runo")
 public class DashboardUI extends UI {

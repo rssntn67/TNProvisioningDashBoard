@@ -1,5 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
+import org.opennms.rest.client.model.OnmsIpInterface;
+import org.opennms.rest.client.model.OnmsNodeList;
 import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import com.vaadin.data.Container;
@@ -37,6 +40,7 @@ public class DashboardService {
 	private JerseyNodesService m_nodeService;
 	private JerseySnmpInfoService m_snmpInfoService;
 
+	private boolean loggedin = false;
 	private SQLContainer m_snmpProfiles;
 	private SQLContainer m_backupProfiles;
 
@@ -74,9 +78,21 @@ public class DashboardService {
 	public void update(String foreignSource, String foreignId, MultivaluedMap<String, String> map) {
 		m_provisionService.update(foreignSource, foreignId, map);
 	}
-	public void logout() {
+	
+	public List<OnmsIpInterface> getIpInterfaces(MultivaluedMap<String, String> queryParams) {
+		OnmsNodeList nodes = m_nodeService.find(queryParams);
+		if (nodes.isEmpty())
+			return new ArrayList<OnmsIpInterface>();
+        return m_nodeService.getIpInterfaces(m_nodeService.find(queryParams).getFirst().getId());
+	}
+	public void destroy() {
 		setJerseyClient(null);
 		m_pool.destroy();
+	}
+	
+	public void logout() {
+		destroy();
+		loggedin = false;
 	}
 	
 	public void login(String url, String username, String password) throws SQLException {
@@ -84,6 +100,8 @@ public class DashboardService {
 				new JerseyClientImpl(url,username,password));
 		m_snmpInfoService.get("127.0.0.1");
 		m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");
+		loadSnmpProfiles();
+		loggedin = true;
 	}
 
 	public void add(String foreignSource, String foreignid, RequisitionAsset asset) {
@@ -140,6 +158,8 @@ public class DashboardService {
 
 	@SuppressWarnings("deprecation")
 	public void loadSnmpProfiles() throws SQLException {
+		if (loggedin)
+			return;
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
 		m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));

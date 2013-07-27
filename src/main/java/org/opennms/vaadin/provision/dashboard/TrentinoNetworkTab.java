@@ -2,8 +2,12 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 
-import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import javax.ws.rs.core.MultivaluedMap;
 
+import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.rest.client.model.OnmsIpInterface;
+
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.Container.Filter;
@@ -96,6 +100,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
 
 	private Table m_secondaryIpAddressTable = new Table();
+	private ComboBox m_secondaryIpComboBox = new ComboBox("Seleziona indirizzo ip");
 
 	private VerticalLayout m_editRequisitionNodeLayout  = new VerticalLayout();
 	
@@ -113,14 +118,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			getService().loadSnmpProfiles();
 		} catch (SQLException e) {
 			Notification.show("Snmp Profile", "Load from db Failed", Type.WARNING_MESSAGE);
-			e.printStackTrace();
 			return;
 		}
 		try {
 			getService().loadBackupProfiles();
 		} catch (SQLException e) {
 			Notification.show("Backup Profile", "Load from db Failed", Type.WARNING_MESSAGE);
-			e.printStackTrace();
 			return;
 		}
 		initLayout();
@@ -344,7 +347,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (Exception e) {
 						Notification.show("Delete ip", "Failed", Type.ERROR_MESSAGE);
-						e.printStackTrace();
 					}
 			      }
 			    });
@@ -356,41 +358,43 @@ public class TrentinoNetworkTab extends DashboardTab {
 		FormLayout rightGeneralInfo = new FormLayout();
 		rightGeneralInfo.setMargin(true);
 		rightGeneralInfo.addComponent(m_secondaryIpAddressTable);
-		final TextField secondaryipaddtextbox = new TextField("Aggiungi ip");
-		Button addSecondaryIp = new Button("+");
-		addSecondaryIp.addClickListener(new ClickListener() {
+		m_secondaryIpComboBox.setNullSelectionAllowed(false);
+		m_secondaryIpComboBox.setInvalidAllowed(false);
+		Button addSecondaryIpButton = new Button("Aggiungi");
+		addSecondaryIpButton.addClickListener(new ClickListener() {
 			
-			/**
-			 * 
-			 */
 			private static final long serialVersionUID = 1L;
 
 			@SuppressWarnings("unchecked")
 			@Override
 			public void buttonClick(ClickEvent event) {
-				if (secondaryipaddtextbox.getValue() != null) {
+				if (m_secondaryIpComboBox.getValue() != null) {
 					try {
 						TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
 						if (node.getUpdate()) {
-							node.addSecondaryInterface(secondaryipaddtextbox.getValue().toString());
 							IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
+							for (Object id: secondary.getItemIds()) {
+								secondary.getContainerProperty(id, "indirizzo ip").getValue().equals(m_secondaryIpComboBox.getValue().toString());
+								Notification.show("Add ip", "Already added", Type.HUMANIZED_MESSAGE);
+								return;
+							}
+							node.addSecondaryInterface(m_secondaryIpComboBox.getValue().toString());
 							Item ipItem = secondary.getItem(secondary.addItem());
-							ipItem.getItemProperty("indirizzo ip").setValue(secondaryipaddtextbox.getValue().toString()); 
+							ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
 							Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
 						} else {
 							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
 						}
 					} catch (Exception e) {
 						Notification.show("Add ip", "Failed", Type.ERROR_MESSAGE);
-						e.printStackTrace();
 					}
 				}
 			}
 		});
 
 		HorizontalLayout bottomRightGeneralInfo = new HorizontalLayout();
-		bottomRightGeneralInfo.addComponent(secondaryipaddtextbox);
-		bottomRightGeneralInfo.addComponent(addSecondaryIp);
+		bottomRightGeneralInfo.addComponent(m_secondaryIpComboBox);
+		bottomRightGeneralInfo.addComponent(addSecondaryIpButton);
 		rightGeneralInfo.addComponent(bottomRightGeneralInfo);
 		
 		generalInfo.addComponent(rightGeneralInfo);
@@ -560,8 +564,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_requisitionContainer.removeAllContainerFilters();
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (CommitException e) {
-					Notification.show("Save", "Failed", Type.ERROR_MESSAGE);
-					e.printStackTrace();
+					Notification.show("Save", "Failed:" + e.getCause().getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
 				selectItem();
 			}
@@ -585,7 +588,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
 					Notification.show("Delete", "Failed", Type.ERROR_MESSAGE);
-					e.printStackTrace();
 				}
 			}
 		});
@@ -636,6 +638,16 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			m_editorFields.setItemDataSource(node);
 			
+			m_secondaryIpComboBox.removeAllItems();
+		   	MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+	    	queryParams.add("label", node.getNodeLabel());
+	    	queryParams.add("foreignSource", TN);
+	 
+			for (OnmsIpInterface ip: getService().getIpInterfaces(queryParams) ) {
+				if (ip.getIpAddress().equals(node.getPrimary()))
+					continue;
+				m_secondaryIpComboBox.addItem(ip.getIpAddress());
+			}
 			m_secondaryIpAddressTable.setContainerDataSource(node.getSecondary());
 			
 			m_editRequisitionNodeLayout.setVisible(true);
