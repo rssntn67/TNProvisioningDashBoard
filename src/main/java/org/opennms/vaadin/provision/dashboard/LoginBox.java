@@ -83,6 +83,9 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    	if (comp != this)
 	    	m_tabs.getTab(comp).setEnabled(false);
 	    }
+	    getUI().getSession().close();
+	    getUI().getPage().setLocation(getUI().getPage().getLocation());
+	    
 	}
 	
 	private void login() {	
