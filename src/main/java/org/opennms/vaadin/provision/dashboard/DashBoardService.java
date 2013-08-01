@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
@@ -14,6 +15,7 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
+import org.opennms.rest.client.JerseyProvisionForeignSourceService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
 import org.opennms.rest.client.model.OnmsIpInterface;
@@ -30,13 +32,13 @@ public class DashboardService {
     
 	protected String[] URL_LIST = new String[] {
 		"http://demo.arsinfo.it/opennms/rest",
-		"http://demo.arsinfo.it:8980/opennms/rest",
 		"http://localhost:8980/opennms/rest"
 	};
 
 	private JerseyClientImpl m_jerseyClient;
     
 	private JerseyProvisionRequisitionService m_provisionService;
+	private JerseyProvisionForeignSourceService m_foreignSourceService;
 	private JerseyNodesService m_nodeService;
 	private JerseySnmpInfoService m_snmpInfoService;
 
@@ -50,6 +52,7 @@ public class DashboardService {
     	m_provisionService = new JerseyProvisionRequisitionService();
     	m_nodeService = new JerseyNodesService();
     	m_snmpInfoService = new JerseySnmpInfoService();
+    	m_foreignSourceService = new JerseyProvisionForeignSourceService();
     }
     
 	public JerseyClientImpl getJerseyClient() {
@@ -61,6 +64,7 @@ public class DashboardService {
 	    m_nodeService.setJerseyClient(m_jerseyClient);
 		m_provisionService.setJerseyClient(m_jerseyClient);
 	    m_snmpInfoService.setJerseyClient(m_jerseyClient);
+	    m_foreignSourceService.setJerseyClient(m_jerseyClient);
 	}
 
 	public Requisition getRequisitionNodes(String foreignSource) {		
@@ -85,6 +89,7 @@ public class DashboardService {
 			return new ArrayList<OnmsIpInterface>();
         return m_nodeService.getIpInterfaces(m_nodeService.find(queryParams).getFirst().getId());
 	}
+	
 	public void destroy() {
 		setJerseyClient(null);
 		m_pool.destroy();
@@ -113,7 +118,18 @@ public class DashboardService {
 	}
 
 	public void add(String foreignSource, String foreignid, RequisitionInterface riface) {
+		m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
 		m_provisionService.add(foreignSource, foreignid, riface);
+	}
+
+	private PolicyWrapper getPolicyWrapper(RequisitionInterface riface) {
+		PolicyWrapper manage = new PolicyWrapper();
+    	manage.setName(getName(riface));
+    	manage.setPluginClass("org.opennms.netmgt.provision.persist.policies.MatchingIpInterfacePolicy");
+    	manage.addParameter("action", "MANAGE");
+    	manage.addParameter("matchBehavior", "ALL_PARAMETERS");
+    	manage.addParameter("ipAddress", "~^"+riface.getIpAddr()+"$");		
+    	return manage;
 	}
 
 	public void add(String foreignSource, RequisitionNode node) {
@@ -129,15 +145,12 @@ public class DashboardService {
 	}
 
 	public void delete(String foreignSource, String foreignId, RequisitionInterface riface) {
+		m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
 		m_provisionService.delete(foreignSource, foreignId, riface);
 	}
 
-	protected JerseyProvisionRequisitionService getProvisionService() {
-		return m_provisionService;
-	}
-
-	protected JerseyNodesService getNodeService() {
-		return m_nodeService;
+	private String getName(RequisitionInterface riface) {
+		return "Manage"+riface.getIpAddr();
 	}
 
 	public void setSnmpProfiles(SQLContainer snmpProfiles) {

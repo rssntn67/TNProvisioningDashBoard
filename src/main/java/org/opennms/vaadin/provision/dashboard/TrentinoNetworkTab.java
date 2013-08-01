@@ -117,13 +117,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 		try {
 			getService().loadSnmpProfiles();
 		} catch (SQLException e) {
-			Notification.show("Snmp Profile", "Load from db Failed", Type.WARNING_MESSAGE);
+			Notification.show("Snmp Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
 		try {
 			getService().loadBackupProfiles();
 		} catch (SQLException e) {
-			Notification.show("Backup Profile", "Load from db Failed", Type.WARNING_MESSAGE);
+			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
 		initLayout();
@@ -346,7 +346,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			        source.getContainerDataSource().removeItem(itemId);
 					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (Exception e) {
-						Notification.show("Delete ip", "Failed", Type.ERROR_MESSAGE);
+						Notification.show("Delete ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 					}
 			      }
 			    });
@@ -386,7 +386,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
 						}
 					} catch (Exception e) {
-						Notification.show("Add ip", "Failed", Type.ERROR_MESSAGE);
+						Notification.show("Add ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 					}
 				}
 			}
@@ -564,7 +564,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_requisitionContainer.removeAllContainerFilters();
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (CommitException e) {
-					Notification.show("Save", "Failed:" + e.getCause().getLocalizedMessage(), Type.ERROR_MESSAGE);
+					Notification.show("Save", "Failed: " + e.getCause().getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
 				selectItem();
 			}
@@ -587,7 +587,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 						m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
 					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
-					Notification.show("Delete", "Failed", Type.ERROR_MESSAGE);
+					Notification.show("Delete", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
 			}
 		});

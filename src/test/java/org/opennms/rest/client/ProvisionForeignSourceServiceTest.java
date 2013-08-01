@@ -32,7 +32,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
+import org.opennms.netmgt.provision.persist.foreignsource.ForeignSource;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSourceCollection;
+import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -57,8 +59,28 @@ public class ProvisionForeignSourceServiceTest {
     @Test
     public void testList() throws Exception {
         ForeignSourceCollection nodelist = m_requisitionservice.getAll();
-        assertEquals(3, nodelist.size());
-          
+        assertEquals(10, nodelist.size());
+        for (ForeignSource fs: nodelist) {
+        	System.out.println(fs.getName());
+        }
+    }
+    
+    @Test
+    public void createPolicy() throws Exception {
+    	String ip = "10.10.10.10";
+    	PolicyWrapper manage = new PolicyWrapper();
+    	manage.setName("Manage"+ip);
+    	manage.setPluginClass("org.opennms.netmgt.provision.persist.policies.MatchingIpInterfacePolicy");
+    	manage.addParameter("action", "MANAGE");
+    	manage.addParameter("matchBehavior", "ALL_PARAMETERS");
+    	manage.addParameter("ipAddress", "~^"+ip+"$");
+    	m_requisitionservice.addOrReplace("TrentinoNetworkTest", manage);
+    }
+
+    @Test
+    public void deletePolicy() throws Exception {
+    	String ip = "10.10.10.10";
+    	m_requisitionservice.deletePolicy("TrentinoNetworkTest", "Manage"+ip);
     }
 
 }

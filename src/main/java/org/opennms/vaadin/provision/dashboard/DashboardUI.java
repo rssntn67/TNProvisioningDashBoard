@@ -13,8 +13,8 @@ import com.vaadin.ui.UI;
  * embed your UI to an existing web page. 
  */
 //FIXME add configuration file for postgresql connection and urls
-//FIXME add and delete foreign policy
 //FIXME add validation: duplicate nodelabel
+//FIXME add validation: valid dns name
 //FIXME add validation: dns domain exists
 //FIXME add validation: foreignId Unique
 //FIXME change color for not valid nodes
