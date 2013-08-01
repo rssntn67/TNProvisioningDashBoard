@@ -564,7 +564,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_requisitionContainer.removeAllContainerFilters();
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (CommitException e) {
-					Notification.show("Save", "Failed: " + e.getCause().getLocalizedMessage(), Type.ERROR_MESSAGE);
+					e.printStackTrace();
+					String localizedMessage = e.getLocalizedMessage();
+					Throwable t = e.getCause();
+					while ( t != null) {
+						if (t.getLocalizedMessage() != null)
+							localizedMessage+= ": " + t.getLocalizedMessage();
+						t = t.getCause();
+					}
+					Notification.show("Save Failed", localizedMessage, Type.ERROR_MESSAGE);
 				}
 				selectItem();
 			}

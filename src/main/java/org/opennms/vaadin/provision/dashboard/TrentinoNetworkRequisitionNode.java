@@ -2,6 +2,7 @@ package org.opennms.vaadin.provision.dashboard;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
@@ -516,6 +517,7 @@ public class TrentinoNetworkRequisitionNode {
 	public void setPrimary(String primary) {
 		if (this.primary != null && this.primary.equals(primary))
 			return;
+		InetAddressUtils.getInetAddress(primary);
 		RequisitionInterface iface = new RequisitionInterface();
 		iface.setSnmpPrimary("P");
 		iface.setIpAddr(primary);
@@ -532,8 +534,8 @@ public class TrentinoNetworkRequisitionNode {
 			m_service.delete(TN, m_requisitionNode.getForeignId(), m_requisitionNode.getInterface(this.primary));
 			m_service.add(TN, m_requisitionNode.getForeignId(),iface);
 			updateSnmpProfileOnServer(primary, this.snmpProfile);
+			m_requisitionNode.deleteInterface(this.primary);
 		}
-		m_requisitionNode.deleteInterface(this.primary);
 		m_requisitionNode.putInterface(iface);
 		this.primary = primary;
 	}
