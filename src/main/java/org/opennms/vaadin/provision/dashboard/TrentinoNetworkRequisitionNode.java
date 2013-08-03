@@ -227,7 +227,8 @@ public class TrentinoNetworkRequisitionNode {
 		m_service = service;
 		m_requisitionNode = requisitionNode;
 
-		parent = m_requisitionNode.getParentForeignId();
+		if (m_requisitionNode.getParentForeignId() != null)
+			parent = m_requisitionNode.getParentForeignId();
 		
 		for (String vrf: m_vrfs) {
 			if (m_requisitionNode.getNodeLabel().endsWith("."+vrf)) {
@@ -283,7 +284,8 @@ public class TrentinoNetworkRequisitionNode {
 			}
 		}
 		
-		city = requisitionNode.getCity();
+		if (requisitionNode.getCity() != null)
+			city = requisitionNode.getCity();
 		if (m_requisitionNode.getAsset(ADDRESS) != null)
 			address1 = m_requisitionNode.getAsset(ADDRESS).getValue();
 		
@@ -296,12 +298,14 @@ public class TrentinoNetworkRequisitionNode {
 	public void setParent(String parentForeignId) {
 		if (this.parent != null && this.parent.equals(parentForeignId))
 			return;
-		if (update) {
-			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-			map.add("parent-foreign-id", parentForeignId);
-			m_service.update(TN, m_requisitionNode.getForeignId(), map);
+		if (parentForeignId != null) {
+			m_requisitionNode.setParentForeignId(parentForeignId);
+			if (update) {
+				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+				map.add("parent-foreign-id", parentForeignId);
+				m_service.update(TN, m_requisitionNode.getForeignId(), map);
+			}
 		}
-		m_requisitionNode.setParentForeignId(parentForeignId);
 		this.parent = parentForeignId;
 	}
 
@@ -312,78 +316,82 @@ public class TrentinoNetworkRequisitionNode {
 	public void setCity(String city) {
 		if (this.city != null && this.city.equals(city))
 			return;
-		if (update) {
-			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-			map.add(CITY, city);
-			m_service.update(TN, m_requisitionNode.getForeignId(), map);
+		RequisitionAsset assetdescription = new RequisitionAsset(DESCRIPTION, city + " - " + address1);
+		if (city != null) {
+			m_requisitionNode.setCity(city);
+			m_requisitionNode.putAsset(assetdescription);
+			if (update) {
+				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+				map.add(CITY, city);
+				m_service.update(TN, m_requisitionNode.getForeignId(), map);
+				m_service.add(TN, m_requisitionNode.getForeignId(), assetdescription);
+			}
 		}
-		m_requisitionNode.setCity(city);
 		this.city = city;
 		
-		RequisitionAsset assetdescription = new RequisitionAsset(DESCRIPTION, city + " - " + address1);
-		if (update) {
-			m_service.add(TN, m_requisitionNode.getForeignId(), assetdescription);
-		}
-		m_requisitionNode.putAsset(assetdescription);
 	}
 
 	public String[] getNetworkCategory() {
 		return networkCategory;
 	}
 	public void setNetworkCategory(String[] networkCategory) {
-		if (this.networkCategory == networkCategory)
+		if (networkCategory != null && this.networkCategory == networkCategory)
 			return;
-		if (update) {
+		if (update && this.networkCategory != null) {
 			for (String cat: this.networkCategory) {
 				RequisitionCategory category = new RequisitionCategory(cat);
-				if (update) 
-					m_service.delete(TN, m_requisitionNode.getForeignId(), category);
+				m_service.delete(TN, m_requisitionNode.getForeignId(), category);
 				m_requisitionNode.deleteCategory(category);
 			}
 		}
-		for (String cat: networkCategory) {
-			RequisitionCategory category = new RequisitionCategory(cat);
-			if (update)
-				m_service.add(TN, m_requisitionNode.getForeignId(), category);
-			m_requisitionNode.putCategory(category);
+		
+		if (networkCategory != null) {
+			for (String cat: networkCategory) {
+				RequisitionCategory category = new RequisitionCategory(cat);
+				m_requisitionNode.putCategory(category);
+				if (update)
+					m_service.add(TN, m_requisitionNode.getForeignId(), category);
+			}
 		}
 		this.networkCategory = networkCategory;
 	}
+	
 	public String getNotifCategory() {
 		return notifCategory;
 	}
 	public void setNotifCategory(String notifCategory) {
-		if (this.notifCategory == notifCategory )
+		if (notifCategory != null && this.notifCategory == notifCategory )
 			return;
-		if (update) {
+		RequisitionCategory newcategory = new RequisitionCategory(notifCategory);
+		if (update && this.notifCategory != null) {
 			RequisitionCategory category = new RequisitionCategory(this.notifCategory);
 			m_service.delete(TN, m_requisitionNode.getForeignId(), category);
 			m_requisitionNode.deleteCategory(category);
 		}
-		
-		RequisitionCategory newcategory = new RequisitionCategory(notifCategory);
-		if (update) 
-			m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
-		m_requisitionNode.putCategory(newcategory);
-		
+		if (newcategory != null) { 
+			m_requisitionNode.putCategory(newcategory);
+			if (update)
+				m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
+		}
 		this.notifCategory = notifCategory;
 	}
 	public String getThreshCategory() {
 		return threshCategory;
 	}
 	public void setThreshCategory(String threshCategory) {
-		if (this.threshCategory == threshCategory )
+		if (threshCategory != null && this.threshCategory == threshCategory )
 			return;
-		if (update) {
+		RequisitionCategory newcategory = new RequisitionCategory(threshCategory);
+		if (update && this.threshCategory != null) {
 			RequisitionCategory category = new RequisitionCategory(this.threshCategory);
 			m_service.delete(TN, m_requisitionNode.getForeignId(), category);
 			m_requisitionNode.deleteCategory(category);
 		}
-
-		RequisitionCategory newcategory = new RequisitionCategory(threshCategory);
-		if (update) 
+		if (newcategory != null) {
+			m_requisitionNode.putCategory(newcategory);
+			if (update)
 			m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
-		m_requisitionNode.putCategory(newcategory);
+		}		
 		this.threshCategory = threshCategory;
 	}
 	public String getVrf() {
@@ -392,16 +400,18 @@ public class TrentinoNetworkRequisitionNode {
 	public void setVrf(String vrf) {
 		if (this.vrf != null && this.vrf == vrf)
 			return;
-		String nodelabel=hostname + "." + vrf;
+		if (vrf != null) {
+			String nodelabel=hostname + "." + vrf;
 		
-		if (update) {
-			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-			map.add("node-label", nodelabel);
-			m_service.update(TN, m_requisitionNode.getForeignId(), map);
+			m_requisitionNode.setNodeLabel(nodelabel);
+			if (update) {
+				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+				map.add("node-label", nodelabel);
+				m_service.update(TN, m_requisitionNode.getForeignId(), map);
+			}
 		}
-		m_requisitionNode.setNodeLabel(nodelabel);
-
 		this.vrf = vrf;
+
 	}
 
     public String getDescr() {
@@ -420,8 +430,7 @@ public class TrentinoNetworkRequisitionNode {
 	public void setSnmpProfile(RowId snmpProfile) {
 		if (this.snmpProfile != null && this.snmpProfile.equals(snmpProfile))
 			return;
-		if (update)
-			updateSnmpProfileOnServer(this.primary, snmpProfile);
+		updateSnmpProfileOnServer(this.primary, snmpProfile);
 		this.snmpProfile = snmpProfile;
 	}
 	
@@ -452,7 +461,7 @@ public class TrentinoNetworkRequisitionNode {
 		return backupProfile;
 	}
 	public void setBackupProfile(RowId backupProfile) {
-		if (this.backupProfile != null && this.backupProfile.equals(backupProfile))
+		if (this.backupProfile != null || this.backupProfile.equals(backupProfile))
 			return;
 		Item backup = m_service.getBackupProfiles().getItem(backupProfile);
 		if (backup != null) {
@@ -461,6 +470,11 @@ public class TrentinoNetworkRequisitionNode {
 			RequisitionAsset enable = new RequisitionAsset("enable",backup.getItemProperty("enable").getValue().toString());
 			RequisitionAsset autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
 			RequisitionAsset connection = new RequisitionAsset("connection", backup.getItemProperty("connection").getValue().toString());
+			m_requisitionNode.putAsset(username);
+			m_requisitionNode.putAsset(password);
+			m_requisitionNode.putAsset(enable);
+			m_requisitionNode.putAsset(autoenable);
+			m_requisitionNode.putAsset(connection);
 			if (update) {
 				m_service.add(TN, m_requisitionNode.getForeignId(), username);
 				m_service.add(TN, m_requisitionNode.getForeignId(), password);
@@ -468,11 +482,6 @@ public class TrentinoNetworkRequisitionNode {
 				m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
 				m_service.add(TN, m_requisitionNode.getForeignId(), connection);
 			}
-			m_requisitionNode.putAsset(username);
-			m_requisitionNode.putAsset(password);
-			m_requisitionNode.putAsset(enable);
-			m_requisitionNode.putAsset(autoenable);
-			m_requisitionNode.putAsset(connection);
 		}
 		this.backupProfile = backupProfile;
 	}
@@ -483,60 +492,67 @@ public class TrentinoNetworkRequisitionNode {
 	public void setAddress1(String address) {
 		if (this.address1 !=  null && this.address1.equals(address))
 			return;
-		RequisitionAsset asset = new RequisitionAsset(ADDRESS, address);
-		if (update)
-			m_service.add(TN, m_requisitionNode.getForeignId(), asset);
-		m_requisitionNode.putAsset(asset);
+		if (address != null ) {
+			RequisitionAsset asset = new RequisitionAsset(ADDRESS, address);
+			RequisitionAsset assetdescription = new RequisitionAsset(DESCRIPTION, city + " - " + address);
+			m_requisitionNode.putAsset(asset);
+			m_requisitionNode.putAsset(assetdescription);
+			if (update) {
+				m_service.add(TN, m_requisitionNode.getForeignId(), asset);
+				m_service.add(TN, m_requisitionNode.getForeignId(), assetdescription);
+			}
+		}
 		this.address1 = address;
-		
-		RequisitionAsset assetdescription = new RequisitionAsset(DESCRIPTION, city + " - " + address);
-		if (update)
-			m_service.add(TN, m_requisitionNode.getForeignId(), assetdescription);
-		m_requisitionNode.putAsset(assetdescription);
 	}
 	public String getHostname() {
 		return hostname;
 	}
 	public void setHostname(String hostname) {
-		if (this.hostname != null && this.hostname == hostname)
+		if (this.hostname != null && this.hostname.equals(hostname))
 			return;
-		String nodelabel=hostname + "." + vrf;
-		if (update) {
-			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-			map.add("node-label", nodelabel);
-			m_service.update(TN, m_requisitionNode.getForeignId(), map);
-		} else {
-			m_requisitionNode.setForeignId(hostname);
+		if (hostname != null) {
+			String nodelabel=hostname + "." + vrf;
+			m_requisitionNode.setNodeLabel(nodelabel);
+			if (update) {
+				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+				map.add("node-label", nodelabel);
+				m_service.update(TN, m_requisitionNode.getForeignId(), map);
+			} else {
+				m_requisitionNode.setForeignId(hostname);
+			}
 		}
-		m_requisitionNode.setNodeLabel(nodelabel);
 		this.hostname = hostname;
 	}
 	public String getPrimary() {
+		System.out.println("Get primary: " + primary);
 		return primary;
 	}
 	public void setPrimary(String primary) {
+		System.out.println("Set primary: " + primary);
 		if (this.primary != null && this.primary.equals(primary))
 			return;
-		InetAddressUtils.getInetAddress(primary);
-		RequisitionInterface iface = new RequisitionInterface();
-		iface.setSnmpPrimary("P");
-		iface.setIpAddr(primary);
-		if (update)
-			iface.setMonitoredServices(m_requisitionNode.getInterface(this.primary).getMonitoredServices());
-		else {
+		if (primary != null) {
+			InetAddressUtils.getInetAddress(primary);
+			RequisitionInterface iface = new RequisitionInterface();
+			iface.setSnmpPrimary("P");
+			iface.setIpAddr(primary);
 			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 			iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
-		}
-		iface.setDescr("Provided by Provision Dashboard");
-		
-		setDescr("Provided by Provision Dashboard");
-		if (update) {
-			m_service.delete(TN, m_requisitionNode.getForeignId(), m_requisitionNode.getInterface(this.primary));
-			m_service.add(TN, m_requisitionNode.getForeignId(),iface);
+			iface.setDescr("Provided by Provision Dashboard");
+			setDescr(iface.getDescr());
+			
+			if (this.primary != null) {
+				if (update) {
+					m_service.delete(TN, m_requisitionNode.getForeignId(), m_requisitionNode.getInterface(this.primary));
+					iface.setMonitoredServices(m_requisitionNode.getInterface(this.primary).getMonitoredServices());
+				}
+				m_requisitionNode.deleteInterface(this.primary);
+			}
+			if (update)
+				m_service.add(TN, m_requisitionNode.getForeignId(),iface);
+			m_requisitionNode.putInterface(iface);
 			updateSnmpProfileOnServer(primary, this.snmpProfile);
-			m_requisitionNode.deleteInterface(this.primary);
 		}
-		m_requisitionNode.putInterface(iface);
 		this.primary = primary;
 	}
 	public RequisitionNode getRequisitionNode() {
@@ -568,8 +584,8 @@ public class TrentinoNetworkRequisitionNode {
 	
 	public void commit() {
 		if (!update) {
-			m_service.add(TN, m_requisitionNode);
 			updateSnmpProfileOnServer(primary, snmpProfile);
+			m_service.add(TN, m_requisitionNode);
 			update=true;
 		}
 	}
