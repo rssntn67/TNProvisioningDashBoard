@@ -461,26 +461,31 @@ public class TrentinoNetworkRequisitionNode {
 		return backupProfile;
 	}
 	public void setBackupProfile(RowId backupProfile) {
-		if (this.backupProfile != null || this.backupProfile.equals(backupProfile))
+		if (this.backupProfile != null && this.backupProfile.equals(backupProfile))
 			return;
-		Item backup = m_service.getBackupProfiles().getItem(backupProfile);
-		if (backup != null) {
-			RequisitionAsset username = new RequisitionAsset("username", backup.getItemProperty("username").getValue().toString());
-			RequisitionAsset password = new RequisitionAsset("password", backup.getItemProperty("password").getValue().toString());
-			RequisitionAsset enable = new RequisitionAsset("enable",backup.getItemProperty("enable").getValue().toString());
-			RequisitionAsset autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
-			RequisitionAsset connection = new RequisitionAsset("connection", backup.getItemProperty("connection").getValue().toString());
-			m_requisitionNode.putAsset(username);
-			m_requisitionNode.putAsset(password);
-			m_requisitionNode.putAsset(enable);
-			m_requisitionNode.putAsset(autoenable);
-			m_requisitionNode.putAsset(connection);
-			if (update) {
-				m_service.add(TN, m_requisitionNode.getForeignId(), username);
-				m_service.add(TN, m_requisitionNode.getForeignId(), password);
-				m_service.add(TN, m_requisitionNode.getForeignId(), enable);
-				m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
-				m_service.add(TN, m_requisitionNode.getForeignId(), connection);
+		if (backupProfile != null) {
+			Item backup = m_service.getBackupProfiles().getItem(backupProfile);
+			if (backup != null) {
+				RequisitionAsset username = new RequisitionAsset("username", backup.getItemProperty("username").getValue().toString());
+				RequisitionAsset password = new RequisitionAsset("password", backup.getItemProperty("password").getValue().toString());
+				RequisitionAsset enable = new RequisitionAsset("enable",backup.getItemProperty("enable").getValue().toString());
+				RequisitionAsset connection = new RequisitionAsset("connection", backup.getItemProperty("connection").getValue().toString());
+				m_requisitionNode.putAsset(username);
+				m_requisitionNode.putAsset(password);
+				m_requisitionNode.putAsset(enable);
+				m_requisitionNode.putAsset(connection);
+				if (update) {
+					m_service.add(TN, m_requisitionNode.getForeignId(), username);
+					m_service.add(TN, m_requisitionNode.getForeignId(), password);
+					m_service.add(TN, m_requisitionNode.getForeignId(), enable);
+					m_service.add(TN, m_requisitionNode.getForeignId(), connection);
+				}
+				if (backup.getItemProperty("auto_enable") != null && backup.getItemProperty("auto_enable").getValue() != null) {
+					RequisitionAsset autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
+					m_requisitionNode.putAsset(autoenable);
+					if (update)
+						m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
+				}
 			}
 		}
 		this.backupProfile = backupProfile;
