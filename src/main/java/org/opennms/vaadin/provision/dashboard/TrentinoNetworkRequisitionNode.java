@@ -339,18 +339,18 @@ public class TrentinoNetworkRequisitionNode {
 			return;
 		if (update && this.networkCategory != null) {
 			for (String cat: this.networkCategory) {
-				RequisitionCategory category = new RequisitionCategory(cat);
-				m_service.delete(TN, m_requisitionNode.getForeignId(), category);
-				m_requisitionNode.deleteCategory(category);
+				RequisitionCategory oldcategory = new RequisitionCategory(cat);
+				m_service.delete(TN, m_requisitionNode.getForeignId(), oldcategory);
+				m_requisitionNode.deleteCategory(oldcategory);
 			}
 		}
 		
 		if (networkCategory != null) {
 			for (String cat: networkCategory) {
-				RequisitionCategory category = new RequisitionCategory(cat);
-				m_requisitionNode.putCategory(category);
+				RequisitionCategory newcategory = new RequisitionCategory(cat);
+				m_requisitionNode.putCategory(newcategory);
 				if (update)
-					m_service.add(TN, m_requisitionNode.getForeignId(), category);
+					m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
 			}
 		}
 		this.networkCategory = networkCategory;
@@ -362,13 +362,13 @@ public class TrentinoNetworkRequisitionNode {
 	public void setNotifCategory(String notifCategory) {
 		if (notifCategory != null && this.notifCategory == notifCategory )
 			return;
-		RequisitionCategory newcategory = new RequisitionCategory(notifCategory);
 		if (update && this.notifCategory != null) {
-			RequisitionCategory category = new RequisitionCategory(this.notifCategory);
-			m_service.delete(TN, m_requisitionNode.getForeignId(), category);
-			m_requisitionNode.deleteCategory(category);
+			RequisitionCategory oldcategory = new RequisitionCategory(this.notifCategory);
+			m_service.delete(TN, m_requisitionNode.getForeignId(), oldcategory);
+			m_requisitionNode.deleteCategory(oldcategory);
 		}
-		if (newcategory != null) { 
+		if (notifCategory != null) { 
+			RequisitionCategory newcategory = new RequisitionCategory(notifCategory);
 			m_requisitionNode.putCategory(newcategory);
 			if (update)
 				m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
@@ -381,16 +381,16 @@ public class TrentinoNetworkRequisitionNode {
 	public void setThreshCategory(String threshCategory) {
 		if (threshCategory != null && this.threshCategory == threshCategory )
 			return;
-		RequisitionCategory newcategory = new RequisitionCategory(threshCategory);
 		if (update && this.threshCategory != null) {
 			RequisitionCategory category = new RequisitionCategory(this.threshCategory);
 			m_service.delete(TN, m_requisitionNode.getForeignId(), category);
 			m_requisitionNode.deleteCategory(category);
 		}
-		if (newcategory != null) {
+		if (threshCategory != null) {
+			RequisitionCategory newcategory = new RequisitionCategory(threshCategory);
 			m_requisitionNode.putCategory(newcategory);
 			if (update)
-			m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
+				m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
 		}		
 		this.threshCategory = threshCategory;
 	}
@@ -524,11 +524,9 @@ public class TrentinoNetworkRequisitionNode {
 		this.hostname = hostname;
 	}
 	public String getPrimary() {
-		System.out.println("Get primary: " + primary);
 		return primary;
 	}
 	public void setPrimary(String primary) {
-		System.out.println("Set primary: " + primary);
 		if (this.primary != null && this.primary.equals(primary))
 			return;
 		if (primary != null) {
