@@ -396,12 +396,13 @@ public class TrentinoNetworkRequisitionNode {
 	public String getVrf() {
 		return vrf;
 	}
-	public void setVrf(String vrf) {
+	public void setVrf(String vrf) throws ProvisionDashboardValidationException {
 		if (this.vrf != null && this.vrf == vrf)
 			return;
 		if (vrf != null) {
 			String nodelabel=hostname + "." + vrf;
-		
+			if ( hostname != null )
+					checkNodeLabel(nodelabel);
 			m_requisitionNode.setNodeLabel(nodelabel);
 			if (update) {
 				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
@@ -514,10 +515,12 @@ public class TrentinoNetworkRequisitionNode {
 	public void setHostname(String hostname) throws ProvisionDashboardValidationException {
 		if (this.hostname != null && this.hostname.equals(hostname))
 			return;
-		if (hostname != null) {
-			//check if exist and then thows validation exception
+		if (hostname != null ) {
+			//check if exist and then throws validation exception
 			String nodelabel=hostname + "." + vrf;
-			
+			if (vrf != null) 
+				checkNodeLabel(nodelabel);
+
 			m_requisitionNode.setNodeLabel(nodelabel);
 			if (update) {
 				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
@@ -529,6 +532,18 @@ public class TrentinoNetworkRequisitionNode {
 		}
 		this.hostname = hostname;
 	}
+	
+	private void checkNodeLabel(String nodelabel ) throws ProvisionDashboardValidationException {
+		System.out.println("Setting label: " + nodelabel);
+		for (String label: m_service.getNodeLabels()) {
+			System.out.println("Checking duplicated label: " + label);
+			if (label.equals(nodelabel)) {
+				System.out.println("found duplicated label: " + label);
+				throw new ProvisionDashboardValidationException("The node label exist: cannot duplicate node label: " + label);
+			}
+		}
+	}
+	
 	public String getPrimary() {
 		return primary;
 	}

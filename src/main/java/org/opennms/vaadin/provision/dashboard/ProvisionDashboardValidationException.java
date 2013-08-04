@@ -1,6 +1,8 @@
 package org.opennms.vaadin.provision.dashboard;
 
-public class ProvisionDashboardValidationException extends Exception {
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+
+public class ProvisionDashboardValidationException extends CommitException {
 
 	/**
 	 * 

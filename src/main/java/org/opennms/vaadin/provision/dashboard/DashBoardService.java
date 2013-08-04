@@ -142,6 +142,8 @@ public class DashboardService {
 
 	public void add(String foreignSource, RequisitionNode node) {
 		m_provisionService.add(foreignSource, node);
+		for (RequisitionInterface riface: node.getInterfaces())
+			m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
 	}
 
 	public void delete(String foreignSource, RequisitionNode node) {
@@ -217,7 +219,11 @@ public class DashboardService {
 	}
 
 	public List<String> getNodeLabels() {
-		return m_requisitionContainer.getItemIds();
+	   	List<String> nodelabels = new ArrayList<String>();
+	   	for (Object itemId: m_requisitionContainer.getItemIds()) {
+	   		nodelabels.add(m_requisitionContainer.getItem(itemId).getBean().getNodeLabel());
+	   	}
+	   	return nodelabels;
 	}
 
 	public String[] getUrls() {
