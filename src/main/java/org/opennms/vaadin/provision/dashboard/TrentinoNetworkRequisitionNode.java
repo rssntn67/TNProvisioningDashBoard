@@ -496,10 +496,18 @@ public class TrentinoNetworkRequisitionNode {
 				map.add("node-label", nodelabel);
 				m_service.update(TN, m_requisitionNode.getForeignId(), map);
 			} else {
+				checkForeignId(hostname);
 				m_requisitionNode.setForeignId(hostname);
 			}
 		}
 		this.hostname = hostname;
+	}
+
+	private void checkForeignId(String hostname) throws ProvisionDashboardValidationException {
+		for (String label: m_service.getForeignIds()) {
+			if (label.equals(hostname)) 
+				throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + label);
+		}
 	}
 	
 	private void checkNodeLabel(String nodelabel ) throws ProvisionDashboardValidationException {
