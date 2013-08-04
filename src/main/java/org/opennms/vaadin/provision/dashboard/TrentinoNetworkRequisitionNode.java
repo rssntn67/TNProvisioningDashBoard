@@ -512,11 +512,13 @@ public class TrentinoNetworkRequisitionNode {
 	public String getHostname() {
 		return hostname;
 	}
-	public void setHostname(String hostname) {
+	public void setHostname(String hostname) throws ProvisionDashboardValidationException {
 		if (this.hostname != null && this.hostname.equals(hostname))
 			return;
 		if (hostname != null) {
+			//check if exist and then thows validation exception
 			String nodelabel=hostname + "." + vrf;
+			
 			m_requisitionNode.setNodeLabel(nodelabel);
 			if (update) {
 				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
