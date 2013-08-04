@@ -22,7 +22,9 @@ import org.opennms.rest.client.model.OnmsIpInterface;
 import org.opennms.rest.client.model.OnmsNodeList;
 import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Container;
+import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
@@ -30,6 +32,8 @@ import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 
 public class DashboardService {
     
+	protected static final String LABEL = "nodeLabel";
+
 	protected String[] URL_LIST = new String[] {
 		"http://demo.arsinfo.it/opennms/rest",
 		"http://localhost:8980/opennms/rest"
@@ -42,9 +46,22 @@ public class DashboardService {
 	private JerseyNodesService m_nodeService;
 	private JerseySnmpInfoService m_snmpInfoService;
 
-	private boolean loggedin = false;
+	private boolean snmpProfileLoaded = false;
+	private boolean requisitionNodeLoaded = false;
+	private boolean backupProfileLoaded = false;
+	
 	private SQLContainer m_snmpProfiles;
 	private SQLContainer m_backupProfiles;
+	private BeanContainer<String, TrentinoNetworkRequisitionNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
+
+	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer() {
+		return m_requisitionContainer;
+	}
+
+	public void setRequisitionContainer(
+			BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer) {
+		m_requisitionContainer = requisitionContainer;
+	}
 
 	private JDBCConnectionPool m_pool; 
    
@@ -82,14 +99,7 @@ public class DashboardService {
 	public void update(String foreignSource, String foreignId, MultivaluedMap<String, String> map) {
 		m_provisionService.update(foreignSource, foreignId, map);
 	}
-	
-	public List<OnmsIpInterface> getIpInterfaces(MultivaluedMap<String, String> queryParams) {
-		OnmsNodeList nodes = m_nodeService.find(queryParams);
-		if (nodes.isEmpty())
-			return new ArrayList<OnmsIpInterface>();
-        return m_nodeService.getIpInterfaces(m_nodeService.find(queryParams).getFirst().getId());
-	}
-	
+		
 	public void destroy() {
 		setJerseyClient(null);
 		m_pool.destroy();
@@ -97,7 +107,6 @@ public class DashboardService {
 	
 	public void logout() {
 		destroy();
-		loggedin = false;
 	}
 	
 	public void login(String url, String username, String password) throws SQLException {
@@ -106,7 +115,6 @@ public class DashboardService {
 		m_snmpInfoService.get("127.0.0.1");
 		m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");
 		loadSnmpProfiles();
-		loggedin = true;
 	}
 
 	public void add(String foreignSource, String foreignid, RequisitionAsset asset) {
@@ -171,22 +179,61 @@ public class DashboardService {
 
 	@SuppressWarnings("deprecation")
 	public void loadSnmpProfiles() throws SQLException {
-		if (loggedin)
+		
+		if (snmpProfileLoaded)
 			return;
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
 		m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
+		snmpProfileLoaded = true;
 	}
 
 	@SuppressWarnings("deprecation")
 	public void loadBackupProfiles() throws SQLException {
+		if (backupProfileLoaded)
+			return;
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
 		m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
+		backupProfileLoaded=true;
 	}
 	
+	public void loadProvisionNode(String foreignSource) {
+		if (requisitionNodeLoaded)
+			return;
+		m_requisitionContainer.setBeanIdProperty(LABEL);
+		for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
+			m_requisitionContainer.addBean(new TrentinoNetworkRequisitionNode(node,this));
+		}
+		requisitionNodeLoaded = true;
+	}
+
+	public List<String> getForeignIds() {
+	   	List<String> foreignids = new ArrayList<String>();
+	   	for (Object itemId: m_requisitionContainer.getItemIds()) {
+	   		foreignids.add(m_requisitionContainer.getItem(itemId).getBean().getRequisitionNode().getForeignId());
+	   	}
+	   	return foreignids;
+	}
+
 	public String[] getUrls() {
 		return URL_LIST;
 	}
-	
+
+	public List<String> getIpAddresses(String foreignSource,String nodelabel) {
+	   	List<String> ipaddresses = new ArrayList<String>();
+		MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+    	queryParams.add("label", nodelabel);
+    	queryParams.add("foreignSource", foreignSource);
+
+		OnmsNodeList nodes = m_nodeService.find(queryParams);
+		if (nodes.isEmpty())
+			return ipaddresses; 
+        for (OnmsIpInterface ipinterface: m_nodeService.getIpInterfaces(m_nodeService.find(queryParams).getFirst().getId())){
+        	ipaddresses.add(ipinterface.getIpAddress());
+        }
+        return ipaddresses;
+	}
+
+
 }

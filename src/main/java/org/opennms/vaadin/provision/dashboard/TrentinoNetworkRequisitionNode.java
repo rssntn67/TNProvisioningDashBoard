@@ -20,7 +20,6 @@ public class TrentinoNetworkRequisitionNode {
 	protected static final String DESCR = "descr";
 	protected static final String DESCRIPTION = "description";
 	protected static final String HOST = "hostname";
-	protected static final String LABEL = "nodeLabel";
 	protected static final String PRIMARY = "primary";
 	protected static final String VRF = "vrf";
 	protected static final String PARENT = "parent";

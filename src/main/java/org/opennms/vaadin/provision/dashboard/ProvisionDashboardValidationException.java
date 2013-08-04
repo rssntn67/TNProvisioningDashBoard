@@ -2,6 +2,11 @@ package org.opennms.vaadin.provision.dashboard;
 
 public class ProvisionDashboardValidationException extends Exception {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1524056241176263403L;
+
 	public ProvisionDashboardValidationException() {
 		super();
 	}

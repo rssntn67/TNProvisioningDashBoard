@@ -2,12 +2,7 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 
-import javax.ws.rs.core.MultivaluedMap;
 
-import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.rest.client.model.OnmsIpInterface;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.Container.Filter;
@@ -49,7 +44,7 @@ import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionN
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.VRF;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PRIMARY;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PARENT;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.LABEL;
+import static org.opennms.vaadin.provision.dashboard.DashboardService.LABEL;
 
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NETWORK_CATEGORY;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NOTIF_CATEGORY;
@@ -124,6 +119,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			getService().loadBackupProfiles();
 		} catch (SQLException e) {
 			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
+			return;
+		}
+		try {
+			getService().loadProvisionNode(TN);
+		} catch (Exception e) {
+			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
 		initLayout();
@@ -309,6 +310,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(false);
+		for (String foreignId :getService().getForeignIds())
+			m_parentComboBox.addItem(foreignId);
 		leftGeneralInfo.addComponent(m_parentComboBox);
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		generalInfo.addComponent(leftGeneralInfo);
@@ -616,7 +619,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 
 	private void initProvisionNodeList() {
-		m_requisitionContainer = getProvisionNodeList();
+		m_requisitionContainer = getService().getRequisitionContainer();
 		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 		m_requisitionTable.setVisibleColumns(new String[] { LABEL });
 		m_requisitionTable.setSelectable(true);
@@ -647,14 +650,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_editorFields.setItemDataSource(node);
 			
 			m_secondaryIpComboBox.removeAllItems();
-		   	MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
-	    	queryParams.add("label", node.getNodeLabel());
-	    	queryParams.add("foreignSource", TN);
 	 
-			for (OnmsIpInterface ip: getService().getIpInterfaces(queryParams) ) {
-				if (ip.getIpAddress().equals(node.getPrimary()))
+			for (String ip: getService().getIpAddresses(TN, node.getNodeLabel()) ) {
+				if (ip.equals(node.getPrimary()))
 					continue;
-				m_secondaryIpComboBox.addItem(ip.getIpAddress());
+				m_secondaryIpComboBox.addItem(ip);
 			}
 			m_secondaryIpAddressTable.setContainerDataSource(node.getSecondary());
 			
@@ -672,14 +672,5 @@ public class TrentinoNetworkTab extends DashboardTab {
 		}
 
 	}
-	private BeanContainer<String, TrentinoNetworkRequisitionNode> getProvisionNodeList() {
-		BeanContainer<String,TrentinoNetworkRequisitionNode> nodes = new BeanContainer<String,TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
-		nodes.setBeanIdProperty(LABEL);
-		for (RequisitionNode node : getService().getRequisitionNodes(getForeignSource()).getNodes()) {
-			nodes.addBean(new TrentinoNetworkRequisitionNode(node,getService()));
-			m_parentComboBox.addItem(node.getForeignId());
-		}
-		return nodes;
-	}
-	
+
 }
