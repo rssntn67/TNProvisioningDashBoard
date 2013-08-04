@@ -216,6 +216,10 @@ public class DashboardService {
 	   	return foreignids;
 	}
 
+	public List<String> getNodeLabels() {
+		return m_requisitionContainer.getItemIds();
+	}
+
 	public String[] getUrls() {
 		return URL_LIST;
 	}
