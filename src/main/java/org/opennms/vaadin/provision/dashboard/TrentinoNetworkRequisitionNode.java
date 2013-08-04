@@ -530,6 +530,17 @@ public class TrentinoNetworkRequisitionNode {
 				throw new ProvisionDashboardValidationException("There is no dns domain for: " + nodelabel);
 		}
 		
+		//check dns name
+		if (hostname.length() > 253)
+			throw new ProvisionDashboardValidationException("Bind9 error: The full domain name exceed a total length of 253: " + nodelabel);
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: hostname.split("\\.")) {
+			if (label.length() > 63)
+				throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + label);
+			if (!label.matches(re));	
+				throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters: " + label);
+		}
+		
 		
 	}
 	

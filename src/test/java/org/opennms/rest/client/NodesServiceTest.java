@@ -137,4 +137,36 @@ public class NodesServiceTest {
 
     }
 
+    @Test
+    public void testDnsLabel() {
+    	String nodelabel = "prova.alv01.wl.tnnet.it";
+    	String regularExpression = "\\.";
+    	System.out.println("Prova che almeno scrivo......");
+		for (String label: nodelabel.split(regularExpression) ) {
+			System.out.println(label);
+		}
+    }
+
+    @Test
+    public void testDnsLabelSyntax() {
+    	String nodelabel = "pro-va.alv01.wl.tnnet.it";
+    	String regularExpression = "\\.";
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: nodelabel.split(regularExpression) ) {
+			System.out.println(label);
+			System.out.println(label.matches(re));
+		}
+    }
+    
+    @Test
+    public void testDnsLabelSyntaxWithHyphen() {
+    	String nodelabel = "pro_va.alv01.wl.tnnet.it";
+    	String regularExpression = "\\.";
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: nodelabel.split(regularExpression) ) {
+			System.out.println(label);
+			System.out.println(label.matches(re));
+		}
+    }
+
 }

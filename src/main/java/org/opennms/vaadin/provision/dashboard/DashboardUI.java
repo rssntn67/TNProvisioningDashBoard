@@ -13,8 +13,6 @@ import com.vaadin.ui.UI;
  * embed your UI to an existing web page. 
  */
 //FIXME add configuration file for postgresql connection and urls
-//FIXME add validation: valid dns name
-//FIXME add validation: foreignId Unique
 //FIXME change color for not valid nodes
 @Title("Trentino Network Opennms Provision Dashboard")
 @Theme("runo")
