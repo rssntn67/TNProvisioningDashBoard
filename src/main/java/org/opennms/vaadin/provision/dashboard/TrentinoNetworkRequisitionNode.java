@@ -89,28 +89,24 @@ public class TrentinoNetworkRequisitionNode {
 		{"Winwinet","Accesso"}
 	};
 	
-	protected static final String[] m_domains = {
-		"aglav.tnnet.it",
+	public static final String[] m_sub_domains = {
+		"sw01.bb.tnnet.it",
+		"sw02.bb.tnnet.it",
+		"cavalese-l3.pat.tnnet.it",
+		"cpe01.biblio.tnnet.it",
+		"cpe01.pat.tnnet.it",
+		"cpe01.patacquepub.tnnet.it",
+		"cpe01.scuole.tnnet.it",
+		"mktic.comuni.tnnet.it",
+		"mtk01.reperibilitnet.tnnet.it",
 		"alv01.wl.tnnet.it",
 		"alv02.wl.tnnet.it",
 		"alv03.wl.tnnet.it",
 		"alv04.wl.tnnet.it",
 		"alv05.wl.tnnet.it",
 		"alv06.wl.tnnet.it",
-		"apss.tnnet.it",
 		"asw01.wl.tnnet.it",
-		"bb.tnnet.it",
-		"biblio.tnnet.it",
-		"cavalese-l3.pat.tnnet.it",
-		"comunetn.tnnet.it",
-		"comuni.tnnet.it",
-		"conspro.tnnet.it",
-		"cpe01.biblio.tnnet.it",
-		"cpe01.pat.tnnet.it",
-		"cpe01.patacquepub.tnnet.it",
-		"cpe01.scuole.tnnet.it",
 		"cpe01.wl.tnnet.it",
-		"cue.tnnet.it",
 		"ess01.wl.tnnet.it",
 		"ess02.wl.tnnet.it",
 		"ess03.wl.tnnet.it",
@@ -119,35 +115,8 @@ public class TrentinoNetworkRequisitionNode {
 		"ess06.wl.tnnet.it",
 		"ess07.wl.tnnet.it",
 		"ess08.wl.tnnet.it",
-		"esterni.tnnet.it",
-		"geosis.tnnet.it",
-		"hq.tnnet.it",
-		"iasma.tnnet.it",
-		"info.tnnet.it",
-		"internet-esterni.tnnet.it",
-		"internet.tnnet.it",
-		"medici.tnnet.it",
-		"mitt.tnnet.it",
-		"mktic.comuni.tnnet.it",
-		"mtk01.reperibilitnet.tnnet.it",
 		"mtr01.wl.tnnet.it",
-		"operaunitn.tnnet.it",
-		"pat.tnnet.it",
-		"patacquepub.tnnet.it",
-		"patdighe.tnnet.it",
-		"patvoce.tnnet.it",
-		"reperibilitnet.tnnet.it",
-		"rsacivicatn.tnnet.it",
-		"rsaspes.tnnet.it",
-		"scuole.tnnet.it",
-		"sw01.bb.tnnet.it",
-		"sw02.bb.tnnet.it",
-		"telpat-autonome.tnnet.it",
-		"uby.wl.tnnet.it",
-		"unitn.tnnet.it",
-		"vdsrovereto.tnnet.it",
-		"winwinet.tnnet.it",
-		"wl.tnnet.it"
+		"uby.wl.tnnet.it"
 	};
 	
 	protected static final String[] m_vrfs = {
@@ -534,14 +503,26 @@ public class TrentinoNetworkRequisitionNode {
 	}
 	
 	private void checkNodeLabel(String nodelabel ) throws ProvisionDashboardValidationException {
-		System.out.println("Setting label: " + nodelabel);
+		//check duplicated hostname
 		for (String label: m_service.getNodeLabels()) {
-			System.out.println("Checking duplicated label: " + label);
-			if (label.equals(nodelabel)) {
-				System.out.println("found duplicated label: " + label);
+			if (label.equals(nodelabel)) 
 				throw new ProvisionDashboardValidationException("The node label exist: cannot duplicate node label: " + label);
-			}
 		}
+		//check if domain name exists
+		if (hostname.contains(".")) {
+			boolean subdomainnotfound = true;
+			String hostlabel = hostname.substring(0,hostname.indexOf("."));
+			for (String subdomain: m_sub_domains ) {
+				if (nodelabel.equals(hostlabel+"."+subdomain)) {
+					subdomainnotfound = false;
+					break;
+				}
+			}
+			if (subdomainnotfound)
+				throw new ProvisionDashboardValidationException("There is no dns domain for: " + nodelabel);
+		}
+		
+		
 	}
 	
 	public String getPrimary() {

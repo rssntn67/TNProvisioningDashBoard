@@ -38,6 +38,7 @@ import org.opennms.rest.client.model.OnmsIpInterface;
 import org.opennms.rest.client.model.OnmsIpInterfaceList;
 import org.opennms.rest.client.model.OnmsNode;
 import org.opennms.rest.client.model.OnmsNodeList;
+import org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
@@ -103,4 +104,37 @@ public class NodesServiceTest {
     		System.out.println(ip.getIpHostName());
     	}
     }
+    
+    @Test
+    public void testMatchSubDomain() {
+    	String hostname = "prova.alv01";
+    	String nodelabel = "prova.alv01.wl.tnnet.it";
+		System.out.println(nodelabel);
+		if (hostname.contains(".")) {
+			String hostlabel = hostname.substring(0,hostname.indexOf("."));
+			System.out.println(hostlabel);
+			for (String subdomain: TrentinoNetworkRequisitionNode.m_sub_domains ) {
+				if (nodelabel.equals(hostlabel+"."+subdomain))
+					System.out.println(hostlabel+"."+subdomain);
+			}
+		}
+
+    }
+    
+    @Test
+    public void testUnMatchSubDomain() {
+    	String hostname = "prova.alv07";
+    	String nodelabel = "prova.alv07.wl.tnnet.it";
+		System.out.println(nodelabel);
+		if (hostname.contains(".")) {
+			String hostlabel = hostname.substring(0,hostname.indexOf("."));
+			System.out.println(hostlabel);
+			for (String subdomain: TrentinoNetworkRequisitionNode.m_sub_domains ) {
+				if (nodelabel.equals(hostlabel+"."+subdomain))
+					System.out.println(hostlabel+"."+subdomain);
+			}
+		}
+
+    }
+
 }
