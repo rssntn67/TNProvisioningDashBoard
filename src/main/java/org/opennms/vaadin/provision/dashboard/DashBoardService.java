@@ -102,7 +102,8 @@ public class DashboardService {
 		
 	public void destroy() {
 		setJerseyClient(null);
-		m_pool.destroy();
+		if (m_pool != null)
+			m_pool.destroy();
 	}
 	
 	public void logout() {
@@ -148,6 +149,8 @@ public class DashboardService {
 
 	public void delete(String foreignSource, RequisitionNode node) {
 		m_provisionService.delete(foreignSource, node);
+		for (RequisitionInterface riface: node.getInterfaces())
+			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
 	}
 
 	public void delete(String foreignSource, String foreignId, RequisitionCategory category) {
@@ -213,7 +216,8 @@ public class DashboardService {
 	public List<String> getForeignIds() {
 	   	List<String> foreignids = new ArrayList<String>();
 	   	for (Object itemId: m_requisitionContainer.getItemIds()) {
-	   		foreignids.add(m_requisitionContainer.getItem(itemId).getBean().getRequisitionNode().getForeignId());
+	   		if (m_requisitionContainer.getItem(itemId).getBean().getRequisitionNode().getForeignId() != null)
+	   			foreignids.add(m_requisitionContainer.getItem(itemId).getBean().getRequisitionNode().getForeignId());
 	   	}
 	   	return foreignids;
 	}

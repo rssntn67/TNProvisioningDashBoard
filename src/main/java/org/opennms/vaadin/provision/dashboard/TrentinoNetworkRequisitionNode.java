@@ -1,5 +1,7 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.util.Arrays;
+
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.opennms.core.utils.InetAddressUtils;
@@ -303,7 +305,7 @@ public class TrentinoNetworkRequisitionNode {
 		return networkCategory;
 	}
 	public void setNetworkCategory(String[] networkCategory) {
-		if (networkCategory != null && this.networkCategory == networkCategory)
+		if (networkCategory != null && Arrays.equals(this.networkCategory,networkCategory))
 			return;
 		if (update && this.networkCategory != null) {
 			for (String cat: this.networkCategory) {
@@ -328,7 +330,7 @@ public class TrentinoNetworkRequisitionNode {
 		return notifCategory;
 	}
 	public void setNotifCategory(String notifCategory) {
-		if (notifCategory != null && this.notifCategory == notifCategory )
+		if (notifCategory != null && notifCategory.equals(this.notifCategory))
 			return;
 		if (update && this.notifCategory != null) {
 			RequisitionCategory oldcategory = new RequisitionCategory(this.notifCategory);
@@ -347,7 +349,7 @@ public class TrentinoNetworkRequisitionNode {
 		return threshCategory;
 	}
 	public void setThreshCategory(String threshCategory) {
-		if (threshCategory != null && this.threshCategory == threshCategory )
+		if (threshCategory != null && threshCategory.equals(this.threshCategory))
 			return;
 		if (update && this.threshCategory != null) {
 			RequisitionCategory category = new RequisitionCategory(this.threshCategory);
@@ -366,12 +368,12 @@ public class TrentinoNetworkRequisitionNode {
 		return vrf;
 	}
 	public void setVrf(String vrf) throws ProvisionDashboardValidationException {
-		if (this.vrf != null && this.vrf == vrf)
+		if (this.vrf != null && this.vrf.equals(vrf))
 			return;
 		if (vrf != null) {
 			String nodelabel=hostname + "." + vrf;
 			if ( hostname != null )
-					checkNodeLabel(nodelabel);
+					checkNodeLabel(hostname,nodelabel);
 			m_requisitionNode.setNodeLabel(nodelabel);
 			if (update) {
 				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
@@ -399,7 +401,8 @@ public class TrentinoNetworkRequisitionNode {
 	public void setSnmpProfile(RowId snmpProfile) {
 		if (this.snmpProfile != null && this.snmpProfile.equals(snmpProfile))
 			return;
-		updateSnmpProfileOnServer(this.primary, snmpProfile);
+		if (snmpProfile != null)
+			updateSnmpProfileOnServer(this.primary, snmpProfile);
 		this.snmpProfile = snmpProfile;
 	}
 	
@@ -485,19 +488,15 @@ public class TrentinoNetworkRequisitionNode {
 		if (this.hostname != null && this.hostname.equals(hostname))
 			return;
 		if (hostname != null ) {
-			//check if exist and then throws validation exception
 			String nodelabel=hostname + "." + vrf;
 			if (vrf != null) 
-				checkNodeLabel(nodelabel);
+				checkNodeLabel(hostname,nodelabel);
 
 			m_requisitionNode.setNodeLabel(nodelabel);
 			if (update) {
 				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
 				map.add("node-label", nodelabel);
 				m_service.update(TN, m_requisitionNode.getForeignId(), map);
-			} else {
-				checkForeignId(hostname);
-				m_requisitionNode.setForeignId(hostname);
 			}
 		}
 		this.hostname = hostname;
@@ -510,7 +509,7 @@ public class TrentinoNetworkRequisitionNode {
 		}
 	}
 	
-	private void checkNodeLabel(String nodelabel ) throws ProvisionDashboardValidationException {
+	private void checkNodeLabel(String hostname, String nodelabel ) throws ProvisionDashboardValidationException {
 		//check duplicated hostname
 		for (String label: m_service.getNodeLabels()) {
 			if (label.equals(nodelabel)) 
@@ -536,9 +535,9 @@ public class TrentinoNetworkRequisitionNode {
     	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
 		for (String label: hostname.split("\\.")) {
 			if (label.length() > 63)
-				throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + label);
-			if (!label.matches(re));	
-				throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters: " + label);
+				throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + nodelabel+"/"+label);
+			if (!label.matches(re))	
+				throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters or start or end with hypen: " + nodelabel+"/"+label);
 		}
 		
 		
@@ -601,8 +600,10 @@ public class TrentinoNetworkRequisitionNode {
 		m_requisitionNode.deleteInterface(ipaddress);
 	}
 	
-	public void commit() {
+	public void commit() throws ProvisionDashboardValidationException {
 		if (!update) {
+			checkForeignId(hostname);
+			m_requisitionNode.setForeignId(hostname);
 			updateSnmpProfileOnServer(primary, snmpProfile);
 			m_service.add(TN, m_requisitionNode);
 			update=true;

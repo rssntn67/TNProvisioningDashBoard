@@ -14,6 +14,7 @@ import com.vaadin.ui.UI;
  */
 //FIXME add configuration file for postgresql connection and urls
 //FIXME change color for not valid nodes
+//FIXME before releasing remove e.printstacktrace from save
 @Title("Trentino Network Opennms Provision Dashboard")
 @Theme("runo")
 public class DashboardUI extends UI {

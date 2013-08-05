@@ -169,4 +169,27 @@ public class NodesServiceTest {
 		}
     }
 
+
+    @Test
+    public void testDnsLabelWithRe() {
+    	String nodelabel = "prova";
+    	String regularExpression = "\\.";
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: nodelabel.split(regularExpression) ) {
+			System.out.println(label);
+			System.out.println(label.matches(re));
+		}
+    }
+
+    @Test
+    public void testDnsLabelWithReHypenStart() {
+    	String nodelabel = "-prova";
+    	String regularExpression = "\\.";
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: nodelabel.split(regularExpression) ) {
+			System.out.println(label);
+			System.out.println(label.matches(re));
+		}
+    }
+
 }

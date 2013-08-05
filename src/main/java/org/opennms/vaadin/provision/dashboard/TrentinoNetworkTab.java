@@ -10,7 +10,6 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.IndexedContainer;
@@ -566,7 +565,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
 					m_requisitionContainer.removeAllContainerFilters();
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
-				} catch (CommitException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					String localizedMessage = e.getLocalizedMessage();
 					Throwable t = e.getCause();
