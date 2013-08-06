@@ -87,8 +87,9 @@ public class DashboardService {
     	if (file.exists() && file.isFile()) {
     		try {
     			m_configuration.load(new FileInputStream(file));
+    			System.out.println("Configuration file loaded");
     		} catch (IOException ex) {
-    			System.out.println("No configuration file found using default");
+    			System.out.println("No configuration file found using default built in config info");
     		}
   
     	}
