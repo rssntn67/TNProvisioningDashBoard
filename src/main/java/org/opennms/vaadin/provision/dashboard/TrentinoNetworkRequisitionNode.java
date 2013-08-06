@@ -177,6 +177,16 @@ public class TrentinoNetworkRequisitionNode {
 	protected String city;
 	protected String address1;
 	
+	protected boolean valid = true;
+	
+	public boolean isValid() {
+		return valid;
+	}
+
+	public void setValid(boolean valid) {
+		this.valid = valid;
+	}
+
 	private DashboardService m_service;
 	private boolean update = true;
 	
