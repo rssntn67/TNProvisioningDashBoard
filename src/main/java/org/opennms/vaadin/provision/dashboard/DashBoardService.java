@@ -40,7 +40,7 @@ public class DashboardService {
 
 	protected static final String PROPERTIES_FILE_PATH = "/etc/tomcat7/provision-dashboard.properties";
 	protected static final String PROPERTIES_URLS_KEY = "urls";
-	protected static final String PROPERTIES_URL_ROOT_KEY = "url";
+	protected static final String PROPERTIES_URL_ROOT_KEY = "url.";
 	protected static final String PROPERTIES_DB_URL_KEY = "db_url";
 	protected static final String PROPERTIES_DB_USER_KEY = "db_username";
 	protected static final String PROPERTIES_DB_PASS_KEY = "db_password";
@@ -256,7 +256,7 @@ public class DashboardService {
 		List<String> urls = new ArrayList<String>();
 		if (m_configuration.getProperty(PROPERTIES_URLS_KEY) != null ) {
 			for (String urlKey: m_configuration.getProperty(PROPERTIES_URLS_KEY).split(",")) {
-				String key = PROPERTIES_URL_ROOT_KEY+"."+urlKey;
+				String key = PROPERTIES_URL_ROOT_KEY+urlKey;
 				if (m_configuration.getProperty(key) != null)
 					urls.add(m_configuration.getProperty(key));
 			}
