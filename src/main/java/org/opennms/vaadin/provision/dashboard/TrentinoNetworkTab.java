@@ -43,6 +43,7 @@ import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionN
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.VRF;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PRIMARY;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PARENT;
+import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.VALID;
 import static org.opennms.vaadin.provision.dashboard.DashboardService.LABEL;
 
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NETWORK_CATEGORY;
@@ -118,12 +119,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			getService().loadBackupProfiles();
 		} catch (SQLException e) {
 			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
-			return;
-		}
-		try {
-			getService().loadProvisionNode(TN);
-		} catch (Exception e) {
-			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
 		initLayout();
@@ -618,18 +613,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 
 	private void initProvisionNodeList() {
-		m_requisitionContainer = getService().getRequisitionContainer();
-		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
-		m_requisitionTable.setVisibleColumns(new String[] { LABEL });
-		m_requisitionTable.setSelectable(true);
-		m_requisitionTable.setImmediate(true);
+		try {
+			m_requisitionContainer = getService().getRequisitionContainer(TN);
+			m_requisitionTable.setContainerDataSource(m_requisitionContainer);
+			m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
+			m_requisitionTable.setSelectable(true);
+			m_requisitionTable.setImmediate(true);
 
-		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
-			private static final long serialVersionUID = 1L;
-			public void valueChange(ValueChangeEvent event) {
-				selectItem();
-			}
-		});
+			m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
+				private static final long serialVersionUID = 1L;
+				public void valueChange(ValueChangeEvent event) {
+					selectItem();
+				}
+			});
+		} catch (Exception e) {
+			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
+			return;
+		}
 	}
 
 	@SuppressWarnings("unchecked")

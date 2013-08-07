@@ -67,9 +67,17 @@ public class DashboardService {
 
 	private BeanContainer<String, TrentinoNetworkRequisitionNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 
-	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer() {
+	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String foreignSource) {
+		if (!requisitionNodeLoaded) {
+			m_requisitionContainer.setBeanIdProperty(LABEL);
+			for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
+				m_requisitionContainer.addBean(new TrentinoNetworkRequisitionNode(node,this));
+			}
+			requisitionNodeLoaded = true;
+		}
 		return m_requisitionContainer;
 	}
+
 
 	public void setRequisitionContainer(
 			BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer) {
@@ -226,16 +234,6 @@ public class DashboardService {
 		backupProfileLoaded=true;
 	}
 	
-	public void loadProvisionNode(String foreignSource) {
-		if (requisitionNodeLoaded)
-			return;
-		m_requisitionContainer.setBeanIdProperty(LABEL);
-		for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
-			m_requisitionContainer.addBean(new TrentinoNetworkRequisitionNode(node,this));
-		}
-		requisitionNodeLoaded = true;
-	}
-
 	public List<String> getForeignIds() {
 	   	List<String> foreignids = new ArrayList<String>();
 	   	for (Object itemId: m_requisitionContainer.getItemIds()) {

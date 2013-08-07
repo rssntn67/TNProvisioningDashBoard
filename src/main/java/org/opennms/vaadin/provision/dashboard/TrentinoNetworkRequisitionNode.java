@@ -25,6 +25,7 @@ public class TrentinoNetworkRequisitionNode {
 	protected static final String PRIMARY = "primary";
 	protected static final String VRF = "vrf";
 	protected static final String PARENT = "parent";
+	protected static final String VALID = "valid";
 	
 	protected static final String CITY    = "city";
 	protected static final String ADDRESS = "address1";
@@ -218,6 +219,8 @@ public class TrentinoNetworkRequisitionNode {
 			}
 		}
 
+		if (vrf == null || hostname == null)
+			valid = false;
 		secondary.addContainerProperty("indirizzo ip", String.class, null);
 		for (RequisitionInterface ip: m_requisitionNode.getInterfaces()) {
 			if (ip.getSnmpPrimary().equals("P")) {
@@ -228,6 +231,8 @@ public class TrentinoNetworkRequisitionNode {
 				ipItem.getItemProperty("indirizzo ip").setValue(ip.getIpAddr()); 
 			}
 		}
+		if (primary == null)
+			valid = false;
 		
 		for (String[] networkCategory: m_network_categories) {
 			if (m_requisitionNode.getCategory(networkCategory[0]) != null && m_requisitionNode.getCategory(networkCategory[1]) != null) {
@@ -235,13 +240,16 @@ public class TrentinoNetworkRequisitionNode {
 				break;
 			}
 		}
-
+		if (networkCategory == null)
+			valid = false;
 		for (String notifCategory: m_notif_categories) {
 			if (m_requisitionNode.getCategory(notifCategory) != null ) {
 				this.notifCategory = notifCategory;
 				break;
 			}
 		}
+		if (notifCategory == null)
+			valid = false;
 		
 		for (String threshCategory: m_thresh_categories) {
 			if (m_requisitionNode.getCategory(threshCategory) != null ) {
@@ -249,6 +257,8 @@ public class TrentinoNetworkRequisitionNode {
 				break;
 			}
 		}
+		if (threshCategory == null)
+			valid = false;
 		
 		for (Object profileId: m_service.getBackupProfiles().getItemIds()) {
 			Item profile = m_service.getBackupProfiles().getItem(profileId);
@@ -263,12 +273,27 @@ public class TrentinoNetworkRequisitionNode {
 				break;
 			}
 		}
+		if (backupProfile == null)
+			valid = false;
 		
 		if (requisitionNode.getCity() != null)
 			city = requisitionNode.getCity();
+		else
+			valid = false;
+		
 		if (m_requisitionNode.getAsset(ADDRESS) != null)
 			address1 = m_requisitionNode.getAsset(ADDRESS).getValue();
+		else
+			valid = false;
 		
+		if (hasInvalidDnsBind9Size(getNodeLabel()))
+			valid = false;
+		if (hasInvalidDnsBind9LabelSize(getNodeLabel()))
+			valid = false;
+		if (hasInvalidDnsBind9Label(getNodeLabel()))
+			valid = false;
+		if (hostname != null && hasUnSupportedDnsDomain(hostname,getNodeLabel()))
+			valid = false;
 	}
 	
 	public String getParent() {
@@ -380,21 +405,31 @@ public class TrentinoNetworkRequisitionNode {
 	public void setVrf(String vrf) throws ProvisionDashboardValidationException {
 		if (this.vrf != null && this.vrf.equals(vrf))
 			return;
-		if (vrf != null) {
+		if (vrf != null && hostname != null ) {
 			String nodelabel=hostname + "." + vrf;
-			if ( hostname != null )
-					checkNodeLabel(hostname,nodelabel);
-			m_requisitionNode.setNodeLabel(nodelabel);
-			if (update) {
-				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-				map.add("node-label", nodelabel);
-				m_service.update(TN, m_requisitionNode.getForeignId(), map);
-			}
+			updateNodeLabel(nodelabel, hostname);
 		}
 		this.vrf = vrf;
-
 	}
 
+	private void updateNodeLabel(String nodelabel, String hostname) throws ProvisionDashboardValidationException {
+		if	(hasInvalidDnsBind9Size(nodelabel))
+			throw new ProvisionDashboardValidationException("Bind9 error: The full domain name exceed a total length of 253: " + nodelabel);
+		if (hasInvalidDnsBind9LabelSize(nodelabel))
+			throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + nodelabel);
+		if (hasInvalidDnsBind9Label(nodelabel))
+			throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters or start or end with hypen: " + nodelabel);
+		if (hasUnSupportedDnsDomain(hostname, nodelabel))
+			throw new ProvisionDashboardValidationException("There is no dns domain defined for: " + nodelabel);
+		if (hasDuplicatedNodelabel(nodelabel))
+			throw new ProvisionDashboardValidationException("The node label exist: cannot duplicate node label: " + nodelabel);
+		m_requisitionNode.setNodeLabel(nodelabel);
+		if (update) {
+			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+			map.add("node-label", nodelabel);
+			m_service.update(TN, m_requisitionNode.getForeignId(), map);
+		}
+	}
     public String getDescr() {
 		return descr;
 	}
@@ -437,6 +472,8 @@ public class TrentinoNetworkRequisitionNode {
 				break;
 			}
 		}
+		if (snmpProfile == null)
+			valid = false;
 	}
 	
 	public RowId getBackupProfile() {
@@ -497,62 +534,64 @@ public class TrentinoNetworkRequisitionNode {
 	public void setHostname(String hostname) throws ProvisionDashboardValidationException {
 		if (this.hostname != null && this.hostname.equals(hostname))
 			return;
-		if (hostname != null ) {
+		if (hostname != null && vrf != null) {
 			String nodelabel=hostname + "." + vrf;
-			if (vrf != null) 
-				checkNodeLabel(hostname,nodelabel);
-
-			m_requisitionNode.setNodeLabel(nodelabel);
-			if (update) {
-				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-				map.add("node-label", nodelabel);
-				m_service.update(TN, m_requisitionNode.getForeignId(), map);
-			}
+			updateNodeLabel(nodelabel, hostname);
 		}
 		this.hostname = hostname;
 	}
 
-	private void checkForeignId(String hostname) throws ProvisionDashboardValidationException {
+	private boolean hasDuplicatedForeignId(String hostname) {
 		for (String label: m_service.getForeignIds()) {
 			if (label.equals(hostname)) 
-				throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + label);
+				return true;
 		}
+		return false;
 	}
-	
-	private void checkNodeLabel(String hostname, String nodelabel ) throws ProvisionDashboardValidationException {
-		//check duplicated hostname
+
+	private boolean hasDuplicatedNodelabel(String nodelabel) {
 		for (String label: m_service.getNodeLabels()) {
 			if (label.equals(nodelabel)) 
-				throw new ProvisionDashboardValidationException("The node label exist: cannot duplicate node label: " + label);
+				return true;
 		}
-		//check if domain name exists
+		return false;
+	}
+	
+	private boolean hasUnSupportedDnsDomain(String hostname, String nodelabel) {
 		if (hostname.contains(".")) {
-			boolean subdomainnotfound = true;
 			String hostlabel = hostname.substring(0,hostname.indexOf("."));
 			for (String subdomain: m_sub_domains ) {
 				if (nodelabel.equals(hostlabel+"."+subdomain)) {
-					subdomainnotfound = false;
-					break;
+					return false;
 				}
 			}
-			if (subdomainnotfound)
-				throw new ProvisionDashboardValidationException("There is no dns domain for: " + nodelabel);
 		}
-		
-		//check dns name
-		if (hostname.length() > 253)
-			throw new ProvisionDashboardValidationException("Bind9 error: The full domain name exceed a total length of 253: " + nodelabel);
-    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
-		for (String label: hostname.split("\\.")) {
-			if (label.length() > 63)
-				throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + nodelabel+"/"+label);
-			if (!label.matches(re))	
-				throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters or start or end with hypen: " + nodelabel+"/"+label);
-		}
-		
-		
+		return true;
 	}
-	
+
+	private boolean hasInvalidDnsBind9Size(String nodelabel ) {		
+		if (nodelabel.length() > 253)
+			return true;
+		return false;
+	}
+
+	private boolean hasInvalidDnsBind9LabelSize(String nodelabel ) {		
+		for (String label: nodelabel.split("\\.")) {
+			if (label.length() > 63)
+				return true;
+		}
+		return false;
+	}
+
+	private boolean hasInvalidDnsBind9Label(String nodelabel ) {		
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: nodelabel.split("\\.")) {
+			if (!label.matches(re))	
+				return true;
+		}
+		return false;
+	}
+
 	public String getPrimary() {
 		return primary;
 	}
@@ -612,7 +651,8 @@ public class TrentinoNetworkRequisitionNode {
 	
 	public void commit() throws ProvisionDashboardValidationException {
 		if (!update) {
-			checkForeignId(hostname);
+			if (!hasDuplicatedForeignId(hostname))
+							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
 			m_requisitionNode.setForeignId(hostname);
 			updateSnmpProfileOnServer(primary, snmpProfile);
 			m_service.add(TN, m_requisitionNode);
