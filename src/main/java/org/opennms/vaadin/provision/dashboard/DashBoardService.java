@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -35,7 +37,8 @@ import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 
 public class DashboardService {
-    
+    private final static Logger logger = Logger.getLogger(DashboardService.class.getName());
+	
 	protected static final String LABEL = "nodeLabel";
 
 	protected static final String PROPERTIES_FILE_PATH = "/etc/tomcat7/provision-dashboard.properties";
@@ -64,6 +67,28 @@ public class DashboardService {
 	private SQLContainer m_snmpProfiles;
 	private SQLContainer m_backupProfiles;
 	private Properties m_configuration = new Properties();
+	
+	private String m_username;
+	private String m_url;
+
+	public String getUsername() {
+		return m_username;
+	}
+
+
+	public void setUsername(String username) {
+		m_username = username;
+	}
+
+
+	public String getUrl() {
+		return m_url;
+	}
+
+
+	public void setUrl(String url) {
+		m_url = url;
+	}
 
 	private BeanContainer<String, TrentinoNetworkRequisitionNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 
@@ -95,9 +120,9 @@ public class DashboardService {
     	if (file.exists() && file.isFile()) {
     		try {
     			m_configuration.load(new FileInputStream(file));
-    			System.out.println("Configuration file loaded");
+    			logger.info("Loaded Configuration file: " + PROPERTIES_FILE_PATH );
     		} catch (IOException ex) {
-    			System.out.println("No configuration file found using default built in config info");
+    			logger.log(Level.INFO, "Cannot load configuration file: ", ex );
     		}
   
     	}
@@ -138,15 +163,20 @@ public class DashboardService {
 	}
 	
 	public void logout() {
+		logger.info("logged out user: " + getUsername() + "@" + getUrl());
 		destroy();
 	}
 	
 	public void login(String url, String username, String password) throws SQLException {
+		logger.info("loggin user: " + username + "@" + url);
 		setJerseyClient(
 				new JerseyClientImpl(url,username,password));
 		m_snmpInfoService.get("127.0.0.1");
 		m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", getDbUrl(), getDbUsername(), getDbPassword());
 		loadSnmpProfiles();
+		logger.info("logged in user: " + username + "@" + url);
+		m_username = username;
+		m_url = url;
 	}
 
 	public void add(String foreignSource, String foreignid, RequisitionAsset asset) {
