@@ -1,6 +1,10 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Logger;
 
 
 import com.vaadin.annotations.Theme;
@@ -70,7 +74,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private static final long serialVersionUID = -5948892618258879832L;
 
-	
+	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
 	private BeanContainer<String, TrentinoNetworkRequisitionNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 	private boolean loaded=false;
@@ -112,12 +116,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 		try {
 			getService().loadSnmpProfiles();
 		} catch (SQLException e) {
+			logger.warning("Load of Snmp Profile from db Failed: "+e.getLocalizedMessage());
 			Notification.show("Snmp Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
 		try {
 			getService().loadBackupProfiles();
 		} catch (SQLException e) {
+			logger.warning("Load of Backup Profile from db Failed: "+e.getLocalizedMessage());
 			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
@@ -127,8 +133,42 @@ public class TrentinoNetworkTab extends DashboardTab {
 		initSearch();
 		initActionButtons();
 		loaded=true;
+		checkUniqueNodeLabel();
+		checkUniqueForeignId();
 	}
 
+	private void checkUniqueNodeLabel() {
+		Set<String> labels = new HashSet<String>();
+		Set<String> duplicated = new HashSet<String>();
+		for (String label: getService().getNodeLabels()) {
+			if (labels.contains(label)) {
+				duplicated.add(label);
+			} else {
+				labels.add(label);
+			}
+		}
+		if (!duplicated.isEmpty()) {
+			logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicated.toArray()));
+			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
+		}
+	}
+	
+	private void checkUniqueForeignId() {
+		Set<String> labels = new HashSet<String>();
+		Set<String> duplicated = new HashSet<String>();
+		for (String label: getService().getForeignIds()) {
+			if (labels.contains(label)) {
+				duplicated.add(label);
+			} else {
+				labels.add(label);
+			}
+		}
+		if (!duplicated.isEmpty()) {
+			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicated.toArray()));
+			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
+		}
+	}
+	
 	private void initLayout() {
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
@@ -341,8 +381,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 					try {
 					m_editorFields.getItemDataSource().getBean().removeSecondaryInteface((String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
 			        source.getContainerDataSource().removeItem(itemId);
+					logger.info("Delete ip: " + itemId);
 					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (Exception e) {
+						logger.warning("Delete ip failed: " + itemId +" " + e.getLocalizedMessage());
 						Notification.show("Delete ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 					}
 			      }
@@ -372,17 +414,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 							IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 							for (Object id: secondary.getItemIds()) {
 								secondary.getContainerProperty(id, "indirizzo ip").getValue().equals(m_secondaryIpComboBox.getValue().toString());
+								logger.info("Already added ip: " + m_secondaryIpComboBox.getValue().toString());
 								Notification.show("Add ip", "Already added", Type.HUMANIZED_MESSAGE);
 								return;
 							}
 							node.addSecondaryInterface(m_secondaryIpComboBox.getValue().toString());
 							Item ipItem = secondary.getItem(secondary.addItem());
 							ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
+							logger.info("Add ip: " + m_secondaryIpComboBox.getValue().toString());
 							Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
 						} else {
 							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
 						}
 					} catch (Exception e) {
+						logger.info("Add ip failed: " + m_secondaryIpComboBox.getValue().toString() + " :" +e.getLocalizedMessage());
 						Notification.show("Add ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 					}
 				}
@@ -569,6 +614,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 							localizedMessage+= ": " + t.getLocalizedMessage();
 						t = t.getCause();
 					}
+					logger.warning("Save Failed: " + localizedMessage);
 					Notification.show("Save Failed", localizedMessage, Type.ERROR_MESSAGE);
 				}
 				selectItem();
@@ -627,6 +673,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				}
 			});
 		} catch (Exception e) {
+			logger.warning("Load from rest Failed Failed: "+e.getLocalizedMessage());
 			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}

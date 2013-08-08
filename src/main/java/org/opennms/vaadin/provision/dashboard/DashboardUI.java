@@ -12,8 +12,6 @@ import com.vaadin.ui.UI;
  * app a web page showing your UI is automatically generated. Or you may choose to 
  * embed your UI to an existing web page. 
  */
-//FIXME change color for not valid nodes
-//FIXME before releasing remove e.printstacktrace from save
 @Title("Trentino Network Opennms Provision Dashboard")
 @Theme("runo")
 public class DashboardUI extends UI {

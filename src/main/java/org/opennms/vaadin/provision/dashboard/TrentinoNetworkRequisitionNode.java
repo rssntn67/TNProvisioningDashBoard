@@ -491,6 +491,8 @@ public class TrentinoNetworkRequisitionNode {
 		}
 		if (snmpProfile == null)
 			valid = false;
+		logger.info("checked snmpProfile: " + snmpProfile +" valid: " + valid);
+
 	}
 	
 	public RowId getBackupProfile() {
