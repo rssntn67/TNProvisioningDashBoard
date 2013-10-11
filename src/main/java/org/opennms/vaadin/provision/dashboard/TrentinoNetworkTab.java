@@ -344,8 +344,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(false);
-		for (String foreignId :getService().getForeignIds())
-			m_parentComboBox.addItem(foreignId);
 		leftGeneralInfo.addComponent(m_parentComboBox);
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		generalInfo.addComponent(leftGeneralInfo);
@@ -695,8 +693,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			m_editorFields.setItemDataSource(node);
 			
+			for (String foreignId :getService().getForeignIds())
+				m_parentComboBox.addItem(foreignId);
+
 			m_secondaryIpComboBox.removeAllItems();
-	 
 			for (String ip: getService().getIpAddresses(TN, node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))
 					continue;
