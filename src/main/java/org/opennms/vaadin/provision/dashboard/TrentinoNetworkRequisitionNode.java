@@ -672,9 +672,11 @@ public class TrentinoNetworkRequisitionNode {
 	
 	public void commit() throws ProvisionDashboardValidationException {
 		if (!update) {
-			if (!hasDuplicatedForeignId(hostname))
+			if (hasDuplicatedForeignId(hostname))
 							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
 			m_requisitionNode.setForeignId(hostname);
+			m_service.getForeignIds().add(hostname);
+			m_service.getNodeLabels().add(m_requisitionNode.getNodeLabel());
 			updateSnmpProfileOnServer(primary, snmpProfile);
 			m_service.add(TN, m_requisitionNode);
 			update=true;
