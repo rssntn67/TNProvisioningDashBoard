@@ -251,7 +251,7 @@ public class DashboardService {
 		logger.info("loading snmp profiles");
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
-		m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
+		m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles order by name", primarykeys,m_pool));
 		snmpProfileLoaded = true;
 		logger.info("loaded snmp profiles");
 	}
@@ -263,7 +263,7 @@ public class DashboardService {
 		logger.info("loading backup profiles");
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
-		m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
+		m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles order by name", primarykeys,m_pool));
 		backupProfileLoaded=true;
 		logger.info("loaded backup profiles");
 	}
