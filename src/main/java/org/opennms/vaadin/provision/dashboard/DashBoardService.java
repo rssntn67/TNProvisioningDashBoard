@@ -38,7 +38,144 @@ import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 
 public class DashBoardService {
     private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
+	protected static final String DESCR = "descr";
+	protected static final String DESCRIPTION = "description";
+	protected static final String HOST = "hostname";
+	protected static final String PRIMARY = "primary";
+	protected static final String VRF = "vrf";
+	protected static final String PARENT = "parent";
+	protected static final String VALID = "valid";
 	
+	protected static final String CITY    = "city";
+	protected static final String ADDRESS = "address1";
+
+	protected static final String NETWORK_CATEGORY = "networkCategory";
+	protected static final String NOTIF_CATEGORY   = "notifCategory";
+	protected static final String THRESH_CATEGORY  = "threshCategory";
+	
+	protected static final String SNMP_PROFILE    = "snmpProfile";
+	protected static final String BACKUP_PROFILE  = "backupProfile";
+	
+	protected static final String TN = "TrentinoNetwork";
+	
+	protected static final String[] m_notif_categories = {
+		"EMERGENCY_F0",
+		"EMERGENCY_F1",
+		"EMERGENCY_F2",
+		"EMERGENCY_F3",
+		"EMERGENCY_F4",
+		"INFORMATION"
+	};
+	
+	protected static final String[] m_thresh_categories = {
+		"ThresholdWARNING",
+		"ThresholdALERT"
+	};
+
+	protected static final String[][] m_network_categories = {
+		{"AccessPoint","Backbone"},
+		{"Core","Backbone"},
+		{"Fiemme2013","Backbone"},
+		{"Ponte5p4","Backbone"},
+		{"PontePDH","Backbone"},
+		{"SwitchWiNet","Backbone"},
+		{"Fiemme2013","Backbone"},
+		{"AgLav","Accesso"},
+		{"Apss","Accesso"},
+		{"Biblio","Accesso"},
+		{"CPE","Accesso"},
+		{"CUE","Accesso"},
+		{"ComuneTN","Accesso"},
+		{"Comuni","Accesso"},
+		{"ConsPro","Accesso"},
+		{"GeoSis","Accesso"},
+		{"Info","Accesso"},
+		{"Internet","Accesso"},
+		{"Internet-Esterni","Accesso"},
+		{"LAN","Accesso"},
+		{"Medici","Accesso"},
+		{"Mitt","Accesso"},
+		{"OperaUnitn","Accesso"},
+		{"Pat","Accesso"},
+		{"PatAcquePub","Accesso"},
+		{"PatDighe","Accesso"},
+		{"PatVoce","Accesso"},
+		{"RSACivicaTN","Accesso"},
+		{"RSASpes","Accesso"},
+		{"ReperibiliTnet","Accesso"},
+		{"Scuole","Accesso"},
+		{"ScuoleMaterne","Accesso"},
+		{"Telpat-Autonome","Accesso"},
+		{"Unitn","Accesso"},
+		{"VdsRovereto","Accesso"},
+		{"Winwinet","Accesso"}
+	};
+	
+	public static final String[] m_sub_domains = {
+		"sw01.bb.tnnet.it",
+		"sw02.bb.tnnet.it",
+		"cavalese-l3.pat.tnnet.it",
+		"cpe01.biblio.tnnet.it",
+		"cpe01.pat.tnnet.it",
+		"cpe01.patacquepub.tnnet.it",
+		"cpe01.scuole.tnnet.it",
+		"mktic.comuni.tnnet.it",
+		"mtk01.reperibilitnet.tnnet.it",
+		"alv01.wl.tnnet.it",
+		"alv02.wl.tnnet.it",
+		"alv03.wl.tnnet.it",
+		"alv04.wl.tnnet.it",
+		"alv05.wl.tnnet.it",
+		"alv06.wl.tnnet.it",
+		"asw01.wl.tnnet.it",
+		"cpe01.wl.tnnet.it",
+		"ess01.wl.tnnet.it",
+		"ess02.wl.tnnet.it",
+		"ess03.wl.tnnet.it",
+		"ess04.wl.tnnet.it",
+		"ess05.wl.tnnet.it",
+		"ess06.wl.tnnet.it",
+		"ess07.wl.tnnet.it",
+		"ess08.wl.tnnet.it",
+		"mtr01.wl.tnnet.it",
+		"uby.wl.tnnet.it"
+	};
+	
+	protected static final String[] m_vrfs = {
+		"aglav.tnnet.it",
+		"apss.tnnet.it",
+		"bb.tnnet.it",
+		"biblio.tnnet.it",
+		"comunetn.tnnet.it",
+		"comuni.tnnet.it",
+		"conspro.tnnet.it",
+		"cue.tnnet.it",
+		"esterni.tnnet.it",
+		"geosis.tnnet.it",
+		"hq.tnnet.it",
+		"iasma.tnnet.it",
+		"info.tnnet.it",
+		"internet-esterni.tnnet.it",
+		"internet.tnnet.it",
+		"medici.tnnet.it",
+		"mitt.tnnet.it",
+		"mktic.comuni.tnnet.it",
+		"operaunitn.tnnet.it",
+		"pat.tnnet.it",
+		"patacquepub.tnnet.it",
+		"patdighe.tnnet.it",
+		"patvoce.tnnet.it",
+		"reperibilitnet.tnnet.it",
+		"rsacivicatn.tnnet.it",
+		"rsaspes.tnnet.it",
+		"scuole.tnnet.it",
+		"telpat-autonome.tnnet.it",
+		"unitn.tnnet.it",
+		"vdsrovereto.tnnet.it",
+		"winwinet.tnnet.it",
+		"wl.tnnet.it"
+	};
+
 	protected static final String LABEL = "nodeLabel";
 
 	protected static final String PROPERTIES_FILE_PATH = "/etc/tomcat7/provision-dashboard.properties";

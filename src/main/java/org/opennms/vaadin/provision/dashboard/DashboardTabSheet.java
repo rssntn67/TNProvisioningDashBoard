@@ -5,6 +5,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.TN;
 
 public class DashboardTabSheet extends CustomComponent implements
 		SelectedTabChangeListener {
@@ -28,14 +29,14 @@ public class DashboardTabSheet extends CustomComponent implements
 		
 		tabsheet.addSelectedTabChangeListener(this);
         tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
-        for (String foreignSource: FOREIGN_SOURCE_LIST) {
-        	TrentinoNetworkTab tab=new TrentinoNetworkTab(foreignSource,m_service);
-        	tabsheet.addTab(tab, foreignSource, new ThemeResource("icons/16/users.png"));
-        	tabsheet.getTab(tab).setEnabled(false);
-        }
-        SnmpProfileTab snmpTab = new SnmpProfileTab(null, m_service);
+    	TrentinoNetworkTab tab=new TrentinoNetworkTab(m_service);
+    	tabsheet.addTab(tab, TN, new ThemeResource("icons/16/users.png"));
+    	tabsheet.getTab(tab).setEnabled(false);
+        
+    	SnmpProfileTab snmpTab = new SnmpProfileTab(null, m_service);
         tabsheet.addTab(snmpTab, "Snmp Profiles",new ThemeResource("icons/16/users.png"));
     	tabsheet.getTab(snmpTab).setEnabled(false);
+    	
     	BackupProfileTab backupTab = new BackupProfileTab(null, m_service);
         tabsheet.addTab(backupTab, "Backup Profiles",new ThemeResource("icons/16/users.png"));
         tabsheet.getTab(backupTab).setEnabled(false);

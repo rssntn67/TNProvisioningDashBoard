@@ -37,30 +37,30 @@ import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_vrfs;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_network_categories;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_notif_categories;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.m_thresh_categories;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_vrfs;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_network_categories;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_notif_categories;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_thresh_categories;
 
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.DESCR;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.HOST;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.VRF;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PRIMARY;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PARENT;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.VALID;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.DESCR;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.HOST;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.VRF;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.PRIMARY;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.PARENT;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.VALID;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.LABEL;
 
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NETWORK_CATEGORY;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NOTIF_CATEGORY;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.THRESH_CATEGORY;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.NETWORK_CATEGORY;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.NOTIF_CATEGORY;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.THRESH_CATEGORY;
 
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.SNMP_PROFILE;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.BACKUP_PROFILE;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.SNMP_PROFILE;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.BACKUP_PROFILE;
 
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.CITY;
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.ADDRESS;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.CITY;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.ADDRESS;
 
-import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.TN;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.TN;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -106,8 +106,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private BeanFieldGroup<TrentinoNetworkRequisitionNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 	Integer newHost = 0;
 	
-	public TrentinoNetworkTab(String foreignsource, DashBoardService service) {
-		super(foreignsource, service);
+	public TrentinoNetworkTab(DashBoardService service) {
+		super(TN, service);
 	}
 
 	public void load() {
