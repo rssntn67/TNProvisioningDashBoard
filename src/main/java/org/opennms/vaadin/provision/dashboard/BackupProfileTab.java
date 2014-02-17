@@ -22,7 +22,7 @@ public class BackupProfileTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public BackupProfileTab(String foreignsource, DashboardService service) {
+	public BackupProfileTab(String foreignsource, DashBoardService service) {
 		super(foreignsource, service);
 	}
 

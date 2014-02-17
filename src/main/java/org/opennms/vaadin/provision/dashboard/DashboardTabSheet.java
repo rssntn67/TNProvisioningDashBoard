@@ -19,7 +19,7 @@ public class DashboardTabSheet extends CustomComponent implements
 	private static final long serialVersionUID = -4835992723502900986L;
 	TabSheet tabsheet = new TabSheet();
     LoginBox loginbox;
-    DashboardService m_service = new DashboardService();
+    DashBoardService m_service = new DashBoardService();
     
     DashboardTabSheet() {
 

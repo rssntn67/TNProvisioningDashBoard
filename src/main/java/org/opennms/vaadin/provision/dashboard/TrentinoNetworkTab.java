@@ -48,7 +48,7 @@ import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionN
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PRIMARY;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.PARENT;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.VALID;
-import static org.opennms.vaadin.provision.dashboard.DashboardService.LABEL;
+import static org.opennms.vaadin.provision.dashboard.DashBoardService.LABEL;
 
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NETWORK_CATEGORY;
 import static org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode.NOTIF_CATEGORY;
@@ -106,7 +106,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private BeanFieldGroup<TrentinoNetworkRequisitionNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 	Integer newHost = 0;
 	
-	public TrentinoNetworkTab(String foreignsource, DashboardService service) {
+	public TrentinoNetworkTab(String foreignsource, DashBoardService service) {
 		super(foreignsource, service);
 	}
 

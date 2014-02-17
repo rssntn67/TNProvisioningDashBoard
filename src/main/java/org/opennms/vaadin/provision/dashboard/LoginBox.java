@@ -17,10 +17,12 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickListener;
 
+import elemental.events.KeyboardEvent.KeyCode;
+
 
 public class LoginBox extends CustomComponent implements ClickListener {
 
-	private DashboardService m_service;
+	private DashBoardService m_service;
 
 	/**
 	 * 
@@ -35,7 +37,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private Button m_logout = new Button("Logout");
     private TabSheet m_tabs;
     
-    public LoginBox (TabSheet tabs,DashboardService service) {
+    public LoginBox (TabSheet tabs,DashBoardService service) {
         m_panel.setContent(getLoginBox());
         setCompositionRoot(m_panel);
 
@@ -47,6 +49,9 @@ public class LoginBox extends CustomComponent implements ClickListener {
     	m_logout.setImmediate(true);
     	for (String url: m_service.getUrls())
     		m_select.addItem(url);
+    	m_select.select(m_service.getUrls()[0]);
+    	m_username.focus();
+    	m_login.setClickShortcut(KeyCode.ENTER);
 
 	}
 

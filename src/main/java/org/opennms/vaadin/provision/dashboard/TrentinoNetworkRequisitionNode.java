@@ -191,14 +191,14 @@ public class TrentinoNetworkRequisitionNode {
 		this.valid = valid;
 	}
 
-	private DashboardService m_service;
+	private DashBoardService m_service;
 	private boolean update = true;
 	
 	public boolean getUpdate() {
 		return update;
 	}
 	
-	public TrentinoNetworkRequisitionNode(String label,DashboardService service) {
+	public TrentinoNetworkRequisitionNode(String label,DashBoardService service) {
 		m_service = service;
 		m_requisitionNode = new RequisitionNode();
 		m_requisitionNode.setNodeLabel(label);
@@ -207,7 +207,7 @@ public class TrentinoNetworkRequisitionNode {
 	}
 
 	@SuppressWarnings("unchecked")
-	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode, DashboardService service) {
+	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode, DashBoardService service) {
 		m_service = service;
 		m_requisitionNode = requisitionNode;
 

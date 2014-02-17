@@ -22,7 +22,7 @@ public class SnmpProfileTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public SnmpProfileTab(String foreignsource, DashboardService service) {
+	public SnmpProfileTab(String foreignsource, DashBoardService service) {
 		super(foreignsource, service);
 	}
 

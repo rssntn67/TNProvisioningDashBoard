@@ -36,8 +36,8 @@ import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 
-public class DashboardService {
-    private final static Logger logger = Logger.getLogger(DashboardService.class.getName());
+public class DashBoardService {
+    private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
 	
 	protected static final String LABEL = "nodeLabel";
 
@@ -111,7 +111,7 @@ public class DashboardService {
 
 	private JDBCConnectionPool m_pool; 
    
-	public DashboardService() {
+	public DashBoardService() {
     	m_provisionService = new JerseyProvisionRequisitionService();
     	m_nodeService = new JerseyNodesService();
     	m_snmpInfoService = new JerseySnmpInfoService();
