@@ -111,8 +111,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 	}
 
 	public void load() {
-		if (loaded)
-			return;
 		try {
 			getService().loadSnmpProfiles();
 		} catch (SQLException e) {
@@ -127,6 +125,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
+		if (loaded)
+			return;
 		initLayout();
 		initProvisionNodeList();
 		initEditor();
@@ -343,7 +343,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(primary,PRIMARY);
 		
 		m_parentComboBox.setInvalidAllowed(false);
-		m_parentComboBox.setNullSelectionAllowed(false);
+		m_parentComboBox.setNullSelectionAllowed(true);
+		for (String nodelabel :getService().getNodeLabels())
+			m_parentComboBox.addItem(nodelabel);
 		leftGeneralInfo.addComponent(m_parentComboBox);
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		generalInfo.addComponent(leftGeneralInfo);
@@ -693,9 +695,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			m_editorFields.setItemDataSource(node);
 			
-			for (String foreignId :getService().getForeignIds())
-				m_parentComboBox.addItem(foreignId);
-
 			m_secondaryIpComboBox.removeAllItems();
 			for (String ip: getService().getIpAddresses(TN, node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))

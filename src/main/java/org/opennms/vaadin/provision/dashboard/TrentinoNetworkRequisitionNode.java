@@ -85,7 +85,7 @@ public class TrentinoNetworkRequisitionNode {
 		m_requisitionNode = requisitionNode;
 
 		if (m_requisitionNode.getParentForeignId() != null)
-			parent = m_requisitionNode.getParentForeignId();
+			parent = service.getNodeLabel(m_requisitionNode.getParentForeignId());
 		
 		for (String vrf: m_vrfs) {
 			if (m_requisitionNode.getNodeLabel().endsWith("."+vrf)) {
@@ -190,18 +190,23 @@ public class TrentinoNetworkRequisitionNode {
 		return parent;
 	}
 
-	public void setParent(String parentForeignId) {
-		if (this.parent != null && this.parent.equals(parentForeignId))
+	public void setParent(String parentNodeLabel) {
+		if (this.parent != null && this.parent.equals(parentNodeLabel))
 			return;
-		if (parentForeignId != null) {
-			m_requisitionNode.setParentForeignId(parentForeignId);
-			if (update) {
-				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-				map.add("parent-foreign-id", parentForeignId);
-				m_service.update(TN, m_requisitionNode.getForeignId(), map);
-			}
+		if (this.parent == null && parentNodeLabel == null) 
+			return;
+		
+		String parentForeignId = "";
+		if (parentNodeLabel != null) {
+			parentForeignId = m_service.getForeignId(parentNodeLabel);
 		}
-		this.parent = parentForeignId;
+		if (update) {
+			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+			map.add("parent-foreign-id", parentForeignId);
+			m_service.update(TN, m_requisitionNode.getForeignId(), map);
+		}
+		m_requisitionNode.setParentForeignId(parentForeignId);
+		this.parent = parentNodeLabel;
 	}
 
 	public String getCity() {

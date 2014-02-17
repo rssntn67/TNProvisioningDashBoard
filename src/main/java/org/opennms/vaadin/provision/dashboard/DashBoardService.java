@@ -6,7 +6,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -198,7 +201,6 @@ public class DashBoardService {
 	private JerseySnmpInfoService m_snmpInfoService;
 
 	private boolean snmpProfileLoaded = false;
-	private boolean requisitionNodeLoaded = false;
 	private boolean backupProfileLoaded = false;
 	
 	private SQLContainer m_snmpProfiles;
@@ -207,47 +209,23 @@ public class DashBoardService {
 	
 	private String m_username;
 	private String m_url;
-
-	public String getUsername() {
-		return m_username;
-	}
-
-
-	public void setUsername(String username) {
-		m_username = username;
-	}
-
-
-	public String getUrl() {
-		return m_url;
-	}
-
-
-	public void setUrl(String url) {
-		m_url = url;
-	}
-
-	private BeanContainer<String, TrentinoNetworkRequisitionNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
-
-	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String foreignSource) {
-		if (!requisitionNodeLoaded) {
-			m_requisitionContainer.setBeanIdProperty(LABEL);
-			for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
-				m_requisitionContainer.addBean(new TrentinoNetworkRequisitionNode(node,this));
-			}
-			requisitionNodeLoaded = true;
-		}
-		return m_requisitionContainer;
-	}
-
-
-	public void setRequisitionContainer(
-			BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer) {
-		m_requisitionContainer = requisitionContainer;
-	}
-
 	private JDBCConnectionPool m_pool; 
-   
+	private Map<String,String> m_foreignIdNodeLabelMap;
+	private Map<String,String> m_nodeLabelForeignIdMap;
+	   
+	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String foreignSource) {
+		BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
+		m_foreignIdNodeLabelMap = new HashMap<String, String>();
+		m_nodeLabelForeignIdMap = new HashMap<String, String>();
+		requisitionContainer.setBeanIdProperty(LABEL);
+		for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
+			requisitionContainer.addBean(new TrentinoNetworkRequisitionNode(node,this));
+			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
+			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
+		}
+		return requisitionContainer;
+	}
+
 	public DashBoardService() {
     	m_provisionService = new JerseyProvisionRequisitionService();
     	m_nodeService = new JerseyNodesService();
@@ -405,23 +383,21 @@ public class DashBoardService {
 		logger.info("loaded backup profiles");
 	}
 	
-	public List<String> getForeignIds() {
-	   	List<String> foreignids = new ArrayList<String>();
-	   	for (Object itemId: m_requisitionContainer.getItemIds()) {
-	   		if (m_requisitionContainer.getItem(itemId).getBean().getRequisitionNode().getForeignId() != null)
-	   			foreignids.add(m_requisitionContainer.getItem(itemId).getBean().getRequisitionNode().getForeignId());
-	   	}
-	   	return foreignids;
+	public String getNodeLabel(String foreignId) {
+	   	return m_foreignIdNodeLabelMap.get(foreignId);
 	}
 
-	public List<String> getNodeLabels() {
-	   	List<String> nodelabels = new ArrayList<String>();
-	   	for (Object itemId: m_requisitionContainer.getItemIds()) {
-	   		nodelabels.add(m_requisitionContainer.getItem(itemId).getBean().getNodeLabel());
-	   	}
-	   	return nodelabels;
+	public String getForeignId(String nodeLabel) {
+	   	return m_nodeLabelForeignIdMap.get(nodeLabel);
 	}
 
+	public Collection<String> getNodeLabels() {
+		return m_foreignIdNodeLabelMap.values();
+	}
+
+	public Collection<String> getForeignIds() {
+		return m_foreignIdNodeLabelMap.keySet();
+	}
 	public String[] getUrls() {
 		List<String> urls = new ArrayList<String>();
 		if (m_configuration.getProperty(PROPERTIES_URLS_KEY) != null ) {
@@ -472,6 +448,27 @@ public class DashBoardService {
         }
         return ipaddresses;
 	}
+
+	public String getUsername() {
+		return m_username;
+	}
+
+
+	public void setUsername(String username) {
+		m_username = username;
+	}
+
+
+	public String getUrl() {
+		return m_url;
+	}
+
+
+	public void setUrl(String url) {
+		m_url = url;
+	}
+
+
 
 
 }

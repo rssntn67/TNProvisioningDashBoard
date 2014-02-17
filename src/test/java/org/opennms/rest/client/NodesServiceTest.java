@@ -38,6 +38,7 @@ import org.opennms.rest.client.model.OnmsIpInterface;
 import org.opennms.rest.client.model.OnmsIpInterfaceList;
 import org.opennms.rest.client.model.OnmsNode;
 import org.opennms.rest.client.model.OnmsNodeList;
+import org.opennms.vaadin.provision.dashboard.DashBoardService;
 import org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -113,7 +114,7 @@ public class NodesServiceTest {
 		if (hostname.contains(".")) {
 			String hostlabel = hostname.substring(0,hostname.indexOf("."));
 			System.out.println(hostlabel);
-			for (String subdomain: TrentinoNetworkRequisitionNode.m_sub_domains ) {
+			for (String subdomain: DashBoardService.m_sub_domains ) {
 				if (nodelabel.equals(hostlabel+"."+subdomain))
 					System.out.println(hostlabel+"."+subdomain);
 			}
@@ -129,7 +130,7 @@ public class NodesServiceTest {
 		if (hostname.contains(".")) {
 			String hostlabel = hostname.substring(0,hostname.indexOf("."));
 			System.out.println(hostlabel);
-			for (String subdomain: TrentinoNetworkRequisitionNode.m_sub_domains ) {
+			for (String subdomain: DashBoardService.m_sub_domains ) {
 				if (nodelabel.equals(hostlabel+"."+subdomain))
 					System.out.println(hostlabel+"."+subdomain);
 			}
