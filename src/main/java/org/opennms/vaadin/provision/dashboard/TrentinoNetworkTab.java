@@ -89,6 +89,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
 	private Button m_removeNodeButton  = new Button("Elimina Nodo");
 
+	private TextField m_hostname = new TextField("Hostname");
 	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
 	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
 	private ComboBox m_parentComboBox = new ComboBox("Dipende da");
@@ -311,12 +312,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(m_descrComboBox, DESCR);
 		leftGeneralInfo.addComponent(m_descrComboBox);
 		
-		TextField hostname = new TextField("Hostname");
-		hostname.setSizeFull();
-		hostname.setWidth(4, Unit.CM);
-		hostname.setHeight(6, Unit.MM);
-		hostname.setRequired(true);
-		hostname.setRequiredError("The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
+		m_hostname.setSizeFull();
+		m_hostname.setWidth(4, Unit.CM);
+		m_hostname.setHeight(6, Unit.MM);
+		m_hostname.setRequired(true);
+		m_hostname.setRequiredError("The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
 		" A domain name consists of one or more parts, technically called labels, that are conventionally concatenated, and delimited by dots, such asexample.com."
 				+ " Each label may contain up to 63 characters." +
 				" The full domain name may not exceed a total length of 253 characters in its external dotted-label specification." +
@@ -324,8 +324,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 				" This rule is known as the LDH rule (letters, digits, hyphen). " +
 				" Labels may not start or end with a hyphen." +
 				" A hostname is a domain name that has at least one IP address associated.");
-		m_editorFields.bind(hostname, HOST);
-		leftGeneralInfo.addComponent(hostname);
+		m_editorFields.bind(m_hostname, HOST);
+		leftGeneralInfo.addComponent(m_hostname);
 
 		for (final String vrfs: m_vrfs) {
 			m_vrfsComboBox.addItem(vrfs);
@@ -490,7 +490,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		HorizontalLayout snmplayout = new HorizontalLayout();
 		m_snmpComboBox.setContainerDataSource(getService().getSnmpProfiles());
 		m_snmpComboBox.setInvalidAllowed(false);
-		m_snmpComboBox.setNullSelectionAllowed(false);
+		m_snmpComboBox.setNullSelectionAllowed(true);
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
@@ -501,7 +501,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		FormLayout backupProfile = new FormLayout();
 		m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
         m_backupComboBox.setInvalidAllowed(false);
-        m_backupComboBox.setNullSelectionAllowed(false);
+        m_backupComboBox.setNullSelectionAllowed(true);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
@@ -588,6 +588,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_requisitionContainer.removeAllContainerFilters();
 				m_requisitionTable.select(bean.getBean().getNodeLabel());
 				selectItem();
+				m_hostname.focus();
 			}
 		});
 
