@@ -342,10 +342,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		leftGeneralInfo.addComponent(primary);
 		m_editorFields.bind(primary,PRIMARY);
 		
-		m_parentComboBox.setInvalidAllowed(false);
-		m_parentComboBox.setNullSelectionAllowed(true);
-		for (String nodelabel :getService().getNodeLabels())
-			m_parentComboBox.addItem(nodelabel);
 		leftGeneralInfo.addComponent(m_parentComboBox);
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		generalInfo.addComponent(leftGeneralInfo);
@@ -485,54 +481,48 @@ public class TrentinoNetworkTab extends DashboardTab {
 		categoryInfo.addComponent(catLayout);
 		m_editRequisitionNodeLayout.addComponent(new Panel(categoryInfo));
 
-		FormLayout snmpProfile = new FormLayout();
-		snmpProfile.addComponent(new Label("Credenziali SNMP per collezione dati"));
-		HorizontalLayout snmplayout = new HorizontalLayout();
-		m_snmpComboBox.setContainerDataSource(getService().getSnmpProfiles());
 		m_snmpComboBox.setInvalidAllowed(false);
-		m_snmpComboBox.setNullSelectionAllowed(true);
+		m_snmpComboBox.setNullSelectionAllowed(false);
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
-		snmplayout.addComponent(m_snmpComboBox);
-		snmpProfile.addComponent(snmplayout);
-        m_editRequisitionNodeLayout.addComponent(new Panel(snmpProfile));
 
-		FormLayout backupProfile = new FormLayout();
-		m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
         m_backupComboBox.setInvalidAllowed(false);
-        m_backupComboBox.setNullSelectionAllowed(true);
+        m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
-		backupProfile.addComponent(new Label("Credenziali accesso per backup configurazione"));
-		HorizontalLayout backuplayout = new HorizontalLayout();
-		backuplayout.addComponent(m_backupComboBox);
-		backupProfile.addComponent(backuplayout);
-		m_editRequisitionNodeLayout.addComponent(new Panel(backupProfile));
 
-		HorizontalLayout localizationInfo = new HorizontalLayout();
-		FormLayout localization = new FormLayout();
-		localization.addComponent(new Label("Localizzazione"));
+		FormLayout credProfile = new FormLayout();
+		credProfile.addComponent(new Label("Credenziali"));
+		HorizontalLayout credlayout = new HorizontalLayout();
+		credlayout.setSizeFull();
+		credlayout.addComponent(m_snmpComboBox);
+		credlayout.addComponent(m_backupComboBox);
+		credProfile.addComponent(credlayout);
 		
+		m_editRequisitionNodeLayout.addComponent(new Panel(credProfile));
+
 		TextField city = new TextField("Citta'");
 		city.setWidth(8, Unit.CM);
 		city.setHeight(6, Unit.MM);
-		city.setRequired(true);
 		city.setRequiredError("E' necessario specificare la citta'");
 		m_editorFields.bind(city,CITY);
-		localization.addComponent(city);
 		
 		TextField address = new TextField("Indirizzo");
 		address.setWidth(8, Unit.CM);
 		address.setHeight(6, Unit.MM);
-		address.setRequired(true);
 		address.setRequiredError("E' necessario specificare l'indirizzo");
 		m_editorFields.bind(address, ADDRESS);
-		localization.addComponent(address);
 		
-		localizationInfo.addComponent(localization);
-		m_editRequisitionNodeLayout.addComponent(new Panel(localizationInfo));
+		FormLayout localization = new FormLayout();
+		localization.addComponent(new Label("Localizzazione"));
+		HorizontalLayout localizationInfo = new HorizontalLayout();
+		localizationInfo.setSizeFull();
+		localizationInfo.addComponent(city);
+		localizationInfo.addComponent(address);
+		localization.addComponent(localizationInfo);
+		m_editRequisitionNodeLayout.addComponent(new Panel(localization));
 
 	}
 
@@ -687,14 +677,27 @@ public class TrentinoNetworkTab extends DashboardTab {
 		if (contactId != null) {
 			TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)m_requisitionTable
 				.getItem(contactId)).getBean();
-			if (node.getPrimary() != null)
-				node.updateSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
-			m_snmpComboBox.select(node.getSnmpProfile());
-
+			
 			m_descrComboBox.removeAllItems();
 			m_descrComboBox.addItem(node.getDescr());
+//			m_descrComboBox.select(node.getDescr());
 			
-			m_editorFields.setItemDataSource(node);
+			for (String snmpprofile: getService().getSnmpProfiles()) {
+				m_snmpComboBox.addItem(snmpprofile);
+			}
+			
+			m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
+
+			m_parentComboBox.setInvalidAllowed(false);
+			m_parentComboBox.setNullSelectionAllowed(true);
+			for (String nodelabel :getService().getNodeLabels())
+				m_parentComboBox.addItem(nodelabel);
+
+//			if (node.getPrimary() != null && node.getUpdate())
+//				node.updateSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
+			//m_snmpComboBox.select(node.getSnmpProfile());
+			//m_backupComboBox.select(node.getSnmpProfile());
+
 			
 			m_secondaryIpComboBox.removeAllItems();
 			for (String ip: getService().getIpAddresses(TN, node.getNodeLabel()) ) {
@@ -704,6 +707,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 			m_secondaryIpAddressTable.setContainerDataSource(node.getSecondary());
 			
+			m_editorFields.setItemDataSource(node);
 			m_editRequisitionNodeLayout.setVisible(true);
 			if (node.getDescr().contains("FAST")) {
 				m_saveNodeButton.setEnabled(false);

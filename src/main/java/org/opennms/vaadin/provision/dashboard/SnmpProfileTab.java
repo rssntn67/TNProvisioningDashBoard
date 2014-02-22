@@ -31,14 +31,13 @@ public class SnmpProfileTab extends DashboardTab {
 		if (loaded)
 			return;
 		try {
-			getService().loadSnmpProfiles();
+			m_snmpProfilesTable = new Table("Profiles", getService().getSnmpProfileContainer());
 		} catch (SQLException e) {
 			Notification.show("Snmp Profile", "Load from db Failed", Type.WARNING_MESSAGE);
 			e.printStackTrace();
 			return;
 		}
 		
-		m_snmpProfilesTable = new Table("Profiles", getService().getSnmpProfiles());
 		VerticalLayout layout = new VerticalLayout();
 		layout.setMargin(true);
 		layout.addComponent(m_snmpProfilesTable);

@@ -8,9 +8,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,6 +35,8 @@ import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Container;
+import com.vaadin.data.Item;
+import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
@@ -203,7 +207,7 @@ public class DashBoardService {
 	private boolean snmpProfileLoaded = false;
 	private boolean backupProfileLoaded = false;
 	
-	private SQLContainer m_snmpProfiles;
+	private Map<String,SnmpProfile> m_snmpProfiles;
 	private SQLContainer m_backupProfiles;
 	private Properties m_configuration = new Properties();
 	
@@ -212,7 +216,41 @@ public class DashBoardService {
 	private JDBCConnectionPool m_pool; 
 	private Map<String,String> m_foreignIdNodeLabelMap;
 	private Map<String,String> m_nodeLabelForeignIdMap;
-	   
+	
+	protected class SnmpProfile {
+		final String community;
+		final String version;
+		final Integer timeout;
+		SnmpInfo info;
+		
+		public SnmpProfile(Property<String> community, Property<String> version, Property<String> timeout) {
+			super();
+			this.community = community.getValue();
+			this.version = version.getValue();
+			this.timeout = Integer.parseInt(timeout.getValue());
+			info = new SnmpInfo();
+			info.setCommunity(this.community);
+			info.setVersion(this.version);
+			info.setTimeout(this.timeout);
+		}
+
+		public String getCommunity() {
+			return community;
+		}
+
+		public String getVersion() {
+			return version;
+		}
+
+		public Integer getTimeout() {
+			return timeout;
+		}		
+		
+		public SnmpInfo getSnmpInfo() {
+			return info;
+		}
+	}
+	
 	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String foreignSource) {
 		BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 		m_foreignIdNodeLabelMap = new HashMap<String, String>();
@@ -263,8 +301,8 @@ public class DashBoardService {
 		return m_snmpInfoService.get(ip);
 	}
 
-	public void setSnmpInfo(String ip, SnmpInfo info) {
-		m_snmpInfoService.set(ip, info);
+	public void setSnmpInfo(String ip, String snmpProfile) {
+		m_snmpInfoService.set(ip, m_snmpProfiles.get(snmpProfile).getSnmpInfo());
 	}
 
 	public void update(String foreignSource, String foreignId, MultivaluedMap<String, String> map) {
@@ -287,9 +325,10 @@ public class DashBoardService {
 		setJerseyClient(
 				new JerseyClientImpl(url,username,password));
 		m_snmpInfoService.get("127.0.0.1");
-		m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", getDbUrl(), getDbUsername(), getDbPassword());
-		loadSnmpProfiles();
 		logger.info("logged in user: " + username + "@" + url);
+		m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", getDbUrl(), getDbUsername(), getDbPassword());
+		loadBackupProfiles();
+		logger.info("connected to database: " + getDbUrl());
 		m_username = username;
 		m_url = url;
 	}
@@ -318,12 +357,16 @@ public class DashBoardService {
 	}
 
 	public void add(String foreignSource, RequisitionNode node) {
+		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
+		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		m_provisionService.add(foreignSource, node);
 		for (RequisitionInterface riface: node.getInterfaces())
 			m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
 	}
 
 	public void delete(String foreignSource, RequisitionNode node) {
+		m_foreignIdNodeLabelMap.remove(node.getForeignId());
+		m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
 		m_provisionService.delete(foreignSource, node);
 		for (RequisitionInterface riface: node.getInterfaces())
 			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
@@ -342,31 +385,43 @@ public class DashBoardService {
 		return "Manage"+riface.getIpAddr();
 	}
 
-	public void setSnmpProfiles(SQLContainer snmpProfiles) {
-		m_snmpProfiles = snmpProfiles;
+	@SuppressWarnings("deprecation")
+	public Container getSnmpProfileContainer() throws SQLException {
+        	List<String> primarykeys = new ArrayList<String>();
+        	primarykeys.add("name");
+			return new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles order by name", primarykeys,m_pool));
 	}
-
-	public void setBackupProfiles(SQLContainer backupProfiles) {
-		m_backupProfiles = backupProfiles;
-	}
-
-	public Container getSnmpProfiles() {
-		return m_snmpProfiles;
+	
+	public Set<String> getSnmpProfiles() {
+		return m_snmpProfiles.keySet();
 	}
 	
 	public Container getBackupProfiles() {
 		return m_backupProfiles;
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void loadSnmpProfiles() throws SQLException {
 		
 		if (snmpProfileLoaded)
 			return;
-		logger.info("loading snmp profiles");
+
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
-		m_snmpProfiles = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles order by name", primarykeys,m_pool));
+		SQLContainer snmpProfileTable = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
+		m_snmpProfiles = new HashMap<String, DashBoardService.SnmpProfile>();
+		logger.info("found iterating on snmp profiles");
+		for (Iterator<?> i = snmpProfileTable.getItemIds().iterator(); i.hasNext();) {
+			Item snmpprofiletableRow = snmpProfileTable.getItem(i.next());
+			logger.info("found snmp profile name: " + snmpprofiletableRow.getItemProperty("name").getValue().toString());
+			logger.info("found snmp profile community: " + snmpprofiletableRow.getItemProperty("community").getValue().toString());
+			logger.info("found snmp profile version: " + snmpprofiletableRow.getItemProperty("version").getValue().toString());
+			logger.info("found snmp profile timeout: " + snmpprofiletableRow.getItemProperty("timeout").getValue().toString());
+			m_snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
+					new SnmpProfile(snmpprofiletableRow.getItemProperty("community"), 
+							snmpprofiletableRow.getItemProperty("version"), 
+							snmpprofiletableRow.getItemProperty("timeout")));
+		}
 		snmpProfileLoaded = true;
 		logger.info("loaded snmp profiles");
 	}
@@ -375,10 +430,9 @@ public class DashBoardService {
 	public void loadBackupProfiles() throws SQLException {
 		if (backupProfileLoaded)
 			return;
-		logger.info("loading backup profiles");
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
-		m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles order by name", primarykeys,m_pool));
+		m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
 		backupProfileLoaded=true;
 		logger.info("loaded backup profiles");
 	}
@@ -398,6 +452,7 @@ public class DashBoardService {
 	public Collection<String> getForeignIds() {
 		return m_foreignIdNodeLabelMap.keySet();
 	}
+		
 	public String[] getUrls() {
 		List<String> urls = new ArrayList<String>();
 		if (m_configuration.getProperty(PROPERTIES_URLS_KEY) != null ) {

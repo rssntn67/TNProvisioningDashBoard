@@ -11,7 +11,6 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Item;
@@ -36,7 +35,7 @@ public class TrentinoNetworkRequisitionNode {
 	
 	private RequisitionNode m_requisitionNode;
 
-	protected String descr="Imported from Provision Dashboard";
+	protected String descr;
 	protected String hostname;
 	protected String vrf;
 	protected String primary;
@@ -48,7 +47,7 @@ public class TrentinoNetworkRequisitionNode {
 	protected String notifCategory;
 	protected String threshCategory;
 
-	protected RowId snmpProfile;
+	protected String snmpProfile;
 	protected RowId backupProfile;
 
 	protected String city;
@@ -74,7 +73,10 @@ public class TrentinoNetworkRequisitionNode {
 	public TrentinoNetworkRequisitionNode(String label,DashBoardService service) {
 		m_service = service;
 		m_requisitionNode = new RequisitionNode();
+		hostname="";
+		primary="";
 		m_requisitionNode.setNodeLabel(label);
+		descr="Imported from Provision Dashboard";
 		secondary.addContainerProperty("indirizzo ip", String.class, null);
 		update=false;
 	}
@@ -148,9 +150,13 @@ public class TrentinoNetworkRequisitionNode {
 			if (m_requisitionNode.getAsset("username") != null && m_requisitionNode.getAsset("username").getValue().equals(profile.getItemProperty("username").getValue()) 
 		     && m_requisitionNode.getAsset("password") != null && m_requisitionNode.getAsset("password").getValue().equals(profile.getItemProperty("password").getValue())
 			 && m_requisitionNode.getAsset("enable") != null && m_requisitionNode.getAsset("enable").getValue().equals(profile.getItemProperty("enable").getValue())
-			 && m_requisitionNode.getAsset("autoenable") != null && m_requisitionNode.getAsset("autoenable").getValue().equals(profile.getItemProperty("auto_enable").getValue())
 			 && m_requisitionNode.getAsset("connection") != null && m_requisitionNode.getAsset("connection").getValue().equals(profile.getItemProperty("connection").getValue())
-					) {
+			 && 
+			( 
+			(m_requisitionNode.getAsset("autoenable") != null && m_requisitionNode.getAsset("autoenable").getValue().equals(profile.getItemProperty("auto_enable").getValue()))
+			|| profile.getItemProperty("auto_enable").getValue() == null || profile.getItemProperty("auto_enable").getValue().equals("")	
+			)
+			) {
 				backupProfile=(RowId)profileId;
 				break;
 			}
@@ -335,44 +341,18 @@ public class TrentinoNetworkRequisitionNode {
 	public IndexedContainer getSecondary() {
 		return secondary;
 	}
-	public RowId getSnmpProfile() {
+	public String getSnmpProfile() {
 		return snmpProfile;
 	}
-	public void setSnmpProfile(RowId snmpProfile) {
+
+	public void setSnmpProfile(String snmpProfile) {
 		if (this.snmpProfile != null && this.snmpProfile.equals(snmpProfile))
 			return;
-		if (snmpProfile != null)
-			updateSnmpProfileOnServer(this.primary, snmpProfile);
+		if (snmpProfile != null && update )
+			m_service.setSnmpInfo(this.primary, snmpProfile);
 		this.snmpProfile = snmpProfile;
 	}
-	
-	private void updateSnmpProfileOnServer(String ip,RowId snmp) {
-			Item profile = m_service.getSnmpProfiles().getItem(snmp);
-			if (profile != null) {
-				SnmpInfo info = new SnmpInfo();
-				info.setCommunity(profile.getItemProperty("community").getValue().toString());
-				info.setVersion(profile.getItemProperty("version").getValue().toString());
-				info.setTimeout(Integer.parseInt(profile.getItemProperty("timeout").getValue().toString()));
-				m_service.setSnmpInfo(ip, info);
-			}
-	}
-	public void updateSnmpProfile(SnmpInfo info) {
-		for (Object profileId: m_service.getSnmpProfiles().getItemIds()) {
-			Item snmpdata = m_service.getSnmpProfiles().getItem(profileId);
-			if (info.getRetries() == 1 && info.getPort() == 161 
-			  && info.getCommunity().equals(snmpdata.getItemProperty("community").getValue().toString()) 
-			  && info.getVersion().equals(snmpdata.getItemProperty("version").getValue().toString())
-			  && info.getTimeout() == Integer.parseInt(snmpdata.getItemProperty("timeout").getValue().toString())) {
-				snmpProfile=(RowId)profileId;
-				break;
-			}
-		}
-		if (snmpProfile == null)
-			valid = false;
-		logger.info("checked snmpProfile: " + snmpProfile +" valid: " + valid);
-
-	}
-	
+			
 	public RowId getBackupProfile() {
 		return backupProfile;
 	}
@@ -386,6 +366,11 @@ public class TrentinoNetworkRequisitionNode {
 				RequisitionAsset password = new RequisitionAsset("password", backup.getItemProperty("password").getValue().toString());
 				RequisitionAsset enable = new RequisitionAsset("enable",backup.getItemProperty("enable").getValue().toString());
 				RequisitionAsset connection = new RequisitionAsset("connection", backup.getItemProperty("connection").getValue().toString());
+				RequisitionAsset autoenable = new RequisitionAsset("autoenable", "");
+				if (backup.getItemProperty("auto_enable") != null && backup.getItemProperty("auto_enable").getValue() != null) {
+					autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
+				}
+				m_requisitionNode.putAsset(autoenable);
 				m_requisitionNode.putAsset(username);
 				m_requisitionNode.putAsset(password);
 				m_requisitionNode.putAsset(enable);
@@ -395,12 +380,7 @@ public class TrentinoNetworkRequisitionNode {
 					m_service.add(TN, m_requisitionNode.getForeignId(), password);
 					m_service.add(TN, m_requisitionNode.getForeignId(), enable);
 					m_service.add(TN, m_requisitionNode.getForeignId(), connection);
-				}
-				if (backup.getItemProperty("auto_enable") != null && backup.getItemProperty("auto_enable").getValue() != null) {
-					RequisitionAsset autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
-					m_requisitionNode.putAsset(autoenable);
-					if (update)
-						m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
+					m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
 				}
 			}
 		}
@@ -514,10 +494,11 @@ public class TrentinoNetworkRequisitionNode {
 				}
 				m_requisitionNode.deleteInterface(this.primary);
 			}
-			if (update)
+			if (update) {
 				m_service.add(TN, m_requisitionNode.getForeignId(),iface);
+				m_service.setSnmpInfo(primary, this.snmpProfile);
+			}
 			m_requisitionNode.putInterface(iface);
-			updateSnmpProfileOnServer(primary, this.snmpProfile);
 		}
 		this.primary = primary;
 	}
@@ -553,9 +534,7 @@ public class TrentinoNetworkRequisitionNode {
 			if (hasDuplicatedForeignId(hostname))
 							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
 			m_requisitionNode.setForeignId(hostname);
-			m_service.getForeignIds().add(hostname);
-			m_service.getNodeLabels().add(m_requisitionNode.getNodeLabel());
-			updateSnmpProfileOnServer(primary, snmpProfile);
+			m_service.setSnmpInfo(primary, snmpProfile);
 			m_service.add(TN, m_requisitionNode);
 			update=true;
 		}
