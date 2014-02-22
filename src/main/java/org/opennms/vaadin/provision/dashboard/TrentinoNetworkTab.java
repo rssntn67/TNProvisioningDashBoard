@@ -680,7 +680,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			m_descrComboBox.removeAllItems();
 			m_descrComboBox.addItem(node.getDescr());
-//			m_descrComboBox.select(node.getDescr());
 			
 			for (String snmpprofile: getService().getSnmpProfiles()) {
 				m_snmpComboBox.addItem(snmpprofile);
@@ -692,12 +691,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_parentComboBox.setNullSelectionAllowed(true);
 			for (String nodelabel :getService().getNodeLabels())
 				m_parentComboBox.addItem(nodelabel);
-
-//			if (node.getPrimary() != null && node.getUpdate())
-//				node.updateSnmpProfile(getService().getSnmpInfo(node.getPrimary()));
-			//m_snmpComboBox.select(node.getSnmpProfile());
-			//m_backupComboBox.select(node.getSnmpProfile());
-
 			
 			m_secondaryIpComboBox.removeAllItems();
 			for (String ip: getService().getIpAddresses(TN, node.getNodeLabel()) ) {
