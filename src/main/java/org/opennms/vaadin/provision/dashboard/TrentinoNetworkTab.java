@@ -307,11 +307,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				//m_snmpComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[1]);
-				//m_backupComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
-				m_vrfsComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
-				m_notifCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
-				m_threshCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
+				TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+				if (!node.getUpdate()) {
+					m_vrfsComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
+					m_notifCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
+					m_threshCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
+				}
 			}
 		});
 
@@ -323,6 +324,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 		TextField primary = new TextField(PRIMARY);
 		primary.setRequired(true);
 		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
+
+		m_parentComboBox.setInvalidAllowed(false);
+		m_parentComboBox.setNullSelectionAllowed(true);
 
 		m_secondaryIpAddressTable.setCaption("Altri ip da monitorare");
 		m_secondaryIpAddressTable.setHeight(180,Unit.PIXELS);
@@ -655,14 +659,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_descrComboBox.removeAllItems();
 			m_descrComboBox.addItem(node.getDescr());
 			
-			for (String snmpprofile: getService().getSnmpProfiles()) {
-				m_snmpComboBox.addItem(snmpprofile);
-			}
-			
-			m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
-
-			m_parentComboBox.setInvalidAllowed(false);
-			m_parentComboBox.setNullSelectionAllowed(true);
 			for (String nodelabel :getService().getNodeLabels())
 				m_parentComboBox.addItem(nodelabel);
 			
@@ -672,7 +668,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 					continue;
 				m_secondaryIpComboBox.addItem(ip);
 			}
+			
 			m_secondaryIpAddressTable.setContainerDataSource(node.getSecondary());
+			for (String snmpprofile: getService().getSnmpProfiles()) {
+				m_snmpComboBox.addItem(snmpprofile);
+			}
+			m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
+			
+			if (node.getUpdate())
+				node.updateSnmpProfile(getService().getSnmpProfile(node.getPrimary()));
 			
 			m_editorFields.setItemDataSource(node);
 			m_editRequisitionNodeLayout.setVisible(true);

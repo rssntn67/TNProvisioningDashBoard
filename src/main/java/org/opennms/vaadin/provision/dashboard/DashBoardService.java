@@ -1,6 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
@@ -300,8 +300,15 @@ public class DashBoardService {
 		return m_provisionService.get(foreignSource);
 	}
 
-	public SnmpInfo getSnmpInfo(String ip) {
-		return m_snmpInfoService.get(ip);
+	public String getSnmpProfile(String ip) {
+		SnmpInfo info = m_snmpInfoService.get(ip);
+		for (Entry<String, SnmpProfile> snmpprofileentry :m_snmpProfiles.entrySet()) {
+			if (info.getCommunity().equals(snmpprofileentry.getValue().getCommunity()) &&
+				info.getVersion().equals(snmpprofileentry.getValue().getVersion()) &&	
+				info.getTimeout() == snmpprofileentry.getValue().getTimeout().intValue())
+				return snmpprofileentry.getKey();
+		}
+		return null;
 	}
 
 	public void setSnmpInfo(String ip, String snmpProfile) {
@@ -539,6 +546,59 @@ public class DashBoardService {
 		}
 	}
 	
+	public boolean hasDuplicatedForeignId(String hostname) {
+		for (String label: getForeignIds()) {
+			if (label.equals(hostname)) 
+				return true;
+		}
+		return false;
+	}
+
+	public boolean hasDuplicatedNodelabel(String nodelabel) {
+		for (String label: getNodeLabels()) {
+			if (label.equals(nodelabel)) 
+				return true;
+		}
+		return false;
+	}
+	
+	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel) {
+		if (hostname.contains(".")) {
+			String hostlabel = hostname.substring(0,hostname.indexOf("."));
+			for (String subdomain: m_sub_domains ) {
+				if (nodelabel.equals(hostlabel+"."+subdomain)) {
+					return false;
+				}
+			}
+		} else {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean hasInvalidDnsBind9Size(String nodelabel ) {		
+		if (nodelabel.length() > 253)
+			return true;
+		return false;
+	}
+
+	public static boolean hasInvalidDnsBind9LabelSize(String nodelabel ) {		
+		for (String label: nodelabel.split("\\.")) {
+			if (label.length() > 63)
+				return true;
+		}
+		return false;
+	}
+
+	public static boolean hasInvalidDnsBind9Label(String nodelabel ) {		
+    	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
+		for (String label: nodelabel.split("\\.")) {
+			if (!label.matches(re))	
+				return true;
+		}
+		return false;
+	}
+
 
 	public String getUsername() {
 		return m_username;
@@ -560,6 +620,8 @@ public class DashBoardService {
 	}
 
     public String[] getDefaultValuesFromNetworkCategory(Object networkcategory) {
+    	if (networkcategory == null)
+        	return m_network_categories[0];
     	String[] netcat = (String[]) networkcategory;
     	for (int i = 0; i< m_network_categories.length;i++) {
     	   	if (netcat[0].equals(m_network_categories[i][0]) &&
@@ -567,7 +629,6 @@ public class DashBoardService {
     	    	return m_network_categories[i];
     	}
     	return m_network_categories[0];
-    	
     }
 
 
