@@ -69,8 +69,9 @@ public class TrentinoNetworkRequisitionNode {
 		hostname="";
 		primary="";
 		networkCategory = m_network_categories[0]; 
-		notifCategory = m_network_categories[0][2];
-		threshCategory = m_network_categories[0][3];
+		vrf = m_network_categories[0][2];
+		notifCategory = m_network_categories[0][3];
+		threshCategory = m_network_categories[0][4];
 
 		m_requisitionNode.setNodeLabel(label);
 		descr="Imported from Provision Dashboard";

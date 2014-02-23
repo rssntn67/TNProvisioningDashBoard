@@ -301,6 +301,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_networkCatComboBox.setNullSelectionAllowed(false);
 		m_networkCatComboBox.setRequired(true);
 		m_networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
+		m_networkCatComboBox.setImmediate(true);
 		m_networkCatComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			
 			private static final long serialVersionUID = -3559078865783782719L;
