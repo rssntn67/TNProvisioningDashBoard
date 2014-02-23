@@ -82,14 +82,6 @@ public class DashBoardService {
 		"ThresholdWARNING",
 		"ThresholdALERT"
 	};
-	protected static final String[][] m_defaultValue = {
-		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
-		{"bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING"},
-		{"bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING"},
-		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
-		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
-		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
-	};
 	
 	protected static final String[][] m_network_categories = {
 		{"AccessPoint","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
@@ -570,11 +562,11 @@ public class DashBoardService {
     public String[] getDefaultValuesFromNetworkCategory(Object networkcategory) {
     	String[] netcat = (String[]) networkcategory;
     	for (int i = 0; i< m_network_categories.length;i++) {
-    	   	if (netcat[0].equals(DashBoardService.m_network_categories[i][0]) &&
-        			netcat[1].equals(DashBoardService.m_network_categories[i][1]))
-    	    	return m_defaultValue[i];
+    	   	if (netcat[0].equals(m_network_categories[i][0]) &&
+        			netcat[1].equals(m_network_categories[i][1]))
+    	    	return m_network_categories[i];
     	}
-    	return m_defaultValue[0];
+    	return m_network_categories[0];
     	
     }
 
