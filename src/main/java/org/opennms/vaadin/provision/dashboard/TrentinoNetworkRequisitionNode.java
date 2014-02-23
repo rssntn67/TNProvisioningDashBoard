@@ -54,21 +54,9 @@ public class TrentinoNetworkRequisitionNode {
 	protected String address1;
 	
 	protected boolean valid = true;
-	
-	public boolean isValid() {
-		return valid;
-	}
-
-	public void setValid(boolean valid) {
-		this.valid = valid;
-	}
+	private boolean update = true;
 
 	private DashBoardService m_service;
-	private boolean update = true;
-	
-	public boolean getUpdate() {
-		return update;
-	}
 	
 	public TrentinoNetworkRequisitionNode(String label,DashBoardService service) {
 		m_service = service;
@@ -511,6 +499,18 @@ public class TrentinoNetworkRequisitionNode {
 	public String getNodeLabel() {
 		return m_requisitionNode.getNodeLabel();
     }
+	
+	public boolean isValid() {
+		return valid;
+	}
+
+	public void setValid(boolean valid) {
+		this.valid = valid;
+	}
+
+	public boolean getUpdate() {
+		return update;
+	}
 	
 	public void addSecondaryInterface(String ipaddress) {
 		RequisitionInterface ipsecondary = new RequisitionInterface();

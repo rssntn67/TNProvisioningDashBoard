@@ -6,8 +6,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,8 @@ import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 
 public class DashBoardService {
     private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
@@ -78,44 +82,51 @@ public class DashBoardService {
 		"ThresholdWARNING",
 		"ThresholdALERT"
 	};
-
+	protected static final String[][] m_defaultValue = {
+		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING"},
+		{"bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING"},
+		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+	};
+	
 	protected static final String[][] m_network_categories = {
-		{"AccessPoint","Backbone"},
-		{"Core","Backbone"},
-		{"Fiemme2013","Backbone"},
-		{"Ponte5p4","Backbone"},
-		{"PontePDH","Backbone"},
-		{"SwitchWiNet","Backbone"},
-		{"Fiemme2013","Backbone"},
-		{"AgLav","Accesso"},
-		{"Apss","Accesso"},
-		{"Biblio","Accesso"},
-		{"CPE","Accesso"},
-		{"CUE","Accesso"},
-		{"ComuneTN","Accesso"},
-		{"Comuni","Accesso"},
-		{"ConsPro","Accesso"},
-		{"GeoSis","Accesso"},
-		{"Info","Accesso"},
-		{"Internet","Accesso"},
-		{"Internet-Esterni","Accesso"},
-		{"LAN","Accesso"},
-		{"Medici","Accesso"},
-		{"Mitt","Accesso"},
-		{"OperaUnitn","Accesso"},
-		{"Pat","Accesso"},
-		{"PatAcquePub","Accesso"},
-		{"PatDighe","Accesso"},
-		{"PatVoce","Accesso"},
-		{"RSACivicaTN","Accesso"},
-		{"RSASpes","Accesso"},
-		{"ReperibiliTnet","Accesso"},
-		{"Scuole","Accesso"},
-		{"ScuoleMaterne","Accesso"},
-		{"Telpat-Autonome","Accesso"},
-		{"Unitn","Accesso"},
-		{"VdsRovereto","Accesso"},
-		{"Winwinet","Accesso"}
+		{"AccessPoint","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"Core","Backbone","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING"},
+		{"Ponte5p4","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"PontePDH","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"SwitchWiNet","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"Fiemme2013","Backbone","bb.tnnet.it","EMERGENCY_F1","ThresholdWARNING"},
+		{"AgLav","Accesso","aglav.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Apss","Accesso","apss.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Biblio","Accesso","biblio.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"CPE","Accesso","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"CUE","Accesso","cue.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"ComuneTN","Accesso","comunetn.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Comuni","Accesso","comuni.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"ConsPro","Accesso","conspro.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"GeoSis","Accesso","geosis.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Info","Accesso","info.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Internet","Accesso","internet.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Internet-Esterni","Accesso","internet-esterni.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"LAN","Accesso","hq.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Medici","Accesso","medici.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Mitt","Accesso","mitt.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"OperaUnitn","Accesso","operaunitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Pat","Accesso","pat.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"PatAcquePub","Accesso","patacquepub.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"PatDighe","Accesso","patdighe.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"PatVoce","Accesso","patvoce.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"RSACivicaTN","Accesso","rsacivicatn.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"RSASpes","Accesso","rsaspes.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"ReperibiliTnet","Accesso","reperibilitnet.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Scuole","Accesso","scuole.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"ScuoleMaterne","Accesso","scuole.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Telpat-Autonome","Accesso","telpat-autonome.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Unitn","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"VdsRovereto","Accesso","vdsrovereto.tnnet.it","EMERGENCY_F2","ThresholdWARNING"},
+		{"Winwinet","Accesso","winwinet.tnnet.it","EMERGENCY_F2","ThresholdWARNING"}
 	};
 	
 	public static final String[] m_sub_domains = {
@@ -504,6 +515,39 @@ public class DashBoardService {
         return ipaddresses;
 	}
 
+	public void checkUniqueNodeLabel() {
+		Set<String> labels = new HashSet<String>();
+		Set<String> duplicated = new HashSet<String>();
+		for (String label: getNodeLabels()) {
+			if (labels.contains(label)) {
+				duplicated.add(label);
+			} else {
+				labels.add(label);
+			}
+		}
+		if (!duplicated.isEmpty()) {
+			logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicated.toArray()));
+			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
+		}
+	}
+	
+	public void checkUniqueForeignId() {
+		Set<String> labels = new HashSet<String>();
+		Set<String> duplicated = new HashSet<String>();
+		for (String label: getForeignIds()) {
+			if (labels.contains(label)) {
+				duplicated.add(label);
+			} else {
+				labels.add(label);
+			}
+		}
+		if (!duplicated.isEmpty()) {
+			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicated.toArray()));
+			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
+		}
+	}
+	
+
 	public String getUsername() {
 		return m_username;
 	}
@@ -523,7 +567,16 @@ public class DashBoardService {
 		m_url = url;
 	}
 
-
+    public String[] getDefaultValuesFromNetworkCategory(Object networkcategory) {
+    	String[] netcat = (String[]) networkcategory;
+    	for (int i = 0; i< m_network_categories.length;i++) {
+    	   	if (netcat[0].equals(DashBoardService.m_network_categories[i][0]) &&
+        			netcat[1].equals(DashBoardService.m_network_categories[i][1]))
+    	    	return m_defaultValue[i];
+    	}
+    	return m_defaultValue[0];
+    	
+    }
 
 
 }

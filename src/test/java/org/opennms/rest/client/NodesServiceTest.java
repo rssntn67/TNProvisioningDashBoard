@@ -39,7 +39,6 @@ import org.opennms.rest.client.model.OnmsIpInterfaceList;
 import org.opennms.rest.client.model.OnmsNode;
 import org.opennms.rest.client.model.OnmsNodeList;
 import org.opennms.vaadin.provision.dashboard.DashBoardService;
-import org.opennms.vaadin.provision.dashboard.TrentinoNetworkRequisitionNode;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 

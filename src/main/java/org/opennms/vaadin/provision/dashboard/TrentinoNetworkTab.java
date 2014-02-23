@@ -1,9 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 
@@ -134,42 +131,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 		initSearch();
 		initActionButtons();
 		loaded=true;
-		checkUniqueNodeLabel();
-		checkUniqueForeignId();
+		getService().checkUniqueNodeLabel();
+		getService().checkUniqueForeignId();
 	}
 
-	private void checkUniqueNodeLabel() {
-		Set<String> labels = new HashSet<String>();
-		Set<String> duplicated = new HashSet<String>();
-		for (String label: getService().getNodeLabels()) {
-			if (labels.contains(label)) {
-				duplicated.add(label);
-			} else {
-				labels.add(label);
-			}
-		}
-		if (!duplicated.isEmpty()) {
-			logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicated.toArray()));
-			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
-		}
-	}
-	
-	private void checkUniqueForeignId() {
-		Set<String> labels = new HashSet<String>();
-		Set<String> duplicated = new HashSet<String>();
-		for (String label: getService().getForeignIds()) {
-			if (labels.contains(label)) {
-				duplicated.add(label);
-			} else {
-				labels.add(label);
-			}
-		}
-		if (!duplicated.isEmpty()) {
-			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicated.toArray()));
-			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
-		}
-	}
-	
 	private void initLayout() {
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
@@ -298,20 +263,27 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private void initEditor() {
 
-		m_editRequisitionNodeLayout.setMargin(true);
-		m_editRequisitionNodeLayout.setVisible(false);
-		m_editorFields.setBuffered(true);
+		for (final String vrfs: m_vrfs) {
+			m_vrfsComboBox.addItem(vrfs);
+		}
 
-		HorizontalLayout generalInfo = new HorizontalLayout();
-		FormLayout leftGeneralInfo = new FormLayout();
-		leftGeneralInfo.setMargin(true);
-		leftGeneralInfo.addComponent(new Label("Informazioni Generali"));
+		for (String[] categories: m_network_categories) {
+			m_networkCatComboBox.addItem(categories);
+			m_networkCatComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
+		}
+
+		for (String notif: m_notif_categories) {
+			m_notifCatComboBox.addItem(notif);
+		}
+
+		for (String threshold: m_thresh_categories) {
+			m_threshCatComboBox.addItem(threshold);
+		}
+
 		m_descrComboBox.setInvalidAllowed(false);
 		m_descrComboBox.setNullSelectionAllowed(false);
 		m_descrComboBox.setWidth(8, Unit.CM);
-		m_editorFields.bind(m_descrComboBox, DESCR);
-		leftGeneralInfo.addComponent(m_descrComboBox);
-		
+
 		m_hostname.setSizeFull();
 		m_hostname.setWidth(4, Unit.CM);
 		m_hostname.setHeight(6, Unit.MM);
@@ -324,31 +296,33 @@ public class TrentinoNetworkTab extends DashboardTab {
 				" This rule is known as the LDH rule (letters, digits, hyphen). " +
 				" Labels may not start or end with a hyphen." +
 				" A hostname is a domain name that has at least one IP address associated.");
-		m_editorFields.bind(m_hostname, HOST);
-		leftGeneralInfo.addComponent(m_hostname);
 
-		for (final String vrfs: m_vrfs) {
-			m_vrfsComboBox.addItem(vrfs);
-		}
+		m_networkCatComboBox.setInvalidAllowed(false);
+		m_networkCatComboBox.setNullSelectionAllowed(false);
+		m_networkCatComboBox.setRequired(true);
+		m_networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
+		m_networkCatComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+			
+			private static final long serialVersionUID = -3559078865783782719L;
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				//m_snmpComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[1]);
+				//m_backupComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
+				m_vrfsComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
+				m_notifCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
+				m_threshCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
+			}
+		});
+
 		m_vrfsComboBox.setInvalidAllowed(false);
 		m_vrfsComboBox.setNullSelectionAllowed(false);
 		m_vrfsComboBox.setRequired(true);
 		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
-		m_editorFields.bind(m_vrfsComboBox, VRF);
-		leftGeneralInfo.addComponent(m_vrfsComboBox);
+		
 		TextField primary = new TextField(PRIMARY);
 		primary.setRequired(true);
 		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
-		leftGeneralInfo.addComponent(primary);
-		m_editorFields.bind(primary,PRIMARY);
-		
-		leftGeneralInfo.addComponent(m_parentComboBox);
-		m_editorFields.bind(m_parentComboBox, PARENT);
-		generalInfo.addComponent(leftGeneralInfo);
-
-		VerticalLayout centerGeneralInfo = new VerticalLayout();
-		centerGeneralInfo.setMargin(true);
-		generalInfo.addComponent(centerGeneralInfo);
 
 		m_secondaryIpAddressTable.setCaption("Altri ip da monitorare");
 		m_secondaryIpAddressTable.setHeight(180,Unit.PIXELS);
@@ -390,9 +364,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			  }
 		});
 
-		FormLayout rightGeneralInfo = new FormLayout();
-		rightGeneralInfo.setMargin(true);
-		rightGeneralInfo.addComponent(m_secondaryIpAddressTable);
 		m_secondaryIpComboBox.setNullSelectionAllowed(false);
 		m_secondaryIpComboBox.setInvalidAllowed(false);
 		Button addSecondaryIpButton = new Button("Aggiungi");
@@ -429,100 +400,103 @@ public class TrentinoNetworkTab extends DashboardTab {
 				}
 			}
 		});
-
-		HorizontalLayout bottomRightGeneralInfo = new HorizontalLayout();
-		bottomRightGeneralInfo.addComponent(m_secondaryIpComboBox);
-		bottomRightGeneralInfo.addComponent(addSecondaryIpButton);
-		rightGeneralInfo.addComponent(bottomRightGeneralInfo);
 		
-		generalInfo.addComponent(rightGeneralInfo);
-
-		generalInfo.setExpandRatio(leftGeneralInfo, 3);
-		generalInfo.setExpandRatio(centerGeneralInfo, 1);
-		generalInfo.setExpandRatio(rightGeneralInfo, 3);
-		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
-
-		FormLayout categoryInfo = new FormLayout();
-		categoryInfo.addComponent(new Label("Categorie"));
-		
-		HorizontalLayout catLayout = new HorizontalLayout();
-		catLayout.setSizeFull();
-		for (String[] categories: m_network_categories) {
-			m_networkCatComboBox.addItem(categories);
-			m_networkCatComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
-		}
-		m_networkCatComboBox.setInvalidAllowed(false);
-		m_networkCatComboBox.setNullSelectionAllowed(false);
-		m_networkCatComboBox.setRequired(true);
-		m_networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
-		m_editorFields.bind(m_networkCatComboBox, NETWORK_CATEGORY);
-		
-		for (String notif: m_notif_categories) {
-			m_notifCatComboBox.addItem(notif);
-		}
 		m_notifCatComboBox.setInvalidAllowed(false);
 		m_notifCatComboBox.setNullSelectionAllowed(false);
 		m_notifCatComboBox.setRequired(true);
 		m_notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
-		m_editorFields.bind(m_notifCatComboBox, NOTIF_CATEGORY);
 
-		for (String threshold: m_thresh_categories) {
-			m_threshCatComboBox.addItem(threshold);
-		}
 		m_threshCatComboBox.setInvalidAllowed(false);
 		m_threshCatComboBox.setNullSelectionAllowed(false);
 		m_threshCatComboBox.setRequired(true);
 		m_threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
-		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
-		
-		catLayout.addComponent(m_networkCatComboBox);
-		catLayout.addComponent(m_notifCatComboBox);
-		catLayout.addComponent(m_threshCatComboBox);
-		categoryInfo.addComponent(catLayout);
-		m_editRequisitionNodeLayout.addComponent(new Panel(categoryInfo));
 
 		m_snmpComboBox.setInvalidAllowed(false);
 		m_snmpComboBox.setNullSelectionAllowed(false);
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
-		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
 
         m_backupComboBox.setInvalidAllowed(false);
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
-		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
-
-		FormLayout credProfile = new FormLayout();
-		credProfile.addComponent(new Label("Credenziali"));
-		HorizontalLayout credlayout = new HorizontalLayout();
-		credlayout.setSizeFull();
-		credlayout.addComponent(m_snmpComboBox);
-		credlayout.addComponent(m_backupComboBox);
-		credProfile.addComponent(credlayout);
 		
-		m_editRequisitionNodeLayout.addComponent(new Panel(credProfile));
-
 		TextField city = new TextField("Citta'");
 		city.setWidth(8, Unit.CM);
 		city.setHeight(6, Unit.MM);
-		city.setRequiredError("E' necessario specificare la citta'");
-		m_editorFields.bind(city,CITY);
 		
 		TextField address = new TextField("Indirizzo");
 		address.setWidth(8, Unit.CM);
 		address.setHeight(6, Unit.MM);
-		address.setRequiredError("E' necessario specificare l'indirizzo");
-		m_editorFields.bind(address, ADDRESS);
+
+		m_editorFields.setBuffered(true);
+		m_editorFields.bind(m_descrComboBox, DESCR);
+		m_editorFields.bind(m_hostname, HOST);
+		m_editorFields.bind(m_networkCatComboBox, NETWORK_CATEGORY);
+		m_editorFields.bind(m_vrfsComboBox, VRF);
+		m_editorFields.bind(primary,PRIMARY);
+		m_editorFields.bind(m_parentComboBox, PARENT);
+		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
+		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
+		m_editorFields.bind(m_notifCatComboBox, NOTIF_CATEGORY);
+		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
+		m_editorFields.bind(city,CITY);
+	    m_editorFields.bind(address, ADDRESS);
+
+		FormLayout leftGeneralInfo = new FormLayout();
+		leftGeneralInfo.setMargin(true);
+		leftGeneralInfo.addComponent(m_descrComboBox);
+		leftGeneralInfo.addComponent(m_hostname);
+		leftGeneralInfo.addComponent(m_networkCatComboBox);
+		leftGeneralInfo.addComponent(m_vrfsComboBox);
+		leftGeneralInfo.addComponent(primary);
+		leftGeneralInfo.addComponent(m_parentComboBox);
 		
-		FormLayout localization = new FormLayout();
-		localization.addComponent(new Label("Localizzazione"));
+		VerticalLayout centerGeneralInfo = new VerticalLayout();
+		centerGeneralInfo.setMargin(true);
+
+		HorizontalLayout bottomRightGeneralInfo = new HorizontalLayout();
+		bottomRightGeneralInfo.addComponent(m_secondaryIpComboBox);
+		bottomRightGeneralInfo.addComponent(addSecondaryIpButton);
+		
+		FormLayout rightGeneralInfo = new FormLayout();
+		rightGeneralInfo.setMargin(true);
+		rightGeneralInfo.addComponent(m_secondaryIpAddressTable);
+		rightGeneralInfo.addComponent(bottomRightGeneralInfo);
+				
+		HorizontalLayout catLayout = new HorizontalLayout();
+		catLayout.setSizeFull();
+		catLayout.addComponent(m_snmpComboBox);
+		catLayout.addComponent(m_backupComboBox);
+		catLayout.addComponent(m_notifCatComboBox);
+		catLayout.addComponent(m_threshCatComboBox);
+		
 		HorizontalLayout localizationInfo = new HorizontalLayout();
 		localizationInfo.setSizeFull();
 		localizationInfo.addComponent(city);
 		localizationInfo.addComponent(address);
-		localization.addComponent(localizationInfo);
-		m_editRequisitionNodeLayout.addComponent(new Panel(localization));
+				
+		HorizontalLayout generalInfo = new HorizontalLayout(new Label("Informazioni Generali"));
+		generalInfo.addComponent(leftGeneralInfo);
+		generalInfo.addComponent(centerGeneralInfo);
+		generalInfo.addComponent(rightGeneralInfo);
+		generalInfo.setExpandRatio(leftGeneralInfo, 3);
+		generalInfo.setExpandRatio(centerGeneralInfo, 1);
+		generalInfo.setExpandRatio(rightGeneralInfo, 3);
+
+		FormLayout categoryInfo = new FormLayout();
+		categoryInfo.addComponent(new Label("Profili"));
+		categoryInfo.addComponent(catLayout);
+				
+		FormLayout assetInfo = new FormLayout();
+		assetInfo.addComponent(new Label("Localizzazione"));
+		assetInfo.addComponent(localizationInfo);
+
+		m_editRequisitionNodeLayout.setMargin(true);
+		m_editRequisitionNodeLayout.setVisible(false);
+		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
+		m_editRequisitionNodeLayout.addComponent(new Panel(categoryInfo));
+		m_editRequisitionNodeLayout.addComponent(new Panel(assetInfo));
 
 	}
 
