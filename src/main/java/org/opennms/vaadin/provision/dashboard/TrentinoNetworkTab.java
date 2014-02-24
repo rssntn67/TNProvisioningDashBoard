@@ -448,7 +448,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(city,CITY);
 	    m_editorFields.bind(address, ADDRESS);
 
-		FormLayout leftGeneralInfo = new FormLayout();
+		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
 		leftGeneralInfo.addComponent(m_descrComboBox);
 		leftGeneralInfo.addComponent(m_hostname);
@@ -481,7 +481,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		localizationInfo.addComponent(city);
 		localizationInfo.addComponent(address);
 				
-		HorizontalLayout generalInfo = new HorizontalLayout(new Label("Informazioni Generali"));
+		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
 		generalInfo.addComponent(centerGeneralInfo);
 		generalInfo.addComponent(rightGeneralInfo);
