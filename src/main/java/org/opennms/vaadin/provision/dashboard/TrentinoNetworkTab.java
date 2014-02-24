@@ -471,10 +471,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 				
 		HorizontalLayout catLayout = new HorizontalLayout();
 		catLayout.setSizeFull();
-		catLayout.addComponent(m_snmpComboBox);
-		catLayout.addComponent(m_backupComboBox);
 		catLayout.addComponent(m_notifCatComboBox);
 		catLayout.addComponent(m_threshCatComboBox);
+		catLayout.addComponent(m_snmpComboBox);
+		catLayout.addComponent(m_backupComboBox);
 		
 		HorizontalLayout localizationInfo = new HorizontalLayout();
 		localizationInfo.setSizeFull();
