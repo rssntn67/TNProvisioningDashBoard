@@ -676,9 +676,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 			m_backupComboBox.setContainerDataSource(getService().getBackupProfiles());
 			
-			if (node.getUpdate())
-				node.updateSnmpProfile(getService().getSnmpProfile(node.getPrimary()));
-			
+			if (node.getUpdate()) {
+				String snmpProfile = getService().getSnmpProfile(node.getPrimary());
+				if (snmpProfile == null)
+					node.setValid(false);
+				node.updateSnmpProfile(snmpProfile);
+			}
 			m_editorFields.setItemDataSource(node);
 			m_editRequisitionNodeLayout.setVisible(true);
 			if (node.getDescr().contains("FAST")) {
