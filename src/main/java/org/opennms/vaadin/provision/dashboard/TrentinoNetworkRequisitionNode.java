@@ -1,6 +1,8 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -39,7 +41,16 @@ public class TrentinoNetworkRequisitionNode {
 	
 	private RequisitionNode m_requisitionNode;
 
-	protected String descr;
+	MultivaluedMap<String, String> m_updatemap = new MultivaluedMapImpl();
+    List<RequisitionAsset> m_assetsToPut = new ArrayList<RequisitionAsset>();
+
+    List<RequisitionCategory> m_categoriesToAdd = new ArrayList<RequisitionCategory>();
+    List<RequisitionCategory> m_categoriesToDel = new ArrayList<RequisitionCategory>();
+    
+    List<RequisitionInterface> m_interfToAdd = new ArrayList<RequisitionInterface>();
+    List<RequisitionInterface> m_interfToDel = new ArrayList<RequisitionInterface>();
+
+    protected String descr;
 	protected String hostname;
 	protected String vrf;
 	protected String primary;
@@ -59,6 +70,8 @@ public class TrentinoNetworkRequisitionNode {
 	
 	protected boolean valid = true;
 	private boolean update = true;
+	private boolean updatenodeLabel = false;
+	private boolean updatesnmpprofile = false;
 
 	private DashBoardService m_service;
 	
@@ -78,6 +91,8 @@ public class TrentinoNetworkRequisitionNode {
 		descr="Imported from Provision Dashboard";
 		secondary.addContainerProperty("indirizzo ip", String.class, null);
 		update=false;
+		updatesnmpprofile = true;
+		updatesnmpprofile = true;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -210,11 +225,7 @@ public class TrentinoNetworkRequisitionNode {
 		if (parentNodeLabel != null) {
 			parentForeignId = m_service.getForeignId(parentNodeLabel);
 		}
-		if (update) {
-			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-			map.add("parent-foreign-id", parentForeignId);
-			m_service.update(TN, m_requisitionNode.getForeignId(), map);
-		}
+		m_updatemap.add("parent-foreign-id", parentForeignId);
 		m_requisitionNode.setParentForeignId(parentForeignId);
 		this.parent = parentNodeLabel;
 	}
@@ -229,13 +240,9 @@ public class TrentinoNetworkRequisitionNode {
 		RequisitionAsset assetdescription = new RequisitionAsset(DESCRIPTION, city + " - " + address1);
 		if (city != null) {
 			m_requisitionNode.setCity(city);
+			m_updatemap.add(CITY, city);
 			m_requisitionNode.putAsset(assetdescription);
-			if (update) {
-				MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-				map.add(CITY, city);
-				m_service.update(TN, m_requisitionNode.getForeignId(), map);
-				m_service.add(TN, m_requisitionNode.getForeignId(), assetdescription);
-			}
+			m_assetsToPut.add(assetdescription);
 		}
 		this.city = city;
 		
@@ -244,13 +251,14 @@ public class TrentinoNetworkRequisitionNode {
 	public String[] getNetworkCategory() {
 		return networkCategory;
 	}
+
 	public void setNetworkCategory(String[] networkCategory) {
 		if (networkCategory != null && Arrays.equals(this.networkCategory,networkCategory))
 			return;
-		if (update && this.networkCategory != null) {
+		if (this.networkCategory != null) {
 			for (String cat: this.networkCategory) {
 				RequisitionCategory oldcategory = new RequisitionCategory(cat);
-				m_service.delete(TN, m_requisitionNode.getForeignId(), oldcategory);
+				m_categoriesToDel.add(oldcategory);
 				m_requisitionNode.deleteCategory(oldcategory);
 			}
 		}
@@ -258,9 +266,8 @@ public class TrentinoNetworkRequisitionNode {
 		if (networkCategory != null) {
 			for (String cat: networkCategory) {
 				RequisitionCategory newcategory = new RequisitionCategory(cat);
+				m_categoriesToAdd.add(newcategory);
 				m_requisitionNode.putCategory(newcategory);
-				if (update)
-					m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
 			}
 		}
 		this.networkCategory = networkCategory;
@@ -272,16 +279,15 @@ public class TrentinoNetworkRequisitionNode {
 	public void setNotifCategory(String notifCategory) {
 		if (notifCategory != null && notifCategory.equals(this.notifCategory))
 			return;
-		if (update && this.notifCategory != null) {
+		if (this.notifCategory != null) {
 			RequisitionCategory oldcategory = new RequisitionCategory(this.notifCategory);
-			m_service.delete(TN, m_requisitionNode.getForeignId(), oldcategory);
+			m_categoriesToDel.add(oldcategory);
 			m_requisitionNode.deleteCategory(oldcategory);
 		}
 		if (notifCategory != null) { 
 			RequisitionCategory newcategory = new RequisitionCategory(notifCategory);
 			m_requisitionNode.putCategory(newcategory);
-			if (update)
-				m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
+			m_categoriesToAdd.add(newcategory);
 		}
 		this.notifCategory = notifCategory;
 	}
@@ -291,16 +297,15 @@ public class TrentinoNetworkRequisitionNode {
 	public void setThreshCategory(String threshCategory) {
 		if (threshCategory != null && threshCategory.equals(this.threshCategory))
 			return;
-		if (update && this.threshCategory != null) {
+		if (this.threshCategory != null) {
 			RequisitionCategory category = new RequisitionCategory(this.threshCategory);
-			m_service.delete(TN, m_requisitionNode.getForeignId(), category);
+			m_categoriesToDel.add(category);
 			m_requisitionNode.deleteCategory(category);
 		}
 		if (threshCategory != null) {
 			RequisitionCategory newcategory = new RequisitionCategory(threshCategory);
 			m_requisitionNode.putCategory(newcategory);
-			if (update)
-				m_service.add(TN, m_requisitionNode.getForeignId(), newcategory);
+			m_categoriesToAdd.add(newcategory);
 		}		
 		this.threshCategory = threshCategory;
 	}
@@ -311,30 +316,11 @@ public class TrentinoNetworkRequisitionNode {
 		if (this.vrf != null && this.vrf.equals(vrf))
 			return;
 		if (vrf != null && hostname != null ) {
-			String nodelabel=hostname + "." + vrf;
-			updateNodeLabel(nodelabel, hostname);
+			updatenodeLabel = true;
 		}
 		this.vrf = vrf;
 	}
 
-	private void updateNodeLabel(String nodelabel, String hostname) throws ProvisionDashboardValidationException {
-		if	(hasInvalidDnsBind9Size(nodelabel))
-			throw new ProvisionDashboardValidationException("Bind9 error: The full domain name exceed a total length of 253: " + nodelabel);
-		if (hasInvalidDnsBind9LabelSize(nodelabel))
-			throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + nodelabel);
-		if (hasInvalidDnsBind9Label(nodelabel))
-			throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters or start or end with hypen: " + nodelabel);
-		if (hasUnSupportedDnsDomain(hostname, nodelabel))
-			throw new ProvisionDashboardValidationException("There is no dns domain defined for: " + nodelabel);
-		if (m_service.hasDuplicatedNodelabel(nodelabel))
-			throw new ProvisionDashboardValidationException("The node label exist: cannot duplicate node label: " + nodelabel);
-		m_requisitionNode.setNodeLabel(nodelabel);
-		if (update) {
-			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
-			map.add("node-label", nodelabel);
-			m_service.update(TN, m_requisitionNode.getForeignId(), map);
-		}
-	}
     public String getDescr() {
 		return descr;
 	}
@@ -353,8 +339,8 @@ public class TrentinoNetworkRequisitionNode {
 	public void setSnmpProfile(String snmpProfile) {
 		if (this.snmpProfile != null && this.snmpProfile.equals(snmpProfile))
 			return;
-		if (snmpProfile != null && update )
-			m_service.setSnmpInfo(this.primary, snmpProfile);
+		if (snmpProfile != null)
+			updatesnmpprofile = true;
 		this.snmpProfile = snmpProfile;
 	}
 	
@@ -370,9 +356,7 @@ public class TrentinoNetworkRequisitionNode {
 		if (backupProfile != null) {
 			for ( RequisitionAsset backupProfileItem : m_service.getBackupProfile(backupProfile).getAssets()) {
 				m_requisitionNode.putAsset(backupProfileItem);
-				if (update) {
-					m_service.add(TN, m_requisitionNode.getForeignId(), backupProfileItem);
-				}
+				m_assetsToPut.add(backupProfileItem);
 			}
 		}
 		this.backupProfile = backupProfile;
@@ -389,10 +373,8 @@ public class TrentinoNetworkRequisitionNode {
 			RequisitionAsset assetdescription = new RequisitionAsset(DESCRIPTION, city + " - " + address);
 			m_requisitionNode.putAsset(asset);
 			m_requisitionNode.putAsset(assetdescription);
-			if (update) {
-				m_service.add(TN, m_requisitionNode.getForeignId(), asset);
-				m_service.add(TN, m_requisitionNode.getForeignId(), assetdescription);
-			}
+			m_assetsToPut.add(asset);
+			m_assetsToPut.add(assetdescription);
 		}
 		this.address1 = address;
 	}
@@ -402,9 +384,8 @@ public class TrentinoNetworkRequisitionNode {
 	public void setHostname(String hostname) throws ProvisionDashboardValidationException {
 		if (this.hostname != null && this.hostname.equals(hostname))
 			return;
-		if (hostname != null && vrf != null) {
-			String nodelabel=hostname + "." + vrf;
-			updateNodeLabel(nodelabel, hostname);
+		if ( hostname != null ) {
+			updatenodeLabel = true;
 		}
 		this.hostname = hostname;
 	}
@@ -425,17 +406,13 @@ public class TrentinoNetworkRequisitionNode {
 			setDescr(iface.getDescr());
 			
 			if (this.primary != null) {
-				if (update) {
-					m_service.delete(TN, m_requisitionNode.getForeignId(), m_requisitionNode.getInterface(this.primary));
-					iface.setMonitoredServices(m_requisitionNode.getInterface(this.primary).getMonitoredServices());
-				}
+				m_interfToDel.add(m_requisitionNode.getInterface(this.primary));
+				iface.setMonitoredServices(m_requisitionNode.getInterface(this.primary).getMonitoredServices());
 				m_requisitionNode.deleteInterface(this.primary);
 			}
-			if (update) {
-				m_service.add(TN, m_requisitionNode.getForeignId(),iface);
-				m_service.setSnmpInfo(primary, this.snmpProfile);
-			}
+			m_interfToAdd.add(iface);
 			m_requisitionNode.putInterface(iface);
+			updatesnmpprofile=true;
 		}
 		this.primary = primary;
 	}
@@ -479,13 +456,63 @@ public class TrentinoNetworkRequisitionNode {
 	}
 	
 	public void commit() throws ProvisionDashboardValidationException {
+		if (updatenodeLabel && vrf != null && hostname != null)
+			updateNodeLabel();
+		if (updatesnmpprofile && snmpProfile != null && primary != null )
+			m_service.setSnmpInfo(primary, snmpProfile);
 		if (!update) {
 			if (m_service.hasDuplicatedForeignId(hostname))
 							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
 			m_requisitionNode.setForeignId(hostname);
-			m_service.setSnmpInfo(primary, snmpProfile);
 			m_service.add(TN, m_requisitionNode);
 			update=true;
+		} else {
+			m_service.update(TN, m_requisitionNode.getForeignId(), m_updatemap);
+			for (RequisitionInterface riface: m_interfToDel) {
+				m_service.delete(TN, m_requisitionNode.getForeignId(), riface);
+			}
+			for (RequisitionInterface riface: m_interfToAdd) {
+				m_service.add(TN, m_requisitionNode.getForeignId(), riface);
+			}
+			for (RequisitionAsset asset: m_assetsToPut) {
+				m_service.add(TN, m_requisitionNode.getForeignId(), asset);
+			}
+			for (RequisitionCategory category: m_categoriesToDel) {
+				m_service.delete(TN, m_requisitionNode.getForeignId(), category);
+			}
+			for (RequisitionCategory category: m_categoriesToAdd) {
+				m_service.add(TN, m_requisitionNode.getForeignId(), category);
+			}
+		}
+
+		updatenodeLabel = false;
+		updatesnmpprofile = false;
+		m_updatemap.clear();
+		m_interfToDel.clear();
+		m_interfToAdd.clear();
+		m_assetsToPut.clear();
+		m_categoriesToDel.clear();
+		m_categoriesToAdd.clear();
+	}
+	
+	private void updateNodeLabel() throws ProvisionDashboardValidationException {
+		String nodelabel=hostname + "." + vrf;
+		if	(hasInvalidDnsBind9Size(nodelabel))
+			throw new ProvisionDashboardValidationException("Bind9 error: The full domain name exceed a total length of 253: " + nodelabel);
+		if (hasInvalidDnsBind9LabelSize(nodelabel))
+			throw new ProvisionDashboardValidationException("Bind9 error: dns label contains more then 63 characters: " + nodelabel);
+		if (hasInvalidDnsBind9Label(nodelabel))
+			throw new ProvisionDashboardValidationException("Bind9 error: dns label does not contain only a-zA-Z0-9 characters or start or end with hypen: " + nodelabel);
+		if (hasUnSupportedDnsDomain(hostname, nodelabel))
+			throw new ProvisionDashboardValidationException("There is no dns domain defined for: " + nodelabel);
+		if (m_service.hasDuplicatedNodelabel(nodelabel))
+			throw new ProvisionDashboardValidationException("The node label exist: cannot duplicate node label: " + nodelabel);
+		m_requisitionNode.setNodeLabel(nodelabel);
+		if (update) {
+			MultivaluedMap<String, String> map = new MultivaluedMapImpl();
+			map.add("node-label", nodelabel);
+			m_service.update(TN, m_requisitionNode.getForeignId(), map);
 		}
 	}
+
 }
