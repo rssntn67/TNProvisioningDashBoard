@@ -33,7 +33,7 @@ public class SnmpProfileTab extends DashboardTab {
 		try {
 			m_snmpProfilesTable = new Table("Profiles", getService().getSnmpProfileContainer());
 		} catch (SQLException e) {
-			Notification.show("Snmp Profile", "Load from db Failed", Type.WARNING_MESSAGE);
+			Notification.show("Snmp Profiles", "Load from db Failed", Type.WARNING_MESSAGE);
 			e.printStackTrace();
 			return;
 		}

@@ -211,8 +211,8 @@ public class DashBoardService {
 	private boolean snmpProfileLoaded = false;
 	private boolean backupProfileLoaded = false;
 	
-	private Map<String,SnmpProfile> m_snmpProfiles;
-	private SQLContainer m_backupProfiles;
+	private Map<String,SnmpProfile>   m_snmpProfiles;
+	private Map<String,BackupProfile> m_backupProfiles;
 	private Properties m_configuration = new Properties();
 	
 	private String m_username;
@@ -255,6 +255,56 @@ public class DashBoardService {
 		}
 	}
 	
+	protected class BackupProfile {
+		public String getUsername() {
+			return username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public String getEnable() {
+			return enable;
+		}
+
+		public String getConnection() {
+			return connection;
+		}
+
+		public String getAutoenable() {
+			return autoenable;
+		}
+
+		final String username;
+		final String password;
+		final String enable;
+		final String connection;
+		final String autoenable;
+		
+		public BackupProfile(Property<String> username,Property<String> password,Property<String> enable,Property<String> connection,Property<String> autoenable) {
+			this.username = username.getValue();
+			this.password = password.getValue();
+			this.enable   = enable.getValue();
+			this.connection = connection.getValue();
+			if (autoenable != null && autoenable.getValue() != null)
+				this.autoenable = autoenable.getValue();
+			else
+				this.autoenable = "";
+			
+		}
+		
+		public RequisitionNode getRequisitionAssets() {
+			RequisitionNode template = new RequisitionNode();
+			template.putAsset(new RequisitionAsset("username", getUsername()));
+			template.putAsset(new RequisitionAsset("password", getPassword()));
+			template.putAsset(new RequisitionAsset("enable",getEnable()));
+			template.putAsset(new RequisitionAsset("connection", getConnection()));
+			template.putAsset(new RequisitionAsset("autoenable", getAutoenable()));
+			return template;
+		}
+	}
+
 	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String foreignSource) {
 		BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 		m_foreignIdNodeLabelMap = new HashMap<String, String>();
@@ -400,15 +450,28 @@ public class DashBoardService {
 	public Container getSnmpProfileContainer() throws SQLException {
         	List<String> primarykeys = new ArrayList<String>();
         	primarykeys.add("name");
-			return new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles order by name", primarykeys,m_pool));
+			return new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	public Container getBackupProfileContainer() throws SQLException {
+        	List<String> primarykeys = new ArrayList<String>();
+        	primarykeys.add("name");
+			return new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
+	}
+
 	public Set<String> getSnmpProfiles() {
 		return m_snmpProfiles.keySet();
 	}
 	
-	public Container getBackupProfiles() {
-		return m_backupProfiles;
+	public Set<String> getBackupProfiles() {
+		return m_backupProfiles.keySet();
+	}
+
+	public RequisitionNode getBackupProfile(String backupProfile) {
+		if (m_backupProfiles.containsKey(backupProfile))
+			return m_backupProfiles.get(backupProfile).getRequisitionAssets();
+		return new RequisitionNode();
 	}
 
 	@SuppressWarnings({ "deprecation", "unchecked" })
@@ -421,13 +484,9 @@ public class DashBoardService {
     	primarykeys.add("name");
 		SQLContainer snmpProfileTable = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
 		m_snmpProfiles = new HashMap<String, DashBoardService.SnmpProfile>();
-		logger.info("found iterating on snmp profiles");
 		for (Iterator<?> i = snmpProfileTable.getItemIds().iterator(); i.hasNext();) {
 			Item snmpprofiletableRow = snmpProfileTable.getItem(i.next());
 			logger.info("found snmp profile name: " + snmpprofiletableRow.getItemProperty("name").getValue().toString());
-			logger.info("found snmp profile community: " + snmpprofiletableRow.getItemProperty("community").getValue().toString());
-			logger.info("found snmp profile version: " + snmpprofiletableRow.getItemProperty("version").getValue().toString());
-			logger.info("found snmp profile timeout: " + snmpprofiletableRow.getItemProperty("timeout").getValue().toString());
 			m_snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
 					new SnmpProfile(snmpprofiletableRow.getItemProperty("community"), 
 							snmpprofiletableRow.getItemProperty("version"), 
@@ -437,14 +496,26 @@ public class DashBoardService {
 		logger.info("loaded snmp profiles");
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void loadBackupProfiles() throws SQLException {
 		if (backupProfileLoaded)
 			return;
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");
-		m_backupProfiles = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
-		backupProfileLoaded=true;
+    	SQLContainer backupProfileTable = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
+    	m_backupProfiles = new HashMap<String, DashBoardService.BackupProfile>();
+		for (Iterator<?> i = backupProfileTable.getItemIds().iterator(); i.hasNext();) {
+			Item backupprofiletableRow = backupProfileTable.getItem(i.next());
+			logger.info("found backup profile name: " + backupprofiletableRow.getItemProperty("name").getValue().toString());
+			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
+					new BackupProfile(backupprofiletableRow.getItemProperty("username"), 
+							backupprofiletableRow.getItemProperty("password"), 
+							backupprofiletableRow.getItemProperty("enable"),
+							backupprofiletableRow.getItemProperty("connection"), 
+							backupprofiletableRow.getItemProperty("auto_enable")
+							));
+		}
+    	backupProfileLoaded=true;
 		logger.info("loaded backup profiles");
 	}
 	

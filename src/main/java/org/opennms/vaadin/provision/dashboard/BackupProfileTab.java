@@ -37,8 +37,14 @@ public class BackupProfileTab extends DashboardTab {
 			e.printStackTrace();
 			return;
 		}
-		
-		m_backupProfilesTable = new Table("Profiles", getService().getBackupProfiles());
+		try {
+			m_backupProfilesTable = new Table("Profiles", getService().getBackupProfileContainer());
+		} catch (SQLException e) {
+			Notification.show("Backup Profiles", "Load from db Failed", Type.WARNING_MESSAGE);
+			e.printStackTrace();
+			return;
+		}
+
 		VerticalLayout layout = new VerticalLayout();
 		layout.setMargin(true);
 		layout.addComponent(m_backupProfilesTable);

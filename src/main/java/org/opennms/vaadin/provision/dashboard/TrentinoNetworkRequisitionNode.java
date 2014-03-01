@@ -15,7 +15,6 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.data.util.sqlcontainer.RowId;
 
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_vrfs;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_network_categories;
@@ -53,7 +52,7 @@ public class TrentinoNetworkRequisitionNode {
 	protected String threshCategory;
 
 	protected String snmpProfile;
-	protected RowId backupProfile;
+	protected String backupProfile;
 
 	protected String city;
 	protected String address1;
@@ -72,7 +71,9 @@ public class TrentinoNetworkRequisitionNode {
 		vrf = m_network_categories[0][2];
 		notifCategory = m_network_categories[0][3];
 		threshCategory = m_network_categories[0][4];
-
+		backupProfile = m_network_categories[0][5];
+		snmpProfile = m_network_categories[0][6];
+				
 		m_requisitionNode.setNodeLabel(label);
 		descr="Imported from Provision Dashboard";
 		secondary.addContainerProperty("indirizzo ip", String.class, null);
@@ -142,20 +143,25 @@ public class TrentinoNetworkRequisitionNode {
 			valid = false;
 		logger.info("checked threshcategory: " + threshCategory + " valid: " + valid);
 		
-		for (Object profileId: m_service.getBackupProfiles().getItemIds()) {
-			Item profile = m_service.getBackupProfiles().getItem(profileId);
+		for (String profileId: m_service.getBackupProfiles()) {
+			RequisitionNode profile = m_service.getBackupProfile(profileId);
 		
-			if (m_requisitionNode.getAsset("username") != null && m_requisitionNode.getAsset("username").getValue().equals(profile.getItemProperty("username").getValue()) 
-		     && m_requisitionNode.getAsset("password") != null && m_requisitionNode.getAsset("password").getValue().equals(profile.getItemProperty("password").getValue())
-			 && m_requisitionNode.getAsset("enable") != null && m_requisitionNode.getAsset("enable").getValue().equals(profile.getItemProperty("enable").getValue())
-			 && m_requisitionNode.getAsset("connection") != null && m_requisitionNode.getAsset("connection").getValue().equals(profile.getItemProperty("connection").getValue())
-			 && 
-			( 
-			(m_requisitionNode.getAsset("autoenable") != null && m_requisitionNode.getAsset("autoenable").getValue().equals(profile.getItemProperty("auto_enable").getValue()))
-			|| profile.getItemProperty("auto_enable").getValue() == null || profile.getItemProperty("auto_enable").getValue().equals("")	
-			)
+			if (m_requisitionNode.getAsset("username") != null && profile.getAsset("username") != null 
+			 && m_requisitionNode.getAsset("username").getValue().equals(profile.getAsset("username").getValue()) 
+		     && m_requisitionNode.getAsset("password") != null && profile.getAsset("password") != null 
+		     && m_requisitionNode.getAsset("password").getValue().equals(profile.getAsset("password").getValue())
+			 && m_requisitionNode.getAsset("enable") != null   && profile.getAsset("enable") != null 
+			 && m_requisitionNode.getAsset("enable").getValue().equals(profile.getAsset("enable").getValue())
+			 && m_requisitionNode.getAsset("connection") != null && profile.getAsset("connection") != null 
+			 && m_requisitionNode.getAsset("connection").getValue().equals(profile.getAsset("connection").getValue())
+			 && (
+					 (m_requisitionNode.getAsset("autoenable") != null && profile.getAsset("autoenable") != null 
+					 && m_requisitionNode.getAsset("autoenable").getValue().equals(profile.getAsset("autoenable").getValue()))
+			 	|| (m_requisitionNode.getAsset("autoenable") == null 
+			 	   && (profile.getAsset("autoenable") == null || profile.getAsset("autoenable").getValue().equals("")	
+			)))
 			) {
-				backupProfile=(RowId)profileId;
+				backupProfile=profileId;
 				break;
 			}
 		}
@@ -355,34 +361,17 @@ public class TrentinoNetworkRequisitionNode {
 	public void updateSnmpProfile(String snmpProfile) {
 		this.snmpProfile=snmpProfile;
 	}
-	public RowId getBackupProfile() {
+	public String getBackupProfile() {
 		return backupProfile;
 	}
-	public void setBackupProfile(RowId backupProfile) {
+	public void setBackupProfile(String backupProfile) {
 		if (this.backupProfile != null && this.backupProfile.equals(backupProfile))
 			return;
 		if (backupProfile != null) {
-			Item backup = m_service.getBackupProfiles().getItem(backupProfile);
-			if (backup != null) {
-				RequisitionAsset username = new RequisitionAsset("username", backup.getItemProperty("username").getValue().toString());
-				RequisitionAsset password = new RequisitionAsset("password", backup.getItemProperty("password").getValue().toString());
-				RequisitionAsset enable = new RequisitionAsset("enable",backup.getItemProperty("enable").getValue().toString());
-				RequisitionAsset connection = new RequisitionAsset("connection", backup.getItemProperty("connection").getValue().toString());
-				RequisitionAsset autoenable = new RequisitionAsset("autoenable", "");
-				if (backup.getItemProperty("auto_enable") != null && backup.getItemProperty("auto_enable").getValue() != null) {
-					autoenable = new RequisitionAsset("autoenable", backup.getItemProperty("auto_enable").getValue().toString());
-				}
-				m_requisitionNode.putAsset(autoenable);
-				m_requisitionNode.putAsset(username);
-				m_requisitionNode.putAsset(password);
-				m_requisitionNode.putAsset(enable);
-				m_requisitionNode.putAsset(connection);
+			for ( RequisitionAsset backupProfileItem : m_service.getBackupProfile(backupProfile).getAssets()) {
+				m_requisitionNode.putAsset(backupProfileItem);
 				if (update) {
-					m_service.add(TN, m_requisitionNode.getForeignId(), username);
-					m_service.add(TN, m_requisitionNode.getForeignId(), password);
-					m_service.add(TN, m_requisitionNode.getForeignId(), enable);
-					m_service.add(TN, m_requisitionNode.getForeignId(), connection);
-					m_service.add(TN, m_requisitionNode.getForeignId(), autoenable);
+					m_service.add(TN, m_requisitionNode.getForeignId(), backupProfileItem);
 				}
 			}
 		}
