@@ -439,6 +439,38 @@ public class TrentinoNetworkRequisitionNode {
 		ipsecondary.setIpAddr(ipaddress);
 		m_service.delete(TN, foreignId, ipsecondary);
 	}
+	public RequisitionNode getRequisitionNode() {
+		RequisitionNode requisitionNode = new RequisitionNode();
+		requisitionNode.setForeignId(hostname);
+		requisitionNode.setNodeLabel(nodelabel);
+		if (parent != null) {
+			requisitionNode.setParentForeignId(m_service.getForeignId(parent));
+		}
+		requisitionNode.setCity(city);
+		
+		RequisitionInterface iface = new RequisitionInterface();
+		iface.setSnmpPrimary("P");
+		iface.setIpAddr(primary);
+		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
+		iface.setDescr("Provided by Provision Dashboard");
+		setDescr(iface.getDescr());
+		
+		requisitionNode.putInterface(iface);
+
+		requisitionNode.putCategory(new RequisitionCategory(networkCategory[0]));
+		requisitionNode.putCategory(new RequisitionCategory(networkCategory[1]));
+		
+		requisitionNode.putCategory(new RequisitionCategory(notifCategory));
+		requisitionNode.putCategory(new RequisitionCategory(threshCategory));
+		
+		requisitionNode.putAsset(new RequisitionAsset(DESCRIPTION, city + " - " + address1));
+		requisitionNode.putAsset(new RequisitionAsset(ADDRESS, address1));
+		for ( RequisitionAsset backupProfileItem : m_service.getBackupProfile(backupProfile).getAssets()) {
+			requisitionNode.putAsset(backupProfileItem);
+		}
+		return requisitionNode;
+	}
 	
 	public void commit() throws ProvisionDashboardValidationException {
 		InetAddressUtils.getInetAddress(primary);
@@ -452,38 +484,7 @@ public class TrentinoNetworkRequisitionNode {
 		if (!update) {
 			if (m_service.hasDuplicatedForeignId(hostname))
 							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
-			
-			RequisitionNode requisitionNode = new RequisitionNode();
-			requisitionNode.setForeignId(hostname);
-			requisitionNode.setNodeLabel(nodelabel);
-			if (parent != null) {
-				requisitionNode.setParentForeignId(m_service.getForeignId(parent));
-			}
-			requisitionNode.setCity(city);
-			
-			RequisitionInterface iface = new RequisitionInterface();
-			iface.setSnmpPrimary("P");
-			iface.setIpAddr(primary);
-			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-			iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
-			iface.setDescr("Provided by Provision Dashboard");
-			setDescr(iface.getDescr());
-			
-			requisitionNode.putInterface(iface);
-	
-			requisitionNode.putCategory(new RequisitionCategory(networkCategory[0]));
-			requisitionNode.putCategory(new RequisitionCategory(networkCategory[1]));
-			
-			requisitionNode.putCategory(new RequisitionCategory(notifCategory));
-			requisitionNode.putCategory(new RequisitionCategory(threshCategory));
-			
-			requisitionNode.putAsset(new RequisitionAsset(DESCRIPTION, city + " - " + address1));
-			requisitionNode.putAsset(new RequisitionAsset(ADDRESS, address1));
-			for ( RequisitionAsset backupProfileItem : m_service.getBackupProfile(backupProfile).getAssets()) {
-				requisitionNode.putAsset(backupProfileItem);
-			}
-
-			m_service.add(TN, requisitionNode);
+			m_service.add(TN, getRequisitionNode());
 			valid = true;
 			update=true;
 		} else {

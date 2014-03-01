@@ -458,6 +458,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		leftGeneralInfo.addComponent(m_vrfsComboBox);
 		leftGeneralInfo.addComponent(primary);
 		leftGeneralInfo.addComponent(m_parentComboBox);
+		leftGeneralInfo.addComponent(city);
+		leftGeneralInfo.addComponent(address);
 		
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
 		centerGeneralInfo.setMargin(true);
@@ -475,13 +477,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		catLayout.setSizeFull();
 		catLayout.addComponent(m_notifCatComboBox);
 		catLayout.addComponent(m_threshCatComboBox);
-		catLayout.addComponent(m_snmpComboBox);
-		catLayout.addComponent(m_backupComboBox);
 		
-		HorizontalLayout localizationInfo = new HorizontalLayout();
-		localizationInfo.setSizeFull();
-		localizationInfo.addComponent(city);
-		localizationInfo.addComponent(address);
+		HorizontalLayout profLayout = new HorizontalLayout();
+		profLayout.setSizeFull();
+		profLayout.addComponent(m_snmpComboBox);
+		profLayout.addComponent(m_backupComboBox);
 				
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
@@ -491,19 +491,16 @@ public class TrentinoNetworkTab extends DashboardTab {
 		generalInfo.setExpandRatio(centerGeneralInfo, 1);
 		generalInfo.setExpandRatio(rightGeneralInfo, 3);
 
-		FormLayout categoryInfo = new FormLayout();
-		categoryInfo.addComponent(new Label("Profili"));
-		categoryInfo.addComponent(catLayout);
 				
-		FormLayout assetInfo = new FormLayout();
-		assetInfo.addComponent(new Label("Localizzazione"));
-		assetInfo.addComponent(localizationInfo);
+		FormLayout profileInfo = new FormLayout();
+		profileInfo.addComponent(new Label("Profili"));
+		profileInfo.addComponent(profLayout);
+		profileInfo.addComponent(catLayout);
 
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);
 		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
-		m_editRequisitionNodeLayout.addComponent(new Panel(categoryInfo));
-		m_editRequisitionNodeLayout.addComponent(new Panel(assetInfo));
+		m_editRequisitionNodeLayout.addComponent(new Panel(profileInfo));
 
 	}
 
