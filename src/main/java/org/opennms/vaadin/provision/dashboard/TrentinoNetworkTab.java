@@ -313,6 +313,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_vrfsComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
 					m_notifCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
 					m_threshCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
+					m_backupComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[5]);
+					m_snmpComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[6]);
 				}
 			}
 		});
