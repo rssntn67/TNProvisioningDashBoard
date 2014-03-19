@@ -220,6 +220,7 @@ public class DashBoardService {
 	private JDBCConnectionPool m_pool; 
 	private Map<String,String> m_foreignIdNodeLabelMap;
 	private Map<String,String> m_nodeLabelForeignIdMap;
+	private Collection<String> m_primaryipcollection;
 	
 	protected class SnmpProfile {
 		final String community;
@@ -309,11 +310,14 @@ public class DashBoardService {
 		BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 		m_foreignIdNodeLabelMap = new HashMap<String, String>();
 		m_nodeLabelForeignIdMap = new HashMap<String, String>();
+		m_primaryipcollection = new ArrayList<String>();
 		requisitionContainer.setBeanIdProperty(LABEL);
 		for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
-			requisitionContainer.addBean(new TrentinoNetworkRequisitionNode(node,this));
+			TrentinoNetworkRequisitionNode tnnode = new TrentinoNetworkRequisitionNode(node,this);
+			requisitionContainer.addBean(tnnode);
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
+			m_primaryipcollection.add(tnnode.getPrimary());
 		}
 		return requisitionContainer;
 	}
@@ -417,17 +421,19 @@ public class DashBoardService {
     	return manage;
 	}
 
-	public void add(String foreignSource, RequisitionNode node) {
+	public void add(String foreignSource, RequisitionNode node, String primary) {
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
+		m_primaryipcollection.add(primary);
 		m_provisionService.add(foreignSource, node);
 		for (RequisitionInterface riface: node.getInterfaces())
 			m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
 	}
 
-	public void delete(String foreignSource, RequisitionNode node) {
+	public void delete(String foreignSource, RequisitionNode node, String primary) {
 		m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
+		m_primaryipcollection.remove(primary);
 		m_provisionService.delete(foreignSource, node);
 		for (RequisitionInterface riface: node.getInterfaces())
 			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
@@ -535,6 +541,10 @@ public class DashBoardService {
 		return m_foreignIdNodeLabelMap.keySet();
 	}
 		
+	public Collection<String> getPrimaryIpCollection() {
+		return m_primaryipcollection;
+	}
+
 	public String[] getUrls() {
 		List<String> urls = new ArrayList<String>();
 		if (m_configuration.getProperty(PROPERTIES_URLS_KEY) != null ) {
@@ -616,6 +626,10 @@ public class DashBoardService {
 			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicated.toArray()));
 			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicated.toArray()), Type.WARNING_MESSAGE);
 		}
+	}
+
+	public boolean hasDuplicatedPrimary(String primary) {
+		return m_primaryipcollection.contains(primary);
 	}
 	
 	public boolean hasDuplicatedForeignId(String hostname) {

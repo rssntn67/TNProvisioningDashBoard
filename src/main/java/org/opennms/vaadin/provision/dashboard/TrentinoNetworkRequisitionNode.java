@@ -484,7 +484,9 @@ public class TrentinoNetworkRequisitionNode {
 		if (!update) {
 			if (m_service.hasDuplicatedForeignId(hostname))
 							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
-			m_service.add(TN, getRequisitionNode());
+			if (m_service.hasDuplicatedPrimary(primary))
+				throw new ProvisionDashboardValidationException("The primary ip exist: cannot duplicate primary: " + primary);
+			m_service.add(TN, getRequisitionNode(),primary);
 			valid = true;
 			update=true;
 		} else {

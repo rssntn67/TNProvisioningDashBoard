@@ -602,7 +602,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_resetNodeButton.setEnabled(false);
 					BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
 					if (node.getBean().getUpdate())
-						getService().delete(TN,node.getBean().getRequisitionNode());
+						getService().delete(TN,node.getBean().getRequisitionNode(),node.getBean().getPrimary());
 					if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
 						m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
 					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
