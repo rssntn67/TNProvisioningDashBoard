@@ -685,16 +685,18 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 			m_editorFields.setItemDataSource(node);
 			m_editRequisitionNodeLayout.setVisible(true);
+			m_saveNodeButton.setEnabled(true);
+			m_removeNodeButton.setEnabled(true);
+			m_resetNodeButton.setEnabled(true);
+			/*
 			if (node.getDescr().contains("FAST")) {
 				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
 				Notification.show("provided by FAST", "le modifiche ai nodi aggiunti da FAST non sono abilitate", Type.WARNING_MESSAGE);
 			} else {
-				m_saveNodeButton.setEnabled(true);
-				m_removeNodeButton.setEnabled(true);
-				m_resetNodeButton.setEnabled(true);
 			}
+			*/
 		}
 
 	}
