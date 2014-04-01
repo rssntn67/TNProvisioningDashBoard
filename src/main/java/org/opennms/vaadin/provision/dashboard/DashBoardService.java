@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -642,7 +643,7 @@ public class DashBoardService {
 
 	public boolean hasDuplicatedNodelabel(String nodelabel) {
 		for (String label: getNodeLabels()) {
-			if (label.equals(nodelabel)) 
+			if (label.toLowerCase(Locale.ENGLISH).equals(nodelabel.toLowerCase(Locale.ENGLISH))) 
 				return true;
 		}
 		return false;
