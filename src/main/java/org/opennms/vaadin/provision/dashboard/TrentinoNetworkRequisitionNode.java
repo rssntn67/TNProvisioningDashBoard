@@ -520,7 +520,7 @@ public class TrentinoNetworkRequisitionNode {
 	}
 	
 	private void updateNodeLabel() throws ProvisionDashboardValidationException {
-		String nodelabel=hostname + "." + vrf;
+		String nodelabel=hostname.toLowerCase() + "." + vrf;
 		if	(hasInvalidDnsBind9Size(nodelabel))
 			throw new ProvisionDashboardValidationException("Bind9 error: The full domain name exceed a total length of 253: " + nodelabel);
 		if (hasInvalidDnsBind9LabelSize(nodelabel))
