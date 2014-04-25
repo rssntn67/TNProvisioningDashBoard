@@ -423,21 +423,22 @@ public class DashBoardService {
 	}
 
 	public void add(String foreignSource, RequisitionNode node, String primary) {
-		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
-		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
-		m_primaryipcollection.add(primary);
 		m_provisionService.add(foreignSource, node);
 		for (RequisitionInterface riface: node.getInterfaces())
 			m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
+		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
+		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
+		m_primaryipcollection.add(primary);
+		
 	}
 
 	public void delete(String foreignSource, RequisitionNode node, String primary) {
 		m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
 		m_primaryipcollection.remove(primary);
-		m_provisionService.delete(foreignSource, node);
 		for (RequisitionInterface riface: node.getInterfaces())
 			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
+		m_provisionService.delete(foreignSource, node);
 	}
 
 	public void delete(String foreignSource, String foreignId, RequisitionCategory category) {
