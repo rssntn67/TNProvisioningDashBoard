@@ -458,14 +458,21 @@ public class TrentinoNetworkRequisitionNode {
 		
 		requisitionNode.putInterface(iface);
 
-		requisitionNode.putCategory(new RequisitionCategory(networkCategory[0]));
-		requisitionNode.putCategory(new RequisitionCategory(networkCategory[1]));
+		if (networkCategory != null) {
+			requisitionNode.putCategory(new RequisitionCategory(networkCategory[0]));
+			requisitionNode.putCategory(new RequisitionCategory(networkCategory[1]));
+		}
 		
-		requisitionNode.putCategory(new RequisitionCategory(notifCategory));
-		requisitionNode.putCategory(new RequisitionCategory(threshCategory));
+		if (notifCategory != null)
+			requisitionNode.putCategory(new RequisitionCategory(notifCategory));
+		if (threshCategory != null)
+			requisitionNode.putCategory(new RequisitionCategory(threshCategory));
 		
-		requisitionNode.putAsset(new RequisitionAsset(DESCRIPTION, city + " - " + address1));
-		requisitionNode.putAsset(new RequisitionAsset(ADDRESS, address1));
+		if (city != null && address1 != null)
+			requisitionNode.putAsset(new RequisitionAsset(DESCRIPTION, city + " - " + address1));
+		if (address1 != null)
+			requisitionNode.putAsset(new RequisitionAsset(ADDRESS, address1));
+		
 		for ( RequisitionAsset backupProfileItem : m_service.getBackupProfile(backupProfile).getAssets()) {
 			requisitionNode.putAsset(backupProfileItem);
 		}

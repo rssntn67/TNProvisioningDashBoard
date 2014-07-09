@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.util.logging.Logger;
 
 
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.Container.Filter;
@@ -630,22 +632,29 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private void initProvisionNodeList() {
 		try {
 			m_requisitionContainer = getService().getRequisitionContainer(TN);
-			m_requisitionTable.setContainerDataSource(m_requisitionContainer);
-			m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
-			m_requisitionTable.setSelectable(true);
-			m_requisitionTable.setImmediate(true);
-
-			m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
-				private static final long serialVersionUID = 1L;
-				public void valueChange(ValueChangeEvent event) {
-					selectItem();
-				}
-			});
-		} catch (Exception e) {
-			logger.warning("Load from rest Failed Failed: "+e.getLocalizedMessage());
+		} catch (UniformInterfaceException e) {
+			logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getClientResponseStatus().getReasonPhrase());
+			if (e.getResponse().getClientResponseStatus() == ClientResponse.Status.NO_CONTENT) {
+				logger.info("No Requisition Found: "+e.getLocalizedMessage());
+				getService().createRequisition(TN);
+				initProvisionNodeList();
+				return;
+			}
+			logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
 			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
+		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
+		m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
+		m_requisitionTable.setSelectable(true);
+		m_requisitionTable.setImmediate(true);
+
+		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
+			private static final long serialVersionUID = 1L;
+			public void valueChange(ValueChangeEvent event) {
+				selectItem();
+			}
+		});
 	}
 
 	@SuppressWarnings("unchecked")

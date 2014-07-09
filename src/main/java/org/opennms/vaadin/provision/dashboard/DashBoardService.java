@@ -313,7 +313,7 @@ public class DashBoardService {
 		m_nodeLabelForeignIdMap = new HashMap<String, String>();
 		m_primaryipcollection = new ArrayList<String>();
 		requisitionContainer.setBeanIdProperty(LABEL);
-		for (RequisitionNode node : getRequisitionNodes(foreignSource).getNodes()) {
+		for (RequisitionNode node : getRequisition(foreignSource).getNodes()) {
 			TrentinoNetworkRequisitionNode tnnode = new TrentinoNetworkRequisitionNode(node,this);
 			requisitionContainer.addBean(tnnode);
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
@@ -352,8 +352,14 @@ public class DashBoardService {
 	    m_foreignSourceService.setJerseyClient(m_jerseyClient);
 	}
 
-	public Requisition getRequisitionNodes(String foreignSource) {		
+	public Requisition getRequisition(String foreignSource) {
+		logger.info("getting requisition: " + foreignSource );
 		return m_provisionService.get(foreignSource);
+	}
+
+	public void createRequisition(String foreignSource) {
+		logger.info("creating requisition: " + foreignSource );
+		m_provisionService.add(new Requisition(foreignSource));
 	}
 
 	public String getSnmpProfile(String ip) {
