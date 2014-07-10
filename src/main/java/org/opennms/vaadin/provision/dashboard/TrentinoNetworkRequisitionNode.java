@@ -439,9 +439,10 @@ public class TrentinoNetworkRequisitionNode {
 		ipsecondary.setIpAddr(ipaddress);
 		m_service.delete(TN, foreignId, ipsecondary);
 	}
+	
 	public RequisitionNode getRequisitionNode() {
 		RequisitionNode requisitionNode = new RequisitionNode();
-		requisitionNode.setForeignId(hostname);
+		requisitionNode.setForeignId(foreignId);
 		requisitionNode.setNodeLabel(nodelabel);
 		if (parent != null) {
 			requisitionNode.setParentForeignId(m_service.getForeignId(parent));

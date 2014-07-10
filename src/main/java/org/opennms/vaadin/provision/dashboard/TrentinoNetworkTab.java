@@ -608,8 +608,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 					if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
 						m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
 					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
-				} catch (Exception e) {
-					Notification.show("Delete", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+				} catch (UniformInterfaceException e) {
+					//e.printStackTrace();
+					logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
+					Notification.show("Delete", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
+					e.getResponse().getClientResponseStatus().getReasonPhrase(), Type.ERROR_MESSAGE);
 				}
 			}
 		});

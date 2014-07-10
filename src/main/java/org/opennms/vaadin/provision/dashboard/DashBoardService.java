@@ -439,12 +439,15 @@ public class DashBoardService {
 	}
 
 	public void delete(String foreignSource, RequisitionNode node, String primary) {
+		for (RequisitionInterface riface: node.getInterfaces()) {
+			logger.info("Deleting policy for interface: " + riface.getIpAddr());
+			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
+		}
+		logger.info("Deleting node with foreignId: " + node.getForeignId() + " primary: " + primary);
+		m_provisionService.delete(foreignSource, node);
 		m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
 		m_primaryipcollection.remove(primary);
-		for (RequisitionInterface riface: node.getInterfaces())
-			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
-		m_provisionService.delete(foreignSource, node);
 	}
 
 	public void delete(String foreignSource, String foreignId, RequisitionCategory category) {
@@ -452,7 +455,9 @@ public class DashBoardService {
 	}
 
 	public void delete(String foreignSource, String foreignId, RequisitionInterface riface) {
+		logger.info("Deleting policy for interface: " + riface.getIpAddr());
 		m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
+		logger.info("Deleting node with foreignId: " + foreignId );
 		m_provisionService.delete(foreignSource, foreignId, riface);
 	}
 
