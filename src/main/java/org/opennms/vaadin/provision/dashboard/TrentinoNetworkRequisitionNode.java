@@ -442,7 +442,10 @@ public class TrentinoNetworkRequisitionNode {
 	
 	public RequisitionNode getRequisitionNode() {
 		RequisitionNode requisitionNode = new RequisitionNode();
-		requisitionNode.setForeignId(foreignId);
+		if (foreignId != null)
+			requisitionNode.setForeignId(foreignId);
+		else 
+			requisitionNode.setForeignId(hostname);
 		requisitionNode.setNodeLabel(nodelabel);
 		if (parent != null) {
 			requisitionNode.setParentForeignId(m_service.getForeignId(parent));
