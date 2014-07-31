@@ -403,7 +403,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
 						}
 					} catch (Exception e) {
-						logger.info("Add ip failed: " + m_secondaryIpComboBox.getValue().toString() + " :" +e.getLocalizedMessage());
+						logger.warning("Add ip failed: " + m_secondaryIpComboBox.getValue().toString() + " :" +e.getLocalizedMessage());
 						Notification.show("Add ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 					}
 				}
@@ -575,6 +575,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_editorFields.getItemDataSource().getBean().commit();
 					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
 					m_requisitionContainer.removeAllContainerFilters();
+					logger.info("Saved: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -603,10 +604,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 					m_removeNodeButton.setEnabled(false);
 					m_resetNodeButton.setEnabled(false);
 					BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
+					logger.info("Deleting: " + node.getBean().getNodeLabel());
 					if (node.getBean().getUpdate())
 						getService().delete(TN,node.getBean().getRequisitionNode(),node.getBean().getPrimary());
 					if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
 						m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
+					logger.info("Node Deleted");
 					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (UniformInterfaceException e) {
 					//e.printStackTrace();

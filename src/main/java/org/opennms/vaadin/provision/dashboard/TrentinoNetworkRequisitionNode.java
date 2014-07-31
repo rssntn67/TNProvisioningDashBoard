@@ -3,7 +3,6 @@ package org.opennms.vaadin.provision.dashboard;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -36,8 +35,6 @@ import static org.opennms.vaadin.provision.dashboard.DashBoardService.hasUnSuppo
 
 
 public class TrentinoNetworkRequisitionNode {
-
-	private static final Logger logger = Logger.getLogger(TrentinoNetworkRequisitionNode.class.getName());
 	
 	MultivaluedMap<String, String> m_updatemap = new MultivaluedMapImpl();
     List<RequisitionAsset> m_assetsToPut = new ArrayList<RequisitionAsset>();
@@ -124,7 +121,6 @@ public class TrentinoNetworkRequisitionNode {
 
 		if (vrf == null || hostname == null)
 			valid = false;
-		logger.info("checked hostname and vrf: " + hostname + "." + vrf +" valid: " + valid);
 		
 		secondary.addContainerProperty("indirizzo ip", String.class, null);
 		for (RequisitionInterface ip: requisitionNode.getInterfaces()) {
@@ -139,7 +135,6 @@ public class TrentinoNetworkRequisitionNode {
 		
 		if (primary == null)
 			valid = false;
-		logger.info("checked primary: " + primary + " valid: " + valid);
 		
 		for (String[] networkCategory: m_network_categories) {
 			if (requisitionNode.getCategory(networkCategory[0]) != null && requisitionNode.getCategory(networkCategory[1]) != null) {
@@ -149,7 +144,6 @@ public class TrentinoNetworkRequisitionNode {
 		}
 		if (networkCategory == null)
 			valid = false;
-		logger.info("checked networkcategory: " + networkCategory + " valid: " + valid);
 
 		for (String notifCategory: m_notif_categories) {
 			if (requisitionNode.getCategory(notifCategory) != null ) {
@@ -159,7 +153,6 @@ public class TrentinoNetworkRequisitionNode {
 		}
 		if (notifCategory == null)
 			valid = false;
-		logger.info("checked notifcategory: " + notifCategory + " valid: " + valid);
 		
 		for (String threshCategory: m_thresh_categories) {
 			if (requisitionNode.getCategory(threshCategory) != null ) {
@@ -169,7 +162,6 @@ public class TrentinoNetworkRequisitionNode {
 		}
 		if (threshCategory == null)
 			valid = false;
-		logger.info("checked threshcategory: " + threshCategory + " valid: " + valid);
 		
 		for (String profileId: m_service.getBackupProfiles()) {
 			RequisitionNode profile = m_service.getBackupProfile(profileId);
@@ -195,33 +187,25 @@ public class TrentinoNetworkRequisitionNode {
 		}
 		if (backupProfile == null)
 			valid = false;
-		logger.info("checked backupProfile: " + backupProfile + " valid: " + valid);
 		
 		if (requisitionNode.getCity() != null)
 			city = requisitionNode.getCity();
 		else
 			valid = false;
-		logger.info("checked city: " + city + " valid: " + valid);
 		
 		if (requisitionNode.getAsset(ADDRESS) != null)
 			address1 = requisitionNode.getAsset(ADDRESS).getValue();
 		else
 			valid = false;
-		logger.info("checked address1: " + address1 + " valid: " + valid);
 		
 		if (hasInvalidDnsBind9Size(getNodeLabel()))
 			valid = false;
-		logger.info("hasInvalidDnsBind9Size: " + nodelabel + " valid: " + valid);
 		if (hasInvalidDnsBind9LabelSize(nodelabel))
 			valid = false;
-		logger.info("hasInvalidDnsBind9LabelSize: " + nodelabel + " valid: " + valid);
 		if (hasInvalidDnsBind9Label(nodelabel))
 			valid = false;
-		logger.info("hasInvalidDnsBind9Label: " + nodelabel + " valid: " + valid);
 		if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel))
-			valid = false;
-		logger.info("hasUnSupportedDnsDomain: " + hostname + " valid: " + valid);
-		
+			valid = false;		
 	}
 	
 	public String getParent() {
