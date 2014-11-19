@@ -29,7 +29,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	 */
 	private static final long serialVersionUID = -363579873686942087L;
 
-	private Panel m_panel  = new Panel("Log In");
+	private static final String s_panellogincaption="Trentino Network Provisioning Dashboard 1.2.1 Build Nov 19th 2014  - Log In";
+	private Panel m_panel  = new Panel(s_panellogincaption);
     private ComboBox m_select = new ComboBox("Select Domain");
     private TextField m_username = new TextField("Username:");
     private PasswordField m_password = new PasswordField("Password:");
@@ -79,7 +80,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		m_username.setValue("");
 		m_password.setValue("");
 		m_service.logout();
-		m_panel.setCaption("Log In");
+		m_panel.setCaption(s_panellogincaption);
 		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
 		m_panel.setContent(getLoginBox());
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
