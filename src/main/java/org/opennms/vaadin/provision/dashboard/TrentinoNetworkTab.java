@@ -555,7 +555,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkRequisitionNode("notSavedHost"+newHost++,getService()));
-				m_requisitionContainer.removeAllContainerFilters();
+				m_networkCatSearchComboBox.select(null);
+				m_networkCatSearchComboBox.setValue(null);
+				m_notifCatSearchComboBox.select(null);
+				m_notifCatSearchComboBox.setValue(null);
+				m_threshCatSearchComboBox.select(null);
+				m_threshCatSearchComboBox.setValue(null);
+				m_searchText="";
+				m_searchField.setValue(m_searchText);
 				m_requisitionTable.select(bean.getBean().getNodeLabel());
 				selectItem();
 				m_hostname.focus();
@@ -569,12 +576,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				m_requisitionContainer.removeAllContainerFilters();
 				try {
 					m_editorFields.commit();
 					m_editorFields.getItemDataSource().getBean().commit();
 					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
 					m_requisitionContainer.removeAllContainerFilters();
+					if (m_searchText == null)
+						m_searchText="";
+					m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
 					logger.info("Saved: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
@@ -589,7 +598,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					logger.warning("Save Failed: " + localizedMessage);
 					Notification.show("Save Failed", localizedMessage, Type.ERROR_MESSAGE);
 				}
-				selectItem();
+				m_requisitionTable.unselect(m_requisitionTable.getValue());
 			}
 		});
 
@@ -597,7 +606,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				m_requisitionContainer.removeAllContainerFilters();
 				try {
 					m_editRequisitionNodeLayout.setVisible(false);
 					m_saveNodeButton.setEnabled(false);
@@ -625,8 +633,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				m_editorFields.discard();
-				m_requisitionContainer.removeAllContainerFilters();
 				m_editRequisitionNodeLayout.setVisible(false);
+				m_requisitionTable.unselect(m_requisitionTable.getValue());
 				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
