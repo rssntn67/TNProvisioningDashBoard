@@ -628,8 +628,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 							getService().deletePolicy(riface);
 						} catch (UniformInterfaceException e) {
 							logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
-							Notification.show("Delete Policy From Foreign Source", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
-							e.getResponse().getClientResponseStatus().getReasonPhrase(), Type.WARNING_MESSAGE);
 						}
 					}
 				}
