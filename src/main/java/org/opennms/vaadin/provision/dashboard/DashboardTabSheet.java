@@ -33,11 +33,11 @@ public class DashboardTabSheet extends CustomComponent implements
     	tabsheet.addTab(tab, TN, new ThemeResource("icons/16/users.png"));
     	tabsheet.getTab(tab).setEnabled(false);
         
-    	SnmpProfileTab snmpTab = new SnmpProfileTab(null, m_service);
+    	SnmpProfileTab snmpTab = new SnmpProfileTab(m_service);
         tabsheet.addTab(snmpTab, "Snmp Profiles",new ThemeResource("icons/16/users.png"));
     	tabsheet.getTab(snmpTab).setEnabled(false);
     	
-    	BackupProfileTab backupTab = new BackupProfileTab(null, m_service);
+    	BackupProfileTab backupTab = new BackupProfileTab(m_service);
         tabsheet.addTab(backupTab, "Backup Profiles",new ThemeResource("icons/16/users.png"));
         tabsheet.getTab(backupTab).setEnabled(false);
     	

@@ -25,7 +25,6 @@ import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_thresh_c
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.CITY;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.ADDRESS;
 
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.TN;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.DESCRIPTION;
 
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.hasInvalidDnsBind9Label;
@@ -415,13 +414,13 @@ public class TrentinoNetworkRequisitionNode {
 		ipsecondary.setSnmpPrimary("N");
 		ipsecondary.setDescr("Provided by Provision Dashboard");
 		ipsecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		m_service.add(TN, foreignId, ipsecondary);
+		m_service.add(foreignId, ipsecondary);
 	}
 	
 	public void removeSecondaryInteface(String ipaddress) {
 		RequisitionInterface ipsecondary = new RequisitionInterface();
 		ipsecondary.setIpAddr(ipaddress);
-		m_service.delete(TN, foreignId, ipsecondary);
+		m_service.delete(foreignId, ipsecondary);
 	}
 	
 	public RequisitionNode getRequisitionNode() {
@@ -481,26 +480,26 @@ public class TrentinoNetworkRequisitionNode {
 							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
 			if (m_service.hasDuplicatedPrimary(primary))
 				throw new ProvisionDashboardValidationException("The primary ip exist: cannot duplicate primary: " + primary);
-			m_service.add(TN, getRequisitionNode(),primary);
+			m_service.add(getRequisitionNode(),primary);
 			valid = true;
 			update=true;
 		} else {
 			if (!m_updatemap.isEmpty())
-				m_service.update(TN, foreignId, m_updatemap);
+				m_service.update(foreignId, m_updatemap);
 			for (RequisitionInterface riface: m_interfToDel) {
-				m_service.delete(TN, foreignId, riface);
+				m_service.delete(foreignId, riface);
 			}
 			for (RequisitionInterface riface: m_interfToAdd) {
-				m_service.add(TN, foreignId, riface);
+				m_service.add(foreignId, riface);
 			}
 			for (RequisitionAsset asset: m_assetsToPut) {
-				m_service.add(TN, foreignId, asset);
+				m_service.add(foreignId, asset);
 			}
 			for (RequisitionCategory category: m_categoriesToDel) {
-				m_service.delete(TN, foreignId, category);
+				m_service.delete(foreignId, category);
 			}
 			for (RequisitionCategory category: m_categoriesToAdd) {
-				m_service.add(TN, foreignId, category);
+				m_service.add(foreignId, category);
 			}
 		}
 

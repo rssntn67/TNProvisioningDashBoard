@@ -15,23 +15,17 @@ public abstract class DashboardTab extends CustomComponent {
 	 * 
 	 */
 	private static final long serialVersionUID = 4694567853140078034L;
-	private String m_group;
 	private DashBoardService m_service;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	DashboardTab(String foreignsource,DashBoardService service) {
-		m_group = foreignsource;
+	DashboardTab(DashBoardService service) {
 		m_service = service;
 	}
 
 	public abstract void load();
-
-	public String getForeignSource() {
-		return m_group;
-	}
 	
 	public DashBoardService getService() {
 		return m_service;

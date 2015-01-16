@@ -307,13 +307,14 @@ public class DashBoardService {
 		}
 	}
 
-	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String foreignSource) {
+	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer() {
 		BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
 		m_foreignIdNodeLabelMap = new HashMap<String, String>();
 		m_nodeLabelForeignIdMap = new HashMap<String, String>();
 		m_primaryipcollection = new ArrayList<String>();
 		requisitionContainer.setBeanIdProperty(LABEL);
-		for (RequisitionNode node : getRequisition(foreignSource).getNodes()) {
+		logger.info("getting requisition: " + TN );
+		for (RequisitionNode node : m_provisionService.get(TN).getNodes()) {
 			TrentinoNetworkRequisitionNode tnnode = new TrentinoNetworkRequisitionNode(node,this);
 			requisitionContainer.addBean(tnnode);
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
@@ -352,14 +353,9 @@ public class DashBoardService {
 	    m_foreignSourceService.setJerseyClient(m_jerseyClient);
 	}
 
-	public Requisition getRequisition(String foreignSource) {
-		logger.info("getting requisition: " + foreignSource );
-		return m_provisionService.get(foreignSource);
-	}
-
-	public void createRequisition(String foreignSource) {
-		logger.info("creating requisition: " + foreignSource );
-		m_provisionService.add(new Requisition(foreignSource));
+	public void createRequisition() {
+		logger.info("creating requisition: " + TN );
+		m_provisionService.add(new Requisition(TN));
 	}
 
 	public String getSnmpProfile(String ip) {
@@ -377,8 +373,8 @@ public class DashBoardService {
 		m_snmpInfoService.set(ip, m_snmpProfiles.get(snmpProfile).getSnmpInfo());
 	}
 
-	public void update(String foreignSource, String foreignId, MultivaluedMap<String, String> map) {
-		m_provisionService.update(foreignSource, foreignId, map);
+	public void update(String foreignId, MultivaluedMap<String, String> map) {
+		m_provisionService.update(TN, foreignId, map);
 	}
 		
 	public void destroy() {
@@ -405,17 +401,17 @@ public class DashBoardService {
 		m_url = url;
 	}
 
-	public void add(String foreignSource, String foreignid, RequisitionAsset asset) {
-		m_provisionService.add(foreignSource, foreignid, asset);
+	public void add(String foreignid, RequisitionAsset asset) {
+		m_provisionService.add(TN, foreignid, asset);
 	}
 
-	public void add(String foreignSource, String foreignid, RequisitionCategory category) {
-		m_provisionService.add(foreignSource, foreignid, category);
+	public void add(String foreignid, RequisitionCategory category) {
+		m_provisionService.add(TN, foreignid, category);
 	}
 
-	public void add(String foreignSource, String foreignid, RequisitionInterface riface) {
-		m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
-		m_provisionService.add(foreignSource, foreignid, riface);
+	public void add(String foreignid, RequisitionInterface riface) {
+		m_foreignSourceService.addOrReplace(TN, getPolicyWrapper(riface));
+		m_provisionService.add(TN, foreignid, riface);
 	}
 
 	private PolicyWrapper getPolicyWrapper(RequisitionInterface riface) {
@@ -428,12 +424,12 @@ public class DashBoardService {
     	return manage;
 	}
 
-	public void add(String foreignSource, RequisitionNode node, String primary) {
+	public void add(RequisitionNode node, String primary) {
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + primary);
-		m_provisionService.add(foreignSource, node);
+		m_provisionService.add(TN, node);
 		for (RequisitionInterface riface: node.getInterfaces()) {
 			logger.info("Adding policy for interface: " + riface.getIpAddr());
-			m_foreignSourceService.addOrReplace(foreignSource, getPolicyWrapper(riface));
+			m_foreignSourceService.addOrReplace(TN, getPolicyWrapper(riface));
 		}
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
@@ -441,27 +437,27 @@ public class DashBoardService {
 		
 	}
 
-	public void delete(String foreignSource, RequisitionNode node, String primary) {
-		for (RequisitionInterface riface: node.getInterfaces()) {
-			logger.info("Deleting policy for interface: " + riface.getIpAddr());
-			m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
-		}
+	public void deletePolicy(RequisitionInterface riface) {
+		m_foreignSourceService.deletePolicy(TN, getName(riface));
+	}
+	
+	public void delete(RequisitionNode node, String primary) {
 		logger.info("Deleting node with foreignId: " + node.getForeignId() + " primary: " + primary);
-		m_provisionService.delete(foreignSource, node);
+		m_provisionService.delete(TN, node);
 		m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
 		m_primaryipcollection.remove(primary);
 	}
 
-	public void delete(String foreignSource, String foreignId, RequisitionCategory category) {
-		m_provisionService.delete(foreignSource, foreignId, category);
+	public void delete(String foreignId, RequisitionCategory category) {
+		m_provisionService.delete(TN, foreignId, category);
 	}
 
-	public void delete(String foreignSource, String foreignId, RequisitionInterface riface) {
+	public void delete(String foreignId, RequisitionInterface riface) {
 		logger.info("Deleting policy for interface: " + riface.getIpAddr());
-		m_foreignSourceService.deletePolicy(foreignSource, getName(riface));
+		m_foreignSourceService.deletePolicy(TN, getName(riface));
 		logger.info("Deleting interface" + riface.getIpAddr()+" with foreignId: " + foreignId );
-		m_provisionService.delete(foreignSource, foreignId, riface);
+		m_provisionService.delete(TN, foreignId, riface);
 	}
 
 	private String getName(RequisitionInterface riface) {
@@ -597,11 +593,11 @@ public class DashBoardService {
 			return "Oof6Eezu";
 		
 	}
-	public List<String> getIpAddresses(String foreignSource,String nodelabel) {
+	public List<String> getIpAddresses(String nodelabel) {
 	   	List<String> ipaddresses = new ArrayList<String>();
 		MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     	queryParams.add("label", nodelabel);
-    	queryParams.add("foreignSource", foreignSource);
+    	queryParams.add("foreignSource", TN);
 
 		OnmsNodeList nodes = m_nodeService.find(queryParams);
 		if (nodes.isEmpty())

@@ -3,6 +3,8 @@ package org.opennms.vaadin.provision.dashboard;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
+
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -59,8 +61,6 @@ import static org.opennms.vaadin.provision.dashboard.DashBoardService.BACKUP_PRO
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.CITY;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.ADDRESS;
 
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.TN;
-
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
  * or VaadinPortlet by giving your UI class name a parameter. When you browse to your
@@ -107,7 +107,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	Integer newHost = 0;
 	
 	public TrentinoNetworkTab(DashBoardService service) {
-		super(TN, service);
+		super(service);
 	}
 
 	public void load() {
@@ -606,26 +606,38 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				try {
-					m_editRequisitionNodeLayout.setVisible(false);
-					m_saveNodeButton.setEnabled(false);
-					m_removeNodeButton.setEnabled(false);
-					m_resetNodeButton.setEnabled(false);
-					BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
-					logger.info("Deleting: " + node.getBean().getNodeLabel());
-					if (node.getBean().getUpdate())
-						getService().delete(TN,node.getBean().getRequisitionNode(),node.getBean().getPrimary());
-					if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
-						m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
-					logger.info("Node Deleted");
-					Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
-				} catch (UniformInterfaceException e) {
-					//e.printStackTrace();
-					logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
-					Notification.show("Delete", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
-					e.getResponse().getClientResponseStatus().getReasonPhrase(), Type.ERROR_MESSAGE);
+				m_editRequisitionNodeLayout.setVisible(false);
+				m_saveNodeButton.setEnabled(false);
+				m_removeNodeButton.setEnabled(false);
+				m_resetNodeButton.setEnabled(false);
+				BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
+				logger.info("Deleting: " + node.getBean().getNodeLabel());
+				if (node.getBean().getUpdate()) {
+					try {
+						getService().delete(node.getBean().getRequisitionNode(),node.getBean().getPrimary());
+						Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
+					} catch (UniformInterfaceException e) {
+						logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
+						Notification.show("Delete Node From Requisition", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
+						e.getResponse().getClientResponseStatus().getReasonPhrase(), Type.ERROR_MESSAGE);
+						return;
+					}
+					for (RequisitionInterface riface: node.getBean().getRequisitionNode().getInterfaces()) {
+						try {
+							logger.info("Deleting policy for interface: " + riface.getIpAddr());
+							getService().deletePolicy(riface);
+						} catch (UniformInterfaceException e) {
+							logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
+							Notification.show("Delete Policy From Foreign Source", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
+							e.getResponse().getClientResponseStatus().getReasonPhrase(), Type.WARNING_MESSAGE);
+						}
+					}
 				}
-			}
+				if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
+					m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
+				logger.info("Node Deleted");
+				Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
+		}
 		});
 		
 		m_resetNodeButton.addClickListener(new ClickListener() {
@@ -645,12 +657,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private void initProvisionNodeList() {
 		try {
-			m_requisitionContainer = getService().getRequisitionContainer(TN);
+			m_requisitionContainer = getService().getRequisitionContainer();
 		} catch (UniformInterfaceException e) {
 			logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getClientResponseStatus().getReasonPhrase());
 			if (e.getResponse().getClientResponseStatus() == ClientResponse.Status.NO_CONTENT) {
 				logger.info("No Requisition Found: "+e.getLocalizedMessage());
-				getService().createRequisition(TN);
+				getService().createRequisition();
 				initProvisionNodeList();
 				return;
 			}
@@ -686,7 +698,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_parentComboBox.addItem(nodelabel);
 			
 			m_secondaryIpComboBox.removeAllItems();
-			for (String ip: getService().getIpAddresses(TN, node.getNodeLabel()) ) {
+			for (String ip: getService().getIpAddresses(node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))
 					continue;
 				m_secondaryIpComboBox.addItem(ip);
