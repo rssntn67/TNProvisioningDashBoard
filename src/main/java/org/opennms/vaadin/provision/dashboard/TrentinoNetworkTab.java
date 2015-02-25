@@ -690,7 +690,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 				.getItem(contactId)).getBean();
 			
 			m_descrComboBox.removeAllItems();
-			m_descrComboBox.addItem(node.getDescr());
+			if (node.getDescr() != null)
+				m_descrComboBox.addItem(node.getDescr());
 			
 			for (String nodelabel :getService().getNodeLabels())
 				m_parentComboBox.addItem(nodelabel);
@@ -711,7 +712,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 
 			if (node.getUpdate()) {
-				String snmpProfile = getService().getSnmpProfile(node.getPrimary());
+				String snmpProfile=null;
+				if (node.getPrimary() != null)
+					snmpProfile = getService().getSnmpProfile(node.getPrimary());
 				if (snmpProfile == null)
 					node.setValid(false);
 				node.updateSnmpProfile(snmpProfile);
