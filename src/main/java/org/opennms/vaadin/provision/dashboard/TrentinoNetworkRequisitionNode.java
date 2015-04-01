@@ -105,7 +105,11 @@ public class TrentinoNetworkRequisitionNode {
 		m_service = service;
 
 		foreignId = requisitionNode.getForeignId();
+		if (foreignId == null)
+			valid = false;
 		nodelabel = requisitionNode.getNodeLabel();
+		if (nodelabel == null)
+			valid=false;
 
 		if (requisitionNode.getParentForeignId() != null)
 			parent = service.getNodeLabel(requisitionNode.getParentForeignId());
