@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,8 +49,13 @@ import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 
-public class DashBoardService {
-    private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
+public class DashBoardService implements Serializable {
+    /**
+	 * 
+	 */
+
+	private static final long serialVersionUID = 508580392774265535L;
+	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
 	protected static final String DESCR = "descr";
 	protected static final String DESCRIPTION = "description";
 	protected static final String HOST = "hostname";

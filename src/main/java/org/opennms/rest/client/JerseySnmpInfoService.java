@@ -9,7 +9,12 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class JerseySnmpInfoService extends JerseyAbstractService implements SnmpInfoService {
 
-    private final static String SNMP_REST_PATH = "snmpConfig/";
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6568341570030503947L;
+
+	private final static String SNMP_REST_PATH = "snmpConfig/";
 
     private JerseyClientImpl m_jerseyClient;
         

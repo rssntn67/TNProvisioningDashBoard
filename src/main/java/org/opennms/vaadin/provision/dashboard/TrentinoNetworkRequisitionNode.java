@@ -1,5 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,20 +22,21 @@ import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_vrfs;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_network_categories;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_notif_categories;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_thresh_categories;
-
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.CITY;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.ADDRESS;
-
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.DESCRIPTION;
-
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.hasInvalidDnsBind9Label;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.hasInvalidDnsBind9LabelSize;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.hasInvalidDnsBind9Size;
 import static org.opennms.vaadin.provision.dashboard.DashBoardService.hasUnSupportedDnsDomain;
 
 
-public class TrentinoNetworkRequisitionNode {
+public class TrentinoNetworkRequisitionNode implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3824402168422477329L;
 	MultivaluedMap<String, String> m_updatemap = new MultivaluedMapImpl();
     List<RequisitionAsset> m_assetsToPut = new ArrayList<RequisitionAsset>();
 
@@ -127,7 +129,9 @@ public class TrentinoNetworkRequisitionNode {
 		
 		secondary.addContainerProperty("indirizzo ip", String.class, null);
 		for (RequisitionInterface ip: requisitionNode.getInterfaces()) {
-			if (ip.getSnmpPrimary().equals("P")) {
+			if (ip.getSnmpPrimary() == null)
+				valid=false;
+			if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals("P")) {
 				primary = ip.getIpAddr();
 				descr = ip.getDescr();
 			} else {

@@ -16,7 +16,11 @@ import org.opennms.rest.client.model.OnmsSnmpInterfaceList;
 
 public class JerseyNodesService extends JerseyAbstractService implements NodesService {
 
-    private final static String NODES_PATH = "nodes";
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2157475108884265396L;
+	private final static String NODES_PATH = "nodes";
     private final static String ASSET_PATH = "/assetRecord";
     private final static String IP_INTERFACES_PATH = "/ipinterfaces";
     private final static String SNMP_INTERFACES_PATH = "/snmpinterfaces";

@@ -11,6 +11,10 @@ import org.opennms.rest.client.ProvisionForeignSourceService;
 public class JerseyProvisionForeignSourceService extends JerseyAbstractService
 		implements ProvisionForeignSourceService {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4152007400379749613L;
 	private static final String FOREIGNSOURCE_PATH = "foreignSources";
 	private static final String FOREIGNSOURCE_COUNT_PATH = "foreignSources/count";
 	private static final String FOREIGNSOURCE_DEFAULT_PATH = "foreignSources/default";

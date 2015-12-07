@@ -20,6 +20,10 @@ import org.opennms.rest.client.ProvisionRequisitionService;
 public class JerseyProvisionRequisitionService extends JerseyAbstractService implements
 		ProvisionRequisitionService {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8294418101035238036L;
 	private final static String REQUISITIONS_PATH = "requisitions";
 	private final static String REQUISITIONS_COUNT_PATH = "requisitions/count";
 

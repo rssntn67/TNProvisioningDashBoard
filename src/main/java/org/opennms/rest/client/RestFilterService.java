@@ -1,8 +1,10 @@
 package org.opennms.rest.client;
 
+import java.io.Serializable;
+
 import javax.ws.rs.core.MultivaluedMap;
 
-public interface RestFilterService {
+public interface RestFilterService extends Serializable {
 
 	public MultivaluedMap<String, String> setLimit(Integer limit);
 	
