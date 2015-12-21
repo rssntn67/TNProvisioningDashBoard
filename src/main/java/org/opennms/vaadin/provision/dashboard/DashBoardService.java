@@ -35,7 +35,7 @@ import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionForeignSourceService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
-import org.opennms.rest.client.snmpinfo.SnmpInfo;
+import org.opennms.web.svclayer.model.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Container;
@@ -262,7 +262,7 @@ public class DashBoardService implements Serializable {
 			this.version = version.getValue();
 			this.timeout = Integer.parseInt(timeout.getValue());
 			info = new SnmpInfo();
-			info.setCommunity(this.community);
+			info.setReadCommunity(this.community);
 			info.setVersion(this.version);
 			info.setTimeout(this.timeout);
 		}
@@ -388,7 +388,7 @@ public class DashBoardService implements Serializable {
 	public String getSnmpProfile(String ip) {
 		SnmpInfo info = m_snmpInfoService.get(ip);
 		for (Entry<String, SnmpProfile> snmpprofileentry :m_snmpProfiles.entrySet()) {
-			if (info.getCommunity().equals(snmpprofileentry.getValue().getCommunity()) &&
+			if (info.getReadCommunity().equals(snmpprofileentry.getValue().getCommunity()) &&
 				info.getVersion().equals(snmpprofileentry.getValue().getVersion()) &&	
 				info.getTimeout() == snmpprofileentry.getValue().getTimeout().intValue())
 				return snmpprofileentry.getKey();

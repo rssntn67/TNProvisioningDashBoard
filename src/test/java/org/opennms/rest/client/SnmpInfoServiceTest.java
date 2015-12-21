@@ -31,7 +31,7 @@ package org.opennms.rest.client;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.rest.client.snmpinfo.SnmpInfo;
+import org.opennms.web.svclayer.model.SnmpInfo;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -54,10 +54,10 @@ public class SnmpInfoServiceTest {
     @Test
     public void testGet() throws Exception {
     	SnmpInfo snmp = m_snmpinfoservice.get("172.25.140.97");
-    	assertEquals("ma14na165ge", snmp.getCommunity());
-    	assertEquals(161, snmp.getPort());
-    	assertEquals(1, snmp.getRetries());
-    	assertEquals(5000, snmp.getTimeout());
+    	assertEquals("ma14na165ge", snmp.getReadCommunity());
+    	assertEquals(161, snmp.getPort().intValue());
+    	assertEquals(1, snmp.getRetries().intValue());
+    	assertEquals(5000, snmp.getTimeout().intValue());
     	assertEquals("v2c", snmp.getVersion());
 
     }
@@ -65,29 +65,29 @@ public class SnmpInfoServiceTest {
     @Test
     public void testSet() throws Exception {
     	SnmpInfo snmp = new SnmpInfo();
-    	snmp.setCommunity("sarag8");
+    	snmp.setReadCommunity("sarag8");
     	snmp.setVersion("v1");
     	snmp.setTimeout(1890);
     	m_snmpinfoservice.set("10.10.1.1", snmp);
     	
     	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.1");
-    	assertEquals("sarag8", snmpstored.getCommunity());
-    	assertEquals(161, snmpstored.getPort());
-    	assertEquals(1, snmpstored.getRetries());
-    	assertEquals(1890, snmpstored.getTimeout());
+    	assertEquals("sarag8", snmpstored.getReadCommunity());
+    	assertEquals(161, snmpstored.getPort().intValue());
+    	assertEquals(1, snmpstored.getRetries().intValue());
+    	assertEquals(1890, snmpstored.getTimeout().intValue());
     	assertEquals("v1", snmpstored.getVersion());
     	
     	SnmpInfo snmp2 = new SnmpInfo();
-    	snmp2.setCommunity("sarag8");
+    	snmp2.setReadCommunity("sarag8");
     	snmp2.setTimeout(1800);
     	snmp2.setVersion("v2c");
     	m_snmpinfoservice.set("10.10.1.1", snmp2);
     	
     	SnmpInfo snmpstored2 = m_snmpinfoservice.get("10.10.1.1");
-    	assertEquals("sarag8", snmpstored2.getCommunity());
-    	assertEquals(161, snmpstored2.getPort());
-    	assertEquals(1, snmpstored2.getRetries());
-    	assertEquals(1800, snmpstored2.getTimeout());
+    	assertEquals("sarag8", snmpstored2.getReadCommunity());
+    	assertEquals(161, snmpstored2.getPort().intValue());
+    	assertEquals(1, snmpstored2.getRetries().intValue());
+    	assertEquals(1800, snmpstored2.getTimeout().intValue());
     	assertEquals("v2c", snmpstored2.getVersion());
     	
     }

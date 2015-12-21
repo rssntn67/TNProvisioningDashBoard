@@ -3,6 +3,8 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -24,12 +26,14 @@ public class LoginBox extends CustomComponent implements ClickListener {
 
 	private DashBoardService m_service;
 
+	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -363579873686942087L;
 
-	private static final String s_panellogincaption="- Log In - Trentino Network Provisioning Dashboard 1.2.5 Build Dec 7th 2015";
+	private static final String s_panellogincaption="- Log In - Trentino Network Provisioning Dashboard 2.0.0 Build Dec 21st 2015";
 	private Panel m_panel  = new Panel(s_panellogincaption);
     private ComboBox m_select = new ComboBox("Select Domain");
     private TextField m_username = new TextField("Username:");
@@ -98,6 +102,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		try {
 		    m_service.login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
 		} catch (SQLException sqle) {
+			logger.log(Level.WARNING,"Login Failed for db access",sqle);
 			Notification.show("Login Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
 			m_username.setValue("");
 			m_password.setValue("");
@@ -105,6 +110,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			return;
 		} catch (Exception e) {
 			Notification.show("Login Failed", "Verificare Username e Password e che lo user abbia ROLE_PROVISIONING", Notification.Type.ERROR_MESSAGE);
+			logger.log(Level.WARNING,"Login Failed for rest access",e);
 			m_username.setValue("");
 			m_password.setValue("");
 			m_service.destroy();

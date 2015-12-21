@@ -98,7 +98,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.opennms</groupId>
-			<artifactId>opennms-webapp-rest</artifactId>
+			<artifactId>opennms-web-api</artifactId>
 			<version>${opennms.version}</version>
 		</dependency>
 		<dependency>

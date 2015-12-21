@@ -2,7 +2,7 @@ package org.opennms.rest.client;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.opennms.rest.client.snmpinfo.SnmpInfo;
+import org.opennms.web.svclayer.model.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
