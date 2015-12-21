@@ -8,6 +8,7 @@ import java.util.List;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.opennms.core.utils.InetAddressUtils;
+import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
@@ -131,7 +132,7 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		for (RequisitionInterface ip: requisitionNode.getInterfaces()) {
 			if (ip.getSnmpPrimary() == null)
 				valid=false;
-			if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals("P")) {
+			if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 				primary = ip.getIpAddr();
 				descr = ip.getDescr();
 			} else {
@@ -387,7 +388,7 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 
 		if (primary != null) {
 			RequisitionInterface iface = new RequisitionInterface();
-			iface.setSnmpPrimary("P");
+			iface.setSnmpPrimary(org.opennms.netmgt.model.PrimaryType.PRIMARY);
 			iface.setIpAddr(primary);
 			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 			iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
@@ -419,7 +420,7 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 	public void addSecondaryInterface(String ipaddress) {
 		RequisitionInterface ipsecondary = new RequisitionInterface();
 		ipsecondary.setIpAddr(ipaddress);
-		ipsecondary.setSnmpPrimary("N");
+		ipsecondary.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
 		ipsecondary.setDescr("Provided by Provision Dashboard");
 		ipsecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 		m_service.add(foreignId, ipsecondary);
@@ -444,7 +445,7 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		requisitionNode.setCity(city);
 		
 		RequisitionInterface iface = new RequisitionInterface();
-		iface.setSnmpPrimary("P");
+		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(primary);
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));

@@ -34,6 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
+import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
@@ -124,17 +125,17 @@ public class ProvisionRequisitionServiceTest {
     	RequisitionInterface iface = new RequisitionInterface();
     	iface.setDescr("Manually added by Antonio to test");
     	iface.setIpAddr("10.10.10.1");
-    	iface.setSnmpPrimary("P");
+    	iface.setSnmpPrimary(PrimaryType.PRIMARY);
     	m_requisitionservice.add("Home", "roberta", iface);
     	RequisitionInterface iface2 = new RequisitionInterface();
     	iface2.setDescr("Manually added by Antonio to test");
     	iface2.setIpAddr("10.10.10.2");
-    	iface2.setSnmpPrimary("P");
+    	iface2.setSnmpPrimary(PrimaryType.PRIMARY);
        	m_requisitionservice.add("Home", "rssntn67", iface2);
       	RequisitionInterface iface3 = new RequisitionInterface();
     	iface3.setDescr("Manually added by Antonio to test");
     	iface3.setIpAddr("10.10.10.3");
-    	iface3.setSnmpPrimary("S");
+    	iface3.setSnmpPrimary(PrimaryType.SECONDARY);
        	m_requisitionservice.add("Home", "rssntn67", iface3);
 
        	RequisitionMonitoredService icmp = new RequisitionMonitoredService("ICMP");

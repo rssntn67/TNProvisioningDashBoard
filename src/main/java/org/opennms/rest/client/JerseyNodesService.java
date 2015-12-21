@@ -2,17 +2,17 @@ package org.opennms.rest.client;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.opennms.rest.client.model.OnmsAssetRecord;
-import org.opennms.rest.client.model.OnmsCategory;
-import org.opennms.rest.client.model.OnmsCategoryCollection;
-import org.opennms.rest.client.model.OnmsIpInterface;
-import org.opennms.rest.client.model.OnmsIpInterfaceList;
-import org.opennms.rest.client.model.OnmsMonitoredService;
-import org.opennms.rest.client.model.OnmsMonitoredServiceList;
-import org.opennms.rest.client.model.OnmsNode;
-import org.opennms.rest.client.model.OnmsNodeList;
-import org.opennms.rest.client.model.OnmsSnmpInterface;
-import org.opennms.rest.client.model.OnmsSnmpInterfaceList;
+import org.opennms.netmgt.model.OnmsAssetRecord;
+import org.opennms.netmgt.model.OnmsCategory;
+import org.opennms.netmgt.model.OnmsCategoryCollection;
+import org.opennms.netmgt.model.OnmsIpInterface;
+import org.opennms.netmgt.model.OnmsIpInterfaceList;
+import org.opennms.netmgt.model.OnmsMonitoredService;
+import org.opennms.netmgt.model.OnmsMonitoredServiceList;
+import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.OnmsNodeList;
+import org.opennms.netmgt.model.OnmsSnmpInterface;
+import org.opennms.netmgt.model.OnmsSnmpInterfaceList;
 
 public class JerseyNodesService extends JerseyAbstractService implements NodesService {
 

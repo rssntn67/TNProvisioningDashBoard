@@ -22,6 +22,8 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.opennms.netmgt.model.OnmsIpInterface;
+import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
@@ -33,8 +35,6 @@ import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionForeignSourceService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
-import org.opennms.rest.client.model.OnmsIpInterface;
-import org.opennms.rest.client.model.OnmsNodeList;
 import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -629,8 +629,8 @@ public class DashBoardService implements Serializable {
 		OnmsNodeList nodes = m_nodeService.find(queryParams);
 		if (nodes.isEmpty())
 			return ipaddresses; 
-        for (OnmsIpInterface ipinterface: m_nodeService.getIpInterfaces(m_nodeService.find(queryParams).getFirst().getId())){
-        	ipaddresses.add(ipinterface.getIpAddress());
+        for (OnmsIpInterface ipinterface: m_nodeService.getIpInterfaces(m_nodeService.find(queryParams).getObjects().iterator().next().getId())){
+        	ipaddresses.add(ipinterface.getIpAddress().getHostAddress());
         }
         return ipaddresses;
 	}

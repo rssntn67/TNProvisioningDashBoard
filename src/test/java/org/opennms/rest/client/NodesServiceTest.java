@@ -34,10 +34,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.rest.client.model.OnmsIpInterface;
-import org.opennms.rest.client.model.OnmsIpInterfaceList;
-import org.opennms.rest.client.model.OnmsNode;
-import org.opennms.rest.client.model.OnmsNodeList;
+import org.opennms.netmgt.model.OnmsIpInterface;
+import org.opennms.netmgt.model.OnmsIpInterfaceList;
+import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.vaadin.provision.dashboard.DashBoardService;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -65,8 +65,8 @@ public class NodesServiceTest {
     @Test
     public void testNodes() throws Exception {
         OnmsNodeList nodeslist = m_nodesservice.getAll();
-        assertEquals(36, nodeslist.getCount());
-        assertEquals(36,nodeslist.getTotalCount());
+        assertEquals(36, nodeslist.getCount().intValue());
+        assertEquals(36,nodeslist.getTotalCount().intValue());
         for (OnmsNode node: nodeslist){
         	System.out.println(node);
         }
@@ -78,9 +78,9 @@ public class NodesServiceTest {
     	queryParams.add("label", "ASR9K-1.bb.tnnet.it");
     	queryParams.add("foreignSource", "TrentinoNetworkTest");
         OnmsNodeList nodeslist = m_nodesservice.find(queryParams);
-        assertEquals(1, nodeslist.getCount());
-        assertEquals(1,nodeslist.getTotalCount());
-        OnmsNode node = nodeslist.getFirst();
+        assertEquals(1, nodeslist.getCount().intValue());
+        assertEquals(1,nodeslist.getTotalCount().intValue());
+        OnmsNode node = nodeslist.getObjects().iterator().next();
         assertEquals(942, node.getId().intValue());
     }
 
@@ -97,7 +97,7 @@ public class NodesServiceTest {
     public void testGetIpAddresses() throws Exception {
     	OnmsIpInterfaceList ips = m_nodesservice.getIpInterfaces(942);
     	assertEquals(14, ips.size());
-    	for (OnmsIpInterface ip: ips.getInterfaces()) {
+    	for (OnmsIpInterface ip: ips.getIpInterfaces()) {
     		System.out.println(ip.getIpAddress());
     		if (ip.getSnmpInterface() != null)
     			System.out.println(ip.getSnmpInterface().getNetMask());
