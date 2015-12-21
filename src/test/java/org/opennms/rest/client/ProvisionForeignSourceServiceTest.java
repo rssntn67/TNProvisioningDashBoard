@@ -31,7 +31,6 @@ package org.opennms.rest.client;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSource;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSourceCollection;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
@@ -44,7 +43,6 @@ public class ProvisionForeignSourceServiceTest {
     
     @Before
     public void setUp() throws Exception {
-        MockLogAppender.setupLogging(true, "DEBUG");
         m_requisitionservice = new JerseyProvisionForeignSourceService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
                                                          "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
@@ -53,13 +51,12 @@ public class ProvisionForeignSourceServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        MockLogAppender.assertNoWarningsOrGreater();
     }
     
     @Test
     public void testList() throws Exception {
         ForeignSourceCollection nodelist = m_requisitionservice.getAll();
-        assertEquals(10, nodelist.size());
+        assertEquals(7, nodelist.size());
         for (ForeignSource fs: nodelist) {
         	System.out.println(fs.getName());
         }
@@ -74,13 +71,13 @@ public class ProvisionForeignSourceServiceTest {
     	manage.addParameter("action", "MANAGE");
     	manage.addParameter("matchBehavior", "ALL_PARAMETERS");
     	manage.addParameter("ipAddress", "~^"+ip+"$");
-    	m_requisitionservice.addOrReplace("TrentinoNetworkTest", manage);
+    	m_requisitionservice.addOrReplace("UpdateTN", manage);
     }
 
     @Test
     public void deletePolicy() throws Exception {
     	String ip = "10.10.10.10";
-    	m_requisitionservice.deletePolicy("TrentinoNetworkTest", "Manage"+ip);
+    	m_requisitionservice.deletePolicy("UpdateTN", "Manage"+ip);
     }
 
 }

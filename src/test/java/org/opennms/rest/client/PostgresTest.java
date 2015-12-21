@@ -35,7 +35,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.core.test.MockLogAppender;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
@@ -49,7 +48,6 @@ public class PostgresTest {
     
     @Before
     public void setUp() throws Exception {
-        MockLogAppender.setupLogging(true, "DEBUG");
     	try {
 			m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");
 		} catch (SQLException e) {
@@ -60,7 +58,6 @@ public class PostgresTest {
 
     @After
     public void tearDown() throws Exception {
-        MockLogAppender.assertNoWarningsOrGreater();
     }
     
     @Test

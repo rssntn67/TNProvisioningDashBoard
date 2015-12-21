@@ -33,7 +33,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
@@ -53,38 +52,33 @@ public class ProvisionRequisitionServiceTest {
     
     @Before
     public void setUp() throws Exception {
-        MockLogAppender.setupLogging(true, "DEBUG");
         m_requisitionservice = new JerseyProvisionRequisitionService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin2001");
+                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
         m_requisitionservice.setJerseyClient(jerseyClient);
     }
 
     @After
     public void tearDown() throws Exception {
-        MockLogAppender.assertNoWarningsOrGreater();
     }
     
     @Test
     public void testList() throws Exception {
         RequisitionCollection nodelist = m_requisitionservice.getAll();
-        assertEquals(3, nodelist.size());
+        assertEquals(7, nodelist.size());
         
-        Requisition SI = m_requisitionservice.get("SI");
-        assertEquals(154, SI.getNodeCount());
-
-        Requisition TN = m_requisitionservice.get("TrentinoNetwork");
-        assertEquals(3076, TN.getNodeCount());
+        Requisition TN = m_requisitionservice.get("UpdateTN");
+        assertEquals(21, TN.getNodeCount());
 
     }
     @Test
     public void testCityUpdate() {
-    	RequisitionNode node = m_requisitionservice.getNode("au-sardagna-cons", "TrentinoNetwork");
-    	assertEquals("Trento", node.getCity());
+    	RequisitionNode node = m_requisitionservice.getNode("smichele.mtr01", "UpdateTN");
+    	assertEquals("San Michele all'Adige", node.getCity());
 		MultivaluedMap< String, String> form = new MultivaluedMapImpl();
 		form.add("city", "Positano");
-		m_requisitionservice.update("TrentinoNetwork", "au-sardagna-cons", form);
-    	RequisitionNode node2 = m_requisitionservice.getNode("au-sardagna-cons", "TrentinoNetwork");
+		m_requisitionservice.update("UpdateTN", "smichele.mtr01", form);
+    	RequisitionNode node2 = m_requisitionservice.getNode("smichele.mtr01", "UpdateTN");
     	assertEquals("Positano", node2.getCity());
 		
     }
@@ -92,10 +86,10 @@ public class ProvisionRequisitionServiceTest {
     @Test 
     public void testAddAsset() {
     	RequisitionAsset asset = new RequisitionAsset("address1", "prova antonio");
-    	m_requisitionservice.add("TrentinoNetwork", "au-sardagna-cons", asset);
-    	RequisitionNode node = m_requisitionservice.getNode("au-sardagna-cons", "TrentinoNetwork");
+    	m_requisitionservice.add("UpdateTN", "smichele.mtr01", asset);
+    	RequisitionNode node = m_requisitionservice.getNode("smichele.mtr01", "UpdateTN");
     	assertEquals("prova antonio", node.getAsset("address1").getValue());
-    	m_requisitionservice.add("TrentinoNetwork", "au-sardagna-cons", new RequisitionAsset("address1", "Strada alla Funivia 66 Loc. Sardagna"));
+    	m_requisitionservice.add("UpdateTN", "smichele.mtr01", new RequisitionAsset("address1", "via Biasi 1/A"));
     }
     
     @Test

@@ -31,7 +31,6 @@ package org.opennms.rest.client;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.core.test.MockLogAppender;
 import org.opennms.rest.client.snmpinfo.SnmpInfo;
 
 import static junit.framework.Assert.assertEquals;
@@ -42,7 +41,6 @@ public class SnmpInfoServiceTest {
     
     @Before
     public void setUp() throws Exception {
-        MockLogAppender.setupLogging(true, "DEBUG");
         m_snmpinfoservice = new JerseySnmpInfoService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
                                                          "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
@@ -51,12 +49,11 @@ public class SnmpInfoServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        MockLogAppender.assertNoWarningsOrGreater();
     }
     
     @Test
     public void testGet() throws Exception {
-    	SnmpInfo snmp = m_snmpinfoservice.get("10.93.16.2");
+    	SnmpInfo snmp = m_snmpinfoservice.get("172.25.140.97");
     	assertEquals("ma14na165ge", snmp.getCommunity());
     	assertEquals(161, snmp.getPort());
     	assertEquals(1, snmp.getRetries());

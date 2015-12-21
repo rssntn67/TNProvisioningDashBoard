@@ -32,8 +32,8 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsIpInterfaceList;
 import org.opennms.netmgt.model.OnmsNode;
@@ -50,7 +50,6 @@ public class NodesServiceTest {
     
     @Before
     public void setUp() throws Exception {
-        MockLogAppender.setupLogging(true, "DEBUG");
         m_nodesservice = new JerseyNodesService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
                                                          "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
@@ -59,14 +58,13 @@ public class NodesServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        MockLogAppender.assertNoWarningsOrGreater();
     }
     
     @Test
     public void testNodes() throws Exception {
         OnmsNodeList nodeslist = m_nodesservice.getAll();
-        assertEquals(36, nodeslist.getCount().intValue());
-        assertEquals(36,nodeslist.getTotalCount().intValue());
+        assertEquals(21, nodeslist.getCount().intValue());
+        assertEquals(21,nodeslist.getTotalCount().intValue());
         for (OnmsNode node: nodeslist){
         	System.out.println(node);
         }
@@ -75,28 +73,28 @@ public class NodesServiceTest {
     @Test
     public void testGetNodesByNodelabel() throws Exception {
     	MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
-    	queryParams.add("label", "ASR9K-1.bb.tnnet.it");
-    	queryParams.add("foreignSource", "TrentinoNetworkTest");
+    	queryParams.add("label", "TrentoNord-A9K-PE01.bb.tnnet.it");
+    	queryParams.add("foreignSource", "UpdateTN");
         OnmsNodeList nodeslist = m_nodesservice.find(queryParams);
         assertEquals(1, nodeslist.getCount().intValue());
         assertEquals(1,nodeslist.getTotalCount().intValue());
         OnmsNode node = nodeslist.getObjects().iterator().next();
-        assertEquals(942, node.getId().intValue());
+        assertEquals(20, node.getId().intValue());
     }
 
     @Test
     public void testGetNode() throws Exception {
-        OnmsNode node = m_nodesservice.get(942);
-        assertEquals(942, node.getId().intValue());
-        assertEquals("ASR9K-1.bb.tnnet.it", node.getLabel());
-        assertEquals("ASR9K-1", node.getForeignId());
-        assertEquals("TrentinoNetworkTest", node.getForeignSource());
+        OnmsNode node = m_nodesservice.get(20);
+        assertEquals(20, node.getId().intValue());
+        assertEquals("TrentoNord-A9K-PE01.bb.tnnet.it", node.getLabel());
+        assertEquals("tnnord", node.getForeignId());
+        assertEquals("UpdateTN", node.getForeignSource());
     }
 
     @Test
     public void testGetIpAddresses() throws Exception {
-    	OnmsIpInterfaceList ips = m_nodesservice.getIpInterfaces(942);
-    	assertEquals(14, ips.size());
+    	OnmsIpInterfaceList ips = m_nodesservice.getIpInterfaces(20);
+    	assertEquals(86, ips.size());
     	for (OnmsIpInterface ip: ips.getIpInterfaces()) {
     		System.out.println(ip.getIpAddress());
     		if (ip.getSnmpInterface() != null)

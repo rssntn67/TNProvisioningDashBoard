@@ -4,7 +4,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class JerseyAbstractService {
+public class JerseyAbstractService implements RestFilterService {
 
     private JerseyClientImpl m_jerseyClient;
     

@@ -20,10 +20,6 @@ import org.opennms.rest.client.ProvisionRequisitionService;
 public class JerseyProvisionRequisitionService extends JerseyAbstractService implements
 		ProvisionRequisitionService {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8294418101035238036L;
 	private final static String REQUISITIONS_PATH = "requisitions";
 	private final static String REQUISITIONS_COUNT_PATH = "requisitions/count";
 
@@ -102,8 +98,13 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	@Override
-	public int count() {
+	public Integer count() {
+		return Integer.decode(getJerseyClient().get(REQUISITIONS_COUNT_PATH));
+		/*
+		if (found == null)
+			return -1;
 		return Integer.getInteger(getJerseyClient().get(REQUISITIONS_COUNT_PATH));
+		*/
 	}
 
 	@Override
@@ -179,34 +180,34 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	@Override
-	public void add(Requisition requisition) {
-		getJerseyClient().post(Requisition.class, requisition, REQUISITIONS_PATH);
+	public Requisition add(Requisition requisition) {
+		return getJerseyClient().post(Requisition.class, requisition, REQUISITIONS_PATH);
 	}
 
 	@Override
-	public void add(String name, RequisitionNode rnode) {
-		getJerseyClient().post(Requisition.class, rnode, buildNodesPath(name));
+	public RequisitionNode add(String name, RequisitionNode rnode) {
+		return getJerseyClient().post(RequisitionNode.class, rnode, buildNodesPath(name));
 	}
 
 	@Override
-	public void add(String name, String foreignid, RequisitionInterface rinterface) {
-		getJerseyClient().post(Requisition.class, rinterface, buildInterfacesPath(name,foreignid));
+	public RequisitionInterface add(String name, String foreignid, RequisitionInterface rinterface) {
+		return getJerseyClient().post(RequisitionInterface.class, rinterface, buildInterfacesPath(name,foreignid));
 	}
 
 	@Override
-	public void add(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
-		getJerseyClient().post(Requisition.class, rservice, buildServicesPath(name,foreignid,inet));
+	public RequisitionMonitoredService add(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
+		return getJerseyClient().post(RequisitionMonitoredService.class, rservice, buildServicesPath(name,foreignid,inet));
 	}
 
 	@Override
-	public void add(String name, String foreignid, RequisitionCategory rcategory) {
-		getJerseyClient().post(Requisition.class, rcategory, buildCategoriesPath(name,foreignid));
+	public RequisitionCategory add(String name, String foreignid, RequisitionCategory rcategory) {
+		return getJerseyClient().post(RequisitionCategory.class, rcategory, buildCategoriesPath(name,foreignid));
 
 	}
 
 	@Override
-	public void add(String name, String foreignid, RequisitionAsset rasset) {
-		getJerseyClient().post(Requisition.class, rasset, buildAssetsPath(name,foreignid));
+	public RequisitionAsset add(String name, String foreignid, RequisitionAsset rasset) {
+		return getJerseyClient().post(RequisitionAsset.class, rasset, buildAssetsPath(name,foreignid));
 	}
 
 	@Override
