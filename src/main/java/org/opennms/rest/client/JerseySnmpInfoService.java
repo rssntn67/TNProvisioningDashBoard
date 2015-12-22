@@ -36,8 +36,8 @@ public class JerseySnmpInfoService extends JerseyAbstractService implements Snmp
 	
 	private MultivaluedMap<String,String> getMap(SnmpInfo snmpinfo) {
 		MultivaluedMap< String, String> form = new MultivaluedMapImpl();
-		if (snmpinfo.getCommunity() != null)
-			form.add("community", snmpinfo.getCommunity());
+		if (snmpinfo.getReadCommunity() != null)
+			form.add("community", snmpinfo.getReadCommunity());
 		if (snmpinfo.getVersion() != null )
 			form.add("version", snmpinfo.getVersion());
 		if (snmpinfo.getTimeout() > 0)

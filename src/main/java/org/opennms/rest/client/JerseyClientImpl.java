@@ -52,8 +52,8 @@ public class JerseyClientImpl {
     		return m_webResource.path(relativePath).accept(MediaType.APPLICATION_XML_TYPE).get(clazz);
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		throw uie;
     	}
-    	return null;
     }
     
     public String getXml(String relativePath) {
@@ -61,8 +61,8 @@ public class JerseyClientImpl {
     		return m_webResource.path(relativePath).accept(MediaType.APPLICATION_XML_TYPE).get(String.class);
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		throw uie;
     	}
-    	return null;
     }
     
     public String getXml(String relativePath,MultivaluedMap<String, String> queryParams) {
@@ -70,8 +70,8 @@ public class JerseyClientImpl {
     		return m_webResource.path(relativePath).queryParams(queryParams).accept(MediaType.APPLICATION_XML_TYPE).get(String.class);
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		throw uie;
     	}
-    	return null;
     }
 
     public String get(String relativePath) {
@@ -79,8 +79,8 @@ public class JerseyClientImpl {
     		return m_webResource.path(relativePath).accept(MediaType.TEXT_PLAIN).get(String.class);
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		throw uie;
     	}
-    	return null;
     }
     
     public String get(String relativePath,MultivaluedMap<String, String> queryParams) {
@@ -88,8 +88,8 @@ public class JerseyClientImpl {
     		return m_webResource.path(relativePath).queryParams(queryParams).accept(MediaType.TEXT_PLAIN).get(String.class);
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		throw uie;
     	}
-    	return null;
     }
 
     public <T> T post(Class<T> clazz,Object o, String relativePath) {
