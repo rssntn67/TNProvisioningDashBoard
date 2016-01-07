@@ -96,6 +96,7 @@ public class DashBoardService implements Serializable {
 		{"PontePDH","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesso_switch_pat","public_v2"},
 		{"AccessPoint","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
 		{"SwitchWiNet","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
+		{"SwitchTetra","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
 		{"Fiemme2013","Distribuzione","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_2013","snmp_default_v2"},
 		{"ACSM","Accesso","acsm.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
 		{"AgLav","Accesso","aglav.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
