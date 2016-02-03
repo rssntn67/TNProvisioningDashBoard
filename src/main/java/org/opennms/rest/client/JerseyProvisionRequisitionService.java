@@ -231,31 +231,31 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	@Override
-	public void delete(String name, RequisitionNode foreignid) {
-		getJerseyClient().delete(buildNodePath(name, foreignid.getForeignId()));
+	public void deleteNode(String name, String foreignid) {
+		getJerseyClient().delete(buildNodePath(name, foreignid));
 	}
 
 	@Override
-	public void delete(String name, String foreignid,
-			RequisitionInterface inet) {
-		getJerseyClient().delete(buildInterfacePath(name, foreignid, inet.getIpAddr()));
+	public void deleteInterface(String name, String foreignid,
+			String inet) {
+		getJerseyClient().delete(buildInterfacePath(name, foreignid, inet));
 
 	}
 
 	@Override
-	public void delete(String name, String foreignid,
-			String inet, RequisitionMonitoredService service) {
-		getJerseyClient().delete(buildServicePath(name, foreignid, inet, service.getServiceName()));
+	public void deleteService(String name, String foreignid,
+			String inet, String service) {
+		getJerseyClient().delete(buildServicePath(name, foreignid, inet, service));
 	}
 
 	@Override
-	public void delete(String name, String foreignid,
-			RequisitionCategory category) {
-		getJerseyClient().delete(buildCategoryPath(name, foreignid, category.getName()));
+	public void deleteCategory(String name, String foreignid,
+			String category) {
+		getJerseyClient().delete(buildCategoryPath(name, foreignid, category));
 	}
 
 	@Override
-	public void delete(String name, String foreignid,
+	public void deleteAsset(String name, String foreignid,
 			RequisitionAsset assetfieldname) {
 		getJerseyClient().delete(buildAssetPath(name, foreignid, assetfieldname.getName()));
 	}

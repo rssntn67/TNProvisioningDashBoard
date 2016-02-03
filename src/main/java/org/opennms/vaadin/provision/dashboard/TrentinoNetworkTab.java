@@ -1,10 +1,20 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
+
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
-
+import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
+import org.opennms.vaadin.provision.dao.OnmsDao;
+import org.opennms.vaadin.provision.dao.TNDao;
+import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.TrentinoNetworkRequisitionNode;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -14,10 +24,12 @@ import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Validator;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.IndexedContainer;
+import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
@@ -38,29 +50,6 @@ import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_vrfs;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_network_categories;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_notif_categories;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.m_thresh_categories;
-
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.DESCR;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.HOST;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.VRF;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.PRIMARY;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.PARENT;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.VALID;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.LABEL;
-
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.NETWORK_CATEGORY;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.NOTIF_CATEGORY;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.THRESH_CATEGORY;
-
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.SNMP_PROFILE;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.BACKUP_PROFILE;
-
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.CITY;
-import static org.opennms.vaadin.provision.dashboard.DashBoardService.ADDRESS;
-
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
  * or VaadinPortlet by giving your UI class name a parameter. When you browse to your
@@ -71,7 +60,62 @@ import static org.opennms.vaadin.provision.dashboard.DashBoardService.ADDRESS;
 @Theme("runo")
 public class TrentinoNetworkTab extends DashboardTab {
 
+	private class NodeFilter implements Filter {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		private String   needle="";
+		private String[] needle1=null;
+		private String   needle2=null;
+		private String   needle3=null;
+		
+		public NodeFilter(Object o, Object c1, Object c2,Object c3) {
+			if ( o != null)
+				needle = (String) o;
+			if ( c1 != null) 
+				needle1 = (String[]) c1;
+			if ( c2 != null)
+				needle2 = (String) c2;
+			if ( c3 != null)
+				needle3 = (String) c3;
+		}
+
+		@SuppressWarnings("unchecked")
+		public boolean passesFilter(Object itemId, Item item) {
+			TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)item).getBean();			
+			return (    node.getNodeLabel().contains(needle) 
+					&& ( needle1 == null || node.getNetworkCategory() == needle1 ) 
+					&& ( needle2 == null || node.getNotifCategory()   == needle2 )
+		            && ( needle3 == null || node.getThreshCategory()  == needle3 ) 
+					);
+		}
+
+		public boolean appliesToProperty(Object id) {
+			return true;
+		}
+	}
+
 	private static final long serialVersionUID = -5948892618258879832L;
+
+	public static final String TN = "TrentinoNetwork";
+	public static final String LABEL = "nodeLabel";
+
+	public static final String SNMP_PROFILE    = "snmpProfile";
+	public static final String BACKUP_PROFILE  = "backupProfile";
+	
+
+	public static final String NETWORK_CATEGORY = "networkCategory";
+	public static final String NOTIF_CATEGORY   = "notifCategory";
+	public static final String THRESH_CATEGORY  = "threshCategory";
+
+	public static final String DESCR = "descr";
+	public static final String HOST = "hostname";
+	public static final String PRIMARY = "primary";
+	public static final String VRF = "vrf";
+	public static final String PARENT = "parent";
+	public static final String VALID = "valid";
+	
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
@@ -110,34 +154,46 @@ public class TrentinoNetworkTab extends DashboardTab {
 		super(service);
 	}
 
+	@Override
 	public void load() {
+		Map<String, BackupProfile> backupprofilemap;
+		if (loaded)
+			return;
 		try {
-			getService().loadSnmpProfiles();
+			for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
+				m_snmpComboBox.addItem(snmpprofile);
+			}
 		} catch (SQLException e) {
 			logger.warning("Load of Snmp Profile from db Failed: "+e.getLocalizedMessage());
 			Notification.show("Snmp Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
+
 		try {
-			getService().loadBackupProfiles();
+			backupprofilemap = getService().getTnDao().getBackupProfiles();
+			for (String backupprofile: backupprofilemap.keySet()) {
+				m_backupComboBox.addItem(backupprofile);
+			}
 		} catch (SQLException e) {
 			logger.warning("Load of Backup Profile from db Failed: "+e.getLocalizedMessage());
 			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 			return;
 		}
-		if (loaded)
-			return;
-		initLayout();
-		initProvisionNodeList();
-		initEditor();
-		initSearch();
-		initActionButtons();
-		loaded=true;
-		getService().checkUniqueNodeLabel();
-		getService().checkUniqueForeignId();
-	}
 
-	private void initLayout() {
+		try {
+			m_requisitionContainer = getService().getRequisitionContainer(LABEL,TN,backupprofilemap);
+		} catch (UniformInterfaceException e) {
+			logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
+			if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+				logger.info("No Requisition Found: "+e.getLocalizedMessage());
+				getService().createRequisition(TN);
+				load();
+				return;
+			}
+			logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
+			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
+			return;
+		}
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		setCompositionRoot(splitPanel);
@@ -186,11 +242,19 @@ public class TrentinoNetworkTab extends DashboardTab {
 		bottomRightLayout.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
-	}
-	
-	private void initSearch() {
+		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
+		m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
+		m_requisitionTable.setSelectable(true);
+		m_requisitionTable.setImmediate(true);
 
-		for (String[] categories: m_network_categories) {
+		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
+			private static final long serialVersionUID = 1L;
+			public void valueChange(ValueChangeEvent event) {
+				selectItem();
+			}
+		});
+
+		for (String[] categories: TNDao.m_network_categories) {
 			m_networkCatSearchComboBox.addItem(categories);
 			m_networkCatSearchComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
 		}
@@ -212,7 +276,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		});
 
 
-		for (String category: m_notif_categories) {
+		for (String category: TNDao.m_notif_categories) {
 			m_notifCatSearchComboBox.addItem(category);
 		}
 		m_notifCatSearchComboBox.setInvalidAllowed(false);
@@ -231,7 +295,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 		
-		for (String category: m_thresh_categories) {
+		for (String category: TNDao.m_thresh_categories) {
 			m_threshCatSearchComboBox.addItem(category);
 		}
 		m_threshCatSearchComboBox.setInvalidAllowed(false);
@@ -261,24 +325,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-	}
-
-	private void initEditor() {
-
-		for (final String vrfs: m_vrfs) {
+		for (final String vrfs: TNDao.m_vrfs) {
 			m_vrfsComboBox.addItem(vrfs);
 		}
 
-		for (String[] categories: m_network_categories) {
+		for (String[] categories: TNDao.m_network_categories) {
 			m_networkCatComboBox.addItem(categories);
 			m_networkCatComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
 		}
 
-		for (String notif: m_notif_categories) {
+		for (String notif: TNDao.m_notif_categories) {
 			m_notifCatComboBox.addItem(notif);
 		}
 
-		for (String threshold: m_thresh_categories) {
+		for (String threshold: TNDao.m_thresh_categories) {
 			m_threshCatComboBox.addItem(threshold);
 		}
 
@@ -290,14 +350,19 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_hostname.setWidth(4, Unit.CM);
 		m_hostname.setHeight(6, Unit.MM);
 		m_hostname.setRequired(true);
-		m_hostname.setRequiredError("The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
+		m_hostname.setRequiredError("hostname must be defined");
+		m_hostname.addValidator(new RegexpValidator("^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$","The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
 		" A domain name consists of one or more parts, technically called labels, that are conventionally concatenated, and delimited by dots, such asexample.com."
 				+ " Each label may contain up to 63 characters." +
 				" The full domain name may not exceed a total length of 253 characters in its external dotted-label specification." +
 				" The characters allowed in a label are a subset of the ASCII character set, and includes the characters a through z, A through Z, digits 0 through 9, the hyphen." +
 				" This rule is known as the LDH rule (letters, digits, hyphen). " +
 				" Labels may not start or end with a hyphen." +
-				" A hostname is a domain name that has at least one IP address associated.");
+				" A hostname is a domain name that has at least one IP address associated."));
+		m_hostname.addValidator(new DnsNodelabelValidator());
+		m_hostname.addValidator(new DuplicatedNodelabelValidator());
+		m_hostname.addValidator(new SubdomainValidator());
+		m_hostname.setImmediate(true);
 
 		m_networkCatComboBox.setInvalidAllowed(false);
 		m_networkCatComboBox.setNullSelectionAllowed(false);
@@ -311,12 +376,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
-				if (!node.getUpdate()) {
-					m_vrfsComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
-					m_notifCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
-					m_threshCatComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
-					m_backupComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[5]);
-					m_snmpComboBox.select(getService().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[6]);
+				if (node.getForeignId() == null) {
+					m_vrfsComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
+					m_notifCatComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
+					m_threshCatComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
+					m_backupComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[5]);
+					m_snmpComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[6]);
 				}
 			}
 		});
@@ -325,6 +390,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_vrfsComboBox.setNullSelectionAllowed(false);
 		m_vrfsComboBox.setRequired(true);
 		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
+		m_vrfsComboBox.setImmediate(true);
+		m_vrfsComboBox.addValidator(new DnsNodelabelValidator());
+		m_vrfsComboBox.addValidator(new DuplicatedNodelabelValidator());
+		m_vrfsComboBox.addValidator(new SubdomainValidator());
+		
 		
 		TextField primary = new TextField(PRIMARY);
 		primary.setRequired(true);
@@ -358,7 +428,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 				@Override public void buttonClick(ClickEvent event) {
 					try {
-					m_editorFields.getItemDataSource().getBean().removeSecondaryInteface((String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
+					removeSecondaryInteface(m_editorFields.getItemDataSource().getBean().getForeignId(),
+							(String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
 			        source.getContainerDataSource().removeItem(itemId);
 					logger.info("Delete ip: " + itemId);
 					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
@@ -386,7 +457,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				if (m_secondaryIpComboBox.getValue() != null) {
 					try {
 						TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
-						if (node.getUpdate()) {
+						if (node.getForeignId() != null) {
 							IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 							for (Object id: secondary.getItemIds()) {
 								secondary.getContainerProperty(id, "indirizzo ip").getValue().equals(m_secondaryIpComboBox.getValue().toString());
@@ -394,7 +465,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 								Notification.show("Add ip", "Already added", Type.HUMANIZED_MESSAGE);
 								return;
 							}
-							node.addSecondaryInterface(m_secondaryIpComboBox.getValue().toString());
+							addSecondaryInterface(m_editorFields.getItemDataSource().getBean().getForeignId(),
+									m_secondaryIpComboBox.getValue().toString());
 							Item ipItem = secondary.getItem(secondary.addItem());
 							ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
 							logger.info("Add ip: " + m_secondaryIpComboBox.getValue().toString());
@@ -425,11 +497,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 
+
         m_backupComboBox.setInvalidAllowed(false);
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
-		
 		TextField city = new TextField("Citta'");
 		city.setWidth(8, Unit.CM);
 		city.setHeight(6, Unit.MM);
@@ -449,8 +521,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
 		m_editorFields.bind(m_notifCatComboBox, NOTIF_CATEGORY);
 		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
-		m_editorFields.bind(city,CITY);
-	    m_editorFields.bind(address, ADDRESS);
+		m_editorFields.bind(city,OnmsDao.CITY);
+	    m_editorFields.bind(address, OnmsDao.ADDRESS);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
@@ -504,45 +576,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
 		m_editRequisitionNodeLayout.addComponent(new Panel(profileInfo));
 
-	}
-
-	private class NodeFilter implements Filter {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-		private String   needle="";
-		private String[] needle1=null;
-		private String   needle2=null;
-		private String   needle3=null;
-		
-		public NodeFilter(Object o, Object c1, Object c2,Object c3) {
-			if ( o != null)
-				needle = (String) o;
-			if ( c1 != null) 
-				needle1 = (String[]) c1;
-			if ( c2 != null)
-				needle2 = (String) c2;
-			if ( c3 != null)
-				needle3 = (String) c3;
-		}
-
-		@SuppressWarnings("unchecked")
-		public boolean passesFilter(Object itemId, Item item) {
-			TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)item).getBean();			
-			return (    node.getNodeLabel().contains(needle) 
-					&& ( needle1 == null || node.getNetworkCategory() == needle1 ) 
-					&& ( needle2 == null || node.getNotifCategory()   == needle2 )
-		            && ( needle3 == null || node.getThreshCategory()  == needle3 ) 
-					);
-		}
-
-		public boolean appliesToProperty(Object id) {
-			return true;
-		}
-	}
-
-	private void initActionButtons() {
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);				
 		m_resetNodeButton.setEnabled(false);
@@ -554,7 +587,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkRequisitionNode("notSavedHost"+newHost++,getService()));
+				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkRequisitionNode("notSavedHost"+newHost++));
 				m_networkCatSearchComboBox.select(null);
 				m_networkCatSearchComboBox.setValue(null);
 				m_notifCatSearchComboBox.select(null);
@@ -578,7 +611,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void buttonClick(ClickEvent event) {
 				try {
 					m_editorFields.commit();
-					m_editorFields.getItemDataSource().getBean().commit();
+					getService().save(m_editorFields.getItemDataSource().getBean());
 					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
 					m_requisitionContainer.removeAllContainerFilters();
 					if (m_searchText == null)
@@ -612,23 +645,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_resetNodeButton.setEnabled(false);
 				BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
 				logger.info("Deleting: " + node.getBean().getNodeLabel());
-				if (node.getBean().getUpdate()) {
+				if (node.getBean().getForeignId() !=  null) {
 					try {
-						getService().delete(node.getBean().getRequisitionNode(),node.getBean().getPrimary());
+						getService().deleteNode(TN,node.getBean());
 						Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (UniformInterfaceException e) {
-						logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
+						logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
 						Notification.show("Delete Node From Requisition", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
-						e.getResponse().getClientResponseStatus().getReasonPhrase(), Type.ERROR_MESSAGE);
+						e.getResponse().getStatusInfo().getReasonPhrase(), Type.ERROR_MESSAGE);
 						return;
-					}
-					for (RequisitionInterface riface: node.getBean().getRequisitionNode().getInterfaces()) {
-						try {
-							logger.info("Deleting policy for interface: " + riface.getIpAddr());
-							getService().deletePolicy(riface);
-						} catch (UniformInterfaceException e) {
-							logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getClientResponseStatus().getReasonPhrase());
-						}
 					}
 				}
 				if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
@@ -650,35 +675,21 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_resetNodeButton.setEnabled(false);
 			}
 		});
-
-	}
-
-	private void initProvisionNodeList() {
-		try {
-			m_requisitionContainer = getService().getRequisitionContainer();
-		} catch (UniformInterfaceException e) {
-			logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getClientResponseStatus().getReasonPhrase());
-			if (e.getResponse().getClientResponseStatus() == ClientResponse.Status.NO_CONTENT) {
-				logger.info("No Requisition Found: "+e.getLocalizedMessage());
-				getService().createRequisition();
-				initProvisionNodeList();
-				return;
-			}
-			logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
-			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
-			return;
+		
+		Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
+		if (!duplicatednodeLabels.isEmpty()) {
+			logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
+			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicatednodeLabels.toArray()), Type.WARNING_MESSAGE);
 		}
-		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
-		m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
-		m_requisitionTable.setSelectable(true);
-		m_requisitionTable.setImmediate(true);
 
-		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
-			private static final long serialVersionUID = 1L;
-			public void valueChange(ValueChangeEvent event) {
-				selectItem();
-			}
-		});
+		Set<String> duplicatedForeignIds= getService().checkUniqueForeignId();
+		if (!duplicatedForeignIds.isEmpty()) {
+			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicatedForeignIds.toArray()));
+			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.WARNING_MESSAGE);
+		}
+		loaded=true;
+
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -697,27 +708,26 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_parentComboBox.addItem(nodelabel);
 			
 			m_secondaryIpComboBox.removeAllItems();
-			for (String ip: getService().getIpAddresses(node.getNodeLabel()) ) {
+			for (String ip: getService().getIpAddresses(TN,node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))
 					continue;
 				m_secondaryIpComboBox.addItem(ip);
 			}
 			
 			m_secondaryIpAddressTable.setContainerDataSource(node.getSecondary());
-			for (String snmpprofile: getService().getSnmpProfiles()) {
-				m_snmpComboBox.addItem(snmpprofile);
-			}
-			for (String backupprofile: getService().getBackupProfiles()) {
-				m_backupComboBox.addItem(backupprofile);
-			}
 
-			if (node.getUpdate()) {
+			if (node.getForeignId() != null) {
 				String snmpProfile=null;
-				if (node.getPrimary() != null)
+				if (node.getPrimary() != null) {
+					try {
 					snmpProfile = getService().getSnmpProfile(node.getPrimary());
+					} catch (SQLException sqle) {
+						
+					}
+				}
 				if (snmpProfile == null)
 					node.setValid(false);
-				node.updateSnmpProfile(snmpProfile);
+				node.setSnmpProfile(snmpProfile);
 			}
 			m_editorFields.setItemDataSource(node);
 			m_editRequisitionNodeLayout.setVisible(true);
@@ -735,6 +745,65 @@ public class TrentinoNetworkTab extends DashboardTab {
 			*/
 		}
 
+	}
+	
+	public void addSecondaryInterface(String foreignId,String ipaddress) {
+		RequisitionInterface ipsecondary = new RequisitionInterface();
+		ipsecondary.setIpAddr(ipaddress);
+		ipsecondary.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+		ipsecondary.setDescr("Provided by Provision Dashboard");
+		ipsecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		getService().add(TN,foreignId, ipsecondary);
+	}
+	
+	public void removeSecondaryInteface(String foreignId,String ipaddress) {
+		getService().deleteInterface(TN, foreignId, ipaddress);
+	}
+	
+	class SubdomainValidator implements Validator {
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 4896238666294939805L;
+
+		@Override
+		public void validate(Object value) throws InvalidValueException {
+			TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+			 if (hasUnSupportedDnsDomain(node.getHostname(), node.getNodeLabel(), TNDao.m_sub_domains))
+	             throw new InvalidValueException("There is no dns domain defined for: " + node.getHostname());
+	       }
+	}
+
+	
+	class DuplicatedNodelabelValidator implements Validator {
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5690578176254609879L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+	         if (getService().hasDuplicatedNodelabel(node.getNodeLabel()))
+	             throw new InvalidValueException("The node label exist: cannot duplicate node label: " + node.getNodeLabel());
+	       }
+	}
+	
+	class DnsNodelabelValidator implements Validator {
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3708035507162528130L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+	         if (node.getNodeLabel().length() > 253)
+	             throw new InvalidValueException("The node label is too long (more then 253 valid chars): " + node.getNodeLabel());
+	       }
 	}
 
 }

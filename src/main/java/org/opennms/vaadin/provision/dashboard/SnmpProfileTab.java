@@ -31,7 +31,7 @@ public class SnmpProfileTab extends DashboardTab {
 		if (loaded)
 			return;
 		try {
-			m_snmpProfilesTable = new Table("Profiles", getService().getSnmpProfileContainer());
+			m_snmpProfilesTable = new Table("Profiles", getService().getTnDao().getSnmpProfileContainer());
 		} catch (SQLException e) {
 			Notification.show("Snmp Profiles", "Load from db Failed", Type.WARNING_MESSAGE);
 			e.printStackTrace();

@@ -32,13 +32,12 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsIpInterfaceList;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
-import org.opennms.vaadin.provision.dashboard.DashBoardService;
+import org.opennms.vaadin.provision.model.TrentinoNetworkRequisitionNode;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
@@ -111,7 +110,7 @@ public class NodesServiceTest {
 		if (hostname.contains(".")) {
 			String hostlabel = hostname.substring(0,hostname.indexOf("."));
 			System.out.println(hostlabel);
-			for (String subdomain: DashBoardService.m_sub_domains ) {
+			for (String subdomain: TrentinoNetworkRequisitionNode.m_sub_domains ) {
 				if (nodelabel.equals(hostlabel+"."+subdomain))
 					System.out.println(hostlabel+"."+subdomain);
 			}
@@ -127,7 +126,7 @@ public class NodesServiceTest {
 		if (hostname.contains(".")) {
 			String hostlabel = hostname.substring(0,hostname.indexOf("."));
 			System.out.println(hostlabel);
-			for (String subdomain: DashBoardService.m_sub_domains ) {
+			for (String subdomain: TrentinoNetworkRequisitionNode.m_sub_domains ) {
 				if (nodelabel.equals(hostlabel+"."+subdomain))
 					System.out.println(hostlabel+"."+subdomain);
 			}

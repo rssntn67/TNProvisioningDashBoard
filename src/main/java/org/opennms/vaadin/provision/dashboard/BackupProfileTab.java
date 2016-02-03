@@ -31,14 +31,7 @@ public class BackupProfileTab extends DashboardTab {
 		if (loaded)
 			return;
 		try {
-			getService().loadBackupProfiles();
-		} catch (SQLException e) {
-			Notification.show("Backup Profile", "Load from db Failed", Type.WARNING_MESSAGE);
-			e.printStackTrace();
-			return;
-		}
-		try {
-			m_backupProfilesTable = new Table("Profiles", getService().getBackupProfileContainer());
+			m_backupProfilesTable = new Table("Profiles", getService().getTnDao().getBackupProfileContainer());
 		} catch (SQLException e) {
 			Notification.show("Backup Profiles", "Load from db Failed", Type.WARNING_MESSAGE);
 			e.printStackTrace();

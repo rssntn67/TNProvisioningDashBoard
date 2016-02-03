@@ -139,11 +139,11 @@ public class ProvisionRequisitionServiceTest {
     	RequisitionMonitoredService http = new RequisitionMonitoredService("HTTP");
     	m_requisitionservice.add("Home", "roberta", "10.10.10.1", http);
 
-    	m_requisitionservice.delete("Home", "roberta", "10.10.10.1", http);
-   	    m_requisitionservice.delete("Home", "rssntn67", iface3);
-   	    m_requisitionservice.delete("Home", "rssntn67", category);
-   	    m_requisitionservice.delete("Home", "rssntn67", asset);
-    	m_requisitionservice.delete("Home", node);
+    	m_requisitionservice.deleteService("Home", "roberta", "10.10.10.1", http);
+   	    m_requisitionservice.deleteInterface("Home", "rssntn67", iface3);
+   	    m_requisitionservice.deleteCategory("Home", "rssntn67", category);
+   	    m_requisitionservice.deleteAsset("Home", "rssntn67", asset);
+    	m_requisitionservice.deleteNode("Home", node);
     	m_requisitionservice.delete("Home");
     }
 }

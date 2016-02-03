@@ -55,9 +55,9 @@ public class LoginBox extends CustomComponent implements ClickListener {
     	m_login.addClickListener(this);
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
-    	for (String url: m_service.getUrls())
+    	for (String url: m_service.getConfig().getUrls())
     		m_select.addItem(url);
-    	m_select.select(m_service.getUrls()[0]);
+    	m_select.select(m_service.getConfig().getUrls()[0]);
     	m_username.focus();
     	m_login.setClickShortcut(KeyCode.ENTER);
 
@@ -109,14 +109,14 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			Notification.show("Login Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.destroy();
+			m_service.logout();
 			return;
 		} catch (ClientHandlerException che) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",che);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.destroy();
+			m_service.logout();
 			return;
 		} catch (UniformInterfaceException uie) {
 			if (uie.getResponse().getStatusInfo() == Status.UNAUTHORIZED)
@@ -128,14 +128,14 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			logger.log(Level.WARNING,"Login Failed for rest access",uie);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.destroy();
+			m_service.logout();
 			return;
 		} catch (Exception e) {
 			Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",e);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.destroy();
+			m_service.logout();
 			return;
 		}
 	    m_panel.setCaption("Logged in");

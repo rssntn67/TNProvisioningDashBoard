@@ -68,15 +68,15 @@ public interface ProvisionRequisitionService extends RestFilterService{
     
     public void deleteDeployed(String foreignSource);
     
-    public void delete(String foreignSource, RequisitionNode node);
+    public void deleteNode(String foreignSource, String foreignid);
     
-    public void delete(String foreignSource, String foreignid, RequisitionInterface inet);
+    public void deleteInterface(String foreignSource, String foreignid, String inet);
     
-    public void delete(String foreignSource, String foreignid, String inet, RequisitionMonitoredService service);
+    public void deleteService(String foreignSource, String foreignid, String inet, String service);
     
-    public void delete(String foreignSource, String foreignid, RequisitionCategory category);
+    public void deleteCategory(String foreignSource, String foreignid, String category);
     
-    public void delete(String foreignSource, String foreignid, RequisitionAsset assetfieldname);
+    public void deleteAsset(String foreignSource, String foreignid, RequisitionAsset assetfieldname);
     
     public void update(String foreignSource, String foreignid, MultivaluedMap<String, String> map);
 }
