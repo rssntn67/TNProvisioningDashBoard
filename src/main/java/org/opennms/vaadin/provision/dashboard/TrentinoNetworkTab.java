@@ -14,7 +14,7 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredServ
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
-import org.opennms.vaadin.provision.model.TrentinoNetworkRequisitionNode;
+import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -83,7 +83,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		@SuppressWarnings("unchecked")
 		public boolean passesFilter(Object itemId, Item item) {
-			TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)item).getBean();			
+			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();			
 			return (    node.getNodeLabel().contains(needle) 
 					&& ( needle1 == null || node.getNetworkCategory() == needle1 ) 
 					&& ( needle2 == null || node.getNotifCategory()   == needle2 )
@@ -119,7 +119,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
-	private BeanContainer<String, TrentinoNetworkRequisitionNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
+	private BeanContainer<String, TrentinoNetworkNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 	private boolean loaded=false;
 
 	private ComboBox m_networkCatSearchComboBox = new ComboBox("Select Network Category");
@@ -147,7 +147,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private VerticalLayout m_editRequisitionNodeLayout  = new VerticalLayout();
 	
-	private BeanFieldGroup<TrentinoNetworkRequisitionNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
+	private BeanFieldGroup<TrentinoNetworkNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkNode>(TrentinoNetworkNode.class);
 	Integer newHost = 0;
 	
 	public TrentinoNetworkTab(DashBoardService service) {
@@ -362,6 +362,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_hostname.addValidator(new DnsNodelabelValidator());
 		m_hostname.addValidator(new DuplicatedNodelabelValidator());
 		m_hostname.addValidator(new SubdomainValidator());
+		m_hostname.addValidator(new DuplicatedForeignIdValidator());
 		m_hostname.setImmediate(true);
 
 		m_networkCatComboBox.setInvalidAllowed(false);
@@ -375,7 +376,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+				TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 				if (node.getForeignId() == null) {
 					m_vrfsComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
 					m_notifCatComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
@@ -399,6 +400,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		TextField primary = new TextField(PRIMARY);
 		primary.setRequired(true);
 		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
+		primary.setImmediate(true);
+		primary.addValidator(new RegexpValidator(
+		"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$", 
+		"Deve essere inserito un valido indirizzo ip"));
+		primary.addValidator(new DuplicatedPrimaryValidator());
 
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(true);
@@ -456,7 +462,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void buttonClick(ClickEvent event) {
 				if (m_secondaryIpComboBox.getValue() != null) {
 					try {
-						TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+						TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 						if (node.getForeignId() != null) {
 							IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 							for (Object id: secondary.getItemIds()) {
@@ -587,7 +593,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				BeanItem<TrentinoNetworkRequisitionNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkRequisitionNode("notSavedHost"+newHost++));
+				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++));
 				m_networkCatSearchComboBox.select(null);
 				m_networkCatSearchComboBox.setValue(null);
 				m_notifCatSearchComboBox.select(null);
@@ -611,7 +617,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void buttonClick(ClickEvent event) {
 				try {
 					m_editorFields.commit();
-					getService().save(m_editorFields.getItemDataSource().getBean());
+					TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
+					if (node.getForeignId() == null) {
+						node.setForeignId(node.getHostname());
+						getService().save(TN,node);
+					} else {
+						getService().update(TN,node);
+					}
 					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
 					m_requisitionContainer.removeAllContainerFilters();
 					if (m_searchText == null)
@@ -643,7 +655,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
-				BeanItem<TrentinoNetworkRequisitionNode> node = m_editorFields.getItemDataSource();
+				BeanItem<TrentinoNetworkNode> node = m_editorFields.getItemDataSource();
 				logger.info("Deleting: " + node.getBean().getNodeLabel());
 				if (node.getBean().getForeignId() !=  null) {
 					try {
@@ -687,6 +699,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicatedForeignIds.toArray()));
 			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.WARNING_MESSAGE);
 		}
+
+		Set<String> duplicatedPrimaries= getService().checkUniquePrimary();
+		if (!duplicatedPrimaries.isEmpty()) {
+			logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
+			Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.WARNING_MESSAGE);
+		}
+
 		loaded=true;
 
 
@@ -697,7 +716,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		Object contactId = m_requisitionTable.getValue();
 
 		if (contactId != null) {
-			TrentinoNetworkRequisitionNode node = ((BeanItem<TrentinoNetworkRequisitionNode>)m_requisitionTable
+			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)m_requisitionTable
 				.getItem(contactId)).getBean();
 			
 			m_descrComboBox.removeAllItems();
@@ -734,15 +753,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_saveNodeButton.setEnabled(true);
 			m_removeNodeButton.setEnabled(true);
 			m_resetNodeButton.setEnabled(true);
-			/*
+			
 			if (node.getDescr().contains("FAST")) {
 				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
 				Notification.show("provided by FAST", "le modifiche ai nodi aggiunti da FAST non sono abilitate", Type.WARNING_MESSAGE);
-			} else {
-			}
-			*/
+			} 
+			
+			
 		}
 
 	}
@@ -769,9 +788,24 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		@Override
 		public void validate(Object value) throws InvalidValueException {
-			TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 			 if (hasUnSupportedDnsDomain(node.getHostname(), node.getNodeLabel(), TNDao.m_sub_domains))
 	             throw new InvalidValueException("There is no dns domain defined for: " + node.getHostname());
+	       }
+	}
+
+	class DuplicatedForeignIdValidator implements Validator {
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5690578176254609879L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
+	         if (node.getForeignId() == null  && getService().hasDuplicatedForeignId((node.getHostname())))
+	             throw new InvalidValueException("The hostname exists: cannot duplicate hostname: " + node.getHostname());
 	       }
 	}
 
@@ -785,7 +819,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
-			TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 	         if (getService().hasDuplicatedNodelabel(node.getNodeLabel()))
 	             throw new InvalidValueException("The node label exist: cannot duplicate node label: " + node.getNodeLabel());
 	       }
@@ -800,10 +834,26 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
-			TrentinoNetworkRequisitionNode node = m_editorFields.getItemDataSource().getBean();
+			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 	         if (node.getNodeLabel().length() > 253)
 	             throw new InvalidValueException("The node label is too long (more then 253 valid chars): " + node.getNodeLabel());
 	       }
 	}
+	
+	class DuplicatedPrimaryValidator implements Validator {
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5690578176254609879L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
+	         if (getService().hasDuplicatedPrimary((node.getPrimary())))
+	             throw new InvalidValueException("The node label exist: cannot duplicate primary ip: " + node.getPrimary());
+	       }
+	}
+
 
 }

@@ -7,12 +7,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.dashboard.ProvisionDashboardValidationException;
@@ -21,52 +16,48 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
 
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Label;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9LabelSize;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Size;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
-
-
-public class TrentinoNetworkRequisitionNode implements Serializable {
+public class TrentinoNetworkNode implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3824402168422477329L;
 	
-	MultivaluedMap<String, String> m_updatemap = new MultivaluedMapImpl();
-    List<RequisitionAsset> m_assetsToPut = new ArrayList<RequisitionAsset>();
+	private MultivaluedMap<String, String> m_updatemap = new MultivaluedMapImpl();
+	private List<RequisitionAsset> m_assetsToPut = new ArrayList<RequisitionAsset>();
 
-    List<RequisitionCategory> m_categoriesToAdd = new ArrayList<RequisitionCategory>();
-    List<RequisitionCategory> m_categoriesToDel = new ArrayList<RequisitionCategory>();
+	private List<String> m_categoriesToAdd = new ArrayList<String>();
+	private List<String> m_categoriesToDel = new ArrayList<String>();
     
-    List<RequisitionInterface> m_interfToAdd = new ArrayList<RequisitionInterface>();
-    List<RequisitionInterface> m_interfToDel = new ArrayList<RequisitionInterface>();
+	private List<String> m_interfToAdd = new ArrayList<String>();
+	private List<String> m_interfToDel = new ArrayList<String>();
 
-    protected String m_descr;
-	protected String m_hostname;
-	protected String m_vrf;
-	protected String m_primary;
-	protected IndexedContainer m_secondary = new IndexedContainer();
+	private String m_descr;
+	private String m_hostname;
+	private String m_vrf;
+	private String m_primary;
+	private IndexedContainer m_secondary = new IndexedContainer();
 
-	protected String m_parent;
-	protected String m_parentId;
+	private String m_parent;
+	private String m_parentId;
 
-	protected String[] m_networkCategory;
-	protected String m_notifCategory;
-	protected String m_threshCategory;
+	private String[] m_networkCategory;
+	private String m_notifCategory;
+	private String m_threshCategory;
 
-	protected String m_snmpProfile;
-	protected String m_backupProfile;
-
-	protected String m_city;
-	protected String m_address1;
+	private String m_snmpProfile;
+	private String m_backupProfile;
+	private boolean m_snmpProfileUpdated=false;
+	private boolean m_backupProfileUpdated=false;
 	
-	protected String m_foreignId;
+	private String m_city;
+	private String m_address1;
+	
+	private String m_foreignId;
 	
 	protected boolean m_valid = true;
 	
-	public TrentinoNetworkRequisitionNode(String label) {
+	public TrentinoNetworkNode(String label) {
 		m_hostname="";
 		
 		m_primary="0.0.0.0";
@@ -87,92 +78,38 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		m_valid=false;
 	}
 
-	@SuppressWarnings("unchecked")
-	public TrentinoNetworkRequisitionNode(RequisitionNode requisitionNode, String parent) {
-		m_foreignId = requisitionNode.getForeignId();
-		if (m_foreignId == null)
-			m_valid = false;
-		String nodelabel = requisitionNode.getNodeLabel();
-		if (nodelabel == null)
-			m_valid=false;
-
-		m_parentId = requisitionNode.getParentForeignId();
-		m_parent=parent;
-		
-		for (String vrf: TNDao.m_vrfs) {
-			if (requisitionNode.getNodeLabel().endsWith("."+vrf)) {
-				m_vrf = vrf;
-				m_hostname = requisitionNode.getNodeLabel().substring(0,requisitionNode.getNodeLabel().indexOf(vrf)-1);
-				break;
-			}
-		}
-
-		if (m_vrf == null || m_hostname == null)
-			m_valid = false;
-		
-		m_secondary.addContainerProperty("indirizzo ip", String.class, null);
-		for (RequisitionInterface ip: requisitionNode.getInterfaces()) {
-			if (ip.getSnmpPrimary() == null)
-				m_valid=false;
-			if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
-				m_primary = ip.getIpAddr();
-				m_descr = ip.getDescr();
-			} else {
-				Item ipItem = m_secondary.getItem(m_secondary.addItem());
-				ipItem.getItemProperty("indirizzo ip").setValue(ip.getIpAddr()); 
-			}
-		}
-		
-		if (m_primary == null)
-			m_valid = false;
-		
-		for (String[] networkCategory: TNDao.m_network_categories) {
-			if (requisitionNode.getCategory(networkCategory[0]) != null && requisitionNode.getCategory(networkCategory[1]) != null) {
-				m_networkCategory = networkCategory;
-				break;
-			}
-		}
-		if (m_networkCategory == null)
-			m_valid = false;
-
-		for (String notifCategory: TNDao.m_notif_categories) {
-			if (requisitionNode.getCategory(notifCategory) != null ) {
-				m_notifCategory = notifCategory;
-				break;
-			}
-		}
-		if (m_notifCategory == null)
-			m_valid = false;
-		
-		for (String threshCategory: TNDao.m_thresh_categories) {
-			if (requisitionNode.getCategory(threshCategory) != null ) {
-				m_threshCategory = threshCategory;
-				break;
-			}
-		}
-		if (m_threshCategory == null)
-			m_valid = false;
-		
-		if (requisitionNode.getCity() != null)
-			m_city = requisitionNode.getCity();
-		else
-			m_valid = false;
-		
-		if (requisitionNode.getAsset(OnmsDao.ADDRESS) != null)
-			m_address1 = requisitionNode.getAsset(OnmsDao.ADDRESS).getValue();
-		else
-			m_valid = false;
-		
-		if (hasInvalidDnsBind9Size(nodelabel))
-			m_valid = false;
-		if (hasInvalidDnsBind9LabelSize(nodelabel))
-			m_valid = false;
-		if (hasInvalidDnsBind9Label(nodelabel))
-			m_valid = false;
-		if (m_hostname != null && hasUnSupportedDnsDomain(m_hostname,nodelabel,TNDao.m_sub_domains))
-			m_valid = false;		
-	}
 	
+	@SuppressWarnings("unchecked")
+	public TrentinoNetworkNode(String descr, String hostname,
+			String vrf, String primary, String parent, String parentId,
+			String[] networkCategory, String notifCategory,
+			String threshCategory, String snmpProfile, String backupProfile,
+			String city, String address1, String foreignId, boolean valid, String[] secondary) {
+		super();
+		m_descr = descr;
+		m_hostname = hostname;
+		m_vrf = vrf;
+		m_primary = primary;
+		m_parent = parent;
+		m_parentId = parentId;
+		m_networkCategory = networkCategory;
+		m_notifCategory = notifCategory;
+		m_threshCategory = threshCategory;
+		m_snmpProfile = snmpProfile;
+		m_backupProfile = backupProfile;
+		m_city = city;
+		m_address1 = address1;
+		m_foreignId = foreignId;
+		m_valid = valid;
+		m_secondary.addContainerProperty("indirizzo ip", String.class, null);
+		for (String ip: secondary) {
+			Item ipItem = m_secondary.getItem(m_secondary.addItem());
+			ipItem.getItemProperty("indirizzo ip").setValue(ip); 
+		}
+
+	}
+
+
 	public String getForeignId() {
 		return m_foreignId;
 	}
@@ -185,19 +122,19 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		return m_assetsToPut;
 	}
 
-	public List<RequisitionCategory> getCategoriesToAdd() {
+	public List<String> getCategoriesToAdd() {
 		return m_categoriesToAdd;
 	}
 
-	public List<RequisitionCategory> getCategoriesToDel() {
+	public List<String> getCategoriesToDel() {
 		return m_categoriesToDel;
 	}
 
-	public List<RequisitionInterface> getInterfToAdd() {
+	public List<String> getInterfToAdd() {
 		return m_interfToAdd;
 	}
 
-	public List<RequisitionInterface> getInterfToDel() {
+	public List<String> getInterfToDel() {
 		return m_interfToDel;
 	}
 
@@ -250,13 +187,13 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		if (networkCategory != null && Arrays.equals(m_networkCategory,networkCategory))
 			return;
 		if (m_networkCategory != null) {
-			m_categoriesToDel.add(new RequisitionCategory(m_networkCategory[0]));
-			m_categoriesToDel.add(new RequisitionCategory(m_networkCategory[1]));
+			m_categoriesToDel.add(m_networkCategory[0]);
+			m_categoriesToDel.add(m_networkCategory[1]);
 		}
 		
 		if (networkCategory != null) {
-			m_categoriesToAdd.add(new RequisitionCategory(networkCategory[0]));
-			m_categoriesToAdd.add(new RequisitionCategory(networkCategory[1]));
+			m_categoriesToAdd.add(networkCategory[0]);
+			m_categoriesToAdd.add(networkCategory[1]);
 		}
 		m_networkCategory = networkCategory;
 	}
@@ -269,10 +206,10 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		if (notifCategory != null && notifCategory.equals(m_notifCategory))
 			return;
 		if (m_notifCategory != null) {
-			m_categoriesToDel.add(new RequisitionCategory(m_notifCategory));
+			m_categoriesToDel.add(m_notifCategory);
 		}
 		if (notifCategory != null) { 
-			m_categoriesToAdd.add(new RequisitionCategory(notifCategory));
+			m_categoriesToAdd.add(notifCategory);
 		}
 		m_notifCategory = notifCategory;
 	}
@@ -285,10 +222,10 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		if (threshCategory != null && threshCategory.equals(m_threshCategory))
 			return;
 		if (m_threshCategory != null) {
-			m_categoriesToDel.add(new RequisitionCategory(m_threshCategory));
+			m_categoriesToDel.add(m_threshCategory);
 		}
 		if (threshCategory != null) {
-			m_categoriesToAdd.add(new RequisitionCategory(threshCategory));
+			m_categoriesToAdd.add(threshCategory);
 		}		
 		m_threshCategory = threshCategory;
 	}
@@ -325,6 +262,7 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 			m_valid = false;
 		if (m_snmpProfile != null && m_snmpProfile.equals(snmpProfile))
 			return;
+		m_snmpProfileUpdated = true;
 		m_snmpProfile = snmpProfile;
 	}
 	
@@ -337,6 +275,7 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 			m_valid=false;
 		if (m_backupProfile != null && m_backupProfile.equals(backupProfile))
 			return;
+		m_backupProfileUpdated=true;
 		m_backupProfile = backupProfile;
 	}
 
@@ -373,21 +312,11 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		if (m_primary != null && m_primary.equals(primary))
 			return;
 		if (m_primary != null) {
-			RequisitionInterface iface = new RequisitionInterface();
-			iface.setIpAddr(m_primary);
-			m_interfToDel.add(iface);
+			m_interfToDel.add(m_primary);
 		}
 
 		if (primary != null) {
-			RequisitionInterface iface = new RequisitionInterface();
-			iface.setSnmpPrimary(org.opennms.netmgt.model.PrimaryType.PRIMARY);
-			iface.setIpAddr(primary);
-			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-			iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
-			iface.setDescr("Provided by Provision Dashboard");
-			setDescr(iface.getDescr());
-			
-			m_interfToAdd.add(iface);
+			m_interfToAdd.add(primary);
 		}
 		m_primary = primary;
 	}
@@ -407,5 +336,22 @@ public class TrentinoNetworkRequisitionNode implements Serializable {
 		m_assetsToPut.clear();
 		m_categoriesToDel.clear();
 		m_categoriesToAdd.clear();
+	}
+
+	public boolean isSnmpProfileUpdated() {
+		return m_snmpProfileUpdated;
+	}
+
+	public boolean isBackupProfileUpdated() {
+		return m_backupProfileUpdated;
+	}
+
+	public MultivaluedMap<String, String> getUpdatemap() {
+		return m_updatemap;
+	}
+
+
+	public void setForeignId(String foreignId) {
+		m_foreignId = foreignId;
 	}
 }

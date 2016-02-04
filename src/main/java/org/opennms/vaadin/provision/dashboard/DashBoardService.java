@@ -1,5 +1,10 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Label;
+import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9LabelSize;
+import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Size;
+import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,7 +18,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.model.PrimaryType;
@@ -28,9 +32,9 @@ import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.TNDao;
+import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
-import org.opennms.vaadin.provision.model.TrentinoNetworkRequisitionNode;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -48,8 +52,6 @@ public class DashBoardService implements Serializable {
 	private static final long serialVersionUID = 508580392774265535L;
 	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());	
 			
-//	private String m_username;
-//	private String m_url;
 	private Map<String,String> m_foreignIdNodeLabelMap;
 	private Map<String,String> m_nodeLabelForeignIdMap;
 	private Collection<String> m_primaryipcollection;
@@ -101,8 +103,8 @@ public class DashBoardService implements Serializable {
 		logger.info("connected to database: " + m_config.getDbUrl());
 	}
 
-	public BeanContainer<String, TrentinoNetworkRequisitionNode> getRequisitionContainer(String label, String foreignSource,Map<String, BackupProfile> backupprofilemap) {
-		BeanContainer<String, TrentinoNetworkRequisitionNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkRequisitionNode>(TrentinoNetworkRequisitionNode.class);
+	public BeanContainer<String, TrentinoNetworkNode> getRequisitionContainer(String label, String foreignSource,Map<String, BackupProfile> backupprofilemap) {
+		BeanContainer<String, TrentinoNetworkNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 		m_foreignIdNodeLabelMap = new HashMap<String, String>();
 		m_nodeLabelForeignIdMap = new HashMap<String, String>();
 		m_primaryipcollection = new ArrayList<String>();
@@ -114,8 +116,105 @@ public class DashBoardService implements Serializable {
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
 		}
 		for (RequisitionNode node : req.getNodes()) {
-			TrentinoNetworkRequisitionNode tnnode = new TrentinoNetworkRequisitionNode(node,m_foreignIdNodeLabelMap.get(node.getParentForeignId()));
-			tnnode.setBackupProfile(DashBoardUtils.getBackupProfile(node, backupprofilemap));
+			boolean valid = true;
+			String foreignId = node.getForeignId();
+			if (foreignId == null)
+				valid = false;
+			String nodelabel = node.getNodeLabel();
+			if (nodelabel == null)
+				valid=false;
+
+			String parentId = node.getParentForeignId();
+			String vrf = null;
+			String hostname = null;
+			for (String tnvrf: TNDao.m_vrfs) {
+				if (node.getNodeLabel().endsWith("."+tnvrf)) {
+					vrf = tnvrf;
+					hostname = node.getNodeLabel().substring(0,node.getNodeLabel().indexOf(vrf)-1);
+					break;
+				}
+			}
+
+			if (vrf == null || hostname == null)
+				valid = false;
+			
+			String primary = null;
+			String descr = null;
+			int i =0;
+			List<String> secondary = new ArrayList<String>();
+			for (RequisitionInterface ip: node.getInterfaces()) {
+				if (ip.getSnmpPrimary() == null)
+					valid=false;
+				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
+					primary = ip.getIpAddr();
+					descr = ip.getDescr();
+				} else {
+					secondary.add(ip.getIpAddr());
+				}
+			}
+			
+			if (primary == null)
+				valid = false;
+			
+			String[] networkCategory = null;
+			for (String[] ncat: TNDao.m_network_categories) {
+				if (node.getCategory(ncat[0]) != null && node.getCategory(ncat[1]) != null) {
+					networkCategory = ncat;
+					break;
+				}
+			}
+			if (networkCategory == null)
+				valid = false;
+
+			String notifCategory=null;
+			for (String fcat: TNDao.m_notif_categories) {
+				if (node.getCategory(fcat) != null ) {
+					notifCategory = fcat;
+					break;
+				}
+			}
+			if (notifCategory == null)
+				valid = false;
+			
+			String threshCategory = null;
+			for (String tcat: TNDao.m_thresh_categories) {
+				if (node.getCategory(tcat) != null ) {
+					threshCategory = tcat;
+					break;
+				}
+			}
+			if (threshCategory == null)
+				valid = false;
+			
+			String city = null;
+			if (node.getCity() != null)
+				city = node.getCity();
+			else
+				valid = false;
+			
+			String address1 = null;
+			if (node.getAsset(OnmsDao.ADDRESS) != null)
+				address1 = node.getAsset(OnmsDao.ADDRESS).getValue();
+			else
+				valid = false;
+			
+			if (hasInvalidDnsBind9Size(nodelabel))
+				valid = false;
+			if (hasInvalidDnsBind9LabelSize(nodelabel))
+				valid = false;
+			if (hasInvalidDnsBind9Label(nodelabel))
+				valid = false;
+			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,TNDao.m_sub_domains))
+				valid = false;		
+			
+			String parent = null;
+			if (node.getParentForeignId() != null)
+				parent =m_foreignIdNodeLabelMap.get(node.getParentForeignId());
+			
+			String snmpProfile =  null;
+			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(descr, hostname, vrf, primary, 
+					parent, parentId, networkCategory, notifCategory, threshCategory, snmpProfile, 
+					DashBoardUtils.getBackupProfile(node, backupprofilemap), city, address1, foreignId, valid, secondary.toArray(new String[secondary.size()]));
 			requisitionContainer.addBean(tnnode);
 			m_primaryipcollection.add(tnnode.getPrimary());
 		}
@@ -173,7 +272,7 @@ public class DashBoardService implements Serializable {
 		
 	}
 	
-	public void deleteNode(String foreignSource,TrentinoNetworkRequisitionNode tnnode) {
+	public void deleteNode(String foreignSource,TrentinoNetworkNode tnnode) {
 		logger.info("Deleting node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
 		m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		for (RequisitionInterface iface: m_onmsDao.getRequisitionNode(foreignSource, tnnode.getForeignId()).getInterfaces())
@@ -194,7 +293,7 @@ public class DashBoardService implements Serializable {
 		logger.info("Deleting interface" + ipaddr+" with foreignId: " + foreignId );
 		m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ipaddr);
 	}
-
+	
 	public Collection<String> getNodeLabels() {
 		return m_foreignIdNodeLabelMap.values();
 	}
@@ -247,6 +346,19 @@ public class DashBoardService implements Serializable {
 		return duplicated;
 	}
 
+	public Set<String> checkUniquePrimary() {
+		Set<String> primaries = new HashSet<String>();
+		Set<String> duplicated = new HashSet<String>();
+		for (String ip: getPrimaryIpCollection()) {
+			if (primaries.contains(ip)) {
+				duplicated.add(ip);
+			} else {
+				primaries.add(ip);
+			}
+		}
+		return duplicated;
+	}
+
 	public boolean hasDuplicatedPrimary(String primary) {
 		return m_primaryipcollection.contains(primary);
 	}
@@ -267,18 +379,17 @@ public class DashBoardService implements Serializable {
 		return false;
 	}
 
-	public RequisitionNode getRequisitionNode(TrentinoNetworkRequisitionNode node) throws SQLException {
+	public void save(String foreignSource, TrentinoNetworkNode node) throws SQLException {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
-		if (node.getForeignId() != null)
-			requisitionNode.setForeignId(node.getForeignId());
-		else 
-			requisitionNode.setForeignId(node.getHostname());
+		requisitionNode.setForeignId(node.getForeignId());
 		
 		requisitionNode.setNodeLabel(node.getNodeLabel());
+		
 		if (node.getParent() != null) {
 			requisitionNode.setParentForeignId(m_nodeLabelForeignIdMap.get(node.getParent()));
 		}
+		
 		requisitionNode.setCity(node.getCity());
 		
 		RequisitionInterface iface = new RequisitionInterface();
@@ -297,61 +408,70 @@ public class DashBoardService implements Serializable {
 		
 		if (node.getNotifCategory() != null)
 			requisitionNode.putCategory(new RequisitionCategory(node.getNotifCategory()));
+		
 		if (node.getThreshCategory() != null)
 			requisitionNode.putCategory(new RequisitionCategory(node.getThreshCategory()));
 		
 		if (node.getCity() != null && node.getAddress1() != null)
 			requisitionNode.putAsset(new RequisitionAsset(OnmsDao.DESCRIPTION, node.getCity() + " - " + node.getAddress1()));
+		
 		if (node.getAddress1()  != null)
 			requisitionNode.putAsset(new RequisitionAsset(OnmsDao.ADDRESS, node.getAddress1() ));
 		
-		for ( RequisitionAsset backupProfileItem : m_tnDao.getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
-			requisitionNode.putAsset(backupProfileItem);
+		for ( RequisitionAsset asset : m_tnDao.getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
+			requisitionNode.putAsset(asset);
 		}
-		return requisitionNode;
+		m_onmsDao.addRequisitionNode(foreignSource, requisitionNode);
+		m_onmsDao.addOrReplacePolicy(foreignSource, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
+
 	}
 
 	
 	
-	public void save(TrentinoNetworkRequisitionNode node) throws ProvisionDashboardValidationException {
-		InetAddressUtils.getInetAddress(node.getPrimary());
-		/*
-		if (updatenodeLabel && vrf != null && hostname != null)
-			updateNodeLabel();
+	public void update(String foreignSource, TrentinoNetworkNode node) throws ProvisionDashboardValidationException, SQLException {
 		
-		if (updatesnmpprofile && snmpProfile != null && primary != null )
-			m_service.setSnmpInfo(primary, snmpProfile);
+		if (node.isSnmpProfileUpdated()  && node.getSnmpProfile() != null && node.getPrimary() != null )
+			m_onmsDao.setSnmpInfo(node.getPrimary(), m_tnDao.getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		
-		if (!update) {
-			if (m_service.hasDuplicatedForeignId(hostname))
-							throw new ProvisionDashboardValidationException("The foreign id exist: cannot duplicate foreignId: " + hostname);
-			if (m_service.hasDuplicatedPrimary(primary))
-				throw new ProvisionDashboardValidationException("The primary ip exist: cannot duplicate primary: " + primary);
-			m_service.add(getRequisitionNode(),primary);
-			valid = true;
-			update=true;
-		} else {
-			if (!m_updatemap.isEmpty())
-				m_service.update(foreignId, m_updatemap);
-			for (RequisitionInterface riface: m_interfToDel) {
-				m_service.deleteNode(foreignId, riface);
-			}
-			for (RequisitionInterface riface: m_interfToAdd) {
-				m_service.add(foreignId, riface);
-			}
-			for (RequisitionAsset asset: m_assetsToPut) {
-				m_service.add(foreignId, asset);
-			}
-			for (RequisitionCategory category: m_categoriesToDel) {
-				m_service.deleteNode(foreignId, category);
-			}
-			for (RequisitionCategory category: m_categoriesToAdd) {
-				m_service.add(foreignId, category);
+		if (!node.getUpdatemap().isEmpty())
+			m_onmsDao.updateRequisitionNode(foreignSource, node.getForeignId(), node.getUpdatemap());
+
+		for (String ip: node.getInterfToDel()) {
+			m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(ip));
+			m_onmsDao.deleteRequisitionInterface(foreignSource, node.getForeignId(), ip);
+		}
+		
+		for (String ip: node.getInterfToAdd()) {
+			RequisitionInterface iface = new RequisitionInterface();
+			iface.setIpAddr(ip);
+			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+			iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
+			iface.setDescr(node.getDescr());
+			if (node.getPrimary().equals(ip))
+				iface.setSnmpPrimary(PrimaryType.PRIMARY);
+			else
+				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+			m_onmsDao.addRequisitionInterface(foreignSource, node.getForeignId(), iface);
+			m_onmsDao.addOrReplacePolicy(foreignSource, DashBoardUtils.getPolicyWrapper(ip));
+		}
+		
+		for (RequisitionAsset asset: node.getAssetsToPut()) {
+			m_onmsDao.addRequisitionAsset(foreignSource, node.getForeignId(), asset);
+		}
+		
+		for (String category: node.getCategoriesToDel()) {
+			m_onmsDao.deleteRequisitionCategory(foreignSource, node.getForeignId(), category);
+		}
+		
+		for (String category: node.getCategoriesToAdd()) {
+			m_onmsDao.addRequisitionCategory(foreignSource, node.getForeignId(), new RequisitionCategory(category));
+		}
+		
+		if (node.isBackupProfileUpdated() && node.getBackupProfile() != null ) {
+			for ( RequisitionAsset asset : m_tnDao.getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
+				m_onmsDao.addRequisitionAsset(foreignSource, node.getForeignId(), asset);;
 			}
 		}
 
-		updatenodeLabel = false;
-		updatesnmpprofile = false;
-		*/
 	}
 }
