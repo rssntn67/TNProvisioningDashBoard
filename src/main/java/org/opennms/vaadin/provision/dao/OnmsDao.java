@@ -1,10 +1,8 @@
 package org.opennms.vaadin.provision.dao;
 
-import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsIpInterfaceList;
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
@@ -21,10 +19,6 @@ import org.opennms.rest.client.JerseySnmpInfoService;
 import org.opennms.web.svclayer.model.SnmpInfo;
 
 public class OnmsDao {
-
-	public static final String CITY    = "city";
-	public static final String DESCRIPTION = "description";
-	public static final String ADDRESS = "address1";
 
 	private JerseyClientImpl m_jerseyClient;
     
@@ -57,7 +51,7 @@ public class OnmsDao {
 	}
 
 	public RequisitionNode getRequisitionNode(String foreignSource, String foreignId) {
-		return m_provisionService.getNode(foreignSource,foreignId);
+		return m_provisionService.getNode(foreignId,foreignSource);
 	}
 
 	public void createRequisition(String foreignSource) {

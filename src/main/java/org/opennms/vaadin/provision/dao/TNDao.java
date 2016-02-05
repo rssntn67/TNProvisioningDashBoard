@@ -191,16 +191,8 @@ public class TNDao {
 		return snmpProfiles;
 	}
 	
-	@SuppressWarnings({ "deprecation", "unchecked" })
 	public SnmpProfile getSnmpProfile(String name) throws SQLException {
-		
-    	List<String> primarykeys = new ArrayList<String>();
-    	primarykeys.add("name");
-		SQLContainer snmpProfileTable = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
-		Item snmpprofiletableRow = snmpProfileTable.getItem(snmpProfileTable.firstItemId());
-		return	new SnmpProfile(snmpprofiletableRow.getItemProperty("name"),snmpprofiletableRow.getItemProperty("community"), 
-							snmpprofiletableRow.getItemProperty("version"), 
-							snmpprofiletableRow.getItemProperty("timeout"));
+		return getSnmpProfiles().get(name);
 	}
 	
 	
@@ -223,18 +215,8 @@ public class TNDao {
 		return backupProfiles;
 	}
 
-	@SuppressWarnings({ "deprecation", "unchecked" })
 	public BackupProfile getBackupProfile(String name) throws SQLException {
-    	List<String> primarykeys = new ArrayList<String>();
-    	primarykeys.add("name");
-    	SQLContainer backupProfileTable = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles where name = '+name"+"'", primarykeys,m_pool));
-    	Item backupprofiletableRow =backupProfileTable.getItem(backupProfileTable.firstItemId());
-		return	new BackupProfile(backupprofiletableRow.getItemProperty("name"),backupprofiletableRow.getItemProperty("username"), 
-							backupprofiletableRow.getItemProperty("password"), 
-							backupprofiletableRow.getItemProperty("enable"),
-							backupprofiletableRow.getItemProperty("connection"), 
-							backupprofiletableRow.getItemProperty("auto_enable")
-							);
+    	return getBackupProfiles().get(name);
 	}
 
 	@SuppressWarnings("deprecation")

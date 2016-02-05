@@ -21,6 +21,8 @@ public class SnmpProfile {
 		info.setReadCommunity(this.community);
 		info.setVersion(this.version);
 		info.setTimeout(this.timeout);
+		info.setPort(161);
+		info.setRetries(1);
 	}
 
 	public String getName() {

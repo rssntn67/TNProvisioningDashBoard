@@ -3,18 +3,12 @@ package org.opennms.vaadin.provision.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
-import org.opennms.vaadin.provision.dao.OnmsDao;
-import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.dashboard.ProvisionDashboardValidationException;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.vaadin.data.Item;
-import com.vaadin.data.util.IndexedContainer;
+import org.opennms.vaadin.provision.dashboard.TrentinoNetworkTab;
 
 public class TrentinoNetworkNode implements Serializable {
 
@@ -23,8 +17,7 @@ public class TrentinoNetworkNode implements Serializable {
 	 */
 	private static final long serialVersionUID = 3824402168422477329L;
 	
-	private MultivaluedMap<String, String> m_updatemap = new MultivaluedMapImpl();
-	private List<RequisitionAsset> m_assetsToPut = new ArrayList<RequisitionAsset>();
+	private Set<String> m_updatemap = new HashSet<String>();
 
 	private List<String> m_categoriesToAdd = new ArrayList<String>();
 	private List<String> m_categoriesToDel = new ArrayList<String>();
@@ -32,14 +25,14 @@ public class TrentinoNetworkNode implements Serializable {
 	private List<String> m_interfToAdd = new ArrayList<String>();
 	private List<String> m_interfToDel = new ArrayList<String>();
 
+	private String m_label;
 	private String m_descr;
 	private String m_hostname;
 	private String m_vrf;
 	private String m_primary;
-	private IndexedContainer m_secondary = new IndexedContainer();
 
+	private String[] m_secondary;
 	private String m_parent;
-	private String m_parentId;
 
 	private String[] m_networkCategory;
 	private String m_notifCategory;
@@ -47,8 +40,6 @@ public class TrentinoNetworkNode implements Serializable {
 
 	private String m_snmpProfile;
 	private String m_backupProfile;
-	private boolean m_snmpProfileUpdated=false;
-	private boolean m_backupProfileUpdated=false;
 	
 	private String m_city;
 	private String m_address1;
@@ -57,7 +48,9 @@ public class TrentinoNetworkNode implements Serializable {
 	
 	protected boolean m_valid = true;
 	
-	public TrentinoNetworkNode(String label) {
+	public TrentinoNetworkNode(String label, String[] networkCategory,String vrf, String notifCategory,
+			String threshCategory, String backupProfile, String snmpProfile) {
+		m_label = label;
 		m_hostname="";
 		
 		m_primary="0.0.0.0";
@@ -65,33 +58,40 @@ public class TrentinoNetworkNode implements Serializable {
 		m_city="";
 		m_address1="";
 
-		m_networkCategory = TNDao.m_network_categories[0]; 
-		m_vrf = TNDao.m_network_categories[0][2];
-		m_notifCategory = TNDao.m_network_categories[0][3];
-		m_threshCategory = TNDao.m_network_categories[0][4];
-		m_backupProfile = TNDao.m_network_categories[0][5];
-		m_snmpProfile = TNDao.m_network_categories[0][6];
+		m_networkCategory = networkCategory; 
+		m_vrf = vrf;
+		m_notifCategory = notifCategory;
+		m_threshCategory = threshCategory;
+		m_backupProfile = backupProfile;
+		m_snmpProfile = snmpProfile;
 						
 		m_descr="Imported from Provision Dashboard";
-		m_secondary.addContainerProperty("indirizzo ip", String.class, null);
 		
 		m_valid=false;
 	}
-
 	
-	@SuppressWarnings("unchecked")
-	public TrentinoNetworkNode(String descr, String hostname,
-			String vrf, String primary, String parent, String parentId,
-			String[] networkCategory, String notifCategory,
-			String threshCategory, String snmpProfile, String backupProfile,
-			String city, String address1, String foreignId, boolean valid, String[] secondary) {
+	public TrentinoNetworkNode(
+			String descr, 
+			String hostname,
+			String vrf, 
+			String primary, 
+			String parent,
+			String[] networkCategory, 
+			String notifCategory,
+			String threshCategory, 
+			String snmpProfile, 
+			String backupProfile,
+			String city, 
+			String address1, 
+			String foreignId, 
+			boolean valid, 
+			String[] secondary) {
 		super();
 		m_descr = descr;
 		m_hostname = hostname;
 		m_vrf = vrf;
 		m_primary = primary;
 		m_parent = parent;
-		m_parentId = parentId;
 		m_networkCategory = networkCategory;
 		m_notifCategory = notifCategory;
 		m_threshCategory = threshCategory;
@@ -101,11 +101,7 @@ public class TrentinoNetworkNode implements Serializable {
 		m_address1 = address1;
 		m_foreignId = foreignId;
 		m_valid = valid;
-		m_secondary.addContainerProperty("indirizzo ip", String.class, null);
-		for (String ip: secondary) {
-			Item ipItem = m_secondary.getItem(m_secondary.addItem());
-			ipItem.getItemProperty("indirizzo ip").setValue(ip); 
-		}
+		m_label = null;
 
 	}
 
@@ -115,11 +111,9 @@ public class TrentinoNetworkNode implements Serializable {
 	}
 
 	public String getNodeLabel() {
-		return m_hostname.toLowerCase() + "." + m_vrf;		
-	}
-
-	public List<RequisitionAsset> getAssetsToPut() {
-		return m_assetsToPut;
+		if (m_label == null)
+			return m_hostname.toLowerCase() + "." + m_vrf;
+		return m_label;
 	}
 
 	public List<String> getCategoriesToAdd() {
@@ -148,21 +142,9 @@ public class TrentinoNetworkNode implements Serializable {
 		if (m_parent == null && parentNodeLabel == null) 
 			return;		
 		m_parent = parentNodeLabel;
+		m_updatemap.add(TrentinoNetworkTab.PARENT);
 	}
 	
-	public String getParentId() {
-		return m_parentId;
-	}
-
-	public void setParentId(String parentId) {
-		if (m_parentId != null && m_parent.equals(parentId))
-			return;
-		if (m_parentId == null && parentId == null) 
-			return;
-		m_updatemap.add("parent-foreign-id", parentId);
-		m_parentId = parentId;
-	}
-
 	public String getCity() {
 		return m_city;
 	}
@@ -170,13 +152,9 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setCity(String city) {
 		if (m_city != null && m_city.equals(city))
 			return;
-		RequisitionAsset assetdescription = new RequisitionAsset(OnmsDao.DESCRIPTION, city + " - " + m_address1);
-		if (city != null) {
-			m_updatemap.add(OnmsDao.CITY, city);
-			m_assetsToPut.add(assetdescription);
-		}
-		m_city = city;
-		
+		if (city != null)
+			m_updatemap.add(TrentinoNetworkTab.CITY);
+		m_city = city;		
 	}
 
 	public String[] getNetworkCategory() {
@@ -237,9 +215,8 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setVrf(String vrf) throws ProvisionDashboardValidationException {
 		if (m_vrf != null && m_vrf.equals(vrf))
 			return;
-		String nodelabel=m_hostname.toLowerCase() + "." + vrf;
-		m_updatemap.add("node-label", nodelabel);
 		m_vrf = vrf;
+		m_updatemap.add(TrentinoNetworkTab.VRF);
 	}
 
     public String getDescr() {
@@ -249,7 +226,7 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setDescr(String descr) {
 		m_descr = descr;
 	}
-	public IndexedContainer getSecondary() {
+	public String[] getSecondary() {
 		return m_secondary;
 	}
 	
@@ -257,12 +234,14 @@ public class TrentinoNetworkNode implements Serializable {
 		return m_snmpProfile;
 	}
 
+	public void setSnmpProfileWithOutUpdating(String snmpProfile) {
+		m_snmpProfile = snmpProfile;
+	}
+	
 	public void setSnmpProfile(String snmpProfile) {
-		if (snmpProfile == null)
-			m_valid = false;
 		if (m_snmpProfile != null && m_snmpProfile.equals(snmpProfile))
 			return;
-		m_snmpProfileUpdated = true;
+		m_updatemap.add(TrentinoNetworkTab.SNMP_PROFILE);
 		m_snmpProfile = snmpProfile;
 	}
 	
@@ -271,11 +250,9 @@ public class TrentinoNetworkNode implements Serializable {
 	}
 
 	public void setBackupProfile(String backupProfile) {
-		if (backupProfile == null)
-			m_valid=false;
 		if (m_backupProfile != null && m_backupProfile.equals(backupProfile))
 			return;
-		m_backupProfileUpdated=true;
+		m_updatemap.add(TrentinoNetworkTab.BACKUP_PROFILE);
 		m_backupProfile = backupProfile;
 	}
 
@@ -285,9 +262,10 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setAddress1(String address) {
 		if (m_address1 !=  null && m_address1.equals(address))
 			return;
+		if (m_address1 ==  null && address == null)
+			return;
 		if (address != null ) {
-			m_assetsToPut.add(new RequisitionAsset(OnmsDao.ADDRESS, address));
-			m_assetsToPut.add(new RequisitionAsset(OnmsDao.DESCRIPTION, m_city + " - " + address));
+			m_updatemap.add(TrentinoNetworkTab.ADDRESS1);
 		}
 		m_address1 = address;
 	}
@@ -299,9 +277,9 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setHostname(String hostname) throws ProvisionDashboardValidationException {
 		if (m_hostname != null && m_hostname.equals(hostname))
 			return;
+		m_label = null;
 		m_hostname = hostname;
-		String nodelabel=hostname.toLowerCase() + "." + m_vrf;
-		m_updatemap.add("node-label", nodelabel);
+		m_updatemap.add(TrentinoNetworkTab.HOST);
 	}
 
 	public String getPrimary() {
@@ -333,25 +311,19 @@ public class TrentinoNetworkNode implements Serializable {
 		m_updatemap.clear();
 		m_interfToDel.clear();
 		m_interfToAdd.clear();
-		m_assetsToPut.clear();
 		m_categoriesToDel.clear();
 		m_categoriesToAdd.clear();
 	}
 
-	public boolean isSnmpProfileUpdated() {
-		return m_snmpProfileUpdated;
-	}
-
-	public boolean isBackupProfileUpdated() {
-		return m_backupProfileUpdated;
-	}
-
-	public MultivaluedMap<String, String> getUpdatemap() {
+	public Set<String> getUpdatemap() {
 		return m_updatemap;
 	}
 
-
 	public void setForeignId(String foreignId) {
 		m_foreignId = foreignId;
+	}
+	
+	public void setSecondary(String[] secondary) {
+		m_secondary=secondary;
 	}
 }

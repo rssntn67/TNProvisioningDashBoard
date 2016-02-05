@@ -4,14 +4,12 @@ import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDns
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.opennms.netmgt.model.PrimaryType;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
-import org.opennms.vaadin.provision.dao.OnmsDao;
+import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
@@ -115,7 +113,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 	public static final String VRF = "vrf";
 	public static final String PARENT = "parent";
 	public static final String VALID = "valid";
-	
+
+	public static final String CITY    = "city";
+	public static final String ADDRESS1 = "address1";
+
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
@@ -351,14 +352,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_hostname.setHeight(6, Unit.MM);
 		m_hostname.setRequired(true);
 		m_hostname.setRequiredError("hostname must be defined");
-		m_hostname.addValidator(new RegexpValidator("^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$","The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
-		" A domain name consists of one or more parts, technically called labels, that are conventionally concatenated, and delimited by dots, such asexample.com."
-				+ " Each label may contain up to 63 characters." +
-				" The full domain name may not exceed a total length of 253 characters in its external dotted-label specification." +
-				" The characters allowed in a label are a subset of the ASCII character set, and includes the characters a through z, A through Z, digits 0 through 9, the hyphen." +
-				" This rule is known as the LDH rule (letters, digits, hyphen). " +
-				" Labels may not start or end with a hyphen." +
-				" A hostname is a domain name that has at least one IP address associated."));
+		m_hostname.addValidator(new DnsHostNameValidator());
 		m_hostname.addValidator(new DnsNodelabelValidator());
 		m_hostname.addValidator(new DuplicatedNodelabelValidator());
 		m_hostname.addValidator(new SubdomainValidator());
@@ -392,11 +386,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_vrfsComboBox.setRequired(true);
 		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
 		m_vrfsComboBox.setImmediate(true);
-		m_vrfsComboBox.addValidator(new DnsNodelabelValidator());
-		m_vrfsComboBox.addValidator(new DuplicatedNodelabelValidator());
-		m_vrfsComboBox.addValidator(new SubdomainValidator());
-		
-		
+				
 		TextField primary = new TextField(PRIMARY);
 		primary.setRequired(true);
 		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
@@ -434,9 +424,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 				@Override public void buttonClick(ClickEvent event) {
 					try {
-					removeSecondaryInteface(m_editorFields.getItemDataSource().getBean().getForeignId(),
-							(String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
+						getService().deleteInterface(TN, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
+								(String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
 			        source.getContainerDataSource().removeItem(itemId);
+			        Set<String> secondary = new HashSet<String>();
+			        for (Object id: source.getContainerDataSource().getItemIds()) {
+			        	secondary.add((String)source.getContainerProperty(id, "indirizzo ip").getValue());
+			        }
+			        m_editorFields.getItemDataSource().getBean().setSecondary(secondary.toArray(new String[secondary.size()]));
 					logger.info("Delete ip: " + itemId);
 					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (Exception e) {
@@ -464,17 +459,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 					try {
 						TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 						if (node.getForeignId() != null) {
-							IndexedContainer secondary = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-							for (Object id: secondary.getItemIds()) {
-								secondary.getContainerProperty(id, "indirizzo ip").getValue().equals(m_secondaryIpComboBox.getValue().toString());
+							IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
+							for (Object id: secondaryIpContainer.getItemIds()) {
+								secondaryIpContainer.getContainerProperty(id, "indirizzo ip").getValue().equals(m_secondaryIpComboBox.getValue().toString());
 								logger.info("Already added ip: " + m_secondaryIpComboBox.getValue().toString());
 								Notification.show("Add ip", "Already added", Type.HUMANIZED_MESSAGE);
 								return;
 							}
-							addSecondaryInterface(m_editorFields.getItemDataSource().getBean().getForeignId(),
+							getService().addSecondaryInterface(TN,m_editorFields.getItemDataSource().getBean().getForeignId(),
 									m_secondaryIpComboBox.getValue().toString());
-							Item ipItem = secondary.getItem(secondary.addItem());
+							Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
 							ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
+							Set<String> secondary = new HashSet<String>();
+					        for (Object id: m_secondaryIpAddressTable.getContainerDataSource().getItemIds()) {
+					        	secondary.add((String)m_secondaryIpAddressTable.getContainerProperty(id, "indirizzo ip").getValue());
+					        }
+					        m_editorFields.getItemDataSource().getBean().setSecondary(secondary.toArray(new String[secondary.size()]));
+
 							logger.info("Add ip: " + m_secondaryIpComboBox.getValue().toString());
 							Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
 						} else {
@@ -527,8 +528,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
 		m_editorFields.bind(m_notifCatComboBox, NOTIF_CATEGORY);
 		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
-		m_editorFields.bind(city,OnmsDao.CITY);
-	    m_editorFields.bind(address, OnmsDao.ADDRESS);
+		m_editorFields.bind(city,CITY);
+	    m_editorFields.bind(address, ADDRESS1);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
@@ -593,7 +594,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++));
+				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++,
+					TNDao.m_network_categories[0], 
+				    TNDao.m_network_categories[0][2],
+				    TNDao.m_network_categories[0][3],
+				    TNDao.m_network_categories[0][4],
+				    TNDao.m_network_categories[0][5],
+				    TNDao.m_network_categories[0][6]
+				));
 				m_networkCatSearchComboBox.select(null);
 				m_networkCatSearchComboBox.setValue(null);
 				m_notifCatSearchComboBox.select(null);
@@ -604,6 +612,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_searchField.setValue(m_searchText);
 				m_requisitionTable.select(bean.getBean().getNodeLabel());
 				selectItem();
+				m_requisitionContainer.removeAllContainerFilters();
 				m_hostname.focus();
 			}
 		});
@@ -620,15 +629,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 					TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 					if (node.getForeignId() == null) {
 						node.setForeignId(node.getHostname());
-						getService().save(TN,node);
+						node.setValid(true);
+						getService().addNode(TN,node);
 					} else {
-						getService().update(TN,node);
+						getService().updateNode(TN,node);
 					}
-					m_requisitionContainer.addContainerFilter(new NodeFilter(m_editorFields.getItemDataSource().getBean().getNodeLabel(), null,null,null));
-					m_requisitionContainer.removeAllContainerFilters();
-					if (m_searchText == null)
-						m_searchText="";
-					m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
 					logger.info("Saved: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
@@ -733,7 +738,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_secondaryIpComboBox.addItem(ip);
 			}
 			
-			m_secondaryIpAddressTable.setContainerDataSource(node.getSecondary());
+			IndexedContainer secondaryIpContainer = new IndexedContainer();
+			secondaryIpContainer.addContainerProperty("indirizzo ip", String.class, null);
+			if (node.getSecondary() != null) {
+				for (String ip: node.getSecondary()) {
+					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
+					ipItem.getItemProperty("indirizzo ip").setValue(ip); 
+				}
+			}
+			m_secondaryIpAddressTable.setContainerDataSource(secondaryIpContainer);
 
 			if (node.getForeignId() != null) {
 				String snmpProfile=null;
@@ -741,12 +754,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 					try {
 					snmpProfile = getService().getSnmpProfile(node.getPrimary());
 					} catch (SQLException sqle) {
+						logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
+						Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
+					} catch (UniformInterfaceException uie) {
 						
 					}
 				}
 				if (snmpProfile == null)
 					node.setValid(false);
-				node.setSnmpProfile(snmpProfile);
+				node.setSnmpProfileWithOutUpdating(snmpProfile);
 			}
 			m_editorFields.setItemDataSource(node);
 			m_editRequisitionNodeLayout.setVisible(true);
@@ -754,7 +770,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_removeNodeButton.setEnabled(true);
 			m_resetNodeButton.setEnabled(true);
 			
-			if (node.getDescr().contains("FAST")) {
+			if (node.getDescr() !=  null && node.getDescr().contains("FAST")) {
 				m_saveNodeButton.setEnabled(false);
 				m_removeNodeButton.setEnabled(false);
 				m_resetNodeButton.setEnabled(false);
@@ -764,19 +780,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			
 		}
 
-	}
-	
-	public void addSecondaryInterface(String foreignId,String ipaddress) {
-		RequisitionInterface ipsecondary = new RequisitionInterface();
-		ipsecondary.setIpAddr(ipaddress);
-		ipsecondary.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-		ipsecondary.setDescr("Provided by Provision Dashboard");
-		ipsecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		getService().add(TN,foreignId, ipsecondary);
-	}
-	
-	public void removeSecondaryInteface(String foreignId,String ipaddress) {
-		getService().deleteInterface(TN, foreignId, ipaddress);
 	}
 	
 	class SubdomainValidator implements Validator {
@@ -820,7 +823,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (getService().hasDuplicatedNodelabel(node.getNodeLabel()))
+	         if (node.getForeignId() == null  && getService().hasDuplicatedNodelabel(node.getNodeLabel()))
 	             throw new InvalidValueException("The node label exist: cannot duplicate node label: " + node.getNodeLabel());
 	       }
 	}
@@ -836,7 +839,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		public void validate( Object value) throws InvalidValueException {
 			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 	         if (node.getNodeLabel().length() > 253)
-	             throw new InvalidValueException("The node label is too long (more then 253 valid chars): " + node.getNodeLabel());
+	             throw new InvalidValueException("The node label is too long (more then 253 chars): " + node.getNodeLabel());
 	       }
 	}
 	
@@ -850,10 +853,29 @@ public class TrentinoNetworkTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (getService().hasDuplicatedPrimary((node.getPrimary())))
+	         if (node.getForeignId() == null  && getService().hasDuplicatedPrimary((node.getPrimary())))
 	             throw new InvalidValueException("The node label exist: cannot duplicate primary ip: " + node.getPrimary());
 	       }
 	}
 
+	class DnsHostNameValidator implements Validator {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1802798646587971819L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
+	         if (node.getForeignId() != null && (DashBoardUtils.hasInvalidDnsBind9Label(node.getHostname()) || DashBoardUtils.hasInvalidDnsBind9LabelSize(node.getHostname())))
+	             throw new InvalidValueException("Dns name: " + node.getHostname() + " is not well formed. The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
+               " A domain name consists of one or more parts, technically called labels, that are conventionally concatenated, and delimited by dots, such asexample.com."
+                               + " Each label may contain up to 63 characters." +
+                               " The full domain name may not exceed a total length of 253 characters in its external dotted-label specification." +
+                               " The characters allowed in a label are a subset of the ASCII character set, and includes the characters a through z, A through Z, digits 0 through 9, the hyphen." +
+                               " This rule is known as the LDH rule (letters, digits, hyphen). " +
+                               " Labels may not start or end with a hyphen.");
+		}
+	}
 
 }
