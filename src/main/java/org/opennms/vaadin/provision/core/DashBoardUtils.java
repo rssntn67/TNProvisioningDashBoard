@@ -8,30 +8,37 @@ import org.opennms.vaadin.provision.model.BackupProfile;
 
 public class DashBoardUtils {
 
-	public static boolean hasInvalidDnsBind9Size(String nodelabel ) {		
-		if (nodelabel.length() > 253)
+	public static boolean hasInvalidIp(String ip) {
+		if (ip == null)
+			return true;
+		String re ="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"; 
+		if (!ip.matches(re))	
+			return true;
+		if (ip.equals("127.0.0.1"))
+			return true;
+		if (ip.equals("0.0.0.0"))
 			return true;
 		return false;
 	}
 
-	public static boolean hasInvalidDnsBind9LabelSize(String nodelabel ) {		
-		for (String label: nodelabel.split("\\.")) {
-			if (label.length() > 63)
-				return true;
-		}
-		return false;
-	}
-
-	public static boolean hasInvalidDnsBind9Label(String nodelabel ) {		
+	public static boolean hasInvalidDnsBind9Label(String nodelabel ) {
+		if (nodelabel == null)
+			return true;
+		if (nodelabel.length() > 253)
+			return true;
     	String re ="^[a-zA-Z0-9]+[a-zA-Z0-9-\\-]*[a-zA-Z0-9]+";
 		for (String label: nodelabel.split("\\.")) {
 			if (!label.matches(re))	
+				return true;
+			if (label.length() > 63)
 				return true;
 		}
 		return false;
 	}
 	
 	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel, String[] sub_domains) {
+		if (hostname == null)
+			return true;
 		if (hostname.contains(".")) {
 			String hostlabel = hostname.substring(0,hostname.indexOf("."));
 			for (String subdomain: sub_domains ) {

@@ -1,9 +1,8 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Label;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9LabelSize;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Size;
 import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
+import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidIp;
 
 import java.io.Serializable;
 import java.sql.SQLException;
@@ -157,7 +156,9 @@ public class DashBoardService implements Serializable {
 			
 			if (primary == null)
 				valid = false;
-			
+			else if (hasInvalidIp(primary))
+				valid = false;
+				
 			String[] networkCategory = null;
 			for (String[] ncat: TNDao.m_network_categories) {
 				if (node.getCategory(ncat[0]) != null && node.getCategory(ncat[1]) != null) {
@@ -200,10 +201,6 @@ public class DashBoardService implements Serializable {
 			else
 				valid = false;
 			
-			if (hasInvalidDnsBind9Size(nodelabel))
-				valid = false;
-			if (hasInvalidDnsBind9LabelSize(nodelabel))
-				valid = false;
 			if (hasInvalidDnsBind9Label(nodelabel))
 				valid = false;
 			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,TNDao.m_sub_domains))

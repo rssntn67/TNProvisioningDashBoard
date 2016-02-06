@@ -27,7 +27,6 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
@@ -134,6 +133,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private Button m_removeNodeButton  = new Button("Elimina Nodo");
 
 	private TextField m_hostname = new TextField("Hostname");
+	private TextField m_primary = new TextField(PRIMARY);
 	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
 	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
 	private ComboBox m_parentComboBox = new ComboBox("Dipende da");
@@ -352,11 +352,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_hostname.setHeight(6, Unit.MM);
 		m_hostname.setRequired(true);
 		m_hostname.setRequiredError("hostname must be defined");
-		m_hostname.addValidator(new DnsHostNameValidator());
-		m_hostname.addValidator(new DnsNodelabelValidator());
-		m_hostname.addValidator(new DuplicatedNodelabelValidator());
+		m_hostname.addValidator(new DnsNodeLabelValidator());
 		m_hostname.addValidator(new SubdomainValidator());
 		m_hostname.addValidator(new DuplicatedForeignIdValidator());
+		m_hostname.addValidator(new DuplicatedNodelabelValidator());
 		m_hostname.setImmediate(true);
 
 		m_networkCatComboBox.setInvalidAllowed(false);
@@ -385,16 +384,31 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_vrfsComboBox.setNullSelectionAllowed(false);
 		m_vrfsComboBox.setRequired(true);
 		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
+		m_vrfsComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		    /**
+			 * 
+			 */
+			private static final long serialVersionUID = -2209110948375990804L;
+
+			@Override
+		    public void valueChange(ValueChangeEvent event) {
+	        	logger.info("vrf combo box value change:"+ m_vrfsComboBox.getValue());
+		        try {
+		            m_hostname.validate();
+		            m_hostname.setComponentError(null); // MAGIC CODE HERE!!!
+		        } catch (Exception e) {
+		        	logger.info("not working validation");
+		        }
+		    }
+		});
 		m_vrfsComboBox.setImmediate(true);
+
 				
-		TextField primary = new TextField(PRIMARY);
-		primary.setRequired(true);
-		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
-		primary.setImmediate(true);
-		primary.addValidator(new RegexpValidator(
-		"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$", 
-		"Deve essere inserito un valido indirizzo ip"));
-		primary.addValidator(new DuplicatedPrimaryValidator());
+		m_primary.setRequired(true);
+		m_primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
+		m_primary.setImmediate(true);
+		m_primary.addValidator(new IpValidator());
+		m_primary.addValidator(new DuplicatedPrimaryValidator());
 
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(true);
@@ -522,7 +536,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(m_hostname, HOST);
 		m_editorFields.bind(m_networkCatComboBox, NETWORK_CATEGORY);
 		m_editorFields.bind(m_vrfsComboBox, VRF);
-		m_editorFields.bind(primary,PRIMARY);
+		m_editorFields.bind(m_primary,PRIMARY);
 		m_editorFields.bind(m_parentComboBox, PARENT);
 		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
 		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
@@ -537,7 +551,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		leftGeneralInfo.addComponent(m_hostname);
 		leftGeneralInfo.addComponent(m_networkCatComboBox);
 		leftGeneralInfo.addComponent(m_vrfsComboBox);
-		leftGeneralInfo.addComponent(primary);
+		leftGeneralInfo.addComponent(m_primary);
 		leftGeneralInfo.addComponent(m_parentComboBox);
 		leftGeneralInfo.addComponent(city);
 		leftGeneralInfo.addComponent(address);
@@ -602,6 +616,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				    TNDao.m_network_categories[0][5],
 				    TNDao.m_network_categories[0][6]
 				));
+				m_primary.setValue("0.0.0.0");
 				m_networkCatSearchComboBox.select(null);
 				m_networkCatSearchComboBox.setValue(null);
 				m_notifCatSearchComboBox.select(null);
@@ -631,11 +646,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 						node.setForeignId(node.getHostname());
 						node.setValid(true);
 						getService().addNode(TN,node);
+						logger.info("Added: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
+						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 					} else {
 						getService().updateNode(TN,node);
+						logger.info("Updated: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
+						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 					}
-					logger.info("Saved: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
-					Notification.show("Save", "Done", Type.HUMANIZED_MESSAGE);
+					m_requisitionContainer.addContainerFilter(new NodeFilter(node.getHostname(), null, null, null));
+					m_requisitionContainer.removeAllContainerFilters();
 				} catch (Exception e) {
 					e.printStackTrace();
 					String localizedMessage = e.getLocalizedMessage();
@@ -788,12 +807,14 @@ public class TrentinoNetworkTab extends DashboardTab {
 		 * 
 		 */
 		private static final long serialVersionUID = 4896238666294939805L;
-
+		
 		@Override
 		public void validate(Object value) throws InvalidValueException {
-			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-			 if (hasUnSupportedDnsDomain(node.getHostname(), node.getNodeLabel(), TNDao.m_sub_domains))
-	             throw new InvalidValueException("There is no dns domain defined for: " + node.getHostname());
+			String hostname = ((String)value).toLowerCase();
+			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			logger.info("SubdomainValidator: validating hostname: " + hostname);
+			 if (hasUnSupportedDnsDomain(hostname, nodelabel, TNDao.m_sub_domains))
+	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
 	       }
 	}
 
@@ -807,39 +828,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (node.getForeignId() == null  && getService().hasDuplicatedForeignId((node.getHostname())))
-	             throw new InvalidValueException("The hostname exists: cannot duplicate hostname: " + node.getHostname());
-	       }
-	}
-
-	
-	class DuplicatedNodelabelValidator implements Validator {
-		
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 5690578176254609879L;
-
-		@Override
-		public void validate( Object value) throws InvalidValueException {
-			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (node.getForeignId() == null  && getService().hasDuplicatedNodelabel(node.getNodeLabel()))
-	             throw new InvalidValueException("The node label exist: cannot duplicate node label: " + node.getNodeLabel());
-	       }
-	}
-	
-	class DnsNodelabelValidator implements Validator {
-		
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 3708035507162528130L;
-
-		@Override
-		public void validate( Object value) throws InvalidValueException {
-			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (node.getNodeLabel().length() > 253)
-	             throw new InvalidValueException("The node label is too long (more then 253 chars): " + node.getNodeLabel());
+			if (node.getForeignId() != null)
+				return;
+			String hostname = (String)value;
+			logger.info("DuplicatedForeignIdValidator: validating foreignId: " + hostname);
+	         if (getService().hasDuplicatedForeignId((hostname)))
+	             throw new InvalidValueException("The hostname exists: cannot duplicate hostname: " + hostname);
 	       }
 	}
 	
@@ -853,22 +847,62 @@ public class TrentinoNetworkTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (node.getForeignId() == null  && getService().hasDuplicatedPrimary((node.getPrimary())))
-	             throw new InvalidValueException("The node label exist: cannot duplicate primary ip: " + node.getPrimary());
+			if (node.getForeignId() != null)
+				return;
+			String ip = (String)value;
+			logger.info("DuplicatedPrimaryValidator: validating ip: " + ip);
+	         if (getService().hasDuplicatedPrimary((ip)))
+	             throw new InvalidValueException("DuplicatedPrimaryValidator: trovato un duplicato del primary ip: " + ip);
 	       }
 	}
 
-	class DnsHostNameValidator implements Validator {
+	class IpValidator implements Validator {
 		/**
 		 * 
 		 */
-		private static final long serialVersionUID = -1802798646587971819L;
+		private static final long serialVersionUID = 6243101356369643407L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			String ip = (String)value;
+			logger.info("IpValidator: validating ip: " + ip);
+	         if (DashBoardUtils.hasInvalidIp((ip)))
+	             throw new InvalidValueException("Deve essere inserito un valido indirizzo ip (0.0.0.0 e 127.0.0.0 non sono validi): indirizzo sbagliato:" + ip);
+	       }
+	}
+	
+	class DuplicatedNodelabelValidator implements Validator {
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5690578176254609879L;
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-	         if (node.getForeignId() != null && (DashBoardUtils.hasInvalidDnsBind9Label(node.getHostname()) || DashBoardUtils.hasInvalidDnsBind9LabelSize(node.getHostname())))
-	             throw new InvalidValueException("Dns name: " + node.getHostname() + " is not well formed. The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
+			if (node.getForeignId() != null)
+				return;
+			String hostname = ((String)value).toLowerCase();
+			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			logger.info("DuplicatedNodelabelValidator: validating label: " + nodelabel);
+	        if (getService().hasDuplicatedNodelabel(nodelabel))
+	             throw new InvalidValueException("DuplicatedNodelabelValidator: trovato un duplicato della node label: " + nodelabel);
+	       }
+	}
+
+	class DnsNodeLabelValidator implements Validator {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1802798646587971819L;
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			String hostname = ((String)value).toLowerCase();
+			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			logger.info("DnsNodeLabelValidator: validating nodelabel: " + nodelabel);
+	         if (DashBoardUtils.hasInvalidDnsBind9Label(nodelabel))
+	             throw new InvalidValueException("DnsNodeLabelValidator: Dns name: '" + nodelabel + "' is not well formed. The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +
                " A domain name consists of one or more parts, technically called labels, that are conventionally concatenated, and delimited by dots, such asexample.com."
                                + " Each label may contain up to 63 characters." +
                                " The full domain name may not exceed a total length of 253 characters in its external dotted-label specification." +

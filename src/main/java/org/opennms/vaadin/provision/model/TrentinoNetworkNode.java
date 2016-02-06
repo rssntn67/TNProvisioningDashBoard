@@ -52,9 +52,7 @@ public class TrentinoNetworkNode implements Serializable {
 			String threshCategory, String backupProfile, String snmpProfile) {
 		m_label = label;
 		m_hostname="";
-		
-		m_primary="0.0.0.0";
-		
+				
 		m_city="";
 		m_address1="";
 
@@ -289,13 +287,10 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setPrimary(String primary) {
 		if (m_primary != null && m_primary.equals(primary))
 			return;
-		if (m_primary != null) {
-			m_interfToDel.add(m_primary);
-		}
+		if ( m_primary != null) 
+			m_interfToDel.add(new String(m_primary));
 
-		if (primary != null) {
-			m_interfToAdd.add(primary);
-		}
+		m_interfToAdd.add(new String(primary));
 		m_primary = primary;
 	}
 		
