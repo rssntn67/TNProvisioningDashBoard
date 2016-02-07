@@ -33,10 +33,10 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opennms.netmgt.model.OnmsIpInterface;
-import org.opennms.netmgt.model.OnmsIpInterfaceList;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
+import org.opennms.rest.client.model.OnmsIpInterface;
+import org.opennms.rest.client.model.OnmsIpInterfaceList;
 import org.opennms.vaadin.provision.dao.TNDao;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;

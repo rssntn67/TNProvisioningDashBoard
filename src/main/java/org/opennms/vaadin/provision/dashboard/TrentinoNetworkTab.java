@@ -438,16 +438,18 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 				@Override public void buttonClick(ClickEvent event) {
 					try {
+						String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
 						getService().deleteInterface(TN, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
-								(String)source.getContainerProperty(itemId, "indirizzo ip").getValue());
+								ip);
 			        source.getContainerDataSource().removeItem(itemId);
 			        Set<String> secondary = new HashSet<String>();
 			        for (Object id: source.getContainerDataSource().getItemIds()) {
 			        	secondary.add((String)source.getContainerProperty(id, "indirizzo ip").getValue());
 			        }
+			        m_secondaryIpComboBox.addItem(ip);
 			        m_editorFields.getItemDataSource().getBean().setSecondary(secondary.toArray(new String[secondary.size()]));
-					logger.info("Delete ip: " + itemId);
-					Notification.show("Delete ip", "Done", Type.HUMANIZED_MESSAGE);
+					logger.info("Deleted Secondary ip: " + itemId);
+					Notification.show("Delete Secondary ip", "Ip: " + itemId + " deleted.", Type.WARNING_MESSAGE);
 					} catch (Exception e) {
 						logger.warning("Delete ip failed: " + itemId +" " + e.getLocalizedMessage());
 						Notification.show("Delete ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
@@ -470,18 +472,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				if (m_secondaryIpComboBox.getValue() != null) {
+					String ip = m_secondaryIpComboBox.getValue().toString();
 					try {
 						TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 						if (node.getForeignId() != null) {
-							IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-							for (Object id: secondaryIpContainer.getItemIds()) {
-								secondaryIpContainer.getContainerProperty(id, "indirizzo ip").getValue().equals(m_secondaryIpComboBox.getValue().toString());
-								logger.info("Already added ip: " + m_secondaryIpComboBox.getValue().toString());
-								Notification.show("Add ip", "Already added", Type.HUMANIZED_MESSAGE);
-								return;
-							}
 							getService().addSecondaryInterface(TN,m_editorFields.getItemDataSource().getBean().getForeignId(),
-									m_secondaryIpComboBox.getValue().toString());
+									ip);
+							IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 							Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
 							ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
 							Set<String> secondary = new HashSet<String>();
@@ -489,9 +486,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 					        	secondary.add((String)m_secondaryIpAddressTable.getContainerProperty(id, "indirizzo ip").getValue());
 					        }
 					        m_editorFields.getItemDataSource().getBean().setSecondary(secondary.toArray(new String[secondary.size()]));
-
-							logger.info("Add ip: " + m_secondaryIpComboBox.getValue().toString());
-							Notification.show("Add ip", "Done", Type.HUMANIZED_MESSAGE);
+							logger.info("Added Secondary ip address: " + ip);
+							Notification.show("Add Secondary ip", "Added ip: "+ip+ " to node in repository", Type.WARNING_MESSAGE);
+					        m_secondaryIpComboBox.removeItem(ip);
 						} else {
 							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
 						}
@@ -616,7 +613,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 				    TNDao.m_network_categories[0][5],
 				    TNDao.m_network_categories[0][6]
 				));
-				m_primary.setValue("0.0.0.0");
 				m_networkCatSearchComboBox.select(null);
 				m_networkCatSearchComboBox.setValue(null);
 				m_notifCatSearchComboBox.select(null);
@@ -754,7 +750,17 @@ public class TrentinoNetworkTab extends DashboardTab {
 			for (String ip: getService().getIpAddresses(TN,node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))
 					continue;
-				m_secondaryIpComboBox.addItem(ip);
+				boolean add=true;
+				if (node.getSecondary() != null) {
+					for (String secip: node.getSecondary()) {
+						if (ip.equals(secip)) { 
+							add=false;
+							break;
+						}
+					}
+				}
+				if (add)
+					m_secondaryIpComboBox.addItem(ip);
 			}
 			
 			IndexedContainer secondaryIpContainer = new IndexedContainer();

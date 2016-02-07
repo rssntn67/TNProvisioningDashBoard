@@ -17,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
@@ -40,6 +39,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import org.opennms.rest.client.JerseyClientImpl;
+import org.opennms.rest.client.model.OnmsIpInterface;
 
 import com.vaadin.data.util.BeanContainer;
 
@@ -144,6 +144,7 @@ public class DashBoardService implements Serializable {
 			String descr = null;
 			List<String> secondary = new ArrayList<String>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
+				logger.info("parsing requisition: " + foreignSource +", foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
 				if (ip.getSnmpPrimary() == null)
 					valid=false;
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
@@ -211,6 +212,8 @@ public class DashBoardService implements Serializable {
 				parent =m_foreignIdNodeLabelMap.get(node.getParentForeignId());
 			
 			String snmpProfile =  null;
+			logger.info("parsing requisition: " + foreignSource +", foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "secondary: " + secondary);
+
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					descr, 
 					hostname, 
@@ -416,6 +419,7 @@ public class DashBoardService implements Serializable {
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		m_primaryipcollection.add(node.getPrimary());
+		node.clear();
 			
 	}
 
@@ -485,5 +489,7 @@ public class DashBoardService implements Serializable {
 			m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		}
+		
+		node.clear();
 	}
 }

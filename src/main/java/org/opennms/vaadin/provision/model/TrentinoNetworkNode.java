@@ -51,6 +51,7 @@ public class TrentinoNetworkNode implements Serializable {
 	public TrentinoNetworkNode(String label, String[] networkCategory,String vrf, String notifCategory,
 			String threshCategory, String backupProfile, String snmpProfile) {
 		m_label = label;
+		m_primary="0.0.0.0";
 		m_hostname="";
 				
 		m_city="";
@@ -63,7 +64,7 @@ public class TrentinoNetworkNode implements Serializable {
 		m_backupProfile = backupProfile;
 		m_snmpProfile = snmpProfile;
 						
-		m_descr="Imported from Provision Dashboard";
+		m_descr="Provided by Provision Dashboard";
 		
 		m_valid=false;
 	}
@@ -85,6 +86,7 @@ public class TrentinoNetworkNode implements Serializable {
 			boolean valid, 
 			String[] secondary) {
 		super();
+		m_label = null;
 		m_descr = descr;
 		m_hostname = hostname;
 		m_vrf = vrf;
@@ -99,7 +101,7 @@ public class TrentinoNetworkNode implements Serializable {
 		m_address1 = address1;
 		m_foreignId = foreignId;
 		m_valid = valid;
-		m_label = null;
+		m_secondary = secondary;
 
 	}
 

@@ -3,7 +3,7 @@ package org.opennms.vaadin.provision.dao;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.opennms.netmgt.model.OnmsIpInterfaceList;
+
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
@@ -16,6 +16,7 @@ import org.opennms.rest.client.JerseyNodesService;
 import org.opennms.rest.client.JerseyProvisionForeignSourceService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
+import org.opennms.rest.client.model.OnmsIpInterfaceList;
 import org.opennms.web.svclayer.model.SnmpInfo;
 
 public class OnmsDao {
