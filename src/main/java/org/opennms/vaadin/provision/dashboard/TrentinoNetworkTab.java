@@ -53,7 +53,7 @@ import com.vaadin.ui.VerticalLayout;
  * app a web page showing your UI is automatically generated. Or you may choose to 
  * embed your UI to an existing web page. 
  */
-@Title("TrentinoNetwork Provision Dashboard - Trentino Network Requisition")
+@Title("Trentino Network Provision Dashboard - Trentino Network Requisition")
 @Theme("runo")
 public class TrentinoNetworkTab extends DashboardTab {
 
@@ -160,25 +160,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 		Map<String, BackupProfile> backupprofilemap;
 		if (loaded)
 			return;
-		try {
-			for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
-				m_snmpComboBox.addItem(snmpprofile);
-			}
-		} catch (SQLException e) {
-			logger.warning("Load of Snmp Profile from db Failed: "+e.getLocalizedMessage());
-			Notification.show("Snmp Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
-			return;
+		for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
+			m_snmpComboBox.addItem(snmpprofile);
 		}
 
-		try {
-			backupprofilemap = getService().getTnDao().getBackupProfiles();
-			for (String backupprofile: backupprofilemap.keySet()) {
-				m_backupComboBox.addItem(backupprofile);
-			}
-		} catch (SQLException e) {
-			logger.warning("Load of Backup Profile from db Failed: "+e.getLocalizedMessage());
-			Notification.show("Backup Profile", "Load from db Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
-			return;
+		backupprofilemap = getService().getTnDao().getBackupProfiles();
+		for (String backupprofile: backupprofilemap.keySet()) {
+			m_backupComboBox.addItem(backupprofile);
 		}
 
 		try {

@@ -99,7 +99,7 @@ public class DashBoardService implements Serializable {
 				new JerseyClientImpl(url,username,password));
 		m_onmsDao.getSnmpInfo("127.0.0.1");
 		logger.info("logged in user: " + username + "@" + url);
-		m_tnDao.createPool("org.postgresql.Driver", m_config.getDbUrl(), m_config.getDbUsername(), m_config.getDbPassword());
+		m_tnDao.init("org.postgresql.Driver", m_config.getDbUrl(), m_config.getDbUsername(), m_config.getDbPassword());
 		logger.info("connected to database: " + m_config.getDbUrl());
 	}
 

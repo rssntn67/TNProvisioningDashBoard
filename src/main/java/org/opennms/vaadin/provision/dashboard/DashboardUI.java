@@ -1,6 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-
 import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.TNDao;

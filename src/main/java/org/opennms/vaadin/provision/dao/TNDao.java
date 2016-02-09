@@ -1,10 +1,8 @@
 package org.opennms.vaadin.provision.dao;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.opennms.vaadin.provision.model.BackupProfile;
@@ -15,7 +13,7 @@ import com.vaadin.data.Item;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
-import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
+import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 
 public class TNDao {
 
@@ -162,49 +160,31 @@ public class TNDao {
 	
 	private JDBCConnectionPool m_pool; 
 
+	private SQLContainer m_snmpprofilecontainer;
+	private SQLContainer m_backupprofilecontainer;
+	Map<String, SnmpProfile> m_snmpProfiles = new HashMap<String, SnmpProfile>();
+	Map<String, BackupProfile> m_backupProfiles = new HashMap<String, BackupProfile>();
+
 	public TNDao() {
 	}
 
-	public void createPool(String driver, String dburl, String username, String password) throws SQLException {
+	@SuppressWarnings("unchecked")
+	public void init(String driver, String dburl, String username, String password) throws SQLException {
 		m_pool = new SimpleJDBCConnectionPool(driver, dburl, username, password);
-	}
-
-	public void destroy() {
-		if (m_pool != null)
-			m_pool.destroy();
-	}
-
-	@SuppressWarnings({ "deprecation", "unchecked" })
-	public Map<String, SnmpProfile> getSnmpProfiles() throws SQLException {
-		
-    	List<String> primarykeys = new ArrayList<String>();
-    	primarykeys.add("name");
-		SQLContainer snmpProfileTable = new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
-		Map<String, SnmpProfile> snmpProfiles = new HashMap<String, SnmpProfile>();
-		for (Iterator<?> i = snmpProfileTable.getItemIds().iterator(); i.hasNext();) {
-			Item snmpprofiletableRow = snmpProfileTable.getItem(i.next());
-			snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
+        TableQuery snmpprofilequery = new TableQuery("snmpprofiles", m_pool);	
+        m_snmpprofilecontainer = new SQLContainer(snmpprofilequery);
+        for (Iterator<?> i = m_snmpprofilecontainer.getItemIds().iterator(); i.hasNext();) {
+			Item snmpprofiletableRow = m_snmpprofilecontainer.getItem(i.next());
+			m_snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
 					new SnmpProfile(snmpprofiletableRow.getItemProperty("name"),snmpprofiletableRow.getItemProperty("community"), 
 							snmpprofiletableRow.getItemProperty("version"), 
 							snmpprofiletableRow.getItemProperty("timeout")));
 		}
-		return snmpProfiles;
-	}
-	
-	public SnmpProfile getSnmpProfile(String name) throws SQLException {
-		return getSnmpProfiles().get(name);
-	}
-	
-	
-	@SuppressWarnings({ "deprecation", "unchecked" })
-	public Map<String, BackupProfile> getBackupProfiles() throws SQLException {
-    	List<String> primarykeys = new ArrayList<String>();
-    	primarykeys.add("name");
-    	SQLContainer backupProfileTable = new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
-    	Map<String, BackupProfile> backupProfiles = new HashMap<String, BackupProfile>();
-		for (Iterator<?> i = backupProfileTable.getItemIds().iterator(); i.hasNext();) {
-			Item backupprofiletableRow = backupProfileTable.getItem(i.next());
-			backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
+        TableQuery backupprofilequery = new TableQuery("backupprofiles", m_pool);	
+		m_backupprofilecontainer = new SQLContainer(backupprofilequery);
+		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
+			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
+			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
 					new BackupProfile(backupprofiletableRow.getItemProperty("name"),backupprofiletableRow.getItemProperty("username"), 
 							backupprofiletableRow.getItemProperty("password"), 
 							backupprofiletableRow.getItemProperty("enable"),
@@ -212,25 +192,43 @@ public class TNDao {
 							backupprofiletableRow.getItemProperty("auto_enable")
 							));
 		}
-		return backupProfiles;
+
+
+	}
+
+	public void destroy() {
+		if (m_pool != null)
+			m_pool.destroy();
+		m_snmpprofilecontainer=null;
+		m_backupprofilecontainer=null;
+		m_snmpProfiles.clear();
+		m_backupProfiles.clear();
+	}
+
+	public Map<String, SnmpProfile> getSnmpProfiles() {
+		return m_snmpProfiles;
+	}
+	
+	public SnmpProfile getSnmpProfile(String name) {
+		if (m_snmpProfiles != null)
+			return m_snmpProfiles.get(name);
+		return null;
+	}
+		
+	public Map<String, BackupProfile> getBackupProfiles() {
+		return m_backupProfiles;
 	}
 
 	public BackupProfile getBackupProfile(String name) throws SQLException {
-    	return getBackupProfiles().get(name);
+    	return m_backupProfiles.get(name);
 	}
 
-	@SuppressWarnings("deprecation")
-	public Container getSnmpProfileContainer() throws SQLException {
-        	List<String> primarykeys = new ArrayList<String>();
-        	primarykeys.add("name");
-			return new SQLContainer(new FreeformQuery("select * from isi.snmp_profiles", primarykeys,m_pool));
+	public Container getSnmpProfileContainer() {
+		return m_snmpprofilecontainer;
 	}
 
-	@SuppressWarnings("deprecation")
-	public Container getBackupProfileContainer() throws SQLException {
-        	List<String> primarykeys = new ArrayList<String>();
-        	primarykeys.add("name");
-			return new SQLContainer(new FreeformQuery("select * from isi.asset_profiles", primarykeys,m_pool));
+	public Container getBackupProfileContainer() {
+		return m_backupprofilecontainer;
 	}
 
     public String[] getDefaultValuesFromNetworkCategory(Object networkcategory) {
