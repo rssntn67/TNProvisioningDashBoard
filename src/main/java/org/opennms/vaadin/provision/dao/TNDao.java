@@ -1,12 +1,17 @@
 package org.opennms.vaadin.provision.dao;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.FastDevice;
+import org.opennms.vaadin.provision.model.FastService;
 import org.opennms.vaadin.provision.model.SnmpProfile;
+import org.opennms.vaadin.provision.model.Vrf;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.Item;
@@ -31,61 +36,6 @@ public class TNDao {
 		"ThresholdALERT"
 	};
 	
-	public static final String[][] m_network_categories = {
-		{"Core","Backbone","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_7","snmp_default_v2"},
-		{"Ponte5p4","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesspoint_alvarion_tftp","public_v1"},
-		{"PontePDH","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesso_switch_pat","public_v2"},
-		{"AccessPoint","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
-		{"SwitchWiNet","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
-		{"SwitchTetra","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
-		{"Fiemme2013","Distribuzione","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_2013","snmp_default_v2"},
-		{"ACSM","Accesso","acsm.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"AgLav","Accesso","aglav.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Apss","Accesso","apss.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Audiovisivi","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Biblio","Accesso","biblio.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"CPE","Accesso","wl.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
-		{"CUE","Accesso","cue.tnnet.it","EMERGENCY_F0","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ComuneTN","Accesso","comunetn.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v1"},
-		{"Comuni","Accesso","comuni.tnnet.it","EMERGENCY_F4","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ConsPro","Accesso","conspro.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ConsProVoce","Accesso","conspro.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"FEM","Accesso","fem.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"GeoSis","Accesso","geosis.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Iasma","Accesso","iasma.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Info","Accesso","info.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Infotn","Accesso","infotn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"InfotnVoce","Accesso","infotn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Internet","Accesso","internet.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Internet-Esterni","Accesso","internet-esterni.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v1"},
-		{"InternetScuole","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Intra-TNSviluppo","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"LAN","Accesso","hq.tnnet.it","EMERGENCY_F0","ThresholdWARNING","lan","snmp_default_v2"},
-		{"Medici","Accesso","medici.tnnet.it","INFORMATION","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Mitt","Accesso","mitt.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Multivoce","Accesso","multivoce.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"OperaUnitn","Accesso","operaunitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"OperaVoce","Accesso","operavoce.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Pat","Accesso","pat.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"PatAcquePub","Accesso","patacquepub.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"PatDighe","Accesso","patdighe.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Pat-Tecnica","Accesso","pat-tecnica.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"PatVoce","Accesso","patvoce.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Phoenix","Accesso","phoenix.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ReperibiliTnet","Accesso","reperibilitnet.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"RSACivicaTN","Accesso","rsacivicatn.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"RSASpes","Accesso","rsaspes.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Scuole","Accesso","scuole.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ScuoleMaterne","Accesso","scuolematerne.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"ServizioVDS","Accesso","serviziovds.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Telpat-Autonome","Accesso","telpat-autonome.tnnet.it","EMERGENCY_F4","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Unitn","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"UnitnVoce","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"VdsRovereto","Accesso","vdsrovereto.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Winwinet","Accesso","winwinet.tnnet.it","INFORMATION","ThresholdWARNING","accesso_radius","snmp_default_v2"}
-	};
-
-
 	public static final String[] m_sub_domains = {
 		"alv01.wl.tnnet.it",
 		"alv02.wl.tnnet.it",
@@ -157,13 +107,70 @@ public class TNDao {
 		"winwinet.tnnet.it",
 		"wl.tnnet.it"
 	};
+
+	public static final String[][] m_network_categories = {
+		{"Core","Backbone","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_7","snmp_default_v2"},
+		{"Ponte5p4","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesspoint_alvarion_tftp","public_v1"},
+		{"PontePDH","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesso_switch_pat","public_v2"},
+		{"AccessPoint","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
+		{"SwitchWiNet","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
+		{"SwitchTetra","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
+		{"Fiemme2013","Distribuzione","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_2013","snmp_default_v2"},
+		{"ACSM","Accesso","acsm.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"AgLav","Accesso","aglav.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Apss","Accesso","apss.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Audiovisivi","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Biblio","Accesso","biblio.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"CPE","Accesso","wl.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
+		{"CUE","Accesso","cue.tnnet.it","EMERGENCY_F0","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"ComuneTN","Accesso","comunetn.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v1"},
+		{"Comuni","Accesso","comuni.tnnet.it","EMERGENCY_F4","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"ConsPro","Accesso","conspro.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"ConsProVoce","Accesso","conspro.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"FEM","Accesso","fem.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"GeoSis","Accesso","geosis.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Iasma","Accesso","iasma.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Info","Accesso","info.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Infotn","Accesso","infotn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"InfotnVoce","Accesso","infotn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Internet","Accesso","internet.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Internet-Esterni","Accesso","internet-esterni.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v1"},
+		{"InternetScuole","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Intra-TNSviluppo","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"LAN","Accesso","hq.tnnet.it","EMERGENCY_F0","ThresholdWARNING","lan","snmp_default_v2"},
+		{"Medici","Accesso","medici.tnnet.it","INFORMATION","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Mitt","Accesso","mitt.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Multivoce","Accesso","multivoce.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"OperaUnitn","Accesso","operaunitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"OperaVoce","Accesso","operavoce.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"Pat","Accesso","pat.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"PatAcquePub","Accesso","patacquepub.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"PatDighe","Accesso","patdighe.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Pat-Tecnica","Accesso","pat-tecnica.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"PatVoce","Accesso","patvoce.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Phoenix","Accesso","phoenix.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"ReperibiliTnet","Accesso","reperibilitnet.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"RSACivicaTN","Accesso","rsacivicatn.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"RSASpes","Accesso","rsaspes.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"Scuole","Accesso","scuole.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"ScuoleMaterne","Accesso","scuolematerne.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"ServizioVDS","Accesso","serviziovds.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"Telpat-Autonome","Accesso","telpat-autonome.tnnet.it","EMERGENCY_F4","ThresholdWARNING","accesso_radius","snmp_default_v2"},
+		{"Unitn","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"UnitnVoce","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"VdsRovereto","Accesso","vdsrovereto.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
+		{"Winwinet","Accesso","winwinet.tnnet.it","INFORMATION","ThresholdWARNING","accesso_radius","snmp_default_v2"}
+	};
+
 	
 	private JDBCConnectionPool m_pool; 
 
 	private SQLContainer m_snmpprofilecontainer;
 	private SQLContainer m_backupprofilecontainer;
+	private SQLContainer m_vrfcontainer;
 	Map<String, SnmpProfile> m_snmpProfiles = new HashMap<String, SnmpProfile>();
 	Map<String, BackupProfile> m_backupProfiles = new HashMap<String, BackupProfile>();
+	Map<String, Vrf> m_vrf = new HashMap<String, Vrf>();
 
 	public TNDao() {
 	}
@@ -182,6 +189,19 @@ public class TNDao {
 		}
         TableQuery backupprofilequery = new TableQuery("backupprofiles", m_pool);	
 		m_backupprofilecontainer = new SQLContainer(backupprofilequery);
+		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
+			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
+			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
+					new BackupProfile(backupprofiletableRow.getItemProperty("name"),backupprofiletableRow.getItemProperty("username"), 
+							backupprofiletableRow.getItemProperty("password"), 
+							backupprofiletableRow.getItemProperty("enable"),
+							backupprofiletableRow.getItemProperty("connection"), 
+							backupprofiletableRow.getItemProperty("auto_enable")
+							));
+		}
+
+	    TableQuery vrftq = new TableQuery("vrf", m_pool);	
+	    m_vrfcontainer =  new SQLContainer(vrftq);	
 		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
 			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
 			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
@@ -243,6 +263,16 @@ public class TNDao {
     	return m_network_categories[0];
     }
 
+    public Container getVrfContainer() throws SQLException {
+    	return m_vrfcontainer;
+    }
 
+    public List<FastDevice> getFastDevices() {
+    	return new ArrayList<FastDevice>();
+    }
+    
+    public List<FastService> getFastService() {
+    	return new ArrayList<FastService>();
+    }
 
 }

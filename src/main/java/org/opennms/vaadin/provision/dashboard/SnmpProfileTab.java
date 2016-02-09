@@ -11,7 +11,7 @@ import com.vaadin.ui.VerticalLayout;
 public class SnmpProfileTab extends DashboardTab {
 
 	private boolean loaded = false;
-	private Table m_snmpProfilesTable;;
+	private Table m_snmpProfilesTable;
 
 	/**
 	 * 

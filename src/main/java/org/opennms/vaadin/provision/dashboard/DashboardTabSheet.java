@@ -37,6 +37,10 @@ public class DashboardTabSheet extends CustomComponent implements
     	BackupProfileTab backupTab = new BackupProfileTab(service);
         tabsheet.addTab(backupTab, "Profili Backup",new ThemeResource("icons/16/users.png"));
         tabsheet.getTab(backupTab).setEnabled(false);
+        
+        FastTab fastTab= new FastTab(service);
+        tabsheet.addTab(fastTab, "Fast",new ThemeResource("icons/16/users.png"));
+        tabsheet.getTab(fastTab).setEnabled(false);
     	
 	}
 	
