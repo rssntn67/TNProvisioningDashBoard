@@ -8,6 +8,11 @@ public class Vrf {
 	private String m_thresholdlevel;
 	private String m_backupprofile;
 	private String m_snmpprofile;
+	
+	public Vrf() {
+		
+	}
+
 	public Vrf(String name, String notifylevel, String networklevel,
 			String dnsdomain, String thresholdlevel, String backupprofile,
 			String snmpprofile) {
@@ -62,12 +67,5 @@ public class Vrf {
 	public void setSnmpprofile(String snmpprofile) {
 		m_snmpprofile = snmpprofile;
 	}
-	
-	public String[] getStrings() {
-		return new String[]{getName(),
-				getNetworklevel(),getDnsdomain(),getNotifylevel(),
-				getThresholdlevel(),getBackupprofile(),
-				getSnmpprofile()};
-	}
-	
+		
 }

@@ -15,7 +15,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.VerticalLayout;
 
-@Title("Trentino Network Provision Dashboard - Fast Devices")
+@Title("TNPD - Fast Integration")
 @Theme("runo")
 public class FastTab extends DashboardTab implements ClickListener {
 

@@ -17,38 +17,44 @@ public class DashboardTabSheet extends CustomComponent implements
 	 * 
 	 */
 	private static final long serialVersionUID = -4835992723502900986L;
-	TabSheet tabsheet = new TabSheet();
-    LoginBox loginbox;
+	TabSheet m_tabsheet; ;
+    LoginBox m_loginbox;
     
     DashboardTabSheet(DashBoardService service) {
-    	loginbox = new LoginBox(tabsheet,service);
-		setCompositionRoot(tabsheet);
-		
-		tabsheet.addSelectedTabChangeListener(this);
-        tabsheet.addTab(loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
-    	TrentinoNetworkTab tab=new TrentinoNetworkTab(service);
-    	tabsheet.addTab(tab, "rete TN", new ThemeResource("icons/16/users.png"));
-    	tabsheet.getTab(tab).setEnabled(false);
-        
+    	m_tabsheet = new TabSheet();
+		setCompositionRoot(m_tabsheet);
+    	
+		m_loginbox = new LoginBox(m_tabsheet,service);		
+		m_tabsheet.addSelectedTabChangeListener(this);
+        m_tabsheet.addTab(m_loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
+    	
+        TrentinoNetworkTab tab=new TrentinoNetworkTab(service);
+    	m_tabsheet.addTab(tab, "rete TN", new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.getTab(tab).setEnabled(false);
+
+        VrfTab vrfTab=new VrfTab(service);
+    	m_tabsheet.addTab(vrfTab, "Vrf", new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.getTab(vrfTab).setEnabled(false);
+    	
     	SnmpProfileTab snmpTab = new SnmpProfileTab(service);
-        tabsheet.addTab(snmpTab, "Profili Snmp",new ThemeResource("icons/16/users.png"));
-    	tabsheet.getTab(snmpTab).setEnabled(false);
+        m_tabsheet.addTab(snmpTab, "Profili Snmp",new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.getTab(snmpTab).setEnabled(false);
     	
     	BackupProfileTab backupTab = new BackupProfileTab(service);
-        tabsheet.addTab(backupTab, "Profili Backup",new ThemeResource("icons/16/users.png"));
-        tabsheet.getTab(backupTab).setEnabled(false);
+        m_tabsheet.addTab(backupTab, "Profili Backup",new ThemeResource("icons/16/users.png"));
+        m_tabsheet.getTab(backupTab).setEnabled(false);
         
         FastTab fastTab= new FastTab(service);
-        tabsheet.addTab(fastTab, "Fast",new ThemeResource("icons/16/users.png"));
-        tabsheet.getTab(fastTab).setEnabled(false);
+        m_tabsheet.addTab(fastTab, "Fast",new ThemeResource("icons/16/users.png"));
+        m_tabsheet.getTab(fastTab).setEnabled(false);
     	
 	}
 	
 	@Override
 	public void selectedTabChange(SelectedTabChangeEvent event) {
 		final TabSheet source = (TabSheet) event.getSource();
-		if (source == tabsheet) {
-			if (source.getSelectedTab() != loginbox) {
+		if (source == m_tabsheet) {
+			if (source.getSelectedTab() != m_loginbox) {
 				((DashboardTab)source.getSelectedTab()).load();
 			}
 		}

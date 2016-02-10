@@ -7,7 +7,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
-@Title("Trentino Network Provision Dashboard - Backup Profiles")
+@Title("TNPD - Backup Profiles")
 @Theme("runo")
 public class BackupProfileTab extends DashboardTab {
 

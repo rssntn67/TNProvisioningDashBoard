@@ -54,7 +54,7 @@ import com.vaadin.ui.VerticalLayout;
  * app a web page showing your UI is automatically generated. Or you may choose to 
  * embed your UI to an existing web page. 
  */
-@Title("Trentino Network Provision Dashboard - Trentino Network Requisition")
+@Title("TNPD - Trentino Network Requisition")
 @Theme("runo")
 public class TrentinoNetworkTab extends DashboardTab {
 

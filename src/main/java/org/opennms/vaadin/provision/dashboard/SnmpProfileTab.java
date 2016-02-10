@@ -6,7 +6,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
-@Title("Trentino Network Provision Dashboard - Snmp Profiles")
+@Title("TNPD - Snmp Profiles")
 @Theme("runo")
 public class SnmpProfileTab extends DashboardTab {
 

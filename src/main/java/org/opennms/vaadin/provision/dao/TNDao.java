@@ -22,6 +22,12 @@ import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 
 public class TNDao {
 
+	public static final String[] m_network_categories = {
+		"Backbone",
+		"Distribuzione",
+		"Accesso"
+	};
+
 	public static final String[] m_notif_categories = {
 		"EMERGENCY_F0",
 		"EMERGENCY_F1",
@@ -77,7 +83,10 @@ public class TNDao {
 							));
 		}
 
-	    m_vrfcontainer =  new SQLContainer(new TableQuery("vrf", m_pool));	
+		TableQuery vrftq = new TableQuery("vrf", m_pool);
+		vrftq.setVersionColumn("VERSIONID");
+	    m_vrfcontainer =  new SQLContainer(vrftq);	
+	    
 		for (Iterator<?> i = m_vrfcontainer.getItemIds().iterator(); i.hasNext();) {
 			Item vrftableRow = m_vrfcontainer.getItem(i.next());
 			m_vrf.put(vrftableRow.getItemProperty("name").getValue().toString(),
