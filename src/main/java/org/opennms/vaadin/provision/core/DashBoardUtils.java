@@ -1,5 +1,6 @@
 package org.opennms.vaadin.provision.core;
 
+import java.util.List;
 import java.util.Map;
 
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
@@ -36,7 +37,7 @@ public class DashBoardUtils {
 		return false;
 	}
 	
-	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel, String[] sub_domains) {
+	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel, List<String> sub_domains) {
 		if (hostname == null)
 			return true;
 		if (hostname.contains(".")) {

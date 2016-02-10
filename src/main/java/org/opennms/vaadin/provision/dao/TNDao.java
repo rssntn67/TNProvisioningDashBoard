@@ -36,141 +36,18 @@ public class TNDao {
 		"ThresholdALERT"
 	};
 	
-	public static final String[] m_sub_domains = {
-		"alv01.wl.tnnet.it",
-		"alv02.wl.tnnet.it",
-		"alv03.wl.tnnet.it",
-		"alv04.wl.tnnet.it",
-		"alv05.wl.tnnet.it",
-		"alv06.wl.tnnet.it",
-		"asw01.wl.tnnet.it",
-		"cavalese-l3.pat.tnnet.it",
-		"cpe01.biblio.tnnet.it",
-		"cpe01.pat.tnnet.it",
-		"cpe01.patacquepub.tnnet.it",
-		"cpe01.scuole.tnnet.it",
-		"cpe01.wl.tnnet.it",
-		"ess01.wl.tnnet.it",
-		"ess02.wl.tnnet.it",
-		"ess03.wl.tnnet.it",
-		"ess04.wl.tnnet.it",
-		"ess05.wl.tnnet.it",
-		"ess06.wl.tnnet.it",
-		"ess07.wl.tnnet.it",
-		"ess08.wl.tnnet.it",
-		"mktic.comuni.tnnet.it",
-		"mtk01.reperibilitnet.tnnet.it",
-		"mtr01.wl.tnnet.it",
-		"sw01.bb.tnnet.it",
-		"sw02.bb.tnnet.it",
-		"uby.wl.tnnet.it"
-	};
-	
-	public static final String[] m_vrfs = {
-		"acsm.tnnet.it",
-		"aglav.tnnet.it",
-		"apss.tnnet.it",
-		"bb.tnnet.it",
-		"biblio.tnnet.it",
-		"comunetn.tnnet.it",
-		"comuni.tnnet.it",
-		"conspro.tnnet.it",
-		"cue.tnnet.it",
-		"esterni.tnnet.it",
-		"fem.tnnet.it",
-		"geosis.tnnet.it",
-		"hq.tnnet.it",
-		"iasma.tnnet.it",
-		"info.tnnet.it",
-		"infotn.tnnet.it",
-		"internet-esterni.tnnet.it",
-		"internet.tnnet.it",
-		"medici.tnnet.it",
-		"mitt.tnnet.it",
-		"multivoce.tnnet.it",
-		"operaunitn.tnnet.it",
-		"pat.tnnet.it",
-		"patacquepub.tnnet.it",
-		"patdighe.tnnet.it",
-		"patvoce.tnnet.it",
-		"pat-tecnica.tnnet.it",
-		"phoenix.tnnet.it",
-		"reperibilitnet.tnnet.it",
-		"rsacivicatn.tnnet.it",
-		"rsaspes.tnnet.it",
-		"scuolematerne.tnnet.it",
-		"scuole.tnnet.it",
-		"serviziovds.tnnet.it",
-		"telpat-autonome.tnnet.it",
-		"unitn.tnnet.it",
-		"vdsrovereto.tnnet.it",
-		"winwinet.tnnet.it",
-		"wl.tnnet.it"
-	};
-
-	public static final String[][] m_network_categories = {
-		{"Core","Backbone","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_7","snmp_default_v2"},
-		{"Ponte5p4","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesspoint_alvarion_tftp","public_v1"},
-		{"PontePDH","Backbone","wl.tnnet.it","EMERGENCY_F1","ThresholdWARNING","backbone_accesso_switch_pat","public_v2"},
-		{"AccessPoint","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
-		{"SwitchWiNet","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
-		{"SwitchTetra","Distribuzione","wl.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_switch_alcatel_winet","wifless_v2"},
-		{"Fiemme2013","Distribuzione","bb.tnnet.it","EMERGENCY_F0","ThresholdWARNING","backbone_2013","snmp_default_v2"},
-		{"ACSM","Accesso","acsm.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"AgLav","Accesso","aglav.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Apss","Accesso","apss.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Audiovisivi","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Biblio","Accesso","biblio.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"CPE","Accesso","wl.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesspoint_essentia_ssh","wifless_v2"},
-		{"CUE","Accesso","cue.tnnet.it","EMERGENCY_F0","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ComuneTN","Accesso","comunetn.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v1"},
-		{"Comuni","Accesso","comuni.tnnet.it","EMERGENCY_F4","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ConsPro","Accesso","conspro.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ConsProVoce","Accesso","conspro.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"FEM","Accesso","fem.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"GeoSis","Accesso","geosis.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Iasma","Accesso","iasma.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Info","Accesso","info.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Infotn","Accesso","infotn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"InfotnVoce","Accesso","infotn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Internet","Accesso","internet.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Internet-Esterni","Accesso","internet-esterni.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v1"},
-		{"InternetScuole","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Intra-TNSviluppo","Accesso","wl.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"LAN","Accesso","hq.tnnet.it","EMERGENCY_F0","ThresholdWARNING","lan","snmp_default_v2"},
-		{"Medici","Accesso","medici.tnnet.it","INFORMATION","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Mitt","Accesso","mitt.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Multivoce","Accesso","multivoce.tnnet.it","EMERGENCY_F1","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"OperaUnitn","Accesso","operaunitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"OperaVoce","Accesso","operavoce.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Pat","Accesso","pat.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"PatAcquePub","Accesso","patacquepub.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"PatDighe","Accesso","patdighe.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Pat-Tecnica","Accesso","pat-tecnica.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"PatVoce","Accesso","patvoce.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Phoenix","Accesso","phoenix.tnnet.it","EMERGENCY_F3","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ReperibiliTnet","Accesso","reperibilitnet.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"RSACivicaTN","Accesso","rsacivicatn.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"RSASpes","Accesso","rsaspes.tnnet.it","EMERGENCY_F4","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Scuole","Accesso","scuole.tnnet.it","EMERGENCY_F2","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"ScuoleMaterne","Accesso","scuolematerne.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"ServizioVDS","Accesso","serviziovds.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Telpat-Autonome","Accesso","telpat-autonome.tnnet.it","EMERGENCY_F4","ThresholdWARNING","accesso_radius","snmp_default_v2"},
-		{"Unitn","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"UnitnVoce","Accesso","unitn.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"VdsRovereto","Accesso","vdsrovereto.tnnet.it","EMERGENCY_F2","ThresholdWARNING","backbone_accesso_switch_pat","snmp_default_v2"},
-		{"Winwinet","Accesso","winwinet.tnnet.it","INFORMATION","ThresholdWARNING","accesso_radius","snmp_default_v2"}
-	};
-
-	
 	private JDBCConnectionPool m_pool; 
 
 	private SQLContainer m_snmpprofilecontainer;
 	private SQLContainer m_backupprofilecontainer;
 	private SQLContainer m_vrfcontainer;
+	private SQLContainer m_dnsdomaincontainer;
+	private SQLContainer m_dnssubdomaincontainer;
 	Map<String, SnmpProfile> m_snmpProfiles = new HashMap<String, SnmpProfile>();
 	Map<String, BackupProfile> m_backupProfiles = new HashMap<String, BackupProfile>();
 	Map<String, Vrf> m_vrf = new HashMap<String, Vrf>();
+	List<String> m_subdomains = new ArrayList<String>();
+	List<String> m_domains = new ArrayList<String>();
 
 	public TNDao() {
 	}
@@ -178,8 +55,8 @@ public class TNDao {
 	@SuppressWarnings("unchecked")
 	public void init(String driver, String dburl, String username, String password) throws SQLException {
 		m_pool = new SimpleJDBCConnectionPool(driver, dburl, username, password);
-        TableQuery snmpprofilequery = new TableQuery("snmpprofiles", m_pool);	
-        m_snmpprofilecontainer = new SQLContainer(snmpprofilequery);
+        
+        m_snmpprofilecontainer = new SQLContainer(new TableQuery("snmpprofiles", m_pool));
         for (Iterator<?> i = m_snmpprofilecontainer.getItemIds().iterator(); i.hasNext();) {
 			Item snmpprofiletableRow = m_snmpprofilecontainer.getItem(i.next());
 			m_snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
@@ -187,8 +64,8 @@ public class TNDao {
 							snmpprofiletableRow.getItemProperty("version"), 
 							snmpprofiletableRow.getItemProperty("timeout")));
 		}
-        TableQuery backupprofilequery = new TableQuery("backupprofiles", m_pool);	
-		m_backupprofilecontainer = new SQLContainer(backupprofilequery);
+        
+		m_backupprofilecontainer = new SQLContainer(new TableQuery("backupprofiles", m_pool));
 		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
 			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
 			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
@@ -200,17 +77,30 @@ public class TNDao {
 							));
 		}
 
-	    TableQuery vrftq = new TableQuery("vrf", m_pool);	
-	    m_vrfcontainer =  new SQLContainer(vrftq);	
-		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
-			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
-			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
-					new BackupProfile(backupprofiletableRow.getItemProperty("name"),backupprofiletableRow.getItemProperty("username"), 
-							backupprofiletableRow.getItemProperty("password"), 
-							backupprofiletableRow.getItemProperty("enable"),
-							backupprofiletableRow.getItemProperty("connection"), 
-							backupprofiletableRow.getItemProperty("auto_enable")
+	    m_vrfcontainer =  new SQLContainer(new TableQuery("vrf", m_pool));	
+		for (Iterator<?> i = m_vrfcontainer.getItemIds().iterator(); i.hasNext();) {
+			Item vrftableRow = m_vrfcontainer.getItem(i.next());
+			m_vrf.put(vrftableRow.getItemProperty("name").getValue().toString(),
+					new Vrf(vrftableRow.getItemProperty("name").getValue().toString(),
+							vrftableRow.getItemProperty("notifylevel").getValue().toString(),
+							vrftableRow.getItemProperty("networklevel").getValue().toString(),
+							vrftableRow.getItemProperty("dnsdomain").getValue().toString(),
+							vrftableRow.getItemProperty("thresholdlevel").getValue().toString(),
+							vrftableRow.getItemProperty("backupprofile").getValue().toString(),
+							vrftableRow.getItemProperty("snmpprofile").getValue().toString()
 							));
+		}
+
+	    m_dnsdomaincontainer =  new SQLContainer(new TableQuery("dnsdomains", m_pool));	
+		for (Iterator<?> i = m_dnsdomaincontainer.getItemIds().iterator(); i.hasNext();) {
+			Item dnsdomaintableRow = m_dnsdomaincontainer.getItem(i.next());
+			m_domains.add(dnsdomaintableRow.getItemProperty("dnsdomain").getValue().toString());
+		}
+
+	    m_dnssubdomaincontainer =  new SQLContainer(new TableQuery("dnssubdomains", m_pool));	
+		for (Iterator<?> i = m_dnssubdomaincontainer.getItemIds().iterator(); i.hasNext();) {
+			Item dnssubdomaintableRow = m_dnssubdomaincontainer.getItem(i.next());
+			m_subdomains.add(dnssubdomaintableRow.getItemProperty("dnssubdomain").getValue().toString());
 		}
 
 
@@ -251,20 +141,12 @@ public class TNDao {
 		return m_backupprofilecontainer;
 	}
 
-    public String[] getDefaultValuesFromNetworkCategory(Object networkcategory) {
-    	if (networkcategory == null)
-        	return m_network_categories[0];
-    	String[] netcat = (String[]) networkcategory;
-    	for (int i = 0; i< m_network_categories.length;i++) {
-    	   	if (netcat[0].equals(m_network_categories[i][0]) &&
-        			netcat[1].equals(m_network_categories[i][1]))
-    	    	return m_network_categories[i];
-    	}
-    	return m_network_categories[0];
+	public Container getVrfContainer() throws SQLException {
+    	return m_vrfcontainer;
     }
 
-    public Container getVrfContainer() throws SQLException {
-    	return m_vrfcontainer;
+    public Map<String,Vrf> getVrfs() {
+    	return m_vrf;
     }
 
     public List<FastDevice> getFastDevices() {
@@ -274,5 +156,21 @@ public class TNDao {
     public List<FastService> getFastService() {
     	return new ArrayList<FastService>();
     }
+
+	public SQLContainer getDnsdomaincontainer() {
+		return m_dnsdomaincontainer;
+	}
+
+	public SQLContainer getDnssubdomaincontainer() {
+		return m_dnssubdomaincontainer;
+	}
+
+	public List<String> getSubdomains() {
+		return m_subdomains;
+	}
+
+	public List<String> getDomains() {
+		return m_domains;
+	}
 
 }

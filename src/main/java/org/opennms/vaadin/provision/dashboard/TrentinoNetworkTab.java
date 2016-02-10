@@ -13,6 +13,7 @@ import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
+import org.opennms.vaadin.provision.model.Vrf;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -63,7 +64,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		 */
 		private static final long serialVersionUID = 1L;
 		private String   needle="";
-		private String[] needle1=null;
+		private Vrf needle1=null;
 		private String   needle2=null;
 		private String   needle3=null;
 		
@@ -71,7 +72,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			if ( o != null)
 				needle = (String) o;
 			if ( c1 != null) 
-				needle1 = (String[]) c1;
+				needle1 = (Vrf) c1;
 			if ( c2 != null)
 				needle2 = (String) c2;
 			if ( c3 != null)
@@ -243,9 +244,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		for (String[] categories: TNDao.m_network_categories) {
+		for (Vrf categories: getService().getTnDao().getVrfs().values()) {
 			m_networkCatSearchComboBox.addItem(categories);
-			m_networkCatSearchComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
+			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
 		m_networkCatSearchComboBox.setInvalidAllowed(false);
 		m_networkCatSearchComboBox.setNullSelectionAllowed(true);		
@@ -314,13 +315,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		for (final String vrfs: TNDao.m_vrfs) {
+		for (final String vrfs: getService().getTnDao().getDomains()) {
 			m_vrfsComboBox.addItem(vrfs);
 		}
 
-		for (String[] categories: TNDao.m_network_categories) {
+		for (Vrf categories: getService().getTnDao().getVrfs().values()) {
 			m_networkCatComboBox.addItem(categories);
-			m_networkCatComboBox.setItemCaption(categories, categories[1]+" - " + categories[0]);
+			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
 
 		for (String notif: TNDao.m_notif_categories) {
@@ -359,11 +360,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void valueChange(ValueChangeEvent event) {
 				TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 				if (node.getForeignId() == null) {
-					m_vrfsComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[2]);
-					m_notifCatComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[3]);
-					m_threshCatComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[4]);
-					m_backupComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[5]);
-					m_snmpComboBox.select(getService().getTnDao().getDefaultValuesFromNetworkCategory(m_networkCatComboBox.getValue())[6]);
+					m_vrfsComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getDnsdomain());
+					m_notifCatComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getNotifylevel());
+					m_threshCatComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getThresholdlevel());
+					m_backupComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getBackupprofile());
+					m_snmpComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getSnmpprofile());
 				}
 			}
 		});
@@ -594,13 +595,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++,
-					TNDao.m_network_categories[0], 
-				    TNDao.m_network_categories[0][2],
-				    TNDao.m_network_categories[0][3],
-				    TNDao.m_network_categories[0][4],
-				    TNDao.m_network_categories[0][5],
-				    TNDao.m_network_categories[0][6]
-				));
+						getService().getTnDao().getVrfs().values().iterator().next()));
 				m_networkCatSearchComboBox.select(null);
 				m_networkCatSearchComboBox.setValue(null);
 				m_notifCatSearchComboBox.select(null);
@@ -807,7 +802,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			String hostname = ((String)value).toLowerCase();
 			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
 			logger.info("SubdomainValidator: validating hostname: " + hostname);
-			 if (hasUnSupportedDnsDomain(hostname, nodelabel, TNDao.m_sub_domains))
+			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getTnDao().getSubdomains()))
 	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
 	       }
 	}

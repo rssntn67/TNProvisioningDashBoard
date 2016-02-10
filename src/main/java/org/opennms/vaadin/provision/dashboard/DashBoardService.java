@@ -33,6 +33,7 @@ import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
+import org.opennms.vaadin.provision.model.Vrf;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -127,7 +128,7 @@ public class DashBoardService implements Serializable {
 
 			String vrf = null;
 			String hostname = null;
-			for (String tnvrf: TNDao.m_vrfs) {
+			for (String tnvrf: m_tnDao.getDomains()) {
 				if (nodelabel.endsWith("."+tnvrf)) {
 					vrf = tnvrf;
 					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
@@ -160,10 +161,10 @@ public class DashBoardService implements Serializable {
 			else if (hasInvalidIp(primary))
 				valid = false;
 				
-			String[] networkCategory = null;
-			for (String[] ncat: TNDao.m_network_categories) {
-				if (node.getCategory(ncat[0]) != null && node.getCategory(ncat[1]) != null) {
-					networkCategory = ncat;
+			Vrf networkCategory = null;
+			for (Vrf lvrf: m_tnDao.getVrfs().values()) {
+				if (node.getCategory(lvrf.getName()) != null && node.getCategory(lvrf.getNetworklevel()) != null) {
+					networkCategory = lvrf;
 					break;
 				}
 			}
@@ -204,7 +205,7 @@ public class DashBoardService implements Serializable {
 			
 			if (hasInvalidDnsBind9Label(nodelabel))
 				valid = false;
-			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,TNDao.m_sub_domains))
+			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,m_tnDao.getSubdomains()))
 				valid = false;		
 			
 			String parent = null;
@@ -391,8 +392,8 @@ public class DashBoardService implements Serializable {
 		requisitionNode.putInterface(iface);
 
 		if (node.getNetworkCategory() != null) {
-			requisitionNode.putCategory(new RequisitionCategory(node.getNetworkCategory()[0]));
-			requisitionNode.putCategory(new RequisitionCategory(node.getNetworkCategory()[1]));
+			requisitionNode.putCategory(new RequisitionCategory(node.getNetworkCategory().getName()));
+			requisitionNode.putCategory(new RequisitionCategory(node.getNetworkCategory().getNetworklevel()));
 		}
 		
 		if (node.getNotifCategory() != null)

@@ -6,20 +6,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dao.TNDao;
 
 public class DashBoardServiceTest {
 
-    @Test
-    public void testArrayEquals() {
-    	String[] netcat = {"Core","Backbone"};
-    	if (netcat[0].equals(TNDao.m_network_categories[0][0]) &&
-    			netcat[1].equals(TNDao.m_network_categories[0][1])) {
-    		System.out.println("Well Done");
-    	} else {
-    		System.out.println("Nay");    		
-    	}
-    }
     
     @Test
     public void testInvalidDnsLabel() {

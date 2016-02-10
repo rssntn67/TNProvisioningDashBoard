@@ -1,13 +1,13 @@
 package org.opennms.vaadin.provision.model;
 
 public class Vrf {
-	private final String m_name; 
-	private final String m_notifylevel;
-	private final String m_networklevel;
-	private final String m_dnsdomain;
-	private final String m_thresholdlevel;
-	private final String m_backupprofile;
-	private final String m_snmpprofile;
+	private String m_name; 
+	private String m_notifylevel;
+	private String m_networklevel;
+	private String m_dnsdomain;
+	private String m_thresholdlevel;
+	private String m_backupprofile;
+	private String m_snmpprofile;
 	public Vrf(String name, String notifylevel, String networklevel,
 			String dnsdomain, String thresholdlevel, String backupprofile,
 			String snmpprofile) {
@@ -40,6 +40,34 @@ public class Vrf {
 	}
 	public String getSnmpprofile() {
 		return m_snmpprofile;
+	}
+	public void setName(String name) {
+		m_name = name;
+	}
+	public void setNotifylevel(String notifylevel) {
+		m_notifylevel = notifylevel;
+	}
+	public void setNetworklevel(String networklevel) {
+		m_networklevel = networklevel;
+	}
+	public void setDnsdomain(String dnsdomain) {
+		m_dnsdomain = dnsdomain;
+	}
+	public void setThresholdlevel(String thresholdlevel) {
+		m_thresholdlevel = thresholdlevel;
+	}
+	public void setBackupprofile(String backupprofile) {
+		m_backupprofile = backupprofile;
+	}
+	public void setSnmpprofile(String snmpprofile) {
+		m_snmpprofile = snmpprofile;
+	}
+	
+	public String[] getStrings() {
+		return new String[]{getName(),
+				getNetworklevel(),getDnsdomain(),getNotifylevel(),
+				getThresholdlevel(),getBackupprofile(),
+				getSnmpprofile()};
 	}
 	
 }

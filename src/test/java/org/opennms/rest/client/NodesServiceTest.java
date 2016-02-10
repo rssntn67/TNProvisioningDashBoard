@@ -101,39 +101,7 @@ public class NodesServiceTest {
     		System.out.println(ip.getIpHostName());
     	}
     }
-    
-    @Test
-    public void testMatchSubDomain() {
-    	String hostname = "prova.alv01";
-    	String nodelabel = "prova.alv01.wl.tnnet.it";
-		System.out.println(nodelabel);
-		if (hostname.contains(".")) {
-			String hostlabel = hostname.substring(0,hostname.indexOf("."));
-			System.out.println(hostlabel);
-			for (String subdomain: TNDao.m_sub_domains ) {
-				if (nodelabel.equals(hostlabel+"."+subdomain))
-					System.out.println(hostlabel+"."+subdomain);
-			}
-		}
-
-    }
-    
-    @Test
-    public void testUnMatchSubDomain() {
-    	String hostname = "prova.alv07";
-    	String nodelabel = "prova.alv07.wl.tnnet.it";
-		System.out.println(nodelabel);
-		if (hostname.contains(".")) {
-			String hostlabel = hostname.substring(0,hostname.indexOf("."));
-			System.out.println(hostlabel);
-			for (String subdomain: TNDao.m_sub_domains ) {
-				if (nodelabel.equals(hostlabel+"."+subdomain))
-					System.out.println(hostlabel+"."+subdomain);
-			}
-		}
-
-    }
-
+        
     @Test
     public void testDnsLabel() {
     	String nodelabel = "prova.alv01.wl.tnnet.it";

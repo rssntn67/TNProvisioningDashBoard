@@ -2,7 +2,6 @@ package org.opennms.vaadin.provision.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +33,7 @@ public class TrentinoNetworkNode implements Serializable {
 	private String[] m_secondary;
 	private String m_parent;
 
-	private String[] m_networkCategory;
+	private Vrf m_networkCategory;
 	private String m_notifCategory;
 	private String m_threshCategory;
 
@@ -48,8 +47,7 @@ public class TrentinoNetworkNode implements Serializable {
 	
 	protected boolean m_valid = true;
 	
-	public TrentinoNetworkNode(String label, String[] networkCategory,String vrf, String notifCategory,
-			String threshCategory, String backupProfile, String snmpProfile) {
+	public TrentinoNetworkNode(String label, Vrf vrf) {
 		m_label = label;
 		m_primary="0.0.0.0";
 		m_hostname="";
@@ -57,12 +55,12 @@ public class TrentinoNetworkNode implements Serializable {
 		m_city="";
 		m_address1="";
 
-		m_networkCategory = networkCategory; 
-		m_vrf = vrf;
-		m_notifCategory = notifCategory;
-		m_threshCategory = threshCategory;
-		m_backupProfile = backupProfile;
-		m_snmpProfile = snmpProfile;
+		m_networkCategory = vrf; 
+		m_vrf = vrf.getDnsdomain();
+		m_notifCategory = vrf.getNetworklevel();
+		m_threshCategory = vrf.getThresholdlevel();
+		m_backupProfile = vrf.getBackupprofile();
+		m_snmpProfile = vrf.getSnmpprofile();
 						
 		m_descr="Provided by Provision Dashboard";
 		
@@ -75,7 +73,7 @@ public class TrentinoNetworkNode implements Serializable {
 			String vrf, 
 			String primary, 
 			String parent,
-			String[] networkCategory, 
+			Vrf networkCategory, 
 			String notifCategory,
 			String threshCategory, 
 			String snmpProfile, 
@@ -157,21 +155,19 @@ public class TrentinoNetworkNode implements Serializable {
 		m_city = city;		
 	}
 
-	public String[] getNetworkCategory() {
+	public Vrf getNetworkCategory() {
 		return m_networkCategory;
 	}
 
-	public void setNetworkCategory(String[] networkCategory) {
-		if (networkCategory != null && Arrays.equals(m_networkCategory,networkCategory))
+	public void setNetworkCategory(Vrf networkCategory) {
+		if (networkCategory.getName().equals(m_networkCategory.getName()))
 			return;
-		if (m_networkCategory != null) {
-			m_categoriesToDel.add(m_networkCategory[0]);
-			m_categoriesToDel.add(m_networkCategory[1]);
-		}
+		m_categoriesToDel.add(m_networkCategory.getName());
+		m_categoriesToAdd.add(networkCategory.getName());
 		
-		if (networkCategory != null) {
-			m_categoriesToAdd.add(networkCategory[0]);
-			m_categoriesToAdd.add(networkCategory[1]);
+		if (!networkCategory.getNetworklevel().equals(m_networkCategory.getNetworklevel())) {
+			m_categoriesToDel.add(m_networkCategory.getNetworklevel());
+			m_categoriesToAdd.add(networkCategory.getNetworklevel());
 		}
 		m_networkCategory = networkCategory;
 	}
