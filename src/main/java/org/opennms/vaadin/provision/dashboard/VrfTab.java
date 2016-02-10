@@ -7,18 +7,17 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
-import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.Vrf;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Validator;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
-import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
@@ -28,6 +27,8 @@ import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
@@ -43,42 +44,6 @@ import com.vaadin.ui.Button.ClickListener;
 @Title("TNPD - Gestione VRF")
 @Theme("runo")
 public class VrfTab extends DashboardTab {
-
-	private class NodeFilter implements Filter {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-		private String   needle="";
-		private Vrf needle1=null;
-		private String   needle2=null;
-		private String   needle3=null;
-		
-		public NodeFilter(Object o, Object c1, Object c2,Object c3) {
-			if ( o != null)
-				needle = (String) o;
-			if ( c1 != null) 
-				needle1 = (Vrf) c1;
-			if ( c2 != null)
-				needle2 = (String) c2;
-			if ( c3 != null)
-				needle3 = (String) c3;
-		}
-
-		@SuppressWarnings("unchecked")
-		public boolean passesFilter(Object itemId, Item item) {
-			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();			
-			return (    node.getNodeLabel().contains(needle) 
-					&& ( needle1 == null || node.getNetworkCategory() == needle1 ) 
-					&& ( needle2 == null || node.getNotifCategory()   == needle2 )
-		            && ( needle3 == null || node.getThreshCategory()  == needle3 ) 
-					);
-		}
-
-		public boolean appliesToProperty(Object id) {
-			return true;
-		}
-	}
 
 	private static final long serialVersionUID = -5948892618258879832L;
 
@@ -135,12 +100,7 @@ public class VrfTab extends DashboardTab {
 			m_backupComboBox.addItem(backupprofile);
 		}
 
-		try {
-			m_requisitionContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		m_requisitionContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		setCompositionRoot(splitPanel);
@@ -217,7 +177,14 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_vrfSearchComboBox, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				if (m_networkCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+				if (m_notifCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+				if (m_threshCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+				if (m_vrfSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 			}
 		});
 
@@ -237,7 +204,14 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_vrfSearchComboBox, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				if (m_notifCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+				if (m_networkCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+				if (m_threshCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+				if (m_vrfSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 			}
 		});
 		
@@ -256,7 +230,14 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_vrfSearchComboBox, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				if (m_threshCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+				if (m_notifCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+				if (m_networkCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+				if (m_vrfSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 			}
 		});
 
@@ -275,7 +256,14 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_vrfSearchComboBox, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				if (m_vrfSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+				if (m_threshCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+				if (m_notifCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+				if (m_networkCatSearchComboBox.getValue() != null)
+					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
 			}
 		});
 
@@ -300,7 +288,7 @@ public class VrfTab extends DashboardTab {
 		m_vrf.setHeight(6, Unit.MM);
 		m_vrf.setRequired(true);
 		m_vrf.setRequiredError("vrf non deve essere vuota");
-		m_vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z0-9]*$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
+		m_vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]*$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
 		m_vrf.addValidator(new DuplicatedVrfValidator());
 		m_vrf.setImmediate(true);
 
@@ -395,52 +383,68 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
+				Object vrfId = m_requisitionTable.getValue();
+				if (vrfId != null)
+					m_requisitionTable.unselect(vrfId);
 				Vrf vrf = new Vrf();
 				m_editorFields.setItemDataSource(vrf);
 				m_editRequisitionNodeLayout.setVisible(true);
 				m_saveNodeButton.setEnabled(true);
 				m_removeNodeButton.setEnabled(true);
-				m_resetNodeButton.setEnabled(true);						
-
+				m_resetNodeButton.setEnabled(true);	
 			}
 		});
-		/*
+		
 		m_saveNodeButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
+			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
+				Object vrfId = m_requisitionTable.getValue();
 				try {
 					m_editorFields.commit();
-					Vrf vrf = m_editorFields.getItemDataSource().getBean();
-					if (node.getForeignId() == null) {
-						node.setForeignId(node.getHostname());
-						node.setValid(true);
-						getService().addNode(TN,node);
-						logger.info("Added: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
-						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
-					} else {
-						getService().updateNode(TN,node);
-						logger.info("Updated: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
-						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
-					}
-					m_requisitionContainer.addContainerFilter(new NodeFilter(node.getHostname(), null, null, null));
-					m_requisitionContainer.removeAllContainerFilters();
-				} catch (Exception e) {
-					e.printStackTrace();
-					String localizedMessage = e.getLocalizedMessage();
-					Throwable t = e.getCause();
-					while ( t != null) {
-						if (t.getLocalizedMessage() != null)
-							localizedMessage+= ": " + t.getLocalizedMessage();
-						t = t.getCause();
-					}
-					logger.warning("Save Failed: " + localizedMessage);
-					Notification.show("Save Failed", localizedMessage, Type.ERROR_MESSAGE);
+				} catch (CommitException ce) {
+					logger.warning("Save Vrf Failed: " + ce.getLocalizedMessage());
+					Notification.show("Save Vrf Failed", ce.getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
+				
+				Vrf vrf = m_editorFields.getItemDataSource().getBean();
+				Integer versionid = null;
+				if (vrfId == null) {
+					vrfId = m_requisitionContainer.addItem();
+					versionid = 0;
+					logger.info("Adding Vrf: " + vrf.getName());
+				} else {
+					logger.info("Updating Vrf: " + vrf.getName());
+				}
+				m_requisitionContainer.getContainerProperty(vrfId, "name").setValue(vrf.getName());
+				m_requisitionContainer.getContainerProperty(vrfId, "notifylevel").setValue(vrf.getNotifylevel());
+				m_requisitionContainer.getContainerProperty(vrfId, "networklevel").setValue(vrf.getNetworklevel());
+				m_requisitionContainer.getContainerProperty(vrfId, "dnsdomain").setValue(vrf.getDnsdomain());
+				m_requisitionContainer.getContainerProperty(vrfId, "thresholdlevel").setValue(vrf.getThresholdlevel());
+				m_requisitionContainer.getContainerProperty(vrfId, "backupprofile").setValue(vrf.getBackupprofile());
+				m_requisitionContainer.getContainerProperty(vrfId, "snmpprofile").setValue(vrf.getSnmpprofile());
+				m_requisitionContainer.getContainerProperty(vrfId, "versionid").setValue(versionid);
+				
+				try {
+					m_requisitionContainer.commit();
+					Notification.show("Save", "Vrf " + vrf.getName()+ " Saved", Type.HUMANIZED_MESSAGE);
+				} catch (UnsupportedOperationException uoe) {
+					uoe.printStackTrace();					
+					logger.warning("Save Vrf Failed: " + uoe.getLocalizedMessage());
+					Notification.show("Save Vrf Failed", uoe.getLocalizedMessage(), Type.ERROR_MESSAGE);
+				} catch (SQLException sqle) {
+					sqle.printStackTrace();
+					logger.warning("Save Vrf Failed: " + sqle.getLocalizedMessage());
+					Notification.show("Save Vrf Failed", sqle.getLocalizedMessage(), Type.ERROR_MESSAGE);
+				}
+//				m_requisitionContainer.addContainerFilter(new VrfFilter(vrf.getName(), null, null, null));
+//				m_requisitionContainer.removeAllContainerFilters();
 				m_requisitionTable.unselect(m_requisitionTable.getValue());
 			}
 		});
 
+		/*
 		m_removeNodeButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 

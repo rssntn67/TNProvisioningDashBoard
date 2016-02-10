@@ -150,7 +150,7 @@ public class TNDao {
 		return m_backupprofilecontainer;
 	}
 
-	public Container getVrfContainer() throws SQLException {
+	public Container getVrfContainer() {
     	return m_vrfcontainer;
     }
 
