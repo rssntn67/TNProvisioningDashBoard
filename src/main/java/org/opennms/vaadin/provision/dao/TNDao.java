@@ -62,7 +62,9 @@ public class TNDao {
 	public void init(String driver, String dburl, String username, String password) throws SQLException {
 		m_pool = new SimpleJDBCConnectionPool(driver, dburl, username, password);
         
-        m_snmpprofilecontainer = new SQLContainer(new TableQuery("snmpprofiles", m_pool));
+		TableQuery snmptq = new TableQuery("snmpprofiles", m_pool);
+		snmptq.setVersionColumn("versionid");
+        m_snmpprofilecontainer = new SQLContainer(snmptq);
         for (Iterator<?> i = m_snmpprofilecontainer.getItemIds().iterator(); i.hasNext();) {
 			Item snmpprofiletableRow = m_snmpprofilecontainer.getItem(i.next());
 			m_snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
@@ -71,7 +73,9 @@ public class TNDao {
 							snmpprofiletableRow.getItemProperty("timeout")));
 		}
         
-		m_backupprofilecontainer = new SQLContainer(new TableQuery("backupprofiles", m_pool));
+        TableQuery bcktq = new TableQuery("backupprofiles", m_pool);
+		bcktq.setVersionColumn("versionid");
+		m_backupprofilecontainer = new SQLContainer(bcktq);
 		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
 			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
 			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
@@ -84,7 +88,7 @@ public class TNDao {
 		}
 
 		TableQuery vrftq = new TableQuery("vrf", m_pool);
-		vrftq.setVersionColumn("VERSIONID");
+		vrftq.setVersionColumn("versionid");
 	    m_vrfcontainer =  new SQLContainer(vrftq);	
 	    
 		for (Iterator<?> i = m_vrfcontainer.getItemIds().iterator(); i.hasNext();) {

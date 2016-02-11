@@ -56,18 +56,17 @@ public class VrfTab extends DashboardTab {
 	public static final String SNMP_PROFILE    = "snmpprofile";
 	
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private SQLContainer m_requisitionContainer;
+	private SQLContainer m_vrfContainer;
 	private boolean loaded=false;
 
 	private ComboBox m_networkCatSearchComboBox = new ComboBox("Select Vrf Network Level");
 	private ComboBox m_notifCatSearchComboBox   = new ComboBox("Select Vrf Notif Level");
 	private ComboBox m_threshCatSearchComboBox  = new ComboBox("Select Vrf Threshold Level");
 	private ComboBox m_vrfSearchComboBox        = new ComboBox("Select Vrf");
-	private Table m_requisitionTable   	= new Table();
-	private Button m_addNewNodeButton  = new Button("Nuova VRF");
-	private Button m_saveNodeButton  = new Button("Salva Modifiche");
-	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
-	private Button m_removeNodeButton  = new Button("Elimina VRF");
+	private Table m_vrfTable   	= new Table();
+	private Button m_addVrfButton  = new Button("Nuova VRF");
+	private Button m_saveVrfButton  = new Button("Salva Modifiche");
+	private Button m_removeVrfButton  = new Button("Elimina VRF");
 
 	private TextField m_vrf = new TextField("Vrf");
 	private ComboBox m_domainComboBox = new ComboBox("Dominio");
@@ -77,10 +76,9 @@ public class VrfTab extends DashboardTab {
 	private ComboBox m_snmpComboBox  = new ComboBox("SNMP Profile");
 	private ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
 
-	private VerticalLayout m_editRequisitionNodeLayout  = new VerticalLayout();
+	private VerticalLayout m_editVrfLayout  = new VerticalLayout();
 	
 	private BeanFieldGroup<Vrf> m_editorFields     = new BeanFieldGroup<Vrf>(Vrf.class);
-	Integer newHost = 0;
 	
 	public VrfTab(DashBoardService service) {
 		super(service);
@@ -100,7 +98,7 @@ public class VrfTab extends DashboardTab {
 			m_backupComboBox.addItem(backupprofile);
 		}
 
-		m_requisitionContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
+		m_vrfContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		setCompositionRoot(splitPanel);
@@ -125,36 +123,31 @@ public class VrfTab extends DashboardTab {
 		
 		leftLayout.addComponent(new Panel("Search",searchlayout));
 
-		m_requisitionTable.setSizeFull();
-		leftLayout.addComponent(m_requisitionTable);
+		m_vrfTable.setSizeFull();
+		leftLayout.addComponent(m_vrfTable);
 
 		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
 		bottomLeftLayout.addComponent(new Label("----Select to Edit----"));
 		leftLayout.addComponent(bottomLeftLayout);
 		leftLayout.setSizeFull();
 
-
-		HorizontalLayout topRightLayout = new HorizontalLayout();
-		topRightLayout.addComponent(m_addNewNodeButton);
-		rightLayout.addComponent(new Panel(topRightLayout));
-
-		rightLayout.addComponent(m_editRequisitionNodeLayout);
+		rightLayout.addComponent(m_editVrfLayout);
 
 		HorizontalLayout bottomRightLayout = new HorizontalLayout();
-		bottomRightLayout.addComponent(m_removeNodeButton);
-		bottomRightLayout.addComponent(m_saveNodeButton);
-		bottomRightLayout.addComponent(m_resetNodeButton);
-		bottomRightLayout.setComponentAlignment(m_removeNodeButton, Alignment.MIDDLE_LEFT);
-		bottomRightLayout.setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_CENTER);
-		bottomRightLayout.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
+		bottomRightLayout.addComponent(m_removeVrfButton);
+		bottomRightLayout.addComponent(m_saveVrfButton);
+		bottomRightLayout.addComponent(m_addVrfButton);
+		bottomRightLayout.setComponentAlignment(m_removeVrfButton, Alignment.MIDDLE_LEFT);
+		bottomRightLayout.setComponentAlignment(m_saveVrfButton, Alignment.MIDDLE_CENTER);
+		bottomRightLayout.setComponentAlignment(m_addVrfButton, Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
-		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
-		m_requisitionTable.setVisibleColumns(new String[] { "name" });
-		m_requisitionTable.setSelectable(true);
-		m_requisitionTable.setImmediate(true);
+		m_vrfTable.setContainerDataSource(m_vrfContainer);
+		m_vrfTable.setVisibleColumns(new String[] { "name" });
+		m_vrfTable.setSelectable(true);
+		m_vrfTable.setImmediate(true);
 
-		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
+		m_vrfTable.addValueChangeListener(new Property.ValueChangeListener() {
 			private static final long serialVersionUID = 1L;
 			public void valueChange(ValueChangeEvent event) {
 				selectItem();
@@ -176,15 +169,15 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				m_requisitionContainer.removeAllContainerFilters();
+				m_vrfContainer.removeAllContainerFilters();
 				if (m_networkCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
 				if (m_notifCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
 				if (m_threshCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
 				if (m_vrfSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 			}
 		});
 
@@ -203,15 +196,15 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				m_requisitionContainer.removeAllContainerFilters();
+				m_vrfContainer.removeAllContainerFilters();
 				if (m_notifCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
 				if (m_networkCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
 				if (m_threshCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
 				if (m_vrfSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 			}
 		});
 		
@@ -229,15 +222,15 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				m_requisitionContainer.removeAllContainerFilters();
+				m_vrfContainer.removeAllContainerFilters();
 				if (m_threshCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
 				if (m_notifCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
 				if (m_networkCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
 				if (m_vrfSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 			}
 		});
 
@@ -255,15 +248,15 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				m_requisitionContainer.removeAllContainerFilters();
+				m_vrfContainer.removeAllContainerFilters();
 				if (m_vrfSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
 				if (m_threshCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
 				if (m_notifCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
 				if (m_networkCatSearchComboBox.getValue() != null)
-					m_requisitionContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
 			}
 		});
 
@@ -288,7 +281,7 @@ public class VrfTab extends DashboardTab {
 		m_vrf.setHeight(6, Unit.MM);
 		m_vrf.setRequired(true);
 		m_vrf.setRequiredError("vrf non deve essere vuota");
-		m_vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]*$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
+		m_vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]+$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
 		m_vrf.addValidator(new DuplicatedVrfValidator());
 		m_vrf.setImmediate(true);
 
@@ -365,16 +358,15 @@ public class VrfTab extends DashboardTab {
 		profileInfo.addComponent(profLayout);
 		profileInfo.addComponent(catLayout);
 
-		m_editRequisitionNodeLayout.setMargin(true);
-		m_editRequisitionNodeLayout.setVisible(false);
-		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
-		m_editRequisitionNodeLayout.addComponent(new Panel(profileInfo));
+		m_editVrfLayout.setMargin(true);
+		m_editVrfLayout.setVisible(false);
+		m_editVrfLayout.addComponent(new Panel(generalInfo));
+		m_editVrfLayout.addComponent(new Panel(profileInfo));
 
-		m_saveNodeButton.setEnabled(false);
-		m_removeNodeButton.setEnabled(false);				
-		m_resetNodeButton.setEnabled(false);
+		m_saveVrfButton.setEnabled(false);
+		m_removeVrfButton.setEnabled(false);				
 		
-		m_addNewNodeButton.addClickListener(new ClickListener() {
+		m_addVrfButton.addClickListener(new ClickListener() {
 			
 			/**
 			 * 
@@ -383,24 +375,20 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				Object vrfId = m_requisitionTable.getValue();
-				if (vrfId != null)
-					m_requisitionTable.unselect(vrfId);
-				Vrf vrf = new Vrf();
-				m_editorFields.setItemDataSource(vrf);
-				m_editRequisitionNodeLayout.setVisible(true);
-				m_saveNodeButton.setEnabled(true);
-				m_removeNodeButton.setEnabled(true);
-				m_resetNodeButton.setEnabled(true);	
+				m_vrfTable.select(null);
+				m_editorFields.setItemDataSource(new Vrf());
+				m_editVrfLayout.setVisible(true);
+				m_saveVrfButton.setEnabled(true);
+				m_removeVrfButton.setEnabled(true);
 			}
 		});
 		
-		m_saveNodeButton.addClickListener(new ClickListener() {
+		m_saveVrfButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
 			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
-				Object vrfId = m_requisitionTable.getValue();
+				Object vrfId = m_vrfTable.getValue();
 				try {
 					m_editorFields.commit();
 				} catch (CommitException ce) {
@@ -411,92 +399,89 @@ public class VrfTab extends DashboardTab {
 				Vrf vrf = m_editorFields.getItemDataSource().getBean();
 				Integer versionid = null;
 				if (vrfId == null) {
-					vrfId = m_requisitionContainer.addItem();
+					vrfId = m_vrfContainer.addItem();
 					versionid = 0;
 					logger.info("Adding Vrf: " + vrf.getName());
 				} else {
 					logger.info("Updating Vrf: " + vrf.getName());
 				}
-				m_requisitionContainer.getContainerProperty(vrfId, "name").setValue(vrf.getName());
-				m_requisitionContainer.getContainerProperty(vrfId, "notifylevel").setValue(vrf.getNotifylevel());
-				m_requisitionContainer.getContainerProperty(vrfId, "networklevel").setValue(vrf.getNetworklevel());
-				m_requisitionContainer.getContainerProperty(vrfId, "dnsdomain").setValue(vrf.getDnsdomain());
-				m_requisitionContainer.getContainerProperty(vrfId, "thresholdlevel").setValue(vrf.getThresholdlevel());
-				m_requisitionContainer.getContainerProperty(vrfId, "backupprofile").setValue(vrf.getBackupprofile());
-				m_requisitionContainer.getContainerProperty(vrfId, "snmpprofile").setValue(vrf.getSnmpprofile());
-				m_requisitionContainer.getContainerProperty(vrfId, "versionid").setValue(versionid);
-				
+				m_vrfContainer.getContainerProperty(vrfId, "name").setValue(vrf.getName());
+				m_vrfContainer.getContainerProperty(vrfId, "notifylevel").setValue(vrf.getNotifylevel());
+				m_vrfContainer.getContainerProperty(vrfId, "networklevel").setValue(vrf.getNetworklevel());
+				m_vrfContainer.getContainerProperty(vrfId, "dnsdomain").setValue(vrf.getDnsdomain());
+				m_vrfContainer.getContainerProperty(vrfId, "thresholdlevel").setValue(vrf.getThresholdlevel());
+				m_vrfContainer.getContainerProperty(vrfId, "backupprofile").setValue(vrf.getBackupprofile());
+				m_vrfContainer.getContainerProperty(vrfId, "snmpprofile").setValue(vrf.getSnmpprofile());
+				if (versionid != null) 
+					m_vrfSearchComboBox.addItem(vrf.getName());
 				try {
-					m_requisitionContainer.commit();
+					m_vrfContainer.commit();
+					m_vrfTable.select(null);
+					m_editVrfLayout.setVisible(false);
+					logger.info("Saved Vrf: " + vrf.getName());
 					Notification.show("Save", "Vrf " + vrf.getName()+ " Saved", Type.HUMANIZED_MESSAGE);
 				} catch (UnsupportedOperationException uoe) {
 					uoe.printStackTrace();					
 					logger.warning("Save Vrf Failed: " + uoe.getLocalizedMessage());
 					Notification.show("Save Vrf Failed", uoe.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					m_vrfSearchComboBox.removeItem(vrf.getName());
 				} catch (SQLException sqle) {
 					sqle.printStackTrace();
 					logger.warning("Save Vrf Failed: " + sqle.getLocalizedMessage());
 					Notification.show("Save Vrf Failed", sqle.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					m_vrfSearchComboBox.removeItem(vrf.getName());
 				}
-//				m_requisitionContainer.addContainerFilter(new VrfFilter(vrf.getName(), null, null, null));
-//				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionTable.unselect(m_requisitionTable.getValue());
 			}
 		});
 
-		/*
-		m_removeNodeButton.addClickListener(new ClickListener() {
+		m_removeVrfButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				m_editRequisitionNodeLayout.setVisible(false);
-				m_saveNodeButton.setEnabled(false);
-				m_removeNodeButton.setEnabled(false);
-				m_resetNodeButton.setEnabled(false);
-				BeanItem<TrentinoNetworkNode> node = m_editorFields.getItemDataSource();
-				logger.info("Deleting: " + node.getBean().getNodeLabel());
-				if (node.getBean().getForeignId() !=  null) {
+				String vrf = m_editorFields.getItemDataSource().getBean().getName();
+				if (m_vrfContainer.removeItem(m_vrfTable.getValue())) {
 					try {
-						getService().deleteNode(TN,node.getBean());
-						Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
-					} catch (UniformInterfaceException e) {
-						logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
-						Notification.show("Delete Node From Requisition", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
-						e.getResponse().getStatusInfo().getReasonPhrase(), Type.ERROR_MESSAGE);
+						m_vrfContainer.commit();
+					} catch (UnsupportedOperationException uoe) {
+						uoe.printStackTrace();					
+						logger.warning("Delete Vrf Failed: '" + vrf + "'. Error message: "+ uoe.getLocalizedMessage());
+						Notification.show("Delete Vrf Failed: '" + vrf + "'.", uoe.getLocalizedMessage(), Type.ERROR_MESSAGE);
 						return;
+					} catch (SQLException uoe) {
+							uoe.printStackTrace();					
+							logger.warning("Delete Vrf Failed: '" + vrf + "'. Error message: "+ uoe.getLocalizedMessage());
+							Notification.show("Delete Vrf Failed: '" + vrf + "'.", uoe.getLocalizedMessage(), Type.ERROR_MESSAGE);
+							return;
+					} catch (NullPointerException npe) {
+							npe.printStackTrace();
+							logger.warning("Delete Vrf Failed: '" + vrf + "'. Error message: "+ npe.getLocalizedMessage());
+							Notification.show("Delete Vrf Failed: '" + vrf + "'.", npe.getLocalizedMessage(), Type.ERROR_MESSAGE);
+							return;
 					}
+					logger.info("Delete Vrf : '" + vrf + "', deleted");
+					Notification.show("Delete", "Vrf: '" + vrf+ "', Deleted", Type.HUMANIZED_MESSAGE);
+					m_editVrfLayout.setVisible(false);
+					m_saveVrfButton.setEnabled(false);
+					m_removeVrfButton.setEnabled(false);
+					m_vrfTable.select(null);
+					m_vrfSearchComboBox.removeItem(vrf);
+				}  else {
+					logger.warning("Cannot Found Vrf to Delete: '" + vrf + "'.");
+					Notification.show("Cannot Found Vrf to Delete: '" + vrf + "'.", "Vrf not found onq SqlContainer", Type.ERROR_MESSAGE);
 				}
-				if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
-					m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
-				logger.info("Node Deleted");
-				Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
 		}
-		});
-		
-		m_resetNodeButton.addClickListener(new ClickListener() {
-			private static final long serialVersionUID = 1L;
-
-			public void buttonClick(ClickEvent event) {
-				m_editorFields.discard();
-				m_editRequisitionNodeLayout.setVisible(false);
-				m_requisitionTable.unselect(m_requisitionTable.getValue());
-				m_saveNodeButton.setEnabled(false);
-				m_removeNodeButton.setEnabled(false);
-				m_resetNodeButton.setEnabled(false);
-			}
-		});*/
-		
+		});		
 		loaded=true;
 
 
 	}
 
 	private void selectItem() {
-		Object vrfId = m_requisitionTable.getValue();
+		Object vrfId = m_vrfTable.getValue();
 
 		if (vrfId == null)
 			return;
-		Item vrftableRow = m_requisitionTable.getItem(vrfId);
+		Item vrftableRow = m_vrfTable.getItem(vrfId);
 			
 		Vrf vrf =new Vrf(vrftableRow.getItemProperty("name").getValue().toString(),
 				vrftableRow.getItemProperty("notifylevel").getValue().toString(),
@@ -507,10 +492,9 @@ public class VrfTab extends DashboardTab {
 				vrftableRow.getItemProperty("snmpprofile").getValue().toString()
 				);
 		m_editorFields.setItemDataSource(vrf);
-		m_editRequisitionNodeLayout.setVisible(true);
-		m_saveNodeButton.setEnabled(true);
-		m_removeNodeButton.setEnabled(true);
-		m_resetNodeButton.setEnabled(true);						
+		m_editVrfLayout.setVisible(true);
+		m_saveVrfButton.setEnabled(true);
+		m_removeVrfButton.setEnabled(true);
 	}
 
 	
@@ -530,7 +514,7 @@ public class VrfTab extends DashboardTab {
 				return;
 			logger.info("DuplicatedVrfValidator: validating vrf: " + vrf);
 	         if (getService().getTnDao().getVrfs().containsKey(vrf))
-	             throw new InvalidValueException("DuplicatedPrimaryValidator: trovato un duplicato della vrf: " + vrf);
+	             throw new InvalidValueException("DuplicatedVrfValidator: trovato un duplicato della vrf: " + vrf);
 	       }
 	}
 

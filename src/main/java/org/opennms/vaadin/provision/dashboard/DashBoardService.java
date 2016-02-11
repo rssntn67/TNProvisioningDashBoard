@@ -247,7 +247,7 @@ public class DashBoardService implements Serializable {
 		for (Entry<String, SnmpProfile> snmpprofileentry : m_tnDao.getSnmpProfiles().entrySet()) {
 			if (info.getReadCommunity().equals(snmpprofileentry.getValue().getCommunity()) &&
 				info.getVersion().equals(snmpprofileentry.getValue().getVersion()) &&	
-				info.getTimeout() == snmpprofileentry.getValue().getTimeout().intValue())
+				info.getTimeout().intValue() == Integer.parseInt(snmpprofileentry.getValue().getTimeout()))
 				return snmpprofileentry.getKey();
 		}
 		return null;

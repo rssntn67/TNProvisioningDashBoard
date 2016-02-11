@@ -6,12 +6,12 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import com.vaadin.data.Property;
 
 public class BackupProfile {
-	final String name;
-	final String username;
-	final String password;
-	final String enable;
-	final String connection;
-	final String autoenable;
+	String name;
+	String username;
+	String password;
+	String enable;
+	String connection;
+	String autoenable;
 
 	public String getName() {
 		return name;
@@ -36,6 +36,10 @@ public class BackupProfile {
 	public String getAutoenable() {
 		return autoenable;
 	}
+	
+	public BackupProfile() {
+		
+	}
 
 	public BackupProfile(Property<String> name,Property<String> username,Property<String> password,Property<String> enable,Property<String> connection,Property<String> autoenable) {
 		this.name=name.getValue();
@@ -58,5 +62,29 @@ public class BackupProfile {
 		template.putAsset(new RequisitionAsset("connection", getConnection()));
 		template.putAsset(new RequisitionAsset("autoenable", getAutoenable()));
 		return template;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setEnable(String enable) {
+		this.enable = enable;
+	}
+
+	public void setConnection(String connection) {
+		this.connection = connection;
+	}
+
+	public void setAutoenable(String autoenable) {
+		this.autoenable = autoenable;
 	}
 }
