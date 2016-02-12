@@ -22,13 +22,13 @@ import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 
 public class TNDao {
 
-	public static final String[] m_network_categories = {
+	public static final String[] m_network_levels = {
 		"Backbone",
 		"Distribuzione",
 		"Accesso"
 	};
 
-	public static final String[] m_notif_categories = {
+	public static final String[] m_notify_levels = {
 		"EMERGENCY_F0",
 		"EMERGENCY_F1",
 		"EMERGENCY_F2",
@@ -37,7 +37,7 @@ public class TNDao {
 		"INFORMATION"
 	};
 
-	public static final String[] m_thresh_categories = {
+	public static final String[] m_threshold_levels = {
 		"ThresholdWARNING",
 		"ThresholdALERT"
 	};
@@ -49,74 +49,32 @@ public class TNDao {
 	private SQLContainer m_vrfcontainer;
 	private SQLContainer m_dnsdomaincontainer;
 	private SQLContainer m_dnssubdomaincontainer;
-	Map<String, SnmpProfile> m_snmpProfiles = new HashMap<String, SnmpProfile>();
-	Map<String, BackupProfile> m_backupProfiles = new HashMap<String, BackupProfile>();
-	Map<String, Vrf> m_vrf = new HashMap<String, Vrf>();
-	List<String> m_subdomains = new ArrayList<String>();
-	List<String> m_domains = new ArrayList<String>();
 
 	public TNDao() {
 	}
 
-	@SuppressWarnings("unchecked")
 	public void init(String driver, String dburl, String username, String password) throws SQLException {
 		m_pool = new SimpleJDBCConnectionPool(driver, dburl, username, password);
         
 		TableQuery snmptq = new TableQuery("snmpprofiles", m_pool);
 		snmptq.setVersionColumn("versionid");
         m_snmpprofilecontainer = new SQLContainer(snmptq);
-        for (Iterator<?> i = m_snmpprofilecontainer.getItemIds().iterator(); i.hasNext();) {
-			Item snmpprofiletableRow = m_snmpprofilecontainer.getItem(i.next());
-			m_snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
-					new SnmpProfile(snmpprofiletableRow.getItemProperty("name"),snmpprofiletableRow.getItemProperty("community"), 
-							snmpprofiletableRow.getItemProperty("version"), 
-							snmpprofiletableRow.getItemProperty("timeout")));
-		}
         
         TableQuery bcktq = new TableQuery("backupprofiles", m_pool);
 		bcktq.setVersionColumn("versionid");
 		m_backupprofilecontainer = new SQLContainer(bcktq);
-		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
-			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
-			m_backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
-					new BackupProfile(backupprofiletableRow.getItemProperty("name"),backupprofiletableRow.getItemProperty("username"), 
-							backupprofiletableRow.getItemProperty("password"), 
-							backupprofiletableRow.getItemProperty("enable"),
-							backupprofiletableRow.getItemProperty("connection"), 
-							backupprofiletableRow.getItemProperty("auto_enable")
-							));
-		}
 
 		TableQuery vrftq = new TableQuery("vrf", m_pool);
 		vrftq.setVersionColumn("versionid");
 	    m_vrfcontainer =  new SQLContainer(vrftq);	
 	    
-		for (Iterator<?> i = m_vrfcontainer.getItemIds().iterator(); i.hasNext();) {
-			Item vrftableRow = m_vrfcontainer.getItem(i.next());
-			m_vrf.put(vrftableRow.getItemProperty("name").getValue().toString(),
-					new Vrf(vrftableRow.getItemProperty("name").getValue().toString(),
-							vrftableRow.getItemProperty("notifylevel").getValue().toString(),
-							vrftableRow.getItemProperty("networklevel").getValue().toString(),
-							vrftableRow.getItemProperty("dnsdomain").getValue().toString(),
-							vrftableRow.getItemProperty("thresholdlevel").getValue().toString(),
-							vrftableRow.getItemProperty("backupprofile").getValue().toString(),
-							vrftableRow.getItemProperty("snmpprofile").getValue().toString()
-							));
-		}
-
-	    m_dnsdomaincontainer =  new SQLContainer(new TableQuery("dnsdomains", m_pool));	
-		for (Iterator<?> i = m_dnsdomaincontainer.getItemIds().iterator(); i.hasNext();) {
-			Item dnsdomaintableRow = m_dnsdomaincontainer.getItem(i.next());
-			m_domains.add(dnsdomaintableRow.getItemProperty("dnsdomain").getValue().toString());
-		}
-
-	    m_dnssubdomaincontainer =  new SQLContainer(new TableQuery("dnssubdomains", m_pool));	
-		for (Iterator<?> i = m_dnssubdomaincontainer.getItemIds().iterator(); i.hasNext();) {
-			Item dnssubdomaintableRow = m_dnssubdomaincontainer.getItem(i.next());
-			m_subdomains.add(dnssubdomaintableRow.getItemProperty("dnssubdomain").getValue().toString());
-		}
-
-
+	    TableQuery dnstq = new TableQuery("dnsdomains", m_pool);
+	    dnstq.setVersionColumn("versionid");
+	    m_dnsdomaincontainer =  new SQLContainer(dnstq);	
+	    
+	    TableQuery sdnstq = new TableQuery("dnssubdomains", m_pool);
+	    sdnstq.setVersionColumn("versionid");
+	    m_dnssubdomaincontainer =  new SQLContainer(sdnstq);	
 	}
 
 	public void destroy() {
@@ -124,26 +82,46 @@ public class TNDao {
 			m_pool.destroy();
 		m_snmpprofilecontainer=null;
 		m_backupprofilecontainer=null;
-		m_snmpProfiles.clear();
-		m_backupProfiles.clear();
+		m_vrfcontainer =null;
+		m_dnsdomaincontainer = null;
+		m_dnssubdomaincontainer = null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Map<String, SnmpProfile> getSnmpProfiles() {
-		return m_snmpProfiles;
+    	Map<String, SnmpProfile> snmpProfiles = new HashMap<String, SnmpProfile>();
+        for (Iterator<?> i = m_snmpprofilecontainer.getItemIds().iterator(); i.hasNext();) {
+			Item snmpprofiletableRow = m_snmpprofilecontainer.getItem(i.next());
+			snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
+					new SnmpProfile(snmpprofiletableRow.getItemProperty("name"),snmpprofiletableRow.getItemProperty("community"), 
+							snmpprofiletableRow.getItemProperty("version"), 
+							snmpprofiletableRow.getItemProperty("timeout")));
+		}
+		return snmpProfiles;
 	}
 	
 	public SnmpProfile getSnmpProfile(String name) {
-		if (m_snmpProfiles != null)
-			return m_snmpProfiles.get(name);
-		return null;
+			return getSnmpProfiles().get(name);
 	}
 		
+	@SuppressWarnings("unchecked")
 	public Map<String, BackupProfile> getBackupProfiles() {
-		return m_backupProfiles;
+    	Map<String, BackupProfile> backupProfiles = new HashMap<String, BackupProfile>();
+		for (Iterator<?> i = m_backupprofilecontainer.getItemIds().iterator(); i.hasNext();) {
+			Item backupprofiletableRow = m_backupprofilecontainer.getItem(i.next());
+			backupProfiles.put(backupprofiletableRow.getItemProperty("name").getValue().toString(),
+					new BackupProfile(backupprofiletableRow.getItemProperty("name"),backupprofiletableRow.getItemProperty("username"), 
+							backupprofiletableRow.getItemProperty("password"), 
+							backupprofiletableRow.getItemProperty("enable"),
+							backupprofiletableRow.getItemProperty("connection"), 
+							backupprofiletableRow.getItemProperty("auto_enable")
+							));
+		}
+		return backupProfiles;
 	}
 
 	public BackupProfile getBackupProfile(String name) throws SQLException {
-    	return m_backupProfiles.get(name);
+    	return getBackupProfiles().get(name);
 	}
 
 	public Container getSnmpProfileContainer() {
@@ -159,7 +137,20 @@ public class TNDao {
     }
 
     public Map<String,Vrf> getVrfs() {
-    	return m_vrf;
+    	Map<String, Vrf> vrf = new HashMap<String, Vrf>();
+		for (Iterator<?> i = m_vrfcontainer.getItemIds().iterator(); i.hasNext();) {
+			Item vrftableRow = m_vrfcontainer.getItem(i.next());
+			vrf.put(vrftableRow.getItemProperty("name").getValue().toString(),
+					new Vrf(vrftableRow.getItemProperty("name").getValue().toString(),
+							vrftableRow.getItemProperty("notifylevel").getValue().toString(),
+							vrftableRow.getItemProperty("networklevel").getValue().toString(),
+							vrftableRow.getItemProperty("dnsdomain").getValue().toString(),
+							vrftableRow.getItemProperty("thresholdlevel").getValue().toString(),
+							vrftableRow.getItemProperty("backupprofile").getValue().toString(),
+							vrftableRow.getItemProperty("snmpprofile").getValue().toString()
+							));
+		}
+    	return vrf;
     }
 
     public List<FastDevice> getFastDevices() {
@@ -170,20 +161,30 @@ public class TNDao {
     	return new ArrayList<FastService>();
     }
 
-	public SQLContainer getDnsdomaincontainer() {
+	public SQLContainer getDnsDomainContainer() {
 		return m_dnsdomaincontainer;
 	}
 
-	public SQLContainer getDnssubdomaincontainer() {
+	public SQLContainer getDnsSubDomainContainer() {
 		return m_dnssubdomaincontainer;
 	}
 
 	public List<String> getSubdomains() {
-		return m_subdomains;
+    	List<String> subdomains = new ArrayList<String>();
+		for (Iterator<?> i = m_dnssubdomaincontainer.getItemIds().iterator(); i.hasNext();) {
+			Item dnssubdomaintableRow = m_dnssubdomaincontainer.getItem(i.next());
+			subdomains.add(dnssubdomaintableRow.getItemProperty("dnssubdomain").getValue().toString());
+		}
+		return subdomains;
 	}
 
 	public List<String> getDomains() {
-		return m_domains;
+    	List<String> domains = new ArrayList<String>();
+		for (Iterator<?> i = m_dnsdomaincontainer.getItemIds().iterator(); i.hasNext();) {
+			Item dnsdomaintableRow = m_dnsdomaincontainer.getItem(i.next());
+			domains.add(dnsdomaintableRow.getItemProperty("dnsdomain").getValue().toString());
+		}
+		return domains;
 	}
 
 }

@@ -5,13 +5,11 @@ import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDns
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.TNDao;
-import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.Vrf;
 
@@ -123,66 +121,69 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private BeanContainer<String, TrentinoNetworkNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 	private boolean loaded=false;
 
-	private ComboBox m_networkCatSearchComboBox = new ComboBox("Select Network Category");
-	private ComboBox m_notifCatSearchComboBox   = new ComboBox("Select Notification Category");
-	private ComboBox m_threshCatSearchComboBox  = new ComboBox("Select Threshold Category");
-	private TextField m_searchField       = new TextField("Type Label Text");
-	private Table m_requisitionTable   	= new Table();
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
 	private Button m_removeNodeButton  = new Button("Elimina Nodo");
+	private Table m_requisitionTable   	= new Table();
 
-	private TextField m_hostname = new TextField("Hostname");
-	private TextField m_primary = new TextField(PRIMARY);
-	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
-	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
-	private ComboBox m_parentComboBox = new ComboBox("Dipende da");
-	private ComboBox m_networkCatComboBox = new ComboBox("Network Category");
-	private ComboBox m_notifCatComboBox   = new ComboBox("Notification Category");
-	private ComboBox m_threshCatComboBox  = new ComboBox("Threshold Category");
-	private ComboBox m_snmpComboBox  = new ComboBox("SNMP Profile");
-	private ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
-
-	private Table m_secondaryIpAddressTable = new Table();
-	private ComboBox m_secondaryIpComboBox = new ComboBox("Seleziona indirizzo ip");
-
-	private VerticalLayout m_editRequisitionNodeLayout  = new VerticalLayout();
-	
+	private VerticalLayout m_editRequisitionNodeLayout  = new VerticalLayout();	
 	private BeanFieldGroup<TrentinoNetworkNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkNode>(TrentinoNetworkNode.class);
 	Integer newHost = 0;
 	
+	private ComboBox m_secondaryIpComboBox = new ComboBox("Seleziona indirizzo ip");
+	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
+	private Table m_secondaryIpAddressTable = new Table();
+	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
+
 	public TrentinoNetworkTab(DashBoardService service) {
 		super(service);
 	}
 
 	@Override
 	public void load() {
-		Map<String, BackupProfile> backupprofilemap;
-		if (loaded)
-			return;
-		for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
-			m_snmpComboBox.addItem(snmpprofile);
-		}
-
-		backupprofilemap = getService().getTnDao().getBackupProfiles();
-		for (String backupprofile: backupprofilemap.keySet()) {
-			m_backupComboBox.addItem(backupprofile);
-		}
-
-		try {
-			m_requisitionContainer = getService().getRequisitionContainer(LABEL,TN,backupprofilemap);
-		} catch (UniformInterfaceException e) {
-			logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
-			if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
-				logger.info("No Requisition Found: "+e.getLocalizedMessage());
-				getService().createRequisition(TN);
-				load();
+		if (!loaded) {
+			try {
+				m_requisitionContainer = getService().getRequisitionContainer(LABEL,TN,getService().getTnDao().getBackupProfiles());
+				m_requisitionTable.setContainerDataSource(m_requisitionContainer);
+				layout();
+				loaded=true;
+			} catch (UniformInterfaceException e) {
+				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
+				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+					logger.info("No Requisition Found: "+e.getLocalizedMessage());
+					getService().createRequisition(TN);
+					load();
+					return;
+				}
+				logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
+				Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 				return;
-			}
-			logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
-			Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
-			return;
+			}			
+		}
+	}
+	
+	private void layout() { 
+		final ComboBox networkCatSearchComboBox = new ComboBox("Select Network Category");
+		final ComboBox notifCatSearchComboBox   = new ComboBox("Select Notification Category");
+		final ComboBox threshCatSearchComboBox  = new ComboBox("Select Threshold Category");
+		final TextField searchField       = new TextField("Type Label Text");
+
+		final TextField hostname = new TextField("Hostname");
+		TextField primary = new TextField(PRIMARY);
+		final ComboBox networkCatComboBox = new ComboBox("Network Category");
+		final ComboBox notifCatComboBox   = new ComboBox("Notification Category");
+		final ComboBox threshCatComboBox  = new ComboBox("Threshold Category");
+		final ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
+		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
+		ComboBox parentComboBox = new ComboBox("Dipende da");
+
+		for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
+			snmpComboBox.addItem(snmpprofile);
+		}
+
+		for (String backupprofile: getService().getTnDao().getBackupProfiles().keySet()) {
+			backupComboBox.addItem(backupprofile);
 		}
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
@@ -197,12 +198,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
 
 		VerticalLayout searchlayout = new VerticalLayout();
-		searchlayout.addComponent(m_networkCatSearchComboBox);
-		searchlayout.addComponent(m_notifCatSearchComboBox);
-		searchlayout.addComponent(m_threshCatSearchComboBox);
+		searchlayout.addComponent(networkCatSearchComboBox);
+		searchlayout.addComponent(notifCatSearchComboBox);
+		searchlayout.addComponent(threshCatSearchComboBox);
 
-		m_searchField.setWidth("80%");
-		searchlayout.addComponent(m_searchField);
+		searchField.setWidth("80%");
+		searchlayout.addComponent(searchField);
 		searchlayout.setWidth("100%");
 		searchlayout.setMargin(true);
 		
@@ -232,7 +233,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		bottomRightLayout.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
-		m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 		m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
 		m_requisitionTable.setSelectable(true);
 		m_requisitionTable.setImmediate(true);
@@ -245,13 +245,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 		});
 
 		for (Vrf categories: getService().getTnDao().getVrfs().values()) {
-			m_networkCatSearchComboBox.addItem(categories);
-			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+			networkCatSearchComboBox.addItem(categories);
+			networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
-		m_networkCatSearchComboBox.setInvalidAllowed(false);
-		m_networkCatSearchComboBox.setNullSelectionAllowed(true);		
-		m_networkCatSearchComboBox.setImmediate(true);
-		m_networkCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		networkCatSearchComboBox.setInvalidAllowed(false);
+		networkCatSearchComboBox.setNullSelectionAllowed(true);		
+		networkCatSearchComboBox.setImmediate(true);
+		networkCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		
 			/**
 			 * 
@@ -261,18 +261,18 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
 		});
 
 
-		for (String category: TNDao.m_notif_categories) {
-			m_notifCatSearchComboBox.addItem(category);
+		for (String category: TNDao.m_notify_levels) {
+			notifCatSearchComboBox.addItem(category);
 		}
-		m_notifCatSearchComboBox.setInvalidAllowed(false);
-		m_notifCatSearchComboBox.setNullSelectionAllowed(true);		
-		m_notifCatSearchComboBox.setImmediate(true);
-		m_notifCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		notifCatSearchComboBox.setInvalidAllowed(false);
+		notifCatSearchComboBox.setNullSelectionAllowed(true);		
+		notifCatSearchComboBox.setImmediate(true);
+		notifCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			/**
 			 * 
 			 */
@@ -281,17 +281,17 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
 		});
 		
-		for (String category: TNDao.m_thresh_categories) {
-			m_threshCatSearchComboBox.addItem(category);
+		for (String category: TNDao.m_threshold_levels) {
+			threshCatSearchComboBox.addItem(category);
 		}
-		m_threshCatSearchComboBox.setInvalidAllowed(false);
-		m_threshCatSearchComboBox.setNullSelectionAllowed(true);		
-		m_threshCatSearchComboBox.setImmediate(true);
-		m_threshCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		threshCatSearchComboBox.setInvalidAllowed(false);
+		threshCatSearchComboBox.setNullSelectionAllowed(true);		
+		threshCatSearchComboBox.setImmediate(true);
+		threshCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			/**
 			 * 
 			 */
@@ -300,59 +300,60 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
 		});
 
-		m_searchField.setInputPrompt("Search nodes");
-		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
-		m_searchField.addTextChangeListener(new TextChangeListener() {
+		searchField.setInputPrompt("Search nodes");
+		searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
+		searchField.addTextChangeListener(new TextChangeListener() {
 			private static final long serialVersionUID = 1L;
 			public void textChange(final TextChangeEvent event) {
 				m_searchText = event.getText();
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, m_networkCatSearchComboBox.getValue(),m_notifCatSearchComboBox.getValue(),m_threshCatSearchComboBox.getValue()));
+				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
 		});
 
+		m_vrfsComboBox.removeAllItems();
 		for (final String vrfs: getService().getTnDao().getDomains()) {
 			m_vrfsComboBox.addItem(vrfs);
 		}
 
 		for (Vrf categories: getService().getTnDao().getVrfs().values()) {
-			m_networkCatComboBox.addItem(categories);
-			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+			networkCatComboBox.addItem(categories);
+			networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
 
-		for (String notif: TNDao.m_notif_categories) {
-			m_notifCatComboBox.addItem(notif);
+		for (String notif: TNDao.m_notify_levels) {
+			notifCatComboBox.addItem(notif);
 		}
 
-		for (String threshold: TNDao.m_thresh_categories) {
-			m_threshCatComboBox.addItem(threshold);
+		for (String threshold: TNDao.m_threshold_levels) {
+			threshCatComboBox.addItem(threshold);
 		}
 
 		m_descrComboBox.setInvalidAllowed(false);
 		m_descrComboBox.setNullSelectionAllowed(false);
 		m_descrComboBox.setWidth(8, Unit.CM);
 
-		m_hostname.setSizeFull();
-		m_hostname.setWidth(4, Unit.CM);
-		m_hostname.setHeight(6, Unit.MM);
-		m_hostname.setRequired(true);
-		m_hostname.setRequiredError("hostname must be defined");
-		m_hostname.addValidator(new DnsNodeLabelValidator());
-		m_hostname.addValidator(new SubdomainValidator());
-		m_hostname.addValidator(new DuplicatedForeignIdValidator());
-		m_hostname.addValidator(new DuplicatedNodelabelValidator());
-		m_hostname.setImmediate(true);
+		hostname.setSizeFull();
+		hostname.setWidth(4, Unit.CM);
+		hostname.setHeight(6, Unit.MM);
+		hostname.setRequired(true);
+		hostname.setRequiredError("hostname must be defined");
+		hostname.addValidator(new DnsNodeLabelValidator());
+		hostname.addValidator(new SubdomainValidator());
+		hostname.addValidator(new DuplicatedForeignIdValidator());
+		hostname.addValidator(new DuplicatedNodelabelValidator());
+		hostname.setImmediate(true);
 
-		m_networkCatComboBox.setInvalidAllowed(false);
-		m_networkCatComboBox.setNullSelectionAllowed(false);
-		m_networkCatComboBox.setRequired(true);
-		m_networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
-		m_networkCatComboBox.setImmediate(true);
-		m_networkCatComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		networkCatComboBox.setInvalidAllowed(false);
+		networkCatComboBox.setNullSelectionAllowed(false);
+		networkCatComboBox.setRequired(true);
+		networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
+		networkCatComboBox.setImmediate(true);
+		networkCatComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			
 			private static final long serialVersionUID = -3559078865783782719L;
 			
@@ -360,11 +361,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void valueChange(ValueChangeEvent event) {
 				TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 				if (node.getForeignId() == null) {
-					m_vrfsComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getDnsdomain());
-					m_notifCatComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getNotifylevel());
-					m_threshCatComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getThresholdlevel());
-					m_backupComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getBackupprofile());
-					m_snmpComboBox.select(((Vrf)m_networkCatComboBox.getValue()).getSnmpprofile());
+					m_vrfsComboBox.select(((Vrf)networkCatComboBox.getValue()).getDnsdomain());
+					notifCatComboBox.select(((Vrf)networkCatComboBox.getValue()).getNotifylevel());
+					threshCatComboBox.select(((Vrf)networkCatComboBox.getValue()).getThresholdlevel());
+					backupComboBox.select(((Vrf)networkCatComboBox.getValue()).getBackupprofile());
+					snmpComboBox.select(((Vrf)networkCatComboBox.getValue()).getSnmpprofile());
 				}
 			}
 		});
@@ -383,8 +384,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		    public void valueChange(ValueChangeEvent event) {
 	        	logger.info("vrf combo box value change:"+ m_vrfsComboBox.getValue());
 		        try {
-		            m_hostname.validate();
-		            m_hostname.setComponentError(null); // MAGIC CODE HERE!!!
+		            hostname.validate();
+		            hostname.setComponentError(null); // MAGIC CODE HERE!!!
 		        } catch (Exception e) {
 		        	logger.info("not working validation");
 		        }
@@ -393,14 +394,18 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_vrfsComboBox.setImmediate(true);
 
 				
-		m_primary.setRequired(true);
-		m_primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
-		m_primary.setImmediate(true);
-		m_primary.addValidator(new IpValidator());
-		m_primary.addValidator(new DuplicatedPrimaryValidator());
+		primary.setRequired(true);
+		primary.setRequiredError("E' necessario specifica un indirizzo ip primario");
+		primary.setImmediate(true);
+		primary.addValidator(new IpValidator());
+		primary.addValidator(new DuplicatedPrimaryValidator());
 
-		m_parentComboBox.setInvalidAllowed(false);
-		m_parentComboBox.setNullSelectionAllowed(true);
+		parentComboBox.setInvalidAllowed(false);
+		parentComboBox.setNullSelectionAllowed(true);
+
+		for (String nodelabel :getService().getNodeLabels())
+			parentComboBox.addItem(nodelabel);
+		
 
 		m_secondaryIpAddressTable.setCaption("Altri ip da monitorare");
 		m_secondaryIpAddressTable.setHeight(180,Unit.PIXELS);
@@ -489,26 +494,26 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 		
-		m_notifCatComboBox.setInvalidAllowed(false);
-		m_notifCatComboBox.setNullSelectionAllowed(false);
-		m_notifCatComboBox.setRequired(true);
-		m_notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
+		notifCatComboBox.setInvalidAllowed(false);
+		notifCatComboBox.setNullSelectionAllowed(false);
+		notifCatComboBox.setRequired(true);
+		notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 
-		m_threshCatComboBox.setInvalidAllowed(false);
-		m_threshCatComboBox.setNullSelectionAllowed(false);
-		m_threshCatComboBox.setRequired(true);
-		m_threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
+		threshCatComboBox.setInvalidAllowed(false);
+		threshCatComboBox.setNullSelectionAllowed(false);
+		threshCatComboBox.setRequired(true);
+		threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
 
-		m_snmpComboBox.setInvalidAllowed(false);
-		m_snmpComboBox.setNullSelectionAllowed(false);
-		m_snmpComboBox.setRequired(true);
-		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
+		snmpComboBox.setInvalidAllowed(false);
+		snmpComboBox.setNullSelectionAllowed(false);
+		snmpComboBox.setRequired(true);
+		snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 
 
-        m_backupComboBox.setInvalidAllowed(false);
-        m_backupComboBox.setNullSelectionAllowed(false);
-        m_backupComboBox.setRequired(true);
-        m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
+        backupComboBox.setInvalidAllowed(false);
+        backupComboBox.setNullSelectionAllowed(false);
+        backupComboBox.setRequired(true);
+        backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
 		TextField city = new TextField("Citta'");
 		city.setWidth(8, Unit.CM);
 		city.setHeight(6, Unit.MM);
@@ -519,26 +524,26 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		m_editorFields.setBuffered(true);
 		m_editorFields.bind(m_descrComboBox, DESCR);
-		m_editorFields.bind(m_hostname, HOST);
-		m_editorFields.bind(m_networkCatComboBox, NETWORK_CATEGORY);
+		m_editorFields.bind(hostname, HOST);
+		m_editorFields.bind(networkCatComboBox, NETWORK_CATEGORY);
 		m_editorFields.bind(m_vrfsComboBox, VRF);
-		m_editorFields.bind(m_primary,PRIMARY);
-		m_editorFields.bind(m_parentComboBox, PARENT);
-		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
-		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
-		m_editorFields.bind(m_notifCatComboBox, NOTIF_CATEGORY);
-		m_editorFields.bind(m_threshCatComboBox, THRESH_CATEGORY);
+		m_editorFields.bind(primary,PRIMARY);
+		m_editorFields.bind(parentComboBox, PARENT);
+		m_editorFields.bind(snmpComboBox, SNMP_PROFILE);
+		m_editorFields.bind(backupComboBox, BACKUP_PROFILE);
+		m_editorFields.bind(notifCatComboBox, NOTIF_CATEGORY);
+		m_editorFields.bind(threshCatComboBox, THRESH_CATEGORY);
 		m_editorFields.bind(city,CITY);
 	    m_editorFields.bind(address, ADDRESS1);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
 		leftGeneralInfo.addComponent(m_descrComboBox);
-		leftGeneralInfo.addComponent(m_hostname);
-		leftGeneralInfo.addComponent(m_networkCatComboBox);
+		leftGeneralInfo.addComponent(hostname);
+		leftGeneralInfo.addComponent(networkCatComboBox);
 		leftGeneralInfo.addComponent(m_vrfsComboBox);
-		leftGeneralInfo.addComponent(m_primary);
-		leftGeneralInfo.addComponent(m_parentComboBox);
+		leftGeneralInfo.addComponent(primary);
+		leftGeneralInfo.addComponent(parentComboBox);
 		leftGeneralInfo.addComponent(city);
 		leftGeneralInfo.addComponent(address);
 		
@@ -556,13 +561,13 @@ public class TrentinoNetworkTab extends DashboardTab {
 				
 		HorizontalLayout catLayout = new HorizontalLayout();
 		catLayout.setSizeFull();
-		catLayout.addComponent(m_notifCatComboBox);
-		catLayout.addComponent(m_threshCatComboBox);
+		catLayout.addComponent(notifCatComboBox);
+		catLayout.addComponent(threshCatComboBox);
 		
 		HorizontalLayout profLayout = new HorizontalLayout();
 		profLayout.setSizeFull();
-		profLayout.addComponent(m_snmpComboBox);
-		profLayout.addComponent(m_backupComboBox);
+		profLayout.addComponent(snmpComboBox);
+		profLayout.addComponent(backupComboBox);
 				
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
@@ -596,18 +601,18 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void buttonClick(ClickEvent event) {
 				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++,
 						getService().getTnDao().getVrfs().values().iterator().next()));
-				m_networkCatSearchComboBox.select(null);
-				m_networkCatSearchComboBox.setValue(null);
-				m_notifCatSearchComboBox.select(null);
-				m_notifCatSearchComboBox.setValue(null);
-				m_threshCatSearchComboBox.select(null);
-				m_threshCatSearchComboBox.setValue(null);
+				networkCatSearchComboBox.select(null);
+				networkCatSearchComboBox.setValue(null);
+				notifCatSearchComboBox.select(null);
+				notifCatSearchComboBox.setValue(null);
+				threshCatSearchComboBox.select(null);
+				threshCatSearchComboBox.setValue(null);
 				m_searchText="";
-				m_searchField.setValue(m_searchText);
+				searchField.setValue(m_searchText);
 				m_requisitionTable.select(bean.getBean().getNodeLabel());
 				selectItem();
 				m_requisitionContainer.removeAllContainerFilters();
-				m_hostname.focus();
+				hostname.focus();
 			}
 		});
 
@@ -708,10 +713,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
 			Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.WARNING_MESSAGE);
 		}
-
-		loaded=true;
-
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -725,9 +726,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 			m_descrComboBox.removeAllItems();
 			if (node.getDescr() != null)
 				m_descrComboBox.addItem(node.getDescr());
-			
-			for (String nodelabel :getService().getNodeLabels())
-				m_parentComboBox.addItem(nodelabel);
 			
 			m_secondaryIpComboBox.removeAllItems();
 			for (String ip: getService().getIpAddresses(TN,node.getNodeLabel()) ) {

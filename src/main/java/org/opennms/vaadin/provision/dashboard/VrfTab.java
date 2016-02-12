@@ -2,11 +2,10 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.logging.Logger;
 
+import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.TNDao;
-import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.Vrf;
 
 import com.vaadin.annotations.Theme;
@@ -18,6 +17,7 @@ import com.vaadin.data.Validator;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
+import com.vaadin.data.util.sqlcontainer.RowId;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
@@ -57,48 +57,58 @@ public class VrfTab extends DashboardTab {
 	
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private SQLContainer m_vrfContainer;
+	private SQLContainer m_domainContainer;
+	private SQLContainer m_subdomainContainer;
 	private boolean loaded=false;
 
-	private ComboBox m_networkCatSearchComboBox = new ComboBox("Select Vrf Network Level");
-	private ComboBox m_notifCatSearchComboBox   = new ComboBox("Select Vrf Notif Level");
-	private ComboBox m_threshCatSearchComboBox  = new ComboBox("Select Vrf Threshold Level");
-	private ComboBox m_vrfSearchComboBox        = new ComboBox("Select Vrf");
 	private Table m_vrfTable   	= new Table();
 	private Button m_addVrfButton  = new Button("Nuova VRF");
 	private Button m_saveVrfButton  = new Button("Salva Modifiche");
 	private Button m_removeVrfButton  = new Button("Elimina VRF");
 
-	private TextField m_vrf = new TextField("Vrf");
-	private ComboBox m_domainComboBox = new ComboBox("Dominio");
-	private ComboBox m_networkCatComboBox = new ComboBox("Network Level");
-	private ComboBox m_notifCatComboBox   = new ComboBox("Notification Level");
-	private ComboBox m_threshCatComboBox  = new ComboBox("Threshold Level");
-	private ComboBox m_snmpComboBox  = new ComboBox("SNMP Profile");
-	private ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
-
 	private VerticalLayout m_editVrfLayout  = new VerticalLayout();
 	
-	private BeanFieldGroup<Vrf> m_editorFields     = new BeanFieldGroup<Vrf>(Vrf.class);
-	
+	private BeanFieldGroup<Vrf> m_editorFields;
+
+	private ComboBox m_dnsAddSubdomainsComboBox = new ComboBox();
+
 	public VrfTab(DashBoardService service) {
 		super(service);
 	}
 
 	@Override
 	public void load() {
-		Map<String, BackupProfile> backupprofilemap;
-		if (loaded)
-			return;
+		if (!loaded) {
+			m_domainContainer = (SQLContainer) getService().getTnDao().getDnsDomainContainer();
+			m_subdomainContainer = (SQLContainer) getService().getTnDao().getDnsSubDomainContainer();
+			m_vrfContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
+			m_vrfTable.setContainerDataSource(m_vrfContainer);
+			loaded=true;
+		}
+		layout();
+	}
+		
+	private void layout() {
+		final ComboBox networkCatSearchComboBox = new ComboBox("Select Vrf Network Level");
+		final ComboBox notifCatSearchComboBox   = new ComboBox("Select Vrf Notif Level");
+		final ComboBox threshCatSearchComboBox  = new ComboBox("Select Vrf Threshold Level");
+		final ComboBox vrfSearchComboBox        = new ComboBox("Select Vrf");
+
+		TextField vrf = new TextField("Vrf");
+		final ComboBox domainComboBox = new ComboBox("Dominio");
+		ComboBox networkCatComboBox = new ComboBox("Network Level");
+		ComboBox notifCatComboBox   = new ComboBox("Notification Level");
+		ComboBox threshCatComboBox  = new ComboBox("Threshold Level");
+		ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
+		ComboBox backupComboBox  = new ComboBox("Backup Profile");
+
 		for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
-			m_snmpComboBox.addItem(snmpprofile);
+			snmpComboBox.addItem(snmpprofile);
 		}
 
-		backupprofilemap = getService().getTnDao().getBackupProfiles();
-		for (String backupprofile: backupprofilemap.keySet()) {
-			m_backupComboBox.addItem(backupprofile);
+		for (String backupprofile: getService().getTnDao().getBackupProfiles().keySet()) {
+			backupComboBox.addItem(backupprofile);
 		}
-
-		m_vrfContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		setCompositionRoot(splitPanel);
@@ -112,12 +122,12 @@ public class VrfTab extends DashboardTab {
 		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
 
 		VerticalLayout searchlayout = new VerticalLayout();
-		searchlayout.addComponent(m_networkCatSearchComboBox);
-		searchlayout.addComponent(m_notifCatSearchComboBox);
-		searchlayout.addComponent(m_threshCatSearchComboBox);
+		searchlayout.addComponent(networkCatSearchComboBox);
+		searchlayout.addComponent(notifCatSearchComboBox);
+		searchlayout.addComponent(threshCatSearchComboBox);
 
-		m_vrfSearchComboBox.setWidth("80%");
-		searchlayout.addComponent(m_vrfSearchComboBox);
+		vrfSearchComboBox.setWidth("80%");
+		searchlayout.addComponent(vrfSearchComboBox);
 		searchlayout.setWidth("100%");
 		searchlayout.setMargin(true);
 		
@@ -142,7 +152,238 @@ public class VrfTab extends DashboardTab {
 		bottomRightLayout.setComponentAlignment(m_addVrfButton, Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
-		m_vrfTable.setContainerDataSource(m_vrfContainer);
+
+		//Add Domain
+		final TextField dnsDomainTextBox = new TextField();
+		dnsDomainTextBox.setImmediate(true);
+		dnsDomainTextBox.addValidator(new ValidDnsValidator());
+		dnsDomainTextBox.addValidator(new DuplicatedDnsValidator());
+
+		//Delete Domain
+		final ComboBox dnsDomainsDeleteComboBox = new ComboBox();
+		dnsDomainsDeleteComboBox.setNullSelectionAllowed(false);
+		for (Object domain: m_domainContainer.getItemIds())
+			dnsDomainsDeleteComboBox.addItem(domain);
+		dnsDomainsDeleteComboBox.setImmediate(true);
+
+		// Add subdomain
+		final TextField dnsAddSubdomainTextBox = new TextField();
+		dnsAddSubdomainTextBox.setImmediate(true);
+		dnsAddSubdomainTextBox.addValidator(new ValidDnsValidator());
+		dnsAddSubdomainTextBox.addValidator(new DuplicatedSubDomainDnsValidator());
+		
+		m_dnsAddSubdomainsComboBox.setNullSelectionAllowed(false);
+		m_dnsAddSubdomainsComboBox.removeAllItems();
+		for (Object domain: m_domainContainer.getItemIds())
+			m_dnsAddSubdomainsComboBox.addItem(domain);
+		m_dnsAddSubdomainsComboBox.setImmediate(true);
+
+		// Del sub domains
+		final ComboBox delDnsSubdomainComboBox = new ComboBox();
+		delDnsSubdomainComboBox.setNullSelectionAllowed(false);
+		for (Object sdomain: m_subdomainContainer.getItemIds())
+			delDnsSubdomainComboBox.addItem(sdomain);
+
+		Button addDomainButton = new Button("Add dns domain");
+		addDomainButton.addClickListener(new ClickListener() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 439126521516044933L;
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public void buttonClick(ClickEvent event) {
+				if (dnsDomainTextBox.getValue() != null) {
+					Object id  = m_domainContainer.addItem();
+					m_domainContainer.getContainerProperty(id, "dnsdomain").setValue(dnsDomainTextBox.getValue());
+					try {
+						m_domainContainer.commit();
+						logger.info("Added Dns Domain: " + dnsDomainTextBox.getValue());
+						Notification.show("Adding", "Dns Domain" + dnsDomainTextBox.getValue()+ " Saved", Type.HUMANIZED_MESSAGE);
+						dnsDomainsDeleteComboBox.removeAllItems();
+						m_dnsAddSubdomainsComboBox.removeAllItems();
+						domainComboBox.removeAllItems();					
+						for (Object domain: m_domainContainer.getItemIds()) {
+							dnsDomainsDeleteComboBox.addItem(domain);
+							m_dnsAddSubdomainsComboBox.addItem(domain);
+							domainComboBox.addItem(((RowId) domain).toString());
+						}
+					} catch (UnsupportedOperationException e) {
+						e.printStackTrace();
+						logger.warning("Add Dns Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Add Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					} catch (SQLException e) {
+						logger.warning("Add Dns Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Add Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
+
+
+		HorizontalLayout addDomainInfo  = new HorizontalLayout();
+		addDomainInfo.addComponent(dnsDomainTextBox);
+		addDomainInfo.addComponent(addDomainButton);
+
+		FormLayout addDomainForm = new FormLayout(new Label("Aggiungi dominio Dns"));
+		addDomainForm.addComponent(addDomainInfo);
+
+		VerticalLayout addDomainLayout = new VerticalLayout();
+		addDomainLayout.setMargin(true);
+		addDomainLayout.setMargin(true);
+		addDomainLayout.setVisible(true);
+		addDomainLayout.addComponent(new Panel(addDomainForm));
+
+		rightLayout.addComponent(addDomainLayout);
+
+		Button delDomainButton = new Button("Delete dns domain");
+		delDomainButton.addClickListener(new ClickListener() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 439126521516044933L;
+
+ 			@Override
+			public void buttonClick(ClickEvent event) {
+				if (dnsDomainsDeleteComboBox.getValue() != null &&
+					m_domainContainer.removeItem(dnsDomainsDeleteComboBox.getValue())) {
+					try {
+						m_domainContainer.commit();
+						logger.info("Deleted Dns Domain: " + dnsDomainsDeleteComboBox.getValue());
+						Notification.show("Delete", "Dns Domain" + dnsDomainsDeleteComboBox.getValue()+ " Deleted", Type.HUMANIZED_MESSAGE);
+						dnsDomainsDeleteComboBox.removeAllItems();
+						m_dnsAddSubdomainsComboBox.removeAllItems();
+						domainComboBox.removeAllItems();
+						for (Object domain: m_domainContainer.getItemIds()) {
+							dnsDomainsDeleteComboBox.addItem(domain);
+							m_dnsAddSubdomainsComboBox.addItem(domain);
+							domainComboBox.addItem(((RowId) domain).toString());
+						}
+					} catch (UnsupportedOperationException e) {
+						e.printStackTrace();
+						logger.warning("Delete Dns Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Delete Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					} catch (SQLException e) {
+						logger.warning("Delete Dns Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Delete Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
+
+		HorizontalLayout deldomainInfo = new HorizontalLayout();
+		deldomainInfo.addComponent(dnsDomainsDeleteComboBox);
+		deldomainInfo.addComponent(delDomainButton);
+
+		FormLayout delDomainForm = new FormLayout(new Label("Cancella un dominio dns"));
+		delDomainForm.addComponent(deldomainInfo);
+
+		VerticalLayout delDomainLayout  = new VerticalLayout();
+		delDomainLayout.setMargin(true);
+		delDomainLayout.setVisible(true);
+		delDomainLayout.addComponent(new Panel(delDomainForm));
+
+		rightLayout.addComponent(delDomainLayout);
+		
+		Button addSubDomainButton = new Button("Add dns sub domain");
+		addSubDomainButton.addClickListener(new ClickListener() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 439126521516044933L;
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public void buttonClick(ClickEvent event) {
+				if (dnsAddSubdomainTextBox.getValue() != null &&
+						m_dnsAddSubdomainsComboBox.getValue() != null) {
+					Object id  = m_subdomainContainer.addItem();
+					m_subdomainContainer.getContainerProperty(id, "dnssubdomain").setValue(dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
+					try {
+						m_subdomainContainer.commit();
+						logger.info("Added Dns Sub Domain: " + dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
+						Notification.show("Adding", "Dns Sub Domain" + dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue()+ " Saved", Type.HUMANIZED_MESSAGE);
+						delDnsSubdomainComboBox.removeAllItems();
+						for (Object sdomain: m_subdomainContainer.getItemIds())
+							delDnsSubdomainComboBox.addItem(sdomain);
+					} catch (UnsupportedOperationException e) {
+						e.printStackTrace();
+						logger.warning("Add Dns Sub Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Add Dns Sub Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					} catch (SQLException e) {
+						logger.warning("Add Dns Sub Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Add Dns Sub Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
+
+
+		HorizontalLayout addSubDomainInfo  = new HorizontalLayout();
+		addSubDomainInfo.addComponent(m_dnsAddSubdomainsComboBox);
+		addSubDomainInfo.addComponent(dnsAddSubdomainTextBox);
+		addSubDomainInfo.addComponent(addSubDomainButton);
+
+		FormLayout addSubDomainForm = new FormLayout(new Label("Aggiungi sotto dominio Dns"));
+		addSubDomainForm.addComponent(addSubDomainInfo);
+
+		VerticalLayout addSubDomainLayout = new VerticalLayout();
+		addSubDomainLayout.setMargin(true);
+		addSubDomainLayout.setMargin(true);
+		addSubDomainLayout.setVisible(true);
+		addSubDomainLayout.addComponent(new Panel(addSubDomainForm));
+
+		rightLayout.addComponent(addSubDomainLayout);
+
+		Button delSubDomainButton = new Button("Delete dns sub domain");
+		delSubDomainButton.addClickListener(new ClickListener() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 439126521516044933L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				if (delDnsSubdomainComboBox.getValue() != null &&
+					m_subdomainContainer.removeItem(delDnsSubdomainComboBox.getValue())) {
+					try {
+						m_subdomainContainer.commit();
+						logger.info("Deleted Dns Sub Domain: " + delDnsSubdomainComboBox.getValue());
+						Notification.show("Delete", "Dns Sub Domain" + delDnsSubdomainComboBox.getValue()+ " Deleted", Type.HUMANIZED_MESSAGE);
+						delDnsSubdomainComboBox.removeAllItems();
+						for (Object sdomain: m_subdomainContainer.getItemIds())
+							delDnsSubdomainComboBox.addItem(sdomain);
+					} catch (UnsupportedOperationException e) {
+						e.printStackTrace();
+						logger.warning("Delete Sub Dns Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Delete Sub Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					} catch (SQLException e) {
+						logger.warning("Delete Sub Dns Domain Failed: " + e.getLocalizedMessage());
+						Notification.show("Delete Sub Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
+
+		HorizontalLayout delSubDomainInfo = new HorizontalLayout();
+		delSubDomainInfo.addComponent(delDnsSubdomainComboBox);
+		delSubDomainInfo.addComponent(delSubDomainButton);
+
+		FormLayout delSubDomainForm = new FormLayout(new Label("Cancella un sotto dominio dns"));
+		delSubDomainForm.addComponent(delSubDomainInfo);
+
+		VerticalLayout delSubDomainLayout  = new VerticalLayout();
+		delSubDomainLayout.setMargin(true);
+		delSubDomainLayout.setVisible(true);
+		delSubDomainLayout.addComponent(new Panel(delSubDomainForm));
+
+		rightLayout.addComponent(delSubDomainLayout);
+
 		m_vrfTable.setVisibleColumns(new String[] { "name" });
 		m_vrfTable.setSelectable(true);
 		m_vrfTable.setImmediate(true);
@@ -154,13 +395,13 @@ public class VrfTab extends DashboardTab {
 			}
 		});
 
-		for (String nl: TNDao.m_network_categories) {
-			m_networkCatSearchComboBox.addItem(nl);
+		for (String nl: TNDao.m_network_levels) {
+			networkCatSearchComboBox.addItem(nl);
 		}
-		m_networkCatSearchComboBox.setInvalidAllowed(false);
-		m_networkCatSearchComboBox.setNullSelectionAllowed(true);		
-		m_networkCatSearchComboBox.setImmediate(true);
-		m_networkCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		networkCatSearchComboBox.setInvalidAllowed(false);
+		networkCatSearchComboBox.setNullSelectionAllowed(true);		
+		networkCatSearchComboBox.setImmediate(true);
+		networkCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		
 			/**
 			 * 
@@ -170,25 +411,25 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_vrfContainer.removeAllContainerFilters();
-				if (m_networkCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
-				if (m_notifCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
-				if (m_threshCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
-				if (m_vrfSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+				if (networkCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", networkCatSearchComboBox.getValue()));
+				if (notifCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", notifCatSearchComboBox.getValue()));
+				if (threshCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", threshCatSearchComboBox.getValue()));
+				if (vrfSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",vrfSearchComboBox.getValue()));
 			}
 		});
 
 
-		for (String category: TNDao.m_notif_categories) {
-			m_notifCatSearchComboBox.addItem(category);
+		for (String category: TNDao.m_notify_levels) {
+			notifCatSearchComboBox.addItem(category);
 		}
-		m_notifCatSearchComboBox.setInvalidAllowed(false);
-		m_notifCatSearchComboBox.setNullSelectionAllowed(true);		
-		m_notifCatSearchComboBox.setImmediate(true);
-		m_notifCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		notifCatSearchComboBox.setInvalidAllowed(false);
+		notifCatSearchComboBox.setNullSelectionAllowed(true);		
+		notifCatSearchComboBox.setImmediate(true);
+		notifCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			/**
 			 * 
 			 */
@@ -197,24 +438,24 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_vrfContainer.removeAllContainerFilters();
-				if (m_notifCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
-				if (m_networkCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
-				if (m_threshCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
-				if (m_vrfSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+				if (notifCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", notifCatSearchComboBox.getValue()));
+				if (networkCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", networkCatSearchComboBox.getValue()));
+				if (threshCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", threshCatSearchComboBox.getValue()));
+				if (vrfSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",vrfSearchComboBox.getValue()));
 			}
 		});
 		
-		for (String category: TNDao.m_thresh_categories) {
-			m_threshCatSearchComboBox.addItem(category);
+		for (String category: TNDao.m_threshold_levels) {
+			threshCatSearchComboBox.addItem(category);
 		}
-		m_threshCatSearchComboBox.setInvalidAllowed(false);
-		m_threshCatSearchComboBox.setNullSelectionAllowed(true);		
-		m_threshCatSearchComboBox.setImmediate(true);
-		m_threshCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		threshCatSearchComboBox.setInvalidAllowed(false);
+		threshCatSearchComboBox.setNullSelectionAllowed(true);		
+		threshCatSearchComboBox.setImmediate(true);
+		threshCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			/**
 			 * 
 			 */
@@ -223,24 +464,24 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_vrfContainer.removeAllContainerFilters();
-				if (m_threshCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
-				if (m_notifCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
-				if (m_networkCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
-				if (m_vrfSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
+				if (threshCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", threshCatSearchComboBox.getValue()));
+				if (notifCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", notifCatSearchComboBox.getValue()));
+				if (networkCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", networkCatSearchComboBox.getValue()));
+				if (vrfSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",vrfSearchComboBox.getValue()));
 			}
 		});
 
-		for (String vrf: getService().getTnDao().getVrfs().keySet()) {
-			m_vrfSearchComboBox.addItem(vrf);
+		for (String kvrf: getService().getTnDao().getVrfs().keySet()) {
+			vrfSearchComboBox.addItem(kvrf);
 		}
-		m_vrfSearchComboBox.setInvalidAllowed(false);
-		m_vrfSearchComboBox.setNullSelectionAllowed(true);		
-		m_vrfSearchComboBox.setImmediate(true);
-		m_vrfSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		vrfSearchComboBox.setInvalidAllowed(false);
+		vrfSearchComboBox.setNullSelectionAllowed(true);		
+		vrfSearchComboBox.setImmediate(true);
+		vrfSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			/**
 			 * 
 			 */
@@ -249,102 +490,103 @@ public class VrfTab extends DashboardTab {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				m_vrfContainer.removeAllContainerFilters();
-				if (m_vrfSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("name",m_vrfSearchComboBox.getValue()));
-				if (m_threshCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", m_threshCatSearchComboBox.getValue()));
-				if (m_notifCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", m_notifCatSearchComboBox.getValue()));
-				if (m_networkCatSearchComboBox.getValue() != null)
-					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", m_networkCatSearchComboBox.getValue()));
+				if (vrfSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("name",vrfSearchComboBox.getValue()));
+				if (threshCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("thresholdlevel", threshCatSearchComboBox.getValue()));
+				if (notifCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("notifylevel", notifCatSearchComboBox.getValue()));
+				if (networkCatSearchComboBox.getValue() != null)
+					m_vrfContainer.addContainerFilter(new Compare.Equal("networklevel", networkCatSearchComboBox.getValue()));
 			}
 		});
 
-		for (String nl: TNDao.m_network_categories) {
-			m_networkCatComboBox.addItem(nl);
+		for (String nl: TNDao.m_network_levels) {
+			networkCatComboBox.addItem(nl);
 		}
 
-		for (final String vrfs: getService().getTnDao().getDomains()) {
-			m_domainComboBox.addItem(vrfs);
+		for ( Object domain: m_domainContainer.getItemIds()) {
+			domainComboBox.addItem(((RowId) domain).toString());
 		}
 
-		for (String notif: TNDao.m_notif_categories) {
-			m_notifCatComboBox.addItem(notif);
+		for (String notif: TNDao.m_notify_levels) {
+			notifCatComboBox.addItem(notif);
 		}
 
-		for (String threshold: TNDao.m_thresh_categories) {
-			m_threshCatComboBox.addItem(threshold);
+		for (String threshold: TNDao.m_threshold_levels) {
+			threshCatComboBox.addItem(threshold);
 		}
 
-		m_vrf.setSizeFull();
-		m_vrf.setWidth(4, Unit.CM);
-		m_vrf.setHeight(6, Unit.MM);
-		m_vrf.setRequired(true);
-		m_vrf.setRequiredError("vrf non deve essere vuota");
-		m_vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]+$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
-		m_vrf.addValidator(new DuplicatedVrfValidator());
-		m_vrf.setImmediate(true);
+		vrf.setSizeFull();
+		vrf.setWidth(4, Unit.CM);
+		vrf.setHeight(6, Unit.MM);
+		vrf.setRequired(true);
+		vrf.setRequiredError("vrf non deve essere vuota");
+		vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]+$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
+		vrf.addValidator(new DuplicatedVrfValidator());
+		vrf.setImmediate(true);
 
-		m_networkCatComboBox.setInvalidAllowed(false);
-		m_networkCatComboBox.setNullSelectionAllowed(false);
-		m_networkCatComboBox.setRequired(true);
-		m_networkCatComboBox.setRequiredError("E' necessario scegliere un livello di rete");
-		m_networkCatComboBox.setImmediate(true);
+		networkCatComboBox.setInvalidAllowed(false);
+		networkCatComboBox.setNullSelectionAllowed(false);
+		networkCatComboBox.setRequired(true);
+		networkCatComboBox.setRequiredError("E' necessario scegliere un livello di rete");
+		networkCatComboBox.setImmediate(true);
 
-		m_domainComboBox.setInvalidAllowed(false);
-		m_domainComboBox.setNullSelectionAllowed(false);
-		m_domainComboBox.setRequired(true);
-		m_domainComboBox.setRequiredError("Bisogna scegliere un dominio valido");
-		m_domainComboBox.setImmediate(true);
+		domainComboBox.setInvalidAllowed(false);
+		domainComboBox.setNullSelectionAllowed(false);
+		domainComboBox.setRequired(true);
+		domainComboBox.setRequiredError("Bisogna scegliere un dominio valido");
+		domainComboBox.setImmediate(true);
 		
-		m_notifCatComboBox.setInvalidAllowed(false);
-		m_notifCatComboBox.setNullSelectionAllowed(false);
-		m_notifCatComboBox.setRequired(true);
-		m_notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
+		notifCatComboBox.setInvalidAllowed(false);
+		notifCatComboBox.setNullSelectionAllowed(false);
+		notifCatComboBox.setRequired(true);
+		notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 
-		m_threshCatComboBox.setInvalidAllowed(false);
-		m_threshCatComboBox.setNullSelectionAllowed(false);
-		m_threshCatComboBox.setRequired(true);
-		m_threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
+		threshCatComboBox.setInvalidAllowed(false);
+		threshCatComboBox.setNullSelectionAllowed(false);
+		threshCatComboBox.setRequired(true);
+		threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
 
-		m_snmpComboBox.setInvalidAllowed(false);
-		m_snmpComboBox.setNullSelectionAllowed(false);
-		m_snmpComboBox.setRequired(true);
-		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
+		snmpComboBox.setInvalidAllowed(false);
+		snmpComboBox.setNullSelectionAllowed(false);
+		snmpComboBox.setRequired(true);
+		snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 
 
-        m_backupComboBox.setInvalidAllowed(false);
-        m_backupComboBox.setNullSelectionAllowed(false);
-        m_backupComboBox.setRequired(true);
-        m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
+        backupComboBox.setInvalidAllowed(false);
+        backupComboBox.setNullSelectionAllowed(false);
+        backupComboBox.setRequired(true);
+        backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
 
+        m_editorFields = new BeanFieldGroup<Vrf>(Vrf.class);
 		m_editorFields.setBuffered(true);
-		m_editorFields.bind(m_vrf, VRF);
-		m_editorFields.bind(m_networkCatComboBox, NETWORK_LEVEL);
-		m_editorFields.bind(m_domainComboBox, DNS_DOMAIN);
-		m_editorFields.bind(m_snmpComboBox, SNMP_PROFILE);
-		m_editorFields.bind(m_backupComboBox, BACKUP_PROFILE);
-		m_editorFields.bind(m_notifCatComboBox, NOTIF_LEVEL);
-		m_editorFields.bind(m_threshCatComboBox, THRESH_LEVEL);
+		m_editorFields.bind(vrf, VRF);
+		m_editorFields.bind(networkCatComboBox, NETWORK_LEVEL);
+		m_editorFields.bind(domainComboBox, DNS_DOMAIN);
+		m_editorFields.bind(snmpComboBox, SNMP_PROFILE);
+		m_editorFields.bind(backupComboBox, BACKUP_PROFILE);
+		m_editorFields.bind(notifCatComboBox, NOTIF_LEVEL);
+		m_editorFields.bind(threshCatComboBox, THRESH_LEVEL);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
-		leftGeneralInfo.addComponent(m_vrf);
-		leftGeneralInfo.addComponent(m_networkCatComboBox);
-		leftGeneralInfo.addComponent(m_domainComboBox);
+		leftGeneralInfo.addComponent(vrf);
+		leftGeneralInfo.addComponent(networkCatComboBox);
+		leftGeneralInfo.addComponent(domainComboBox);
 		
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
 		centerGeneralInfo.setMargin(true);
 		
 		HorizontalLayout catLayout = new HorizontalLayout();
 		catLayout.setSizeFull();
-		catLayout.addComponent(m_notifCatComboBox);
-		catLayout.addComponent(m_threshCatComboBox);
+		catLayout.addComponent(notifCatComboBox);
+		catLayout.addComponent(threshCatComboBox);
 		
 		HorizontalLayout profLayout = new HorizontalLayout();
 		profLayout.setSizeFull();
-		profLayout.addComponent(m_snmpComboBox);
-		profLayout.addComponent(m_backupComboBox);
+		profLayout.addComponent(snmpComboBox);
+		profLayout.addComponent(backupComboBox);
 				
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
@@ -413,7 +655,7 @@ public class VrfTab extends DashboardTab {
 				m_vrfContainer.getContainerProperty(vrfId, "backupprofile").setValue(vrf.getBackupprofile());
 				m_vrfContainer.getContainerProperty(vrfId, "snmpprofile").setValue(vrf.getSnmpprofile());
 				if (versionid != null) 
-					m_vrfSearchComboBox.addItem(vrf.getName());
+					vrfSearchComboBox.addItem(vrf.getName());
 				try {
 					m_vrfContainer.commit();
 					m_vrfTable.select(null);
@@ -424,12 +666,12 @@ public class VrfTab extends DashboardTab {
 					uoe.printStackTrace();					
 					logger.warning("Save Vrf Failed: " + uoe.getLocalizedMessage());
 					Notification.show("Save Vrf Failed", uoe.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					m_vrfSearchComboBox.removeItem(vrf.getName());
+					vrfSearchComboBox.removeItem(vrf.getName());
 				} catch (SQLException sqle) {
 					sqle.printStackTrace();
 					logger.warning("Save Vrf Failed: " + sqle.getLocalizedMessage());
 					Notification.show("Save Vrf Failed", sqle.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					m_vrfSearchComboBox.removeItem(vrf.getName());
+					vrfSearchComboBox.removeItem(vrf.getName());
 				}
 			}
 		});
@@ -464,16 +706,13 @@ public class VrfTab extends DashboardTab {
 					m_saveVrfButton.setEnabled(false);
 					m_removeVrfButton.setEnabled(false);
 					m_vrfTable.select(null);
-					m_vrfSearchComboBox.removeItem(vrf);
+					vrfSearchComboBox.removeItem(vrf);
 				}  else {
 					logger.warning("Cannot Found Vrf to Delete: '" + vrf + "'.");
 					Notification.show("Cannot Found Vrf to Delete: '" + vrf + "'.", "Vrf not found onq SqlContainer", Type.ERROR_MESSAGE);
 				}
 		}
 		});		
-		loaded=true;
-
-
 	}
 
 	private void selectItem() {
@@ -518,5 +757,56 @@ public class VrfTab extends DashboardTab {
 	       }
 	}
 
+	class DuplicatedDnsValidator implements Validator {		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5690578176254609879L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			String dns = (String)value;
+			logger.info("DuplicatedDnsValidator: validating dns: " + dns);
+	         if (getService().getTnDao().getDomains().contains(dns))
+	             throw new InvalidValueException("DuplicatedDnsValidator: trovato un duplicato del domainio: " + dns);
+	       }
+	}
+
+	class DuplicatedSubDomainDnsValidator implements Validator {
+				
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5690578176254609879L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			if (m_dnsAddSubdomainsComboBox.getValue() == null)
+				return;
+			String subdomain = m_dnsAddSubdomainsComboBox.getValue().toString();
+			String dns = (String)value + "." + subdomain;
+			logger.info("DuplicatedSubDomainDnsValidator: validating dns: " + dns);
+	         if (getService().getTnDao().getSubdomains().contains(dns))
+	             throw new InvalidValueException("DuplicatedSubDomainDnsValidator: trovato un duplicato del dominio: " + dns);
+	       }
+	}
+
+	class ValidDnsValidator implements Validator {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1164410348714595136L;
+
+		@Override
+		public void validate( Object value) throws InvalidValueException {
+			if (value == null)
+				return;
+			String dns = (String)value;
+			logger.info("ValidDnsValidator: validating dns domain: " + dns);
+	         if (DashBoardUtils.hasInvalidDnsBind9Label(dns))
+	             throw new InvalidValueException("ValidDnsValidator: dominio non valido: " + dns);
+	       }
+	}
 	
 }

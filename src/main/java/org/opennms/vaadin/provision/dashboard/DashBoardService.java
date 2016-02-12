@@ -59,7 +59,8 @@ public class DashBoardService implements Serializable {
 	private OnmsDao m_onmsDao;
 	private TNDao m_tnDao;
 	private DashBoardConfig m_config;
-
+	private String m_user;
+	
 	
 	public OnmsDao getOnmsDao() {
 		return m_onmsDao;
@@ -89,21 +90,27 @@ public class DashBoardService implements Serializable {
     }
 	
 	public void logout() {
-		logger.info("logged out");
+		logger.info("logged out: " + m_user);
 		m_onmsDao.destroy();
 		m_tnDao.destroy();
 	}
 	
-	public void login(String url, String username, String password) throws SQLException {
+	public void login(String url, String username, String password) {
 		logger.info("loggin user: " + username + "@" + url);
 		m_onmsDao.setJerseyClient(
 				new JerseyClientImpl(url,username,password));
 		m_onmsDao.getSnmpInfo("127.0.0.1");
 		logger.info("logged in user: " + username + "@" + url);
-		m_tnDao.init("org.postgresql.Driver", m_config.getDbUrl(), m_config.getDbUsername(), m_config.getDbPassword());
-		logger.info("connected to database: " + m_config.getDbUrl());
+		m_user = username;
 	}
 
+	public void init() throws SQLException {
+		m_tnDao.init("org.postgresql.Driver", m_config.getDbUrl(), m_config.getDbUsername(), m_config.getDbPassword());
+		logger.info("connected to database: " + m_config.getDbUrl());
+		
+	}
+	
+	@SuppressWarnings("deprecation")
 	public BeanContainer<String, TrentinoNetworkNode> getRequisitionContainer(String label, String foreignSource,Map<String, BackupProfile> backupprofilemap) {
 		BeanContainer<String, TrentinoNetworkNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 		m_foreignIdNodeLabelMap = new HashMap<String, String>();
@@ -172,7 +179,7 @@ public class DashBoardService implements Serializable {
 				valid = false;
 
 			String notifCategory=null;
-			for (String fcat: TNDao.m_notif_categories) {
+			for (String fcat: TNDao.m_notify_levels) {
 				if (node.getCategory(fcat) != null ) {
 					notifCategory = fcat;
 					break;
@@ -182,7 +189,7 @@ public class DashBoardService implements Serializable {
 				valid = false;
 			
 			String threshCategory = null;
-			for (String tcat: TNDao.m_thresh_categories) {
+			for (String tcat: TNDao.m_threshold_levels) {
 				if (node.getCategory(tcat) != null ) {
 					threshCategory = tcat;
 					break;
@@ -492,5 +499,13 @@ public class DashBoardService implements Serializable {
 		}
 		
 		node.clear();
+	}
+
+	public String getUser() {
+		return m_user;
+	}
+
+	public void setUser(String user) {
+		m_user = user;
 	}
 }

@@ -104,13 +104,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	private void login() {	
 		try {
 		    m_service.login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
-		} catch (SQLException sqle) {
-			logger.log(Level.WARNING,"Login Failed per accesso database",sqle);
-			Notification.show("Login Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
-			m_username.setValue("");
-			m_password.setValue("");
-			m_service.logout();
-			return;
 		} catch (ClientHandlerException che) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",che);
@@ -140,6 +133,14 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		}
 	    m_panel.setCaption("Logged in");
 	    m_panel.setContent(m_logout);
+	    
+	    try {
+	    	m_service.init();
+	    } catch (SQLException sqle) {
+			logger.log(Level.WARNING,"Init Failed per accesso database",sqle);
+			Notification.show("Init Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
+			return;
+	    }
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
 	    while (ite.hasNext()) {
 	    	m_tabs.getTab(ite.next()).setEnabled(true);
