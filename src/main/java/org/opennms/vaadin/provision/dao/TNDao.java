@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.opennms.vaadin.provision.model.BackupProfile;
-import org.opennms.vaadin.provision.model.FastDevice;
-import org.opennms.vaadin.provision.model.FastService;
+import org.opennms.vaadin.provision.model.FastServiceDevice;
+import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.Vrf;
 
@@ -18,6 +18,7 @@ import com.vaadin.data.Item;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
+import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 
 public class TNDao {
@@ -153,12 +154,58 @@ public class TNDao {
     	return vrf;
     }
 
-    public List<FastDevice> getFastDevices() {
-    	return new ArrayList<FastDevice>();
+    @SuppressWarnings("unchecked")
+	public List<FastServiceDevice> getFastServiceDevices() throws SQLException {
+    	List<FastServiceDevice> devices = new ArrayList<FastServiceDevice>();
+    	SQLContainer fastServiceDeviceContainer = new SQLContainer(new FreeformQuery("select * from fastservicedevices", m_pool));
+		for (Iterator<?> i = fastServiceDeviceContainer.getItemIds().iterator(); i.hasNext();) {
+			Item fastservicedevicetableRow = fastServiceDeviceContainer.getItem(i.next());
+			devices.add(new FastServiceDevice(fastservicedevicetableRow.getItemProperty("hostname"), 
+					fastservicedevicetableRow.getItemProperty("ipaddr"),
+					fastservicedevicetableRow.getItemProperty("ipaddr_lan"),
+					fastservicedevicetableRow.getItemProperty("netmask_lan"),
+					fastservicedevicetableRow.getItemProperty("serial_number"),
+					fastservicedevicetableRow.getItemProperty("address_desc"),
+					fastservicedevicetableRow.getItemProperty("address_name"),
+					fastservicedevicetableRow.getItemProperty("address_number"),
+					fastservicedevicetableRow.getItemProperty("floor"),
+					fastservicedevicetableRow.getItemProperty("room"),
+					fastservicedevicetableRow.getItemProperty("city"),
+					fastservicedevicetableRow.getItemProperty("istat_code"),
+					fastservicedevicetableRow.getItemProperty("master_device"),
+					fastservicedevicetableRow.getItemProperty("snmpprofiles"),
+					fastservicedevicetableRow.getItemProperty("backupprofiles"),
+					fastservicedevicetableRow.getItemProperty("not_monitoring"),
+					fastservicedevicetableRow.getItemProperty("save_config"),
+					fastservicedevicetableRow.getItemProperty("notify_category"),
+					fastservicedevicetableRow.getItemProperty("order_code"),
+					fastservicedevicetableRow.getItemProperty("device_type")));
+		}
+    	return devices;
     }
     
-    public List<FastService> getFastService() {
-    	return new ArrayList<FastService>();
+    @SuppressWarnings("unchecked")
+	public List<FastServiceLink> getFastServiceLink() throws SQLException {
+    	List<FastServiceLink> links = new ArrayList<FastServiceLink>();
+    	SQLContainer fastServiceLinkContainer = new SQLContainer(new FreeformQuery("select * from fastservicelink", m_pool));
+		for (Iterator<?> i = fastServiceLinkContainer.getItemIds().iterator(); i.hasNext();) {
+			Item fastservicelinktableRow = fastServiceLinkContainer.getItem(i.next());
+			links.add(new FastServiceLink(
+					fastservicelinktableRow.getItemProperty("order_code"), 
+					fastservicelinktableRow.getItemProperty("tariff"),
+					fastservicelinktableRow.getItemProperty("link_type"),
+					fastservicelinktableRow.getItemProperty("pcv_1_name"),
+					fastservicelinktableRow.getItemProperty("pcv_2_name"),
+					fastservicelinktableRow.getItemProperty("td"),
+					fastservicelinktableRow.getItemProperty("delivery_device_network_side"),
+					fastservicelinktableRow.getItemProperty("delivery_device_client_side"),
+					fastservicelinktableRow.getItemProperty("delivery_interface"),
+					fastservicelinktableRow.getItemProperty("interface_description"),
+					fastservicelinktableRow.getItemProperty("vrf"),
+					fastservicelinktableRow.getItemProperty("delivery_code")));
+		}
+    	
+    	return links;
     }
 
 	public SQLContainer getDnsDomainContainer() {

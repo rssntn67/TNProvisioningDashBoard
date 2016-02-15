@@ -1,10 +1,15 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.sql.SQLException;
+
 import org.opennms.vaadin.provision.fast.FastIntegrationRunnable;
+import org.opennms.vaadin.provision.model.FastServiceDevice;
+import org.opennms.vaadin.provision.model.FastServiceLink;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -13,6 +18,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
 @Title("TNPD - Fast Integration")
@@ -26,6 +32,9 @@ public class FastTab extends DashboardTab implements ClickListener {
     private boolean m_loaded = false;
 
     private FastIntegrationRunnable runnable; 
+    
+    private Table m_fastDeviceTable =  new Table();
+    private Table m_fastLinkTable =  new Table();
 	/**
 	 * 
 	 */
@@ -52,6 +61,8 @@ public class FastTab extends DashboardTab implements ClickListener {
         layout.addComponent(m_fast);
         m_progress.setEnabled(false);
         layout.addComponent(m_progress);
+        layout.addComponent(m_fastDeviceTable);
+        layout.addComponent(m_fastLinkTable);
         return layout;
 	}
 
@@ -65,6 +76,25 @@ public class FastTab extends DashboardTab implements ClickListener {
 		m_progress.setEnabled(true);
 		Thread thread = new Thread(runnable);
 		thread.start();
+		BeanItemContainer<FastServiceDevice> fsdc = new BeanItemContainer<FastServiceDevice>(FastServiceDevice.class);
+		try {
+			fsdc.addAll(getService().getTnDao().getFastServiceDevices());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		m_fastDeviceTable.setContainerDataSource(fsdc);
+
+		BeanItemContainer<FastServiceLink> fslc = new BeanItemContainer<FastServiceLink>(FastServiceLink.class);
+		try {
+			fslc.addAll(getService().getTnDao().getFastServiceLink());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		m_fastLinkTable.setContainerDataSource(fslc);
+
+		
 		Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);	
 	}
 	
@@ -80,5 +110,12 @@ public class FastTab extends DashboardTab implements ClickListener {
 		m_panel.setCaption("Fast Integration - Status: Running");
 		m_progress.setValue(fl);
 	}
+	
+	public Table getFastDeviceTable() {
+		return m_fastDeviceTable;
+	}
 
+	public Table getFastLinkTable() {
+		return m_fastLinkTable;
+	}
 }
