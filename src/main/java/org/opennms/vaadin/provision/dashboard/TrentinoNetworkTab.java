@@ -136,7 +136,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private Table m_secondaryIpAddressTable = new Table();
 	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
 
-	public TrentinoNetworkTab(DashBoardService service) {
+	public TrentinoNetworkTab(DashBoardSessionService service) {
 		super(service);
 	}
 
@@ -144,7 +144,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	public void load() {
 		if (!loaded) {
 			try {
-				m_requisitionContainer = getService().getRequisitionContainer(LABEL,TN,getService().getTnDao().getBackupProfiles());
+				m_requisitionContainer = getService().getRequisitionContainer(LABEL,TN);
 				m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 				layout();
 				loaded=true;
@@ -178,11 +178,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
 		ComboBox parentComboBox = new ComboBox("Dipende da");
 
-		for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
+		for (String snmpprofile: getService().getTnDao().getSnmpProfileContainer().getSnmpProfileMap().keySet()) {
 			snmpComboBox.addItem(snmpprofile);
 		}
 
-		for (String backupprofile: getService().getTnDao().getBackupProfiles().keySet()) {
+		for (String backupprofile: getService().getTnDao().getBackupProfileContainer().getBackupProfileMap().keySet()) {
 			backupComboBox.addItem(backupprofile);
 		}
 
@@ -244,7 +244,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		for (Vrf categories: getService().getTnDao().getVrfs().values()) {
+		for (Vrf categories: getService().getTnDao().getVrfContainer().getVrfMap().values()) {
 			networkCatSearchComboBox.addItem(categories);
 			networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
@@ -316,11 +316,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		});
 
 		m_vrfsComboBox.removeAllItems();
-		for (final String vrfs: getService().getTnDao().getDomains()) {
+		for (final String vrfs: getService().getTnDao().getDnsDomainContainer().getDomains()) {
 			m_vrfsComboBox.addItem(vrfs);
 		}
 
-		for (Vrf categories: getService().getTnDao().getVrfs().values()) {
+		for (Vrf categories: getService().getTnDao().getVrfContainer().getVrfMap().values()) {
 			networkCatComboBox.addItem(categories);
 			networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
@@ -600,7 +600,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++,
-						getService().getTnDao().getVrfs().values().iterator().next()));
+						getService().getTnDao().getVrfContainer().getVrfMap().values().iterator().next()));
 				networkCatSearchComboBox.select(null);
 				networkCatSearchComboBox.setValue(null);
 				notifCatSearchComboBox.select(null);
@@ -758,7 +758,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				String snmpProfile=null;
 				if (node.getPrimary() != null) {
 					try {
-					snmpProfile = getService().getSnmpProfile(node.getPrimary());
+					snmpProfile = getService().getSnmpProfileName(node.getPrimary());
 					} catch (SQLException sqle) {
 						logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
 						Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
@@ -800,7 +800,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			String hostname = ((String)value).toLowerCase();
 			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
 			logger.info("SubdomainValidator: validating hostname: " + hostname);
-			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getTnDao().getSubdomains()))
+			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getTnDao().getDnsSubDomainContainer().getSubdomains()))
 	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
 	       }
 	}

@@ -4,10 +4,10 @@ import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.model.SnmpProfile;
+import org.opennms.vaadin.provision.model.SnmpProfileContainer;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -15,7 +15,6 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.RowId;
-import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -43,7 +42,7 @@ public class SnmpProfileTab extends DashboardTab {
 	public static final String SNMP_TIMEOUT      = "timeout";
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private SQLContainer m_snmpContainer;
+	private SnmpProfileContainer m_snmpContainer;
 	private boolean loaded = false;
 	
 	private Table m_snmpTable   	= new Table();
@@ -61,14 +60,14 @@ public class SnmpProfileTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public SnmpProfileTab(DashBoardService service) {
+	public SnmpProfileTab(DashBoardSessionService service) {
 		super(service);
 	}
 
 	@Override
 	public void load() {
 		if (!loaded) {
-			m_snmpContainer = (SQLContainer) getService().getTnDao().getSnmpProfileContainer();
+			m_snmpContainer = getService().getTnDao().getSnmpProfileContainer();
 			m_snmpTable.setContainerDataSource(m_snmpContainer);
 			layout();
 			loaded=true;
@@ -228,7 +227,6 @@ public class SnmpProfileTab extends DashboardTab {
 		m_saveSnmpButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
-			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
 				Object snmpId = m_snmpTable.getValue();
 				try {
@@ -241,16 +239,13 @@ public class SnmpProfileTab extends DashboardTab {
 				SnmpProfile snmp = m_editorFields.getItemDataSource().getBean();
 				Integer versionid = null;
 				if (snmpId == null) {
-					snmpId = m_snmpContainer.addItem();
 					versionid = 0;
 					logger.info("Adding Snmp Profile: " + snmp.getName());
+					m_snmpContainer.add(snmp);
 				} else {
 					logger.info("Updating Snmp Profile: " + snmp.getName());
+					m_snmpContainer.save(snmpId,snmp);
 				}
-				m_snmpContainer.getContainerProperty(snmpId, "name").setValue(snmp.getName());
-				m_snmpContainer.getContainerProperty(snmpId, "community").setValue(snmp.getCommunity());
-				m_snmpContainer.getContainerProperty(snmpId, "version").setValue(snmp.getVersion());
-				m_snmpContainer.getContainerProperty(snmpId, "timeout").setValue(snmp.getTimeout());
 				if (versionid != null) 
 					snmpSearchComboBox.addItem(snmp.getName());
 				try {
@@ -312,19 +307,12 @@ public class SnmpProfileTab extends DashboardTab {
 		});		
 	}
 
-	@SuppressWarnings("unchecked")
 	private void selectItem() {
 		Object snmpId = m_snmpTable.getValue();
 
 		if (snmpId == null)
 			return;
-		Item snmptableRow = m_snmpTable.getItem(snmpId);
-			
-		SnmpProfile snmp =new SnmpProfile(snmptableRow.getItemProperty("name"),
-				snmptableRow.getItemProperty("community"),
-				snmptableRow.getItemProperty("version"),
-				snmptableRow.getItemProperty("timeout")
-				);
+		SnmpProfile snmp = m_snmpContainer.get(snmpId);
 		m_editorFields.setItemDataSource(snmp);
 		m_editSnmpLayout.setVisible(true);
 		m_saveSnmpButton.setEnabled(true);
@@ -347,7 +335,7 @@ public class SnmpProfileTab extends DashboardTab {
 			if (data.getName() != null)
 				return;
 			logger.info("DuplicatedSnmpProfileValidator: validating Snmp Profile: " + snmp);
-	         if (getService().getTnDao().getSnmpProfiles().containsKey(snmp))
+	         if (m_snmpContainer.getSnmpProfileMap().containsKey(snmp))
 	             throw new InvalidValueException("DuplicatedSnmpProfileValidator: trovato un duplicato della profilo snmp: " + snmp);
 	       }
 	}

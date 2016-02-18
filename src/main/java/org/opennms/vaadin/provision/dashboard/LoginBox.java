@@ -1,7 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
-import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,7 +26,7 @@ import elemental.events.KeyboardEvent.KeyCode;
 
 public class LoginBox extends CustomComponent implements ClickListener {
 
-	private DashBoardService m_service;
+	private DashBoardSessionService m_service;
 
 	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
 
@@ -45,7 +44,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private Button m_logout = new Button("Logout");
     private TabSheet m_tabs;
     
-    public LoginBox (TabSheet tabs,DashBoardService service) {
+    public LoginBox (TabSheet tabs,DashBoardSessionService service) {
         m_panel.setContent(getLoginBox());
         setCompositionRoot(m_panel);
 
@@ -84,6 +83,10 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	}
 
 	private void logout() {
+		if (m_service.isFastRunning()) {
+			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
+			return;
+		}
 		m_username.setValue("");
 		m_password.setValue("");
 		m_service.logout();
@@ -134,13 +137,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    m_panel.setCaption("Logged in");
 	    m_panel.setContent(m_logout);
 	    
-	    try {
-	    	m_service.init();
-	    } catch (SQLException sqle) {
-			logger.log(Level.WARNING,"Init Failed per accesso database",sqle);
-			Notification.show("Init Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
-			return;
-	    }
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
 	    while (ite.hasNext()) {
 	    	m_tabs.getTab(ite.next()).setEnabled(true);

@@ -15,19 +15,19 @@ public abstract class DashboardTab extends CustomComponent {
 	 * 
 	 */
 	private static final long serialVersionUID = 4694567853140078034L;
-	private DashBoardService m_service;
+	private DashBoardSessionService m_service;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	DashboardTab(DashBoardService service) {
+	DashboardTab(DashBoardSessionService service) {
 		m_service = service;
 	}
 
 	public abstract void load();
 	
-	public DashBoardService getService() {
+	public DashBoardSessionService getService() {
 		return m_service;
 	}
 

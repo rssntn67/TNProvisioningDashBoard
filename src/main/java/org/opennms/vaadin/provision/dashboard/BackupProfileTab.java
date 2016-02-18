@@ -5,10 +5,10 @@ import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.BackupProfileContainer;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -16,7 +16,6 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.RowId;
-import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -46,7 +45,7 @@ public class BackupProfileTab extends DashboardTab {
 	public static final String BACKUP_AUTOENABLE   = "autoenable";
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private SQLContainer m_backupContainer;
+	private BackupProfileContainer m_backupContainer;
 	private boolean loaded = false;
 	
 	private Table m_backupTable   	= new Table();
@@ -63,14 +62,14 @@ public class BackupProfileTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public BackupProfileTab(DashBoardService service) {
+	public BackupProfileTab(DashBoardSessionService service) {
 		super(service);
 	}
 
 	@Override
 	public void load() {
 		if (!loaded) {
-			m_backupContainer = (SQLContainer) getService().getTnDao().getBackupProfileContainer();
+			m_backupContainer = getService().getTnDao().getBackupProfileContainer();
 			m_backupTable.setContainerDataSource(m_backupContainer);
 			layout();
 			loaded=true;
@@ -262,7 +261,6 @@ public class BackupProfileTab extends DashboardTab {
 		m_saveBackupButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
-			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
 				Object backupId = m_backupTable.getValue();
 				try {
@@ -278,15 +276,11 @@ public class BackupProfileTab extends DashboardTab {
 					backupId = m_backupContainer.addItem();
 					versionid = 0;
 					logger.info("Adding Backup Profile: " + backup.getName());
+					m_backupContainer.add(backup);
 				} else {
 					logger.info("Updating Backup Profile: " + backup.getName());
+					m_backupContainer.save(backupId, backup);
 				}
-				m_backupContainer.getContainerProperty(backupId, "name").setValue(backup.getName());
-				m_backupContainer.getContainerProperty(backupId, "username").setValue(backup.getUsername());
-				m_backupContainer.getContainerProperty(backupId, "password").setValue(backup.getPassword());
-				m_backupContainer.getContainerProperty(backupId, "enable").setValue(backup.getEnable());
-				m_backupContainer.getContainerProperty(backupId, "connection").setValue(backup.getConnection());
-				m_backupContainer.getContainerProperty(backupId, "auto_enable").setValue(backup.getAutoenable());
 				if (versionid != null) 
 					backupSearchComboBox.addItem(backup.getName());
 				try {
@@ -348,21 +342,12 @@ public class BackupProfileTab extends DashboardTab {
 		});		
 	}
 
-	@SuppressWarnings("unchecked")
 	private void selectItem() {
 		Object backupId = m_backupTable.getValue();
 
 		if (backupId == null)
 			return;
-		Item backuptableRow = m_backupTable.getItem(backupId);
-			
-		BackupProfile backup = new BackupProfile(backuptableRow.getItemProperty("name"),
-				backuptableRow.getItemProperty("username"),
-				backuptableRow.getItemProperty("password"),
-				backuptableRow.getItemProperty("enable"),
-				backuptableRow.getItemProperty("connection"),
-				backuptableRow.getItemProperty("auto_enable")
-				);
+		BackupProfile backup = m_backupContainer.get(backupId);
 		m_editorFields.setItemDataSource(backup);
 		m_editBackupLayout.setVisible(true);
 		m_saveBackupButton.setEnabled(true);
@@ -385,7 +370,7 @@ public class BackupProfileTab extends DashboardTab {
 			if (data.getName() != null)
 				return;
 			logger.info("DuplicatedBackupProfileValidator: validating Backup Profile: " + backup);
-	         if (getService().getTnDao().getBackupProfiles().containsKey(backup))
+	         if (m_backupContainer.getBackupProfileMap().containsKey(backup))
 	             throw new InvalidValueException("DuplicatedBackupProfileValidator: trovato un duplicato della profilo backup: " + backup);
 	       }
 	}

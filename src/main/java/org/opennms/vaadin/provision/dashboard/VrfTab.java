@@ -6,11 +6,15 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.TNDao;
+import org.opennms.vaadin.provision.model.BackupProfileContainer;
+import org.opennms.vaadin.provision.model.DnsDomainContainer;
+import org.opennms.vaadin.provision.model.DnsSubDomainContainer;
+import org.opennms.vaadin.provision.model.SnmpProfileContainer;
 import org.opennms.vaadin.provision.model.Vrf;
+import org.opennms.vaadin.provision.model.VrfContainer;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Validator;
@@ -18,7 +22,6 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.RowId;
-import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -56,9 +59,11 @@ public class VrfTab extends DashboardTab {
 	public static final String SNMP_PROFILE    = "snmpprofile";
 	
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private SQLContainer m_vrfContainer;
-	private SQLContainer m_domainContainer;
-	private SQLContainer m_subdomainContainer;
+	private VrfContainer m_vrfContainer;
+	private DnsDomainContainer m_domainContainer;
+	private DnsSubDomainContainer m_subdomainContainer;
+	private BackupProfileContainer m_backupprofilecontainer;
+	private SnmpProfileContainer m_snmpprofilecontainer;
 	private boolean loaded=false;
 
 	private Table m_vrfTable   	= new Table();
@@ -72,17 +77,19 @@ public class VrfTab extends DashboardTab {
 
 	private ComboBox m_dnsAddSubdomainsComboBox = new ComboBox();
 
-	public VrfTab(DashBoardService service) {
+	public VrfTab(DashBoardSessionService service) {
 		super(service);
 	}
 
 	@Override
 	public void load() {
 		if (!loaded) {
-			m_domainContainer = (SQLContainer) getService().getTnDao().getDnsDomainContainer();
-			m_subdomainContainer = (SQLContainer) getService().getTnDao().getDnsSubDomainContainer();
-			m_vrfContainer = (SQLContainer) getService().getTnDao().getVrfContainer();
+			m_domainContainer = getService().getTnDao().getDnsDomainContainer();
+			m_subdomainContainer = getService().getTnDao().getDnsSubDomainContainer();
+			m_vrfContainer = getService().getTnDao().getVrfContainer();
 			m_vrfTable.setContainerDataSource(m_vrfContainer);
+			m_backupprofilecontainer = getService().getTnDao().getBackupProfileContainer();
+			m_snmpprofilecontainer = getService().getTnDao().getSnmpProfileContainer();
 			loaded=true;
 		}
 		layout();
@@ -102,11 +109,11 @@ public class VrfTab extends DashboardTab {
 		ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
 		ComboBox backupComboBox  = new ComboBox("Backup Profile");
 
-		for (String snmpprofile: getService().getTnDao().getSnmpProfiles().keySet()) {
+		for (String snmpprofile: m_snmpprofilecontainer.getSnmpProfileMap().keySet()) {
 			snmpComboBox.addItem(snmpprofile);
 		}
 
-		for (String backupprofile: getService().getTnDao().getBackupProfiles().keySet()) {
+		for (String backupprofile: m_backupprofilecontainer.getBackupProfileMap().keySet()) {
 			backupComboBox.addItem(backupprofile);
 		}
 
@@ -192,12 +199,10 @@ public class VrfTab extends DashboardTab {
 			 */
 			private static final long serialVersionUID = 439126521516044933L;
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void buttonClick(ClickEvent event) {
 				if (dnsDomainTextBox.getValue() != null) {
-					Object id  = m_domainContainer.addItem();
-					m_domainContainer.getContainerProperty(id, "dnsdomain").setValue(dnsDomainTextBox.getValue());
+					m_domainContainer.add(dnsDomainTextBox.getValue());
 					try {
 						m_domainContainer.commit();
 						logger.info("Added Dns Domain: " + dnsDomainTextBox.getValue());
@@ -296,13 +301,11 @@ public class VrfTab extends DashboardTab {
 			 */
 			private static final long serialVersionUID = 439126521516044933L;
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void buttonClick(ClickEvent event) {
 				if (dnsAddSubdomainTextBox.getValue() != null &&
 						m_dnsAddSubdomainsComboBox.getValue() != null) {
-					Object id  = m_subdomainContainer.addItem();
-					m_subdomainContainer.getContainerProperty(id, "dnssubdomain").setValue(dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
+					m_subdomainContainer.add(dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
 					try {
 						m_subdomainContainer.commit();
 						logger.info("Added Dns Sub Domain: " + dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
@@ -475,7 +478,7 @@ public class VrfTab extends DashboardTab {
 			}
 		});
 
-		for (String kvrf: getService().getTnDao().getVrfs().keySet()) {
+		for (String kvrf: m_vrfContainer.getVrfMap().keySet()) {
 			vrfSearchComboBox.addItem(kvrf);
 		}
 		vrfSearchComboBox.setInvalidAllowed(false);
@@ -628,7 +631,6 @@ public class VrfTab extends DashboardTab {
 		m_saveVrfButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
 
-			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
 				Object vrfId = m_vrfTable.getValue();
 				try {
@@ -644,16 +646,11 @@ public class VrfTab extends DashboardTab {
 					vrfId = m_vrfContainer.addItem();
 					versionid = 0;
 					logger.info("Adding Vrf: " + vrf.getName());
+					m_vrfContainer.add(vrf);
 				} else {
 					logger.info("Updating Vrf: " + vrf.getName());
+					m_vrfContainer.save(vrfId, vrf);
 				}
-				m_vrfContainer.getContainerProperty(vrfId, "name").setValue(vrf.getName());
-				m_vrfContainer.getContainerProperty(vrfId, "notifylevel").setValue(vrf.getNotifylevel());
-				m_vrfContainer.getContainerProperty(vrfId, "networklevel").setValue(vrf.getNetworklevel());
-				m_vrfContainer.getContainerProperty(vrfId, "dnsdomain").setValue(vrf.getDnsdomain());
-				m_vrfContainer.getContainerProperty(vrfId, "thresholdlevel").setValue(vrf.getThresholdlevel());
-				m_vrfContainer.getContainerProperty(vrfId, "backupprofile").setValue(vrf.getBackupprofile());
-				m_vrfContainer.getContainerProperty(vrfId, "snmpprofile").setValue(vrf.getSnmpprofile());
 				if (versionid != null) 
 					vrfSearchComboBox.addItem(vrf.getName());
 				try {
@@ -720,16 +717,7 @@ public class VrfTab extends DashboardTab {
 
 		if (vrfId == null)
 			return;
-		Item vrftableRow = m_vrfTable.getItem(vrfId);
-			
-		Vrf vrf =new Vrf(vrftableRow.getItemProperty("name").getValue().toString(),
-				vrftableRow.getItemProperty("notifylevel").getValue().toString(),
-				vrftableRow.getItemProperty("networklevel").getValue().toString(),
-				vrftableRow.getItemProperty("dnsdomain").getValue().toString(),
-				vrftableRow.getItemProperty("thresholdlevel").getValue().toString(),
-				vrftableRow.getItemProperty("backupprofile").getValue().toString(),
-				vrftableRow.getItemProperty("snmpprofile").getValue().toString()
-				);
+		Vrf vrf =m_vrfContainer.get(vrfId);
 		m_editorFields.setItemDataSource(vrf);
 		m_editVrfLayout.setVisible(true);
 		m_saveVrfButton.setEnabled(true);
@@ -752,7 +740,7 @@ public class VrfTab extends DashboardTab {
 			if (data.getName() != null)
 				return;
 			logger.info("DuplicatedVrfValidator: validating vrf: " + vrf);
-	         if (getService().getTnDao().getVrfs().containsKey(vrf))
+	         if (m_vrfContainer.getVrfMap().containsKey(vrf))
 	             throw new InvalidValueException("DuplicatedVrfValidator: trovato un duplicato della vrf: " + vrf);
 	       }
 	}
@@ -767,7 +755,7 @@ public class VrfTab extends DashboardTab {
 		public void validate( Object value) throws InvalidValueException {
 			String dns = (String)value;
 			logger.info("DuplicatedDnsValidator: validating dns: " + dns);
-	         if (getService().getTnDao().getDomains().contains(dns))
+	         if (m_domainContainer.getDomains().contains(dns))
 	             throw new InvalidValueException("DuplicatedDnsValidator: trovato un duplicato del domainio: " + dns);
 	       }
 	}
@@ -786,7 +774,7 @@ public class VrfTab extends DashboardTab {
 			String subdomain = m_dnsAddSubdomainsComboBox.getValue().toString();
 			String dns = (String)value + "." + subdomain;
 			logger.info("DuplicatedSubDomainDnsValidator: validating dns: " + dns);
-	         if (getService().getTnDao().getSubdomains().contains(dns))
+	         if (m_subdomainContainer.getSubdomains().contains(dns))
 	             throw new InvalidValueException("DuplicatedSubDomainDnsValidator: trovato un duplicato del dominio: " + dns);
 	       }
 	}

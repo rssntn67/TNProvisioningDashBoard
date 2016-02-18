@@ -20,7 +20,7 @@ public class DashboardTabSheet extends CustomComponent implements
 	TabSheet m_tabsheet; ;
     LoginBox m_loginbox;
     
-    DashboardTabSheet(DashBoardService service) {
+    DashboardTabSheet(DashBoardSessionService service) {
     	m_tabsheet = new TabSheet();
 		setCompositionRoot(m_tabsheet);
     	

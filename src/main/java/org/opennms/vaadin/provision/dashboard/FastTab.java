@@ -1,11 +1,13 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+
 import java.sql.SQLException;
 
 import org.opennms.vaadin.provision.fast.FastIntegrationRunnable;
-import org.opennms.vaadin.provision.model.FastServiceDevice;
-import org.opennms.vaadin.provision.model.FastServiceLink;
+import org.opennms.vaadin.provision.model.Job;
+import org.opennms.vaadin.provision.model.JobContainer;
+import org.opennms.vaadin.provision.model.JobLogEntry;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -29,18 +31,20 @@ public class FastTab extends DashboardTab implements ClickListener {
     private Button m_fast = new Button("Start Fast Integration");
     final ProgressIndicator m_progress = new ProgressIndicator();
 
+    private JobContainer m_jobcontainer;
+	private BeanItemContainer<JobLogEntry> m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
     private boolean m_loaded = false;
 
     private FastIntegrationRunnable runnable; 
     
-    private Table m_fastDeviceTable =  new Table();
-    private Table m_fastLinkTable =  new Table();
+    private Table m_jobTable =  new Table();
+    private Table m_logTable =  new Table();
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public FastTab(DashBoardService service) {
+	public FastTab(DashBoardSessionService service) {
 		super(service);
 	}
 
@@ -48,21 +52,23 @@ public class FastTab extends DashboardTab implements ClickListener {
 	public void load() {
 		if (m_loaded) 
 			return;
-		runnable = new FastIntegrationRunnable(this);
+		m_jobcontainer = getService().getTnDao().getJobContainer();
+		m_jobTable.setContainerDataSource(m_jobcontainer);
+		m_logTable.setContainerDataSource(m_logcontainer);
 		m_panel.setContent(getFastBox());
-        setCompositionRoot(m_panel);
-        m_fast.addClickListener(this);
-        m_loaded = true;
+		setCompositionRoot(m_panel);
+		m_fast.addClickListener(this);
+    	m_loaded = true;
 	}
 
 	private Component getFastBox() {
 	   	VerticalLayout layout = new VerticalLayout();
     	layout.setMargin(true);
         layout.addComponent(m_fast);
-        m_progress.setEnabled(false);
         layout.addComponent(m_progress);
-        layout.addComponent(m_fastDeviceTable);
-        layout.addComponent(m_fastLinkTable);
+        layout.addComponent(m_jobTable);
+        m_logTable.setVisible(false);
+        layout.addComponent(m_logTable);
         return layout;
 	}
 
@@ -73,36 +79,17 @@ public class FastTab extends DashboardTab implements ClickListener {
 	}
 	
 	private void runfast() {
-		m_progress.setEnabled(true);
+        m_logTable.setVisible(true);
+   		runnable = new FastIntegrationRunnable(this);
 		Thread thread = new Thread(runnable);
-		thread.start();
-		BeanItemContainer<FastServiceDevice> fsdc = new BeanItemContainer<FastServiceDevice>(FastServiceDevice.class);
-		try {
-			fsdc.addAll(getService().getTnDao().getFastServiceDevices());
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		m_fastDeviceTable.setContainerDataSource(fsdc);
-
-		BeanItemContainer<FastServiceLink> fslc = new BeanItemContainer<FastServiceLink>(FastServiceLink.class);
-		try {
-			fslc.addAll(getService().getTnDao().getFastServiceLink());
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		m_fastLinkTable.setContainerDataSource(fslc);
-
-		
+		thread.start();		
 		Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);	
 	}
 	
 	public void setCaptionReady() {
 			m_fast.setEnabled(true);
 			m_panel.setCaption("Fast Integration - Status: Ready");
-			m_progress.setEnabled(false);
-			
+			m_progress.setEnabled(false);			
 	}
 	
 	public void setCaptionRunning(Float fl) {
@@ -110,12 +97,23 @@ public class FastTab extends DashboardTab implements ClickListener {
 		m_panel.setCaption("Fast Integration - Status: Running");
 		m_progress.setValue(fl);
 	}
-	
-	public Table getFastDeviceTable() {
-		return m_fastDeviceTable;
-	}
+		
+	public int commitJob(Job job) {
+		if (job.getJobid() == null)
+		m_jobcontainer.add(job);
+		try {
+			m_jobcontainer.commit();
+		} catch (UnsupportedOperationException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return m_jobcontainer.getLastJobId().getValue();
 
-	public Table getFastLinkTable() {
-		return m_fastLinkTable;
+	}
+	
+	public void log(JobLogEntry jLogE) {
+		m_logcontainer.addBean(jLogE);
 	}
 }
