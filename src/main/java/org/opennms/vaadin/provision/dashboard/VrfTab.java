@@ -5,13 +5,12 @@ import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dao.TNDao;
-import org.opennms.vaadin.provision.model.BackupProfileContainer;
-import org.opennms.vaadin.provision.model.DnsDomainContainer;
-import org.opennms.vaadin.provision.model.DnsSubDomainContainer;
-import org.opennms.vaadin.provision.model.SnmpProfileContainer;
+import org.opennms.vaadin.provision.dao.BackupProfileDao;
+import org.opennms.vaadin.provision.dao.DnsDomainDao;
+import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
+import org.opennms.vaadin.provision.dao.SnmpProfileDao;
+import org.opennms.vaadin.provision.dao.VrfDao;
 import org.opennms.vaadin.provision.model.Vrf;
-import org.opennms.vaadin.provision.model.VrfContainer;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -59,11 +58,11 @@ public class VrfTab extends DashboardTab {
 	public static final String SNMP_PROFILE    = "snmpprofile";
 	
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private VrfContainer m_vrfContainer;
-	private DnsDomainContainer m_domainContainer;
-	private DnsSubDomainContainer m_subdomainContainer;
-	private BackupProfileContainer m_backupprofilecontainer;
-	private SnmpProfileContainer m_snmpprofilecontainer;
+	private VrfDao m_vrfContainer;
+	private DnsDomainDao m_domainContainer;
+	private DnsSubDomainDao m_subdomainContainer;
+	private BackupProfileDao m_backupprofilecontainer;
+	private SnmpProfileDao m_snmpprofilecontainer;
 	private boolean loaded=false;
 
 	private Table m_vrfTable   	= new Table();
@@ -84,12 +83,12 @@ public class VrfTab extends DashboardTab {
 	@Override
 	public void load() {
 		if (!loaded) {
-			m_domainContainer = getService().getTnDao().getDnsDomainContainer();
-			m_subdomainContainer = getService().getTnDao().getDnsSubDomainContainer();
-			m_vrfContainer = getService().getTnDao().getVrfContainer();
+			m_domainContainer = getService().getDnsDomainContainer();
+			m_subdomainContainer = getService().getDnsSubDomainContainer();
+			m_vrfContainer = getService().getVrfContainer();
 			m_vrfTable.setContainerDataSource(m_vrfContainer);
-			m_backupprofilecontainer = getService().getTnDao().getBackupProfileContainer();
-			m_snmpprofilecontainer = getService().getTnDao().getSnmpProfileContainer();
+			m_backupprofilecontainer = getService().getBackupProfileContainer();
+			m_snmpprofilecontainer = getService().getSnmpProfileContainer();
 			loaded=true;
 		}
 		layout();
@@ -398,7 +397,7 @@ public class VrfTab extends DashboardTab {
 			}
 		});
 
-		for (String nl: TNDao.m_network_levels) {
+		for (String nl: DashBoardUtils.m_network_levels) {
 			networkCatSearchComboBox.addItem(nl);
 		}
 		networkCatSearchComboBox.setInvalidAllowed(false);
@@ -426,7 +425,7 @@ public class VrfTab extends DashboardTab {
 		});
 
 
-		for (String category: TNDao.m_notify_levels) {
+		for (String category: DashBoardUtils.m_notify_levels) {
 			notifCatSearchComboBox.addItem(category);
 		}
 		notifCatSearchComboBox.setInvalidAllowed(false);
@@ -452,7 +451,7 @@ public class VrfTab extends DashboardTab {
 			}
 		});
 		
-		for (String category: TNDao.m_threshold_levels) {
+		for (String category: DashBoardUtils.m_threshold_levels) {
 			threshCatSearchComboBox.addItem(category);
 		}
 		threshCatSearchComboBox.setInvalidAllowed(false);
@@ -504,7 +503,7 @@ public class VrfTab extends DashboardTab {
 			}
 		});
 
-		for (String nl: TNDao.m_network_levels) {
+		for (String nl: DashBoardUtils.m_network_levels) {
 			networkCatComboBox.addItem(nl);
 		}
 
@@ -512,11 +511,11 @@ public class VrfTab extends DashboardTab {
 			domainComboBox.addItem(((RowId) domain).toString());
 		}
 
-		for (String notif: TNDao.m_notify_levels) {
+		for (String notif: DashBoardUtils.m_notify_levels) {
 			notifCatComboBox.addItem(notif);
 		}
 
-		for (String threshold: TNDao.m_threshold_levels) {
+		for (String threshold: DashBoardUtils.m_threshold_levels) {
 			threshCatComboBox.addItem(threshold);
 		}
 

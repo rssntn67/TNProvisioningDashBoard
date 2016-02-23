@@ -1,22 +1,24 @@
-package org.opennms.vaadin.provision.model;
+package org.opennms.vaadin.provision.dao;
 
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.opennms.vaadin.provision.model.BackupProfile;
+
 import com.vaadin.data.Item;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
 
-public class BackupProfileContainer extends SQLContainer {
+public class BackupProfileDao extends SQLContainer {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -4984152104834873631L;
 
-	public BackupProfileContainer(QueryDelegate delegate) throws SQLException {
+	public BackupProfileDao(QueryDelegate delegate) throws SQLException {
 		super(delegate);
 	}
 

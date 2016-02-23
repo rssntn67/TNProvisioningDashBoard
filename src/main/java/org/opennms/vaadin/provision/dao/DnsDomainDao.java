@@ -1,4 +1,4 @@
-package org.opennms.vaadin.provision.model;
+package org.opennms.vaadin.provision.dao;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -9,14 +9,14 @@ import com.vaadin.data.Item;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
 
-public class DnsSubDomainContainer extends SQLContainer {
+public class DnsDomainDao extends SQLContainer {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3163337505690134726L;
 
-	public DnsSubDomainContainer(QueryDelegate delegate) throws SQLException {
+	public DnsDomainDao(QueryDelegate delegate) throws SQLException {
 		super(delegate);
 	}
 
@@ -26,7 +26,7 @@ public class DnsSubDomainContainer extends SQLContainer {
 	
 	@SuppressWarnings("unchecked")
 	public synchronized void save(Object id, String domain) {
-		getContainerProperty(id, "dnssubdomain").setValue(domain);
+		getContainerProperty(id, "dnsdomain").setValue(domain);
 
 	}
 	
@@ -38,15 +38,14 @@ public class DnsSubDomainContainer extends SQLContainer {
 	}
 
 	
-	public synchronized List<String> getSubdomains() {
-    	List<String> subdomains = new ArrayList<String>();
+	public synchronized List<String> getDomains() {
+    	List<String> domains = new ArrayList<String>();
 		for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
-			Item dnssubdomaintableRow = getItem(i.next());
-			subdomains.add(dnssubdomaintableRow.getItemProperty("dnssubdomain").getValue().toString());
+			Item dnsdomaintableRow = getItem(i.next());
+			domains.add(dnsdomaintableRow.getItemProperty("dnsdomain").getValue().toString());
 		}
-		return subdomains;
+		return domains;
 	}
-	    
 
 
 }

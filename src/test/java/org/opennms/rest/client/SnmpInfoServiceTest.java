@@ -30,6 +30,7 @@ package org.opennms.rest.client;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.web.svclayer.model.SnmpInfo;
 
@@ -52,6 +53,7 @@ public class SnmpInfoServiceTest {
     }
     
     @Test
+    @Ignore
     public void testGet() throws Exception {
     	SnmpInfo snmp = m_snmpinfoservice.get("172.25.140.97");
     	assertEquals("ma14na165ge", snmp.getReadCommunity());
@@ -63,6 +65,7 @@ public class SnmpInfoServiceTest {
     }
 
     @Test
+    @Ignore
     public void testSet() throws Exception {
     	SnmpInfo snmp = new SnmpInfo();
     	snmp.setReadCommunity("sarag8");

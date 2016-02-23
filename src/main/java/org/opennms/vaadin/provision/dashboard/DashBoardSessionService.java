@@ -28,8 +28,15 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.web.svclayer.model.SnmpInfo;
 import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.dao.BackupProfileDao;
+import org.opennms.vaadin.provision.dao.DnsDomainDao;
+import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
+import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
+import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
+import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
-import org.opennms.vaadin.provision.dao.TNDao;
+import org.opennms.vaadin.provision.dao.SnmpProfileDao;
+import org.opennms.vaadin.provision.dao.VrfDao;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
@@ -58,10 +65,52 @@ public class DashBoardSessionService implements Serializable {
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
 
 	private OnmsDao m_onmsDao;
-	private TNDao m_tnDao;
-	private DashBoardConfig m_config;
 	private String m_user;
+	private DashBoardService m_service;
 	
+	public DashBoardConfig getConfig() {
+		return m_service.getConfig();
+	}
+	
+	public SnmpProfileDao getSnmpProfileContainer() {
+		return m_service.getSnmpProfileContainer();
+	}
+
+	public BackupProfileDao getBackupProfileContainer() {
+		return m_service.getBackupProfileContainer();
+	}
+
+	public VrfDao getVrfContainer() {
+    	return m_service.getVrfContainer();
+    }
+
+	public FastServiceDeviceDao getFastServiceDeviceContainer() {
+		return m_service.getFastServiceDeviceContainer();
+    }
+    
+	public FastServiceLinkDao getFastServiceLinkContainer() {
+		return m_service.getFastServiceLinkContainer();
+    }
+
+	public DnsDomainDao getDnsDomainContainer() {
+		return m_service.getDnsDomainContainer();
+	}
+
+	public DnsSubDomainDao getDnsSubDomainContainer() {
+		return m_service.getDnsSubDomainContainer();
+	}
+
+	public JobDao getJobContainer() {
+		return m_service.getJobContainer();
+	}
+
+	public DashBoardService getService() {
+		return m_service;
+	}
+
+	public void setService(DashBoardService service) {
+		m_service = service;
+	}
 	
     public OnmsDao getOnmsDao() {
 		return m_onmsDao;
@@ -71,22 +120,6 @@ public class DashBoardSessionService implements Serializable {
 		m_onmsDao = onmsDao;
 	}
 
-	public TNDao getTnDao() {
-		return m_tnDao;
-	}
-
-	public void setTnDao(TNDao tnDao) {
-		m_tnDao = tnDao;
-	}
-
-	public DashBoardConfig getConfig() {
-		return m_config;
-	}
-
-	public void setConfig(DashBoardConfig config) {
-		m_config = config;
-	}
-	
 	public void logout() {
 		logger.info("logged out: " + m_user);
 		m_onmsDao.destroy();
@@ -105,12 +138,12 @@ public class DashBoardSessionService implements Serializable {
 	public BeanContainer<String, TrentinoNetworkNode> getRequisitionContainer(String label, String foreignSource) {
 		BeanContainer<String, TrentinoNetworkNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 		
-		Map<String, BackupProfile> backupprofilemap = m_tnDao.getBackupProfileContainer().getBackupProfileMap();
+		Map<String, BackupProfile> backupprofilemap = m_service.getBackupProfileContainer().getBackupProfileMap();
 		requisitionContainer.setBeanIdProperty(label);
 		
-		Collection<Vrf> vrfs = m_tnDao.getVrfContainer().getVrfMap().values();
-		List<String> domains = m_tnDao.getDnsDomainContainer().getDomains();
-		List<String> subdomains = m_tnDao.getDnsSubDomainContainer().getSubdomains();
+		Collection<Vrf> vrfs = m_service.getVrfContainer().getVrfMap().values();
+		List<String> domains = m_service.getDnsDomainContainer().getDomains();
+		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
 
 		logger.info("getting requisition: " + foreignSource );
 		
@@ -180,7 +213,7 @@ public class DashBoardSessionService implements Serializable {
 				valid = false;
 
 			String notifCategory=null;
-			for (String fcat: TNDao.m_notify_levels) {
+			for (String fcat: DashBoardUtils.m_notify_levels) {
 				if (node.getCategory(fcat) != null ) {
 					notifCategory = fcat;
 					break;
@@ -190,7 +223,7 @@ public class DashBoardSessionService implements Serializable {
 				valid = false;
 			
 			String threshCategory = null;
-			for (String tcat: TNDao.m_threshold_levels) {
+			for (String tcat: DashBoardUtils.m_threshold_levels) {
 				if (node.getCategory(tcat) != null ) {
 					threshCategory = tcat;
 					break;
@@ -252,7 +285,7 @@ public class DashBoardSessionService implements Serializable {
 
 	public String getSnmpProfileName(String ip) throws SQLException {
 		SnmpInfo info = m_onmsDao.getSnmpInfo(ip);
-		for (Entry<String, SnmpProfile> snmpprofileentry : m_tnDao.getSnmpProfileContainer().getSnmpProfileMap().entrySet()) {
+		for (Entry<String, SnmpProfile> snmpprofileentry : m_service.getSnmpProfileContainer().getSnmpProfileMap().entrySet()) {
 			if (info.getReadCommunity().equals(snmpprofileentry.getValue().getCommunity()) &&
 				info.getVersion().equals(snmpprofileentry.getValue().getVersion()) &&	
 				info.getTimeout().intValue() == Integer.parseInt(snmpprofileentry.getValue().getTimeout()))
@@ -416,10 +449,10 @@ public class DashBoardSessionService implements Serializable {
 		if (node.getAddress1()  != null)
 			requisitionNode.putAsset(new RequisitionAsset("address1", node.getAddress1() ));
 		
-		for ( RequisitionAsset asset : m_tnDao.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
+		for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
 			requisitionNode.putAsset(asset);
 		}
-		m_onmsDao.setSnmpInfo(node.getPrimary(), m_tnDao.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
+		m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
 		m_onmsDao.addRequisitionNode(foreignSource, requisitionNode);
 		logger.info("Adding policy for interface: " + node.getPrimary());
@@ -437,7 +470,7 @@ public class DashBoardSessionService implements Serializable {
 	public void updateNode(String foreignSource, TrentinoNetworkNode node) throws ProvisionDashboardValidationException, SQLException {
 		
 		if (node.getUpdatemap().contains(TrentinoNetworkTab.SNMP_PROFILE)  && node.getPrimary() != null )
-			m_onmsDao.setSnmpInfo(node.getPrimary(), m_tnDao.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
+			m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		
 		MultivaluedMap< String, String> updatemap=new MultivaluedMapImpl();
 		List<RequisitionAsset> assetsToPut = new ArrayList<RequisitionAsset>();
@@ -490,7 +523,7 @@ public class DashBoardSessionService implements Serializable {
 		}
 		
 		if (node.getUpdatemap().contains(TrentinoNetworkTab.BACKUP_PROFILE) && node.getBackupProfile() != null ) {
-			for ( RequisitionAsset asset : m_tnDao.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
+			for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
 				m_onmsDao.addRequisitionAsset(foreignSource, node.getForeignId(), asset);;
 			}
 		}
@@ -511,7 +544,7 @@ public class DashBoardSessionService implements Serializable {
 	}
 		
     public boolean isFastRunning() {
-    	return m_tnDao.getJobContainer().isFastRunning();
+    	return m_service.getJobContainer().isFastRunning();
     }
 
 }

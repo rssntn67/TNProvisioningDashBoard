@@ -4,8 +4,8 @@ package org.opennms.vaadin.provision.dashboard;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
-import org.opennms.vaadin.provision.model.BackupProfileContainer;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -45,7 +45,7 @@ public class BackupProfileTab extends DashboardTab {
 	public static final String BACKUP_AUTOENABLE   = "autoenable";
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private BackupProfileContainer m_backupContainer;
+	private BackupProfileDao m_backupContainer;
 	private boolean loaded = false;
 	
 	private Table m_backupTable   	= new Table();
@@ -69,7 +69,7 @@ public class BackupProfileTab extends DashboardTab {
 	@Override
 	public void load() {
 		if (!loaded) {
-			m_backupContainer = getService().getTnDao().getBackupProfileContainer();
+			m_backupContainer = getService().getBackupProfileContainer();
 			m_backupTable.setContainerDataSource(m_backupContainer);
 			layout();
 			loaded=true;

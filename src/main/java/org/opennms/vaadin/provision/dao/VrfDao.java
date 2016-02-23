@@ -1,22 +1,24 @@
-package org.opennms.vaadin.provision.model;
+package org.opennms.vaadin.provision.dao;
 
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.opennms.vaadin.provision.model.Vrf;
+
 import com.vaadin.data.Item;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
 
-public class VrfContainer extends SQLContainer {
+public class VrfDao extends SQLContainer {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -8281743245940512436L;
 
-	public VrfContainer(QueryDelegate delegate) throws SQLException {
+	public VrfDao(QueryDelegate delegate) throws SQLException {
 		super(delegate);
 	}
 	

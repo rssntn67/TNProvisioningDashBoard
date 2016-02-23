@@ -4,9 +4,9 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 
+import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.fast.FastIntegrationRunnable;
 import org.opennms.vaadin.provision.model.Job;
-import org.opennms.vaadin.provision.model.JobContainer;
 import org.opennms.vaadin.provision.model.JobLogEntry;
 
 import com.vaadin.annotations.Theme;
@@ -31,7 +31,7 @@ public class FastTab extends DashboardTab implements ClickListener {
     private Button m_fast = new Button("Start Fast Integration");
     final ProgressIndicator m_progress = new ProgressIndicator();
 
-    private JobContainer m_jobcontainer;
+    private JobDao m_jobcontainer;
 	private BeanItemContainer<JobLogEntry> m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
     private boolean m_loaded = false;
 
@@ -52,7 +52,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 	public void load() {
 		if (m_loaded) 
 			return;
-		m_jobcontainer = getService().getTnDao().getJobContainer();
+		m_jobcontainer = getService().getJobContainer();
 		m_jobTable.setContainerDataSource(m_jobcontainer);
 		m_logTable.setContainerDataSource(m_logcontainer);
 		m_panel.setContent(getFastBox());

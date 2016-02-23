@@ -1,6 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -11,6 +10,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 
@@ -35,20 +35,18 @@ public class DashboardUI extends UI {
 	protected void init(VaadinRequest request) {
 		
 		DashBoardService service = (DashBoardService)VaadinSession.getCurrent().getService();
-	    
-	    try {
-	    	service.init();
-			logger.info("connected to database: " + service.getConfig().getDbUrl());
-	    } catch (SQLException sqle) {
-			logger.log(Level.WARNING,"Init Failed per accesso database",sqle);
+		
+		if (service == null) {
+			setContent(new Label("Applicazione non disponibile"));
+			logger.log(Level.WARNING,"Init Failed per accesso database");
 			Notification.show("Init Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
-	    }
+			return;
+		}
 
-	    DashBoardSessionService sessionservice = new DashBoardSessionService();
-	    sessionservice.setConfig(service.getConfig());
-	    sessionservice.setOnmsDao(new OnmsDao());
-	    sessionservice.setTnDao(service.getTnDao());
-		setContent(new DashboardTabSheet(sessionservice));	    
+		DashBoardSessionService sessionservice = new DashBoardSessionService();
+    	sessionservice.setService(service);
+    	sessionservice.setOnmsDao(new OnmsDao());
+    	setContent(new DashboardTabSheet(sessionservice));	    
 	}
 
 }

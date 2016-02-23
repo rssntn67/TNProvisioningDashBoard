@@ -45,7 +45,7 @@ public class FastIntegrationRunnable implements Runnable {
 		job.setJobid(jobId);
 		
 		logger.info("run: loading fast service device table ");
-		List<FastServiceDevice> devices = m_tab.getService().getTnDao().getFastServiceDeviceContainer().getFastServiceDevices();
+		List<FastServiceDevice> devices = m_tab.getService().getFastServiceDeviceContainer().getFastServiceDevices();
 		logger.info("run: finishing loading table ");
 		int step = devices.size()  / 100;
 		logger.info("run: step: " + step);

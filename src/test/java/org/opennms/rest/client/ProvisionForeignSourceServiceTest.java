@@ -30,6 +30,7 @@ package org.opennms.rest.client;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSource;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSourceCollection;
@@ -54,6 +55,7 @@ public class ProvisionForeignSourceServiceTest {
     }
     
     @Test
+    @Ignore
     public void testList() throws Exception {
         ForeignSourceCollection nodelist = m_requisitionservice.getAll();
         assertEquals(7, nodelist.size());
@@ -63,6 +65,7 @@ public class ProvisionForeignSourceServiceTest {
     }
     
     @Test
+    @Ignore
     public void createPolicy() throws Exception {
     	String ip = "10.10.10.10";
     	PolicyWrapper manage = new PolicyWrapper();
@@ -75,6 +78,7 @@ public class ProvisionForeignSourceServiceTest {
     }
 
     @Test
+    @Ignore
     public void deletePolicy() throws Exception {
     	String ip = "10.10.10.10";
     	m_requisitionservice.deletePolicy("UpdateTN", "Manage"+ip);

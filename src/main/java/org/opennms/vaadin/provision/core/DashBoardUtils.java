@@ -9,6 +9,27 @@ import org.opennms.vaadin.provision.model.BackupProfile;
 
 public class DashBoardUtils {
 
+	public static final String[] m_network_levels = {
+		"Backbone",
+		"Distribuzione",
+		"Accesso"
+	};
+
+	public static final String[] m_notify_levels = {
+		"EMERGENCY_F0",
+		"EMERGENCY_F1",
+		"EMERGENCY_F2",
+		"EMERGENCY_F3",
+		"EMERGENCY_F4",
+		"INFORMATION"
+	};
+
+	public static final String[] m_threshold_levels = {
+		"ThresholdWARNING",
+		"ThresholdALERT"
+	};
+	
+
 	public static boolean hasInvalidIp(String ip) {
 		if (ip == null)
 			return true;

@@ -32,12 +32,12 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.rest.client.model.OnmsIpInterface;
 import org.opennms.rest.client.model.OnmsIpInterfaceList;
-import org.opennms.vaadin.provision.dao.TNDao;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
@@ -60,6 +60,7 @@ public class NodesServiceTest {
     }
     
     @Test
+    @Ignore
     public void testNodes() throws Exception {
         OnmsNodeList nodeslist = m_nodesservice.getAll();
         assertEquals(21, nodeslist.getCount().intValue());
@@ -70,6 +71,7 @@ public class NodesServiceTest {
     }
 
     @Test
+    @Ignore
     public void testGetNodesByNodelabel() throws Exception {
     	MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     	queryParams.add("label", "TrentoNord-A9K-PE01.bb.tnnet.it");
@@ -82,6 +84,7 @@ public class NodesServiceTest {
     }
 
     @Test
+    @Ignore
     public void testGetNode() throws Exception {
         OnmsNode node = m_nodesservice.get(20);
         assertEquals(20, node.getId().intValue());
@@ -91,6 +94,7 @@ public class NodesServiceTest {
     }
 
     @Test
+    @Ignore
     public void testGetIpAddresses() throws Exception {
     	OnmsIpInterfaceList ips = m_nodesservice.getIpInterfaces(20);
     	assertEquals(86, ips.size());

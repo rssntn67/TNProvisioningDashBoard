@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dao.TNDao;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.Vrf;
 
@@ -178,11 +177,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
 		ComboBox parentComboBox = new ComboBox("Dipende da");
 
-		for (String snmpprofile: getService().getTnDao().getSnmpProfileContainer().getSnmpProfileMap().keySet()) {
+		for (String snmpprofile: getService().getSnmpProfileContainer().getSnmpProfileMap().keySet()) {
 			snmpComboBox.addItem(snmpprofile);
 		}
 
-		for (String backupprofile: getService().getTnDao().getBackupProfileContainer().getBackupProfileMap().keySet()) {
+		for (String backupprofile: getService().getBackupProfileContainer().getBackupProfileMap().keySet()) {
 			backupComboBox.addItem(backupprofile);
 		}
 
@@ -244,7 +243,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		for (Vrf categories: getService().getTnDao().getVrfContainer().getVrfMap().values()) {
+		for (Vrf categories: getService().getVrfContainer().getVrfMap().values()) {
 			networkCatSearchComboBox.addItem(categories);
 			networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
@@ -266,7 +265,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		});
 
 
-		for (String category: TNDao.m_notify_levels) {
+		for (String category: DashBoardUtils.m_notify_levels) {
 			notifCatSearchComboBox.addItem(category);
 		}
 		notifCatSearchComboBox.setInvalidAllowed(false);
@@ -285,7 +284,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 		
-		for (String category: TNDao.m_threshold_levels) {
+		for (String category: DashBoardUtils.m_threshold_levels) {
 			threshCatSearchComboBox.addItem(category);
 		}
 		threshCatSearchComboBox.setInvalidAllowed(false);
@@ -316,20 +315,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 		});
 
 		m_vrfsComboBox.removeAllItems();
-		for (final String vrfs: getService().getTnDao().getDnsDomainContainer().getDomains()) {
+		for (final String vrfs: getService().getDnsDomainContainer().getDomains()) {
 			m_vrfsComboBox.addItem(vrfs);
 		}
 
-		for (Vrf categories: getService().getTnDao().getVrfContainer().getVrfMap().values()) {
+		for (Vrf categories: getService().getVrfContainer().getVrfMap().values()) {
 			networkCatComboBox.addItem(categories);
 			networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
 
-		for (String notif: TNDao.m_notify_levels) {
+		for (String notif: DashBoardUtils.m_notify_levels) {
 			notifCatComboBox.addItem(notif);
 		}
 
-		for (String threshold: TNDao.m_threshold_levels) {
+		for (String threshold: DashBoardUtils.m_threshold_levels) {
 			threshCatComboBox.addItem(threshold);
 		}
 
@@ -600,7 +599,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++,
-						getService().getTnDao().getVrfContainer().getVrfMap().values().iterator().next()));
+						getService().getVrfContainer().getVrfMap().values().iterator().next()));
 				networkCatSearchComboBox.select(null);
 				networkCatSearchComboBox.setValue(null);
 				notifCatSearchComboBox.select(null);
@@ -800,7 +799,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			String hostname = ((String)value).toLowerCase();
 			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
 			logger.info("SubdomainValidator: validating hostname: " + hostname);
-			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getTnDao().getDnsSubDomainContainer().getSubdomains()))
+			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getDnsSubDomainContainer().getSubdomains()))
 	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
 	       }
 	}

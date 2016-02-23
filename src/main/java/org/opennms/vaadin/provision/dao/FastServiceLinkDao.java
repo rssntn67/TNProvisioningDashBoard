@@ -1,22 +1,24 @@
-package org.opennms.vaadin.provision.model;
+package org.opennms.vaadin.provision.dao;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.opennms.vaadin.provision.model.FastServiceLink;
+
 import com.vaadin.data.Item;
 import com.vaadin.data.util.sqlcontainer.SQLContainer;
 import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
 
-public class FastServiceLinkContainer extends SQLContainer {
+public class FastServiceLinkDao extends SQLContainer {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6920237072015173649L;
 
-	public FastServiceLinkContainer(QueryDelegate delegate)
+	public FastServiceLinkDao(QueryDelegate delegate)
 			throws SQLException {
 		super(delegate);
 	}

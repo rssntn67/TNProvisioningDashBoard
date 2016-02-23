@@ -3,8 +3,8 @@ package org.opennms.vaadin.provision.dashboard;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.model.SnmpProfile;
-import org.opennms.vaadin.provision.model.SnmpProfileContainer;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -42,7 +42,7 @@ public class SnmpProfileTab extends DashboardTab {
 	public static final String SNMP_TIMEOUT      = "timeout";
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
-	private SnmpProfileContainer m_snmpContainer;
+	private SnmpProfileDao m_snmpContainer;
 	private boolean loaded = false;
 	
 	private Table m_snmpTable   	= new Table();
@@ -67,7 +67,7 @@ public class SnmpProfileTab extends DashboardTab {
 	@Override
 	public void load() {
 		if (!loaded) {
-			m_snmpContainer = getService().getTnDao().getSnmpProfileContainer();
+			m_snmpContainer = getService().getSnmpProfileContainer();
 			m_snmpTable.setContainerDataSource(m_snmpContainer);
 			layout();
 			loaded=true;

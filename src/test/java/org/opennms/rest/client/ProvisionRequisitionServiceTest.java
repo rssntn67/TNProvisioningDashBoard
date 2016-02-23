@@ -32,6 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
@@ -63,6 +64,7 @@ public class ProvisionRequisitionServiceTest {
     }
     
     @Test
+    @Ignore
     public void testList() throws Exception {
         RequisitionCollection nodelist = m_requisitionservice.getAll();
         assertEquals(7, nodelist.size());
@@ -72,6 +74,7 @@ public class ProvisionRequisitionServiceTest {
 
     }
     @Test
+    @Ignore
     public void testCityUpdate() {
     	RequisitionNode node = m_requisitionservice.getNode("smichele.mtr01", "UpdateTN");
     	assertEquals("San Michele all'Adige", node.getCity());
@@ -84,6 +87,7 @@ public class ProvisionRequisitionServiceTest {
     }
 
     @Test 
+    @Ignore
     public void testAddAsset() {
     	RequisitionAsset asset = new RequisitionAsset("address1", "prova antonio");
     	m_requisitionservice.add("UpdateTN", "smichele.mtr01", asset);
@@ -93,6 +97,7 @@ public class ProvisionRequisitionServiceTest {
     }
     
     @Test
+    @Ignore
     public void addRequisition() {
     	Requisition home = new Requisition("Home");
     	RequisitionNode node = new RequisitionNode();
