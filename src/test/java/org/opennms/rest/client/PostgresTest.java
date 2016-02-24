@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.vaadin.data.Container;
@@ -61,6 +62,7 @@ public class PostgresTest {
     }
     
     @Test
+    @Ignore
 	@SuppressWarnings("deprecation")
     public void testSnmpProfiles() throws Exception {
     	List<String> primarykeys = new ArrayList<String>();

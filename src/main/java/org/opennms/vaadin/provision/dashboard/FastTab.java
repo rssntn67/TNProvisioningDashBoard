@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 import java.sql.SQLException;
+import java.util.List;
 
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.fast.FastIntegrationRunnable;
@@ -16,10 +17,11 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
@@ -29,7 +31,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 	private Panel m_panel  = new Panel("Fast Integration - Status: Ready");
     private Button m_fast = new Button("Start Fast Integration");
-    final ProgressIndicator m_progress = new ProgressIndicator();
+    final ProgressBar m_progress = new ProgressBar();
 
     private JobDao m_jobcontainer;
 	private BeanItemContainer<JobLogEntry> m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
@@ -54,7 +56,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			return;
 		m_jobcontainer = getService().getJobContainer();
 		m_jobTable.setContainerDataSource(m_jobcontainer);
-		m_logTable.setContainerDataSource(m_logcontainer);
+		m_logTable.setContainerDataSource(m_logcontainer);	       
 		m_panel.setContent(getFastBox());
 		setCompositionRoot(m_panel);
 		m_fast.addClickListener(this);
@@ -66,9 +68,14 @@ public class FastTab extends DashboardTab implements ClickListener {
     	layout.setMargin(true);
         layout.addComponent(m_fast);
         layout.addComponent(m_progress);
+	    m_progress.setEnabled(false);
+	    m_progress.setVisible(false);
+        
+        HorizontalLayout tablelayout = new HorizontalLayout();
         layout.addComponent(m_jobTable);
-        m_logTable.setVisible(false);
         layout.addComponent(m_logTable);
+        layout.addComponent(tablelayout);
+        m_logTable.setVisible(false);
         return layout;
 	}
 
@@ -80,6 +87,8 @@ public class FastTab extends DashboardTab implements ClickListener {
 	
 	private void runfast() {
         m_logTable.setVisible(true);
+        m_progress.setEnabled(true);
+//        m_progress.setIndeterminate(true);
    		runnable = new FastIntegrationRunnable(this);
 		Thread thread = new Thread(runnable);
 		thread.start();		
@@ -100,12 +109,16 @@ public class FastTab extends DashboardTab implements ClickListener {
 		
 	public int commitJob(Job job) {
 		if (job.getJobid() == null)
-		m_jobcontainer.add(job);
+			m_jobcontainer.add(job);
+		else
+			m_jobcontainer.save(job.getJobid(), job);
 		try {
-			m_jobcontainer.commit();
+			m_jobcontainer.commit();;
 		} catch (UnsupportedOperationException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (java.lang.IllegalStateException e) {
 			e.printStackTrace();
 		}
 		
@@ -116,4 +129,9 @@ public class FastTab extends DashboardTab implements ClickListener {
 	public void log(JobLogEntry jLogE) {
 		m_logcontainer.addBean(jLogE);
 	}
+	
+	public void log(List<JobLogEntry> jLogEcoll) {
+		m_logcontainer.addAll(jLogEcoll);
+	}
+
 }
