@@ -169,10 +169,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 					rnmap.put(rnode.getForeignId(), rnode);
 				}
 				
-				for (FastServiceLink link: links) {
-					if (link.getDeliveryDeviceClientSide() != null) 
-						slmap.put(link.getDeliveryDeviceClientSide(), link);
-				}
+				Map<String, List<FastServiceDevice>> fldhostmap = new HashMap<String, List<FastServiceDevice>>();
+				Map<String, List<FastServiceDevice>> fldipmap   = new HashMap<String, List<FastServiceDevice>>();
+				List<FastServiceDevice> devicewithouthostname = new ArrayList<FastServiceDevice>();
+				List<FastServiceDevice> devicewithoutipaddr = new ArrayList<FastServiceDevice>();
 				
 				int i = 0;
 				int step = devices.size()  / 100;
