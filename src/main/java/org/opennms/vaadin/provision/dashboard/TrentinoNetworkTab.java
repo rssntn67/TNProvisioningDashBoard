@@ -93,7 +93,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private static final long serialVersionUID = -5948892618258879832L;
 
-	public static final String TN = "TrentinoNetwork";
 	public static final String LABEL = "nodeLabel";
 
 	public static final String SNMP_PROFILE    = "snmpProfile";
@@ -143,7 +142,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	public void load() {
 		if (!loaded) {
 			try {
-				m_requisitionContainer = getService().getRequisitionContainer(LABEL,TN);
+				m_requisitionContainer = getService().getRequisitionContainer(LABEL,DashBoardUtils.TN);
 				m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 				layout();
 				loaded=true;
@@ -151,7 +150,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
 				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
 					logger.info("No Requisition Found: "+e.getLocalizedMessage());
-					getService().createRequisition(TN);
+					getService().createRequisition(DashBoardUtils.TN);
 					load();
 					return;
 				}
@@ -432,7 +431,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				@Override public void buttonClick(ClickEvent event) {
 					try {
 						String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
-						getService().deleteInterface(TN, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
+						getService().deleteInterface(DashBoardUtils.TN, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
 								ip);
 			        source.getContainerDataSource().removeItem(itemId);
 			        Set<String> secondary = new HashSet<String>();
@@ -469,7 +468,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					try {
 						TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 						if (node.getForeignId() != null) {
-							getService().addSecondaryInterface(TN,m_editorFields.getItemDataSource().getBean().getForeignId(),
+							getService().addSecondaryInterface(DashBoardUtils.TN,m_editorFields.getItemDataSource().getBean().getForeignId(),
 									ip);
 							IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 							Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
@@ -628,11 +627,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 					if (node.getForeignId() == null) {
 						node.setForeignId(node.getHostname());
 						node.setValid(true);
-						getService().addNode(TN,node);
+						getService().addNode(DashBoardUtils.TN,node);
 						logger.info("Added: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 					} else {
-						getService().updateNode(TN,node);
+						getService().updateNode(DashBoardUtils.TN,node);
 						logger.info("Updated: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 					}
@@ -666,7 +665,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				logger.info("Deleting: " + node.getBean().getNodeLabel());
 				if (node.getBean().getForeignId() !=  null) {
 					try {
-						getService().deleteNode(TN,node.getBean());
+						getService().deleteNode(DashBoardUtils.TN,node.getBean());
 						Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (UniformInterfaceException e) {
 						logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
@@ -727,7 +726,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_descrComboBox.addItem(node.getDescr());
 			
 			m_secondaryIpComboBox.removeAllItems();
-			for (String ip: getService().getIpAddresses(TN,node.getNodeLabel()) ) {
+			for (String ip: getService().getIpAddresses(DashBoardUtils.TN,node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))
 					continue;
 				boolean add=true;

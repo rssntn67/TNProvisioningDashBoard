@@ -113,6 +113,8 @@ public class DashBoardUtils {
 		return null;
 	}
 
+	public static final String TN = "TrentinoNetwork";
+
 
 
 
