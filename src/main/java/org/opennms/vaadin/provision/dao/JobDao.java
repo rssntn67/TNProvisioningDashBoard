@@ -30,7 +30,7 @@ public class JobDao extends SQLContainer {
 		getContainerProperty(id, "jobdescr").setValue(job.getJobdescr());
 		getContainerProperty(id, "jobstatus").setValue(job.getJobstatus().name());
 		getContainerProperty(id, "jobstart").setValue(job.getJobstart());
-
+		getContainerProperty(id, "jobend").setValue(job.getJobend());
 	}
 	
 	public synchronized void saveOrUpdate(Object id, Job job) {
