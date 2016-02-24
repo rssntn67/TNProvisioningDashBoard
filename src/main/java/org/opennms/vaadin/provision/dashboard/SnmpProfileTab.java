@@ -121,7 +121,7 @@ public class SnmpProfileTab extends DashboardTab {
 		Panel buttonPanel = new Panel(bottomRightLayout);
 		rightLayout.addComponent(buttonPanel);
 		rightLayout.setExpandRatio(buttonPanel, 3);
-		m_snmpTable.setVisibleColumns(new String[] { "name" });
+		m_snmpTable.setVisibleColumns(new Object[] { "name" });
 		m_snmpTable.setSelectable(true);
 		m_snmpTable.setImmediate(true);
 

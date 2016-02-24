@@ -99,6 +99,7 @@ public class DashBoardService extends VaadinServletService implements Serializab
 		} catch (Exception e) {
 		logger.log(Level.SEVERE,"createServletService: cannot init postgres", e);
 		m_initdb=false;
+		return;
 		}
 		m_initdb = true;
 

@@ -126,7 +126,7 @@ public class BackupProfileTab extends DashboardTab {
 		Panel buttonPanel = new Panel(bottomRightLayout);
 		rightLayout.addComponent(buttonPanel);
 		rightLayout.setExpandRatio(buttonPanel, 3);
-		m_backupTable.setVisibleColumns(new String[] { "name" });
+		m_backupTable.setVisibleColumns(new Object[] { "name" });
 		m_backupTable.setSelectable(true);
 		m_backupTable.setImmediate(true);
 
@@ -273,7 +273,6 @@ public class BackupProfileTab extends DashboardTab {
 				BackupProfile backup = m_editorFields.getItemDataSource().getBean();
 				Integer versionid = null;
 				if (backupId == null) {
-					backupId = m_backupContainer.addItem();
 					versionid = 0;
 					logger.info("Adding Backup Profile: " + backup.getName());
 					m_backupContainer.add(backup);

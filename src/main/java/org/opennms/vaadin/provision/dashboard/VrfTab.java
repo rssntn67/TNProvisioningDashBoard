@@ -386,7 +386,7 @@ public class VrfTab extends DashboardTab {
 
 		rightLayout.addComponent(delSubDomainLayout);
 
-		m_vrfTable.setVisibleColumns(new String[] { "name" });
+		m_vrfTable.setVisibleColumns(new Object[] { "name" });
 		m_vrfTable.setSelectable(true);
 		m_vrfTable.setImmediate(true);
 
@@ -642,7 +642,6 @@ public class VrfTab extends DashboardTab {
 				Vrf vrf = m_editorFields.getItemDataSource().getBean();
 				Integer versionid = null;
 				if (vrfId == null) {
-					vrfId = m_vrfContainer.addItem();
 					versionid = 0;
 					logger.info("Adding Vrf: " + vrf.getName());
 					m_vrfContainer.add(vrf);

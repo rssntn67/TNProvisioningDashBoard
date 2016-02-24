@@ -10,7 +10,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
@@ -39,9 +39,13 @@ public class DashboardUI extends UI {
 		DashBoardService service = (DashBoardService)VaadinSession.getCurrent().getService();
 		
 		if (!service.isInitdb()) {
-			HorizontalLayout layout = new HorizontalLayout();
-			layout.setMargin(true);
-			layout.addComponent(new Panel(new Label("Applicazione non disponibile"))); 
+			AbsoluteLayout layout = new AbsoluteLayout();
+			layout.setWidth("800px");
+			layout.setHeight("600px");
+			Panel panel = new Panel("L'applicazione non e' disponibile");
+			panel.setContent(new Label("Accesso al database non dispobile, contattare l'amministratore di sistema"));
+			panel.setWidth("500px");
+			layout.addComponent(panel,"left: 150px; top: 100px;");
 			setContent(layout);
 			logger.log(Level.WARNING,"Init Failed per accesso database");
 			Notification.show("Init Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);

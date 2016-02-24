@@ -93,7 +93,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		m_panel.setCaption(s_panellogincaption);
 		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
 		m_panel.setContent(getLoginBox());
-	    Iterator<Component> ite = m_tabs.getComponentIterator();
+	    @SuppressWarnings("deprecation")
+		Iterator<Component> ite = m_tabs.getComponentIterator();
 	    while (ite.hasNext()) {
 	    	Component comp = ite.next();
 	    	if (comp != this)
@@ -137,6 +138,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    m_panel.setCaption("Logged in");
 	    m_panel.setContent(m_logout);
 	    
+	    @SuppressWarnings("deprecation")
 	    Iterator<Component> ite = m_tabs.getComponentIterator();
 	    while (ite.hasNext()) {
 	    	m_tabs.getTab(ite.next()).setEnabled(true);

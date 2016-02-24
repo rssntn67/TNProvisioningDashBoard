@@ -231,7 +231,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		bottomRightLayout.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
-		m_requisitionTable.setVisibleColumns(new String[] { LABEL,VALID });
+		m_requisitionTable.setVisibleColumns(new Object[] { LABEL,VALID });
 		m_requisitionTable.setSelectable(true);
 		m_requisitionTable.setImmediate(true);
 
