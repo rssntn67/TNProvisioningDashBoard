@@ -6,8 +6,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -138,16 +140,20 @@ public class FastTab extends DashboardTab implements ClickListener {
 				}
 			});
 					
-			List<FastServiceDevice> devices = new ArrayList<FastServiceDevice>();
+			Map<String, List<FastServiceDevice>> fastServiceDeviceMap;
 			Requisition tn;
-			List<FastServiceLink> links; 
+			Map<String, List<FastServiceLink>> fastServiceLinkMap = new HashMap<String, List<FastServiceLink>>();
 			try {
 				logger.info("run: loading table fastservicedevice");
-				devices = getService().getFastServiceDeviceContainer().getFastServiceDevices();
+				fastServiceDeviceMap = checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
 				logger.info("run: loaded table fastservicedevice");
 				
 				logger.info("run: loading table fastservicelink");
-				links = getService().getFastServiceLinkContainer().getFastServiceLinks();
+				for (FastServiceLink link:getService().getFastServiceLinkContainer().getFastServiceLinks()) {
+					if (!fastServiceLinkMap.containsKey(link.getOrderCode()))
+						fastServiceLinkMap.put(link.getOrderCode(), new ArrayList<FastServiceLink>());
+					fastServiceLinkMap.get(link.getOrderCode()).add(link);
+				}
 				logger.info("run: loaded table fastservicelink");
 				
 				logger.info("run: loading requisition: " + DashBoardUtils.TN);
@@ -164,23 +170,18 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 				// first operation remove from devices the devices with hostname null 
 				// group devices by entries
-				Map<String,RequisitionNode> rnmap = new HashMap<String, RequisitionNode>();
+				Map<String,RequisitionNode> onmsRequisitionNodeMap = new HashMap<String, RequisitionNode>();
 				for (RequisitionNode rnode: tn.getNodes()) {
-					rnmap.put(rnode.getForeignId(), rnode);
+					onmsRequisitionNodeMap.put(rnode.getForeignId(), rnode);
 				}
-				
-				Map<String, List<FastServiceDevice>> fldhostmap = new HashMap<String, List<FastServiceDevice>>();
-				Map<String, List<FastServiceDevice>> fldipmap   = new HashMap<String, List<FastServiceDevice>>();
-				List<FastServiceDevice> devicewithouthostname = new ArrayList<FastServiceDevice>();
-				List<FastServiceDevice> devicewithoutipaddr = new ArrayList<FastServiceDevice>();
-				
+			
 				int i = 0;
-				int step = devices.size()  / 100;
+				int step = fastServiceDeviceMap.size()  / 100;
 				logger.info("run: step: " + step);
-				logger.info("run: size: " + devices.size());
+				logger.info("run: size: " + fastServiceDeviceMap.size());
 				int barrier = step;
-				for (FastServiceDevice device:devices) {
-					process(device, rnmap);
+				for (String hostname: fastServiceDeviceMap.keySet()) {
+					process(hostname, fastServiceDeviceMap.get(hostname), onmsRequisitionNodeMap.get(hostname), fastServiceLinkMap);
 					i++;
 					if (i == barrier) {
 							current += 0.01;
@@ -212,7 +213,119 @@ public class FastTab extends DashboardTab implements ClickListener {
 				});
 			}
 		}
+
+		private Map<String, List<FastServiceDevice>> checkfastdevices(List<FastServiceDevice> devices) {
+			Map<String, List<FastServiceDevice>> fldhostmap = new HashMap<String, List<FastServiceDevice>>(); 
+			Map<String,Set<String>> iptohostnamemap = new HashMap<String, Set<String>>();
+			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+			for (FastServiceDevice device:devices) {
 				
+				if (device.getHostname() != null && device.getIpaddr() != null ) {
+					if (DashBoardUtils.hasInvalidIp(device.getIpaddr())) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping service device. Cause: invalid ip");
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: invalid ip. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else {
+						if (!fldhostmap.containsKey(device.getHostname().toLowerCase())) {
+							fldhostmap.put(device.getHostname().toLowerCase(), new ArrayList<FastServiceDevice>());
+							iptohostnamemap.put(device.getIpaddr(), new HashSet<String>());
+						}
+						fldhostmap.get(device.getHostname().toLowerCase()).add(device);
+						iptohostnamemap.get(device.getIpaddr()).add(device.getHostname());
+						logger.info("Adding service device. hostname:  " + device.getHostname() + " ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					}
+				} else if (device.getHostname() == null && device.getIpaddr() == null ) {
+					final JobLogEntry jloe = new JobLogEntry();
+					jloe.setHostname("null");
+					jloe.setIpaddr("null");
+					jloe.setOrderCode(device.getOrderCode());
+					jloe.setJobid(job.getJobid());
+					jloe.setDescription("FAST sync: skipping service device. Cause: null hostname and null ip address");
+					jloe.setNote(getNote(device));
+					logs.add(jloe);
+					logger.info("Skipping service device. Cause: null hostname and null ip address. order_code: " +  device.getOrderCode() + " " +getNote(device));
+				} else if (device.getHostname() != null && device.getIpaddr() == null) {
+					final JobLogEntry jloe = new JobLogEntry();
+					jloe.setHostname(device.getHostname());
+					jloe.setIpaddr("null");
+					jloe.setOrderCode(device.getOrderCode());
+					jloe.setJobid(job.getJobid());
+					jloe.setDescription("FAST sync: skipping service device. Cause: null ip address");
+					jloe.setNote(getNote(device));
+					logs.add(jloe);
+					logger.info("Skipping service device. Cause: null ip address. hostname: " + device.getHostname() + " order_code: " +  device.getOrderCode() + " " + getNote(device));
+				} else if (device.getHostname() == null && device.getIpaddr() != null ) {
+					final JobLogEntry jloe = new JobLogEntry();
+					jloe.setHostname("null");
+					jloe.setIpaddr(device.getIpaddr());
+					jloe.setOrderCode(device.getOrderCode());
+					jloe.setJobid(job.getJobid());
+					jloe.setDescription("FAST sync: skipping service device. Cause: null hostname");
+					jloe.setNote(getNote(device));
+					logs.add(jloe);
+					logger.info("Skipping service device. Cause: null hostname. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+				} 	
+			}
+			
+			for (String ipaddr: iptohostnamemap.keySet()) {
+				if (iptohostnamemap.get(ipaddr).size() > 1) {
+					for (String hostname: iptohostnamemap.get(ipaddr)) {
+						for (FastServiceDevice device: fldhostmap.get(hostname)) {
+							if (device.getIpaddr().equals(ipaddr)) {
+							final JobLogEntry jloe = new JobLogEntry();
+							jloe.setHostname(hostname);
+							jloe.setIpaddr(ipaddr);
+							jloe.setOrderCode(device.getOrderCode());
+							jloe.setJobid(job.getJobid());
+							jloe.setDescription("FAST sync: Same ip found on different hostnames: " + iptohostnamemap.get(ipaddr));
+							jloe.setNote(getNote(device));
+							logs.add(jloe);
+							logger.info("Same ip found on different hostnames: " + iptohostnamemap.get(ipaddr) + " hostname:  " + device.getHostname() + " ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+							}
+						}
+					}
+				}
+			}
+			
+			UI.getCurrent().access(new Runnable() {
+				
+				@Override
+				public void run() {
+					for (JobLogEntry log: logs) {
+						log(log);
+					}
+				}
+			});
+			return fldhostmap;
+		}
+		
+		private String getNote(FastServiceDevice device) {
+			StringBuffer deviceNote=new StringBuffer("Notes:");
+			if (device.getDeviceType() != null) {
+				deviceNote.append(" deviceType: ");
+				deviceNote.append(device.getDeviceType());
+			}
+			if (device.getCity() != null) {
+				deviceNote.append(" city: ");
+				deviceNote.append(device.getCity());
+			}
+			if (device.getIpAddrLan() != null) {
+				deviceNote.append(" ip lan");
+				deviceNote.append(device.getIpAddrLan());
+			}
+			if (device.isNotmonitoring())
+				deviceNote.append(" not_monitored");
+			else
+				deviceNote.append(" monitored");
+			return deviceNote.toString();
+		}
+
 		private void runned(JobStatus status, String jobdescr) {
 			m_progress.setValue(new Float(0.0));
 	        m_progress.setEnabled(false);
@@ -235,38 +348,43 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		}
 
-		private void process(FastServiceDevice device, Map<String,RequisitionNode> rnmap) {
+		private void process(String hostname, List<FastServiceDevice> devices, RequisitionNode rnode, Map<String, List<FastServiceLink>> linkmap) {
 			
 			try {
 				Thread.sleep(20);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-//			logger.info("process: processing hostname: " + device.getHostname() + " ip: " + device.getIpaddr());
+
+			for (FastServiceDevice device : devices) {
+				logger.info("process: processing hostname: " + hostname
+						+ " ip: " + device.getIpaddr() +  " order code: " + device.getOrderCode() + getNote(device));
+				if (device.isNotmonitoring())
+					continue;
+			}
+			
+			if (rnode != null) {
+				logger.info("process: found requisition node: "
+						+ rnode.getForeignId() + " nodelabel: "
+						+ rnode.getNodeLabel());
+			} else {
+				logger.info("process: not found on requisition hostname: "
+						+ hostname);
+			}
+/*
 			final JobLogEntry jloe = new JobLogEntry();
-			jloe.setHostname(device.getHostname());
+			jloe.setHostname(hostname);
 			jloe.setIpaddr(device.getIpaddr());
 			jloe.setOrderCode(device.getOrderCode());
-			if (device.getHostname() != null) {
-				if (rnmap.containsKey(device.getHostname())) {
-					//RequisitionNode rnode = rnmap.get(device.getHostname());
-					jloe.setDescription("FAST sync: label found on requisition TrentinoNetwork.");
-//					logger.info("process: found requisition node: " + rnode.getForeignId() + " nodelabel: " + rnode.getNodeLabel());
-				} else {
-					jloe.setDescription("FAST sync: hostname not found on requisition TrentinoNetwork");
-//					logger.info("process: not found on requisition hostname: " + device.getHostname() + " ip: " + device.getIpaddr());
-				}
-			} else { 
-				jloe.setDescription("FAST sync: null hostname");
-//				logger.info("process: hostname is null for order code: " + device.getOrderCode() + " ip: " + device.getIpaddr());
-			}
 			UI.getCurrent().access(new Runnable() {
-				
+
 				@Override
 				public void run() {
 					log(jloe);
 				}
 			});
+*/
+
 		}
 		
 		public int commitJob(Job job) {

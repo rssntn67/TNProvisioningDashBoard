@@ -7,6 +7,7 @@ public class JobLogEntry {
 	private String m_ipaddr;
 	private String m_orderCode;
 	private String m_description;
+	private String m_note;
 
 	public int getJobid() {
 		return m_jobid;
@@ -37,6 +38,12 @@ public class JobLogEntry {
 	}
 	public void setDescription(String description) {
 		m_description = description;
+	}
+	public String getNote() {
+		return m_note;
+	}
+	public void setNote(String note) {
+		m_note = note;
 	}
 
 	
