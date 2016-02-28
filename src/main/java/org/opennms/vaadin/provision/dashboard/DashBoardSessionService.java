@@ -277,7 +277,15 @@ public class DashBoardSessionService implements Serializable {
 		}
 		return requisitionContainer;
 	}
-
+	
+	public void deleteNode(String foreignSource, RequisitionNode node) {
+		if (node == null)
+			return;
+		for (RequisitionInterface riface: node.getInterfaces())
+			m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(riface.getIpAddr()));
+		m_onmsDao.deleteRequisitionNode(foreignSource, node.getForeignId());
+	}
+	
 	public void createRequisition(String foreignSource) {
 		logger.info("creating requisition: " + foreignSource );
 		m_onmsDao.createRequisition(foreignSource);
