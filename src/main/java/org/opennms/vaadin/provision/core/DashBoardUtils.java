@@ -29,7 +29,11 @@ public class DashBoardUtils {
 		"ThresholdALERT"
 	};
 	
+	public static final String CITY    = "city";
+	public static final String ADDRESS1 = "address1";
 
+	public static final String m_fast_default_notify = "Default";
+	
 	public static boolean hasInvalidIp(String ip) {
 		if (ip == null)
 			return true;

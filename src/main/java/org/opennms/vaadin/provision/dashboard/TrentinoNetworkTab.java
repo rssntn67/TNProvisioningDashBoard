@@ -110,10 +110,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 	public static final String PARENT = "parent";
 	public static final String VALID = "valid";
 
-	public static final String CITY    = "city";
-	public static final String ADDRESS1 = "address1";
-
-
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
 	private BeanContainer<String, TrentinoNetworkNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
@@ -531,8 +527,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(backupComboBox, BACKUP_PROFILE);
 		m_editorFields.bind(notifCatComboBox, NOTIF_CATEGORY);
 		m_editorFields.bind(threshCatComboBox, THRESH_CATEGORY);
-		m_editorFields.bind(city,CITY);
-	    m_editorFields.bind(address, ADDRESS1);
+		m_editorFields.bind(city,DashBoardUtils.CITY);
+	    m_editorFields.bind(address, DashBoardUtils.ADDRESS1);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);

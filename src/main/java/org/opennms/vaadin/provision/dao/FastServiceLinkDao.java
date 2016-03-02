@@ -40,7 +40,8 @@ public class FastServiceLinkDao extends SQLContainer {
 					fastservicelinktableRow.getItemProperty("delivery_interface"),
 					fastservicelinktableRow.getItemProperty("interface_description"),
 					fastservicelinktableRow.getItemProperty("vrf"),
-					fastservicelinktableRow.getItemProperty("delivery_code")));
+					fastservicelinktableRow.getItemProperty("delivery_code"),
+					fastservicelinktableRow.getItemProperty("site_code")));
 		}
     	
     	return links;

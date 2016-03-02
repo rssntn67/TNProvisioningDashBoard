@@ -16,6 +16,7 @@ public class FastServiceLink {
 	private final String m_interfaceDescription; 
 	private final String m_vrf;
 	private final String m_deliveryCode;
+	private final String m_siteCode;
 
 	
 	public FastServiceLink(
@@ -30,7 +31,8 @@ public class FastServiceLink {
 			Property<String> deliveryInterface, 
 			Property<String> interfaceDescription, 
 			Property<String> vrf,
-			Property<String> deliveryCode) {
+			Property<String> deliveryCode,
+			Property<String> siteCode) {
 		super();
 		if (orderCode!= null)
 			m_orderCode = orderCode.getValue();
@@ -91,8 +93,16 @@ public class FastServiceLink {
 			m_deliveryCode = deliveryCode.getValue();
 		else
 			m_deliveryCode = null;
+
+		if (siteCode != null)
+			m_siteCode = siteCode.getValue();
+		else
+			m_siteCode = null;
 	}
 
+	public String getSiteCode() {
+		return m_siteCode;
+	}
 	public String getOrderCode() {
 		return m_orderCode;
 	}
