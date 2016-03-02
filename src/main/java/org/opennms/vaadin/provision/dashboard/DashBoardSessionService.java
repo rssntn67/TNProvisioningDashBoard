@@ -480,19 +480,21 @@ public class DashBoardSessionService implements Serializable {
 			
 	}
 
-	
+	public void updateNode(String foreignSource, String foreignId, String primary, Map<String,String> update, List<String> interfaceToDel, List<String> interfaceToAdd, List<String> categoryToDel,List<String> categoryToAdd) {
+		
+	}
 	
 	public void updateNode(String foreignSource, TrentinoNetworkNode node) {
 		
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.SNMP_PROFILE)  && node.getPrimary() != null )
+		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)  && node.getPrimary() != null )
 			m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		
 		MultivaluedMap< String, String> updatemap=new MultivaluedMapImpl();
 		List<RequisitionAsset> assetsToPut = new ArrayList<RequisitionAsset>();
 				
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.PARENT))
+		if (node.getUpdatemap().contains(DashBoardUtils.PARENT))
 			updatemap.add("parent-foreign-id", m_nodeLabelForeignIdMap.get(node.getParent()));
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.HOST) || node.getUpdatemap().contains(TrentinoNetworkTab.VRF))
+		if (node.getUpdatemap().contains(DashBoardUtils.HOST) || node.getUpdatemap().contains(DashBoardUtils.VRF))
 			updatemap.add("node-label", node.getNodeLabel());
 		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
 			updatemap.add("city", node.getCity());
@@ -538,12 +540,12 @@ public class DashBoardSessionService implements Serializable {
 			m_onmsDao.addRequisitionCategory(foreignSource, node.getForeignId(), new RequisitionCategory(category));
 		}
 		
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.BACKUP_PROFILE) && node.getBackupProfile() != null ) {
+		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE) && node.getBackupProfile() != null ) {
 			for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
 				m_onmsDao.addRequisitionAsset(foreignSource, node.getForeignId(), asset);;
 			}
 		}
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.HOST) || node.getUpdatemap().contains(TrentinoNetworkTab.VRF)) {
+		if (node.getUpdatemap().contains(DashBoardUtils.HOST) || node.getUpdatemap().contains(DashBoardUtils.VRF)) {
 			m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		}
@@ -551,74 +553,6 @@ public class DashBoardSessionService implements Serializable {
 		node.clear();
 	}
 
-	//FIXME
-	public void updateNode(String foreignSource, String foreignId, FastServiceDevice node, FastServiceLink link, Vrf vrf, Set<String> secondary, RequisitionNode requisitionNode) {
-		/*
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.SNMP_PROFILE)  && node.getPrimary() != null )
-			m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
-		
-		MultivaluedMap< String, String> updatemap=new MultivaluedMapImpl();
-		List<RequisitionAsset> assetsToPut = new ArrayList<RequisitionAsset>();
-				
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.PARENT))
-			updatemap.add("parent-foreign-id", m_nodeLabelForeignIdMap.get(node.getParent()));
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.HOST) || node.getUpdatemap().contains(TrentinoNetworkTab.VRF))
-			updatemap.add("node-label", node.getNodeLabel());
-		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
-			updatemap.add("city", node.getCity());
-		if (node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
-			 assetsToPut.add(new RequisitionAsset("address1", node.getAddress1()));
-		if (node.getUpdatemap().contains(DashBoardUtils.CITY) || node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
-			assetsToPut.add(new RequisitionAsset("description", node.getCity() + " - " + node.getAddress1()));
-		
-		if (!updatemap.isEmpty())
-			m_onmsDao.updateRequisitionNode(foreignSource, node.getForeignId(), updatemap);
-
-		for (String ip: node.getInterfToDel()) {
-			m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(ip));
-			m_onmsDao.deleteRequisitionInterface(foreignSource, node.getForeignId(), ip);
-			m_primaryipcollection.remove(ip);
-		}
-		
-		for (String ip: node.getInterfToAdd()) {
-			RequisitionInterface iface = new RequisitionInterface();
-			iface.setIpAddr(ip);
-			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-			iface.setDescr(node.getDescr());
-			if (node.getPrimary().equals(ip)) {
-				m_primaryipcollection.add(ip);
-				iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
-				iface.setSnmpPrimary(PrimaryType.PRIMARY);
-			} else {
-				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-			}
-			m_onmsDao.addRequisitionInterface(foreignSource, node.getForeignId(), iface);
-			m_onmsDao.addOrReplacePolicy(foreignSource, DashBoardUtils.getPolicyWrapper(ip));
-		}
-		
-		for (RequisitionAsset asset: assetsToPut ) {
-			m_onmsDao.addRequisitionAsset(foreignSource, node.getForeignId(), asset);
-		}
-		
-		for (String category: node.getCategoriesToDel()) {
-			m_onmsDao.deleteRequisitionCategory(foreignSource, node.getForeignId(), category);
-		}
-		
-		for (String category: node.getCategoriesToAdd()) {
-			m_onmsDao.addRequisitionCategory(foreignSource, node.getForeignId(), new RequisitionCategory(category));
-		}
-		
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.BACKUP_PROFILE) && node.getBackupProfile() != null ) {
-			for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
-				m_onmsDao.addRequisitionAsset(foreignSource, node.getForeignId(), asset);;
-			}
-		}
-		if (node.getUpdatemap().contains(TrentinoNetworkTab.HOST) || node.getUpdatemap().contains(TrentinoNetworkTab.VRF)) {
-			m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
-			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
-		}*/
-
-	}
 	
 	public void addNode(String foreignSource, String foreignId, FastServiceDevice node, FastServiceLink link, Vrf vrf, Set<String> secondary) {
 		RequisitionNode requisitionNode = new RequisitionNode();

@@ -93,23 +93,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 	private static final long serialVersionUID = -5948892618258879832L;
 
-	public static final String LABEL = "nodeLabel";
-
-	public static final String SNMP_PROFILE    = "snmpProfile";
-	public static final String BACKUP_PROFILE  = "backupProfile";
-	
-
-	public static final String NETWORK_CATEGORY = "networkCategory";
-	public static final String NOTIF_CATEGORY   = "notifCategory";
-	public static final String THRESH_CATEGORY  = "threshCategory";
-
-	public static final String DESCR = "descr";
-	public static final String HOST = "hostname";
-	public static final String PRIMARY = "primary";
-	public static final String VRF = "vrf";
-	public static final String PARENT = "parent";
-	public static final String VALID = "valid";
-
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
 	private BeanContainer<String, TrentinoNetworkNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
@@ -138,7 +121,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	public void load() {
 		if (!loaded) {
 			try {
-				m_requisitionContainer = getService().getRequisitionContainer(LABEL,DashBoardUtils.TN);
+				m_requisitionContainer = getService().getRequisitionContainer(DashBoardUtils.LABEL,DashBoardUtils.TN);
 				m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 				layout();
 				loaded=true;
@@ -164,7 +147,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		final TextField searchField       = new TextField("Type Label Text");
 
 		final TextField hostname = new TextField("Hostname");
-		TextField primary = new TextField(PRIMARY);
+		TextField primary = new TextField(DashBoardUtils.PRIMARY);
 		final ComboBox networkCatComboBox = new ComboBox("Network Category");
 		final ComboBox notifCatComboBox   = new ComboBox("Notification Category");
 		final ComboBox threshCatComboBox  = new ComboBox("Threshold Category");
@@ -227,7 +210,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		bottomRightLayout.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 		rightLayout.addComponent(new Panel(bottomRightLayout));
 		
-		m_requisitionTable.setVisibleColumns(new Object[] { LABEL,VALID });
+		m_requisitionTable.setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
 		m_requisitionTable.setSelectable(true);
 		m_requisitionTable.setImmediate(true);
 
@@ -517,16 +500,16 @@ public class TrentinoNetworkTab extends DashboardTab {
 		address.setHeight(6, Unit.MM);
 
 		m_editorFields.setBuffered(true);
-		m_editorFields.bind(m_descrComboBox, DESCR);
-		m_editorFields.bind(hostname, HOST);
-		m_editorFields.bind(networkCatComboBox, NETWORK_CATEGORY);
-		m_editorFields.bind(m_vrfsComboBox, VRF);
-		m_editorFields.bind(primary,PRIMARY);
-		m_editorFields.bind(parentComboBox, PARENT);
-		m_editorFields.bind(snmpComboBox, SNMP_PROFILE);
-		m_editorFields.bind(backupComboBox, BACKUP_PROFILE);
-		m_editorFields.bind(notifCatComboBox, NOTIF_CATEGORY);
-		m_editorFields.bind(threshCatComboBox, THRESH_CATEGORY);
+		m_editorFields.bind(m_descrComboBox, DashBoardUtils.DESCR);
+		m_editorFields.bind(hostname, DashBoardUtils.HOST);
+		m_editorFields.bind(networkCatComboBox, DashBoardUtils.NETWORK_CATEGORY);
+		m_editorFields.bind(m_vrfsComboBox, DashBoardUtils.VRF);
+		m_editorFields.bind(primary,DashBoardUtils.PRIMARY);
+		m_editorFields.bind(parentComboBox, DashBoardUtils.PARENT);
+		m_editorFields.bind(snmpComboBox, DashBoardUtils.SNMP_PROFILE);
+		m_editorFields.bind(backupComboBox, DashBoardUtils.BACKUP_PROFILE);
+		m_editorFields.bind(notifCatComboBox, DashBoardUtils.NOTIF_CATEGORY);
+		m_editorFields.bind(threshCatComboBox, DashBoardUtils.THRESH_CATEGORY);
 		m_editorFields.bind(city,DashBoardUtils.CITY);
 	    m_editorFields.bind(address, DashBoardUtils.ADDRESS1);
 

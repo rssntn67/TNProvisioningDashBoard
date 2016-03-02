@@ -6,8 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.opennms.vaadin.provision.dashboard.ProvisionDashboardValidationException;
-import org.opennms.vaadin.provision.dashboard.TrentinoNetworkTab;
+import org.opennms.vaadin.provision.core.DashBoardUtils;
 
 public class TrentinoNetworkNode implements Serializable {
 
@@ -140,7 +139,7 @@ public class TrentinoNetworkNode implements Serializable {
 		if (m_parent == null && parentNodeLabel == null) 
 			return;		
 		m_parent = parentNodeLabel;
-		m_updatemap.add(TrentinoNetworkTab.PARENT);
+		m_updatemap.add(DashBoardUtils.PARENT);
 	}
 	
 	public String getCity() {
@@ -151,7 +150,7 @@ public class TrentinoNetworkNode implements Serializable {
 		if (m_city != null && m_city.equals(city))
 			return;
 		if (city != null)
-			m_updatemap.add(TrentinoNetworkTab.CITY);
+			m_updatemap.add(DashBoardUtils.CITY);
 		m_city = city;		
 	}
 
@@ -208,11 +207,11 @@ public class TrentinoNetworkNode implements Serializable {
 		return m_vrf;
 	}
 
-	public void setVrf(String vrf) throws ProvisionDashboardValidationException {
+	public void setVrf(String vrf) {
 		if (m_vrf != null && m_vrf.equals(vrf))
 			return;
 		m_vrf = vrf;
-		m_updatemap.add(TrentinoNetworkTab.VRF);
+		m_updatemap.add(DashBoardUtils.VRF);
 	}
 
     public String getDescr() {
@@ -237,7 +236,7 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setSnmpProfile(String snmpProfile) {
 		if (m_snmpProfile != null && m_snmpProfile.equals(snmpProfile))
 			return;
-		m_updatemap.add(TrentinoNetworkTab.SNMP_PROFILE);
+		m_updatemap.add(DashBoardUtils.SNMP_PROFILE);
 		m_snmpProfile = snmpProfile;
 	}
 	
@@ -248,7 +247,7 @@ public class TrentinoNetworkNode implements Serializable {
 	public void setBackupProfile(String backupProfile) {
 		if (m_backupProfile != null && m_backupProfile.equals(backupProfile))
 			return;
-		m_updatemap.add(TrentinoNetworkTab.BACKUP_PROFILE);
+		m_updatemap.add(DashBoardUtils.BACKUP_PROFILE);
 		m_backupProfile = backupProfile;
 	}
 
@@ -261,7 +260,7 @@ public class TrentinoNetworkNode implements Serializable {
 		if (m_address1 ==  null && address == null)
 			return;
 		if (address != null ) {
-			m_updatemap.add(TrentinoNetworkTab.ADDRESS1);
+			m_updatemap.add(DashBoardUtils.ADDRESS1);
 		}
 		m_address1 = address;
 	}
@@ -270,12 +269,12 @@ public class TrentinoNetworkNode implements Serializable {
 		return m_hostname;
 	}
 	
-	public void setHostname(String hostname) throws ProvisionDashboardValidationException {
+	public void setHostname(String hostname) {
 		if (m_hostname != null && m_hostname.equals(hostname))
 			return;
 		m_label = null;
 		m_hostname = hostname;
-		m_updatemap.add(TrentinoNetworkTab.HOST);
+		m_updatemap.add(DashBoardUtils.HOST);
 	}
 
 	public String getPrimary() {

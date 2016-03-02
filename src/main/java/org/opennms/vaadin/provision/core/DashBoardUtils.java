@@ -28,9 +28,29 @@ public class DashBoardUtils {
 		"ThresholdWARNING",
 		"ThresholdALERT"
 	};
+
+	public static final String LABEL = "nodeLabel";
+
+	public static final String SNMP_PROFILE    = "snmpProfile";
+	public static final String BACKUP_PROFILE  = "backupProfile";
 	
+
+	public static final String NETWORK_CATEGORY = "networkCategory";
+	public static final String NOTIF_CATEGORY   = "notifCategory";
+	public static final String THRESH_CATEGORY  = "threshCategory";
+
+	public static final String DESCR = "descr";
+	public static final String HOST = "hostname";
+	public static final String PRIMARY = "primary";
+	public static final String VRF = "vrf";
+	public static final String PARENT = "parent";
+	public static final String VALID = "valid";
+
+
 	public static final String CITY    = "city";
 	public static final String ADDRESS1 = "address1";
+	public static final String BUILDING = "building";
+	public static final String CIRCUIID = "circuitId";
 
 	public static final String m_fast_default_notify = "Default";
 	

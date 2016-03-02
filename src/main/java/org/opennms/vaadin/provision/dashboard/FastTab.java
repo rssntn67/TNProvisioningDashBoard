@@ -946,9 +946,9 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		}
 				
+		@SuppressWarnings("deprecation")
 		private void update(String hostname, String foreingId) {
 			RequisitionNode rnode = m_onmsRequisitionNodeMap.get(foreingId);
-			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			Set<String> secondary = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
 			FastServiceLink reflink = null;
@@ -973,14 +973,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 					reflink= m_fastServiceLinkMap.get(device.getOrderCode());						
 				}
 
-				final JobLogEntry jloe = new JobLogEntry();
-				jloe.setHostname(device.getHostname());
-				jloe.setIpaddr(device.getIpaddr());
-				jloe.setOrderCode(device.getOrderCode());
-				jloe.setJobid(job.getJobid());
-				jloe.setDescription("FAST sync: updated service device.");
-				jloe.setNote(getNote(device));
-				logs.add(jloe);
 
 			}
 
@@ -990,15 +982,21 @@ public class FastTab extends DashboardTab implements ClickListener {
 			}
 
 			secondary.remove(refdevice.getIpaddr());
-			getService().updateNode(DashBoardUtils.TN, hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary,rnode);
+			//FIXME
+			//getService().updateNode(DashBoardUtils.TN, hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary,rnode);
+			final JobLogEntry jloe = new JobLogEntry();
+			jloe.setHostname(refdevice.getHostname());
+			jloe.setIpaddr(refdevice.getIpaddr());
+			jloe.setOrderCode(refdevice.getOrderCode());
+			jloe.setJobid(job.getJobid());
+			jloe.setDescription("FAST sync: updated service device.");
+			jloe.setNote(getNote(refdevice)+ getNote(reflink));
 			
 			UI.getCurrent().access(new Runnable() {
 				
 				@Override
 				public void run() {
-					for (JobLogEntry log: logs) {
-						log(log);
-					}
+					log(jloe);
 				}
 			});
 
