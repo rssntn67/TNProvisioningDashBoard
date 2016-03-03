@@ -15,10 +15,12 @@ import java.util.logging.Logger;
 
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.JobDao;
+import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.Job;
@@ -307,6 +309,8 @@ public class FastTab extends DashboardTab implements ClickListener {
 		Set<String> m_onmsDuplicatedForeignId  = new HashSet<String>();
 		
 		Map<String,Vrf> m_vrf;
+		Map<String, BackupProfile> m_backup;
+
 
 
 		@Override
@@ -330,6 +334,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 				m_vrf = getService().getVrfContainer().getVrfMap();
 				logger.info("run: loaded table vrf");
 
+				logger.info("run: loading table backupprofile");
+				m_backup= getService().getBackupProfileContainer().getBackupProfileMap();
+				logger.info("run: loaded table backupprofile");
+
 				logger.info("run: loading table fastservicedevice");
 				checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
 				logger.info("run: loaded table fastservicedevice");
@@ -342,11 +350,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 				checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN));
 				logger.info("run: loaded requisition: " + DashBoardUtils.TN);
 
-				logger.info("run: sync Fast devices with Requisition");
-				sync();
-				logger.info("run: sync Fast devices with Requisition");
-				job.setJobstatus(JobStatus.SUCCESS);
-				job.setJobdescr("FAST sync: Done");
 			} catch (final ProvisionDashboardException e) {
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
 				job.setJobstatus(JobStatus.FAILED);
@@ -357,6 +360,24 @@ public class FastTab extends DashboardTab implements ClickListener {
 				job.setJobdescr("FAST sync: Failed init check Fast. Error: " + e.getMessage());
 			}
 
+			try {
+				if (job.getJobstatus() == JobStatus.RUNNING) {
+					logger.info("run: sync Fast devices with Requisition");
+					sync();
+					logger.info("run: sync Fast devices with Requisition");
+				}
+				job.setJobstatus(JobStatus.SUCCESS);
+				job.setJobdescr("FAST sync: Done");
+			} catch (final ProvisionDashboardException e) {
+				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
+				job.setJobstatus(JobStatus.FAILED);
+				job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+			} catch (final Exception e) {
+				logger.log(Level.SEVERE,"Failed syncing Fast devices with Requisition", e);
+				job.setJobstatus(JobStatus.FAILED);
+				job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+			}
+			
 			job.setJobend(new Date());
 
 			try {
@@ -380,7 +401,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			});				
 
 			int i = 0;
-			int step = (4*m_fastServiceDeviceMap.size() + m_onmsRequisitionNodeMap.size()) / 100;
+			int step = (m_fastServiceDeviceMap.size() + m_onmsRequisitionNodeMap.size()) / 100;
 			logger.info("run: step: " + step);
 			logger.info("run: size: " + m_fastServiceDeviceMap.size());
 			int barrier = step;
@@ -394,9 +415,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						e.printStackTrace();
 					}
 
-					if (!checkduplicatedhostname(hostname) && !checkduplicatedipaddress(hostname))
-						process(hostname);
-					i=i+4;
+					i++;
 					if (i >= barrier) {
 						if (current < 0.99)
 							current += 0.01;
@@ -409,6 +428,33 @@ public class FastTab extends DashboardTab implements ClickListener {
 						});
 						barrier += step;
 					}
+					
+					if (!checkduplicatedhostname(hostname) && !checkduplicatedipaddress(hostname)) {
+						Set<String> foreignIds = new HashSet<String>();
+						for (FastServiceDevice device : m_fastServiceDeviceMap
+								.get(hostname)) {
+							String ipaddr = device.getIpaddr();
+							if (m_onmsRequisitionNodeMap.containsKey(hostname)) {
+								foreignIds.add(hostname);
+							} else {
+								for (RequisitionNode rnode : m_onmsRequisitionNodeMap
+										.values()) {
+									if (rnode.getNodeLabel().startsWith(hostname)) {
+										foreignIds.add(rnode.getForeignId());
+										break;
+									}
+								}
+							}
+						}	
+						if (foreignIds.size() == 0) {
+							add(hostname);
+						} else if (foreignIds.size() == 1) {
+							update(hostname, m_onmsRequisitionNodeMap.get(foreignIds.iterator().next()));
+						} else {
+							mismatch(hostname, foreignIds);
+						}
+					}
+
 	
 				}
 
@@ -436,7 +482,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					if (isDeviceInFast(foreignId))
 						continue;
 					RequisitionNode rnode = m_onmsRequisitionNodeMap.get(foreignId);
-					if (isDeletedFastDevice(rnode)) {
+					if (isManagedByFast(rnode)) {
 						deleteNode(foreignId, rnode);
 						continue;
 					}
@@ -834,35 +880,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 			});
 
 		}
-
-		private void process(String hostname) {
-
-			Set<String> foreignIds = new HashSet<String>();
-			for (FastServiceDevice device : m_fastServiceDeviceMap
-					.get(hostname)) {
-				String ipaddr = device.getIpaddr();
-				if (m_onmsIpForeignIdMap.containsKey(ipaddr)) {
-					foreignIds.add( m_onmsIpForeignIdMap.get(ipaddr));
-				} else if (m_onmsRequisitionNodeMap.containsKey(hostname)) {
-					foreignIds.add(hostname);
-				} else {
-					for (RequisitionNode rnode : m_onmsRequisitionNodeMap
-							.values()) {
-						if (rnode.getNodeLabel().startsWith(hostname)) {
-							foreignIds.add(rnode.getForeignId());
-							break;
-						}
-					}
-				}
-				if (foreignIds.size() == 0) {
-					add(hostname);
-				} else if (foreignIds.size() == 1) {
-					update(hostname, foreignIds.iterator().next());
-				} else {
-					mismatch(hostname, foreignIds);
-				}
-			}
-		}
 		
 		private void norefdevice(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
@@ -946,14 +963,78 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		}
 				
-		@SuppressWarnings("deprecation")
-		private void update(String hostname, String foreingId) {
-			RequisitionNode rnode = m_onmsRequisitionNodeMap.get(foreingId);
-			Set<String> secondary = new HashSet<String>(); 
+		//FIXME no update snmp profile for performance trouble
+		private void update(String hostname, RequisitionNode rnode) {
+			if (isManagedByFast(rnode))
+				updateFast(hostname, rnode);
+			else 
+				updateNonFast(hostname,rnode);
+		}
+
+		private void updateNonFast(String hostname, RequisitionNode rnode) {
+			Set<String> ipaddresses = new HashSet<String>(); 
+			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
+				ipaddresses.add(device.getIpaddr());
+			}
+			
+			List<String> iptoAdd = new ArrayList<String>();
+			List<String> ipToDel = new ArrayList<String>();
+			for (String ip : ipaddresses) {
+				if (rnode.getInterface(ip) == null)
+					iptoAdd.add(ip);
+			}
+			String primary = null;
+			for (RequisitionInterface riface: rnode.getInterfaces()) {
+				if (riface.getDescr().contains("FAST") && !ipaddresses.contains(riface.getIpAddr()))
+					ipToDel.add(riface.getIpAddr());
+				if (riface.getSnmpPrimary().equals(PrimaryType.PRIMARY))
+					primary=riface.getIpAddr();
+			}
+			
+			if (iptoAdd.isEmpty() && ipToDel.isEmpty())
+				return;
+			getService().updateNode(DashBoardUtils.TN,rnode.getForeignId(),primary,"provided by FAST",
+					new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),null);
+			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+
+			for (String ip :ipToDel) {
+				final JobLogEntry jloe = new JobLogEntry();
+				jloe.setHostname(hostname);
+				jloe.setIpaddr(ip);
+				jloe.setOrderCode("NA");
+				jloe.setJobid(job.getJobid());
+				jloe.setDescription("FAST sync: deleted ip.");
+				jloe.setNote("Updates: " + ipToDel + iptoAdd );
+				logs.add(jloe);
+			}			
+			for (String ip :iptoAdd) {
+				final JobLogEntry jloe = new JobLogEntry();
+				jloe.setHostname(hostname);
+				jloe.setIpaddr(ip);
+				jloe.setOrderCode("NA");
+				jloe.setJobid(job.getJobid());
+				jloe.setDescription("FAST sync: added ip.");
+				jloe.setNote("Updates: " + ipToDel + iptoAdd );
+				logs.add(jloe);
+			}			
+			UI.getCurrent().access(new Runnable() {
+				
+				@Override
+				public void run() {
+					for (JobLogEntry log: logs) {
+						log(log);
+					}
+				}
+			});
+
+		}
+
+		private void updateFast(String hostname, RequisitionNode rnode) {
+			Set<String> ipaddresses = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
 			FastServiceLink reflink = null;
 			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
-				secondary.add(device.getIpaddr());
+				ipaddresses.add(device.getIpaddr());
 				if (!m_fastServiceLinkMap.containsKey(device.getOrderCode()))
 					continue;
 				if (refdevice == null ) {
@@ -972,25 +1053,120 @@ public class FastTab extends DashboardTab implements ClickListener {
 					refdevice= device;
 					reflink= m_fastServiceLinkMap.get(device.getOrderCode());						
 				}
-
-
 			}
 
 			if (refdevice == null) {
 				norefdevice(hostname);
 				return;
 			}
+			
+			Map<String,String> update = new HashMap<String, String>();
+			String nodelabel = hostname + "." + m_vrf.get(reflink.getVrf()).getDnsdomain();
+			if (!rnode.getNodeLabel().equals(nodelabel))
+				update.put(DashBoardUtils.LABEL, nodelabel);
 
-			secondary.remove(refdevice.getIpaddr());
-			//FIXME
-			//getService().updateNode(DashBoardUtils.TN, hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary,rnode);
+			if (refdevice.getCity() != null && !refdevice.getCity().equals(rnode.getCity()))
+				update.put(DashBoardUtils.CITY, refdevice.getCity());
+			else if (refdevice.getCity() == null && rnode.getCity() != null)
+				update.put(DashBoardUtils.CITY, "");
+
+			StringBuffer address1 = new StringBuffer();
+			if (refdevice.getAddressDescr() != null)
+				address1.append(refdevice.getAddressDescr());
+			if (refdevice.getAddressName() != null) {
+				if (address1.length() > 0)
+					address1.append(" ");
+				address1.append(refdevice.getAddressName());
+			}
+			if (refdevice.getAddressNumber() != null) {
+				if (address1.length() > 0)
+					address1.append(" ");
+				address1.append(refdevice.getAddressNumber());
+			}
+
+			if (address1.length() > 0 && rnode.getAsset("address1") == null)
+				update.put(DashBoardUtils.ADDRESS1, address1.toString());
+			else if (address1.length() > 0 && !address1.toString().equals(rnode.getAsset("address1").getValue()))
+				update.put(DashBoardUtils.ADDRESS1, address1.toString());
+			else if (address1.length() == 0 && rnode.getAsset("address1") != null && rnode.getAsset("address1").getValue() != null && !"".equals(rnode.getAsset("address1").getValue()))
+				update.put(DashBoardUtils.ADDRESS1, "");
+			
+			if (update.containsKey(DashBoardUtils.CITY) || update.containsKey(DashBoardUtils.ADDRESS1))
+				update.put(DashBoardUtils.DESCRIPTION, refdevice.getCity() + " - " + address1.toString());
+			
+			if (reflink.getDeliveryCode() != null && rnode.getAsset("circuitId") == null) 
+				update.put(DashBoardUtils.CIRCUITID, reflink.getDeliveryCode());
+			else if (reflink.getDeliveryCode() != null &&  !reflink.getDeliveryCode().equals(rnode.getAsset("circuitId").getValue()))
+				update.put(DashBoardUtils.CIRCUITID, reflink.getDeliveryCode());
+			else if	(reflink.getDeliveryCode() == null && rnode.getAsset("circuitId") != null && rnode.getAsset("circuitId").getValue() != null && !"".equals(rnode.getAsset("circuitId").getValue()) )
+				update.put(DashBoardUtils.CIRCUITID, "");
+					
+			if (refdevice.getIstat() != null && reflink.getSiteCode() !=  null && rnode.getAsset("building") == null)
+				update.put(DashBoardUtils.BUILDING, refdevice.getIstat()+"-"+reflink.getSiteCode());
+			else if (refdevice.getIstat() != null && reflink.getSiteCode() !=  null 
+					&& !rnode.getAsset("building").getValue().equals(refdevice.getIstat()+"-"+reflink.getSiteCode()))
+				update.put(DashBoardUtils.BUILDING, refdevice.getIstat()+"-"+reflink.getSiteCode());
+			else if ((refdevice.getIstat() == null || reflink.getSiteCode() ==  null) && rnode.getAsset("building") != null)
+				update.put(DashBoardUtils.BUILDING, "");
+
+			Vrf vrf = m_vrf.get(reflink.getVrf());
+			String backupprofile = vrf.getBackupprofile();
+			if (refdevice.getBackupprofile() != null)
+				backupprofile = refdevice.getBackupprofile();
+			String rnodebckprofile = DashBoardUtils.getBackupProfile(rnode, m_backup);
+			BackupProfile bck = null;
+			if (!backupprofile.equals(rnodebckprofile) && m_backup.containsKey(backupprofile)) {
+				update.put(DashBoardUtils.BACKUP_PROFILE, backupprofile);
+				bck = m_backup.get(backupprofile);
+			}
+			
+			List<String> categorytoAdd = new ArrayList<String>();
+			List<String> categoryToDel = new ArrayList<String>();
+			List<String> all = new ArrayList<String>();
+			
+			if (rnode.getCategory(vrf.getNetworklevel()) == null)
+				categorytoAdd.add(vrf.getNetworklevel());
+			if (rnode.getCategory(vrf.getName()) == null)
+				categorytoAdd.add(vrf.getName());
+			String notiyCategory = vrf.getNotifylevel();
+			if (refdevice.getNotifyCategory() != null && !refdevice.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify)
+					&& DashBoardUtils.isValidNotifyLevel(refdevice.getNotifyCategory()))
+				notiyCategory = refdevice.getNotifyCategory();
+			if (rnode.getCategory(notiyCategory) == null)
+				categorytoAdd.add(notiyCategory);
+			if (rnode.getCategory(vrf.getThresholdlevel()) == null)
+				categorytoAdd.add(vrf.getThresholdlevel());
+			
+			all.add(vrf.getNetworklevel());
+			all.add(vrf.getName());
+			all.add(notiyCategory);
+			all.add(vrf.getThresholdlevel());
+			
+			for (RequisitionCategory category: rnode.getCategories()) {
+				if (!all.contains(category.getName()))
+					categoryToDel.add(category.getName());
+			}
+			
+			List<String> iptoAdd = new ArrayList<String>();
+			List<String> ipToDel = new ArrayList<String>();
+			for (String ip : ipaddresses) {
+				if (rnode.getInterface(ip) == null)
+					iptoAdd.add(ip);
+			}
+			for (RequisitionInterface riface: rnode.getInterfaces()) {
+				if (!ipaddresses.contains(riface.getIpAddr()))
+					ipToDel.add(riface.getIpAddr());
+			}
+			if (update.isEmpty() && categorytoAdd.isEmpty() && categoryToDel.isEmpty() && iptoAdd.isEmpty() && ipToDel.isEmpty())
+				return;
+			getService().updateNode(DashBoardUtils.TN,rnode.getForeignId(),refdevice.getIpaddr(),"provided by FAST",update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,bck);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(refdevice.getHostname());
 			jloe.setIpaddr(refdevice.getIpaddr());
 			jloe.setOrderCode(refdevice.getOrderCode());
 			jloe.setJobid(job.getJobid());
 			jloe.setDescription("FAST sync: updated service device.");
-			jloe.setNote(getNote(refdevice)+ getNote(reflink));
+			jloe.setNote("Updates:" + update + ipToDel + iptoAdd + categoryToDel + categorytoAdd);
 			
 			UI.getCurrent().access(new Runnable() {
 				
@@ -1014,7 +1190,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			return false;
 		}
 		
-		private boolean isDeletedFastDevice(RequisitionNode rnode) {
+		private boolean isManagedByFast(RequisitionNode rnode) {
 			if (rnode.getCategory(DashBoardUtils.m_network_levels[0]) != null)
 				return false;
 			if (rnode.getCategory(DashBoardUtils.m_network_levels[1]) != null)

@@ -47,10 +47,11 @@ public class DashBoardUtils {
 	public static final String VALID = "valid";
 
 
+	public static final String DESCRIPTION = "description";
 	public static final String CITY    = "city";
 	public static final String ADDRESS1 = "address1";
 	public static final String BUILDING = "building";
-	public static final String CIRCUIID = "circuitId";
+	public static final String CIRCUITID = "circuitId";
 
 	public static final String m_fast_default_notify = "Default";
 	
@@ -96,6 +97,13 @@ public class DashBoardUtils {
 			return false;
 		}
 		return true;
+	}
+	public static boolean isValidNotifyLevel(String notifyLevel) {
+		for (String validnotifyLevel: m_notify_levels) {
+			if (validnotifyLevel.equals(notifyLevel))
+				return true;
+		}
+		return false;
 	}
 	
 	public static PolicyWrapper getPolicyWrapper(String ipaddr) {
