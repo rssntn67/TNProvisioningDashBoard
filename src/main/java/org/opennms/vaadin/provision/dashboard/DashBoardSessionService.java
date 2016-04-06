@@ -633,8 +633,11 @@ public class DashBoardSessionService implements Serializable {
 		requisitionNode.putCategory(new RequisitionCategory(vrf.getNetworklevel()));
 		requisitionNode.putCategory(new RequisitionCategory(vrf.getName()));
 		
-		if (node.getNotifyCategory() == null || node.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
+		if (node.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
 			requisitionNode.putCategory(new RequisitionCategory(vrf.getNotifylevel()));
+		else
+			requisitionNode.putCategory(new RequisitionCategory(node.getNotifyCategory()));
+			
 		
 		requisitionNode.putCategory(new RequisitionCategory(vrf.getThresholdlevel()));
 		
@@ -664,16 +667,10 @@ public class DashBoardSessionService implements Serializable {
 		if (node.getIstat() != null && link.getSiteCode() !=  null )
 			requisitionNode.putAsset(new RequisitionAsset("building", node.getIstat()+"-"+link.getSiteCode()));
 
-		String backupprofile = vrf.getBackupprofile();
-		if (node.getBackupprofile() != null)
-			backupprofile = node.getBackupprofile();
-		for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(backupprofile).getRequisitionAssets().getAssets()) {
+		for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupprofile()).getRequisitionAssets().getAssets()) {
 			requisitionNode.putAsset(asset);
 		}
-		if (node.getSnmpprofile() != null)
-			m_onmsDao.setSnmpInfo(node.getIpaddr(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpprofile()).getSnmpInfo());
-		else
-			m_onmsDao.setSnmpInfo(node.getIpaddr(), m_service.getSnmpProfileContainer().getSnmpProfile(vrf.getSnmpprofile()).getSnmpInfo());
+		m_onmsDao.setSnmpInfo(node.getIpaddr(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpprofile()).getSnmpInfo());
 			
 		logger.info("Adding node with foreignId: " + foreignId + " primary: " + node.getIpaddr());
 		m_onmsDao.addRequisitionNode(foreignSource, requisitionNode);

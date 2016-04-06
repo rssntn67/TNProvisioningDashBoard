@@ -103,6 +103,8 @@ public class DashBoardUtils {
 			if (validnotifyLevel.equals(notifyLevel))
 				return true;
 		}
+		if (m_fast_default_notify.equals(notifyLevel))
+			return true;
 		return false;
 	}
 	
@@ -147,7 +149,13 @@ public class DashBoardUtils {
 
 	public static final String TN = "TrentinoNetwork";
 
-
+	public static boolean validNotifyCategory(String notifyCategory) {
+		for (String validcategory:m_notify_levels) {
+			if (validcategory.equals(notifyCategory))
+				return true;
+		}
+		return false;
+	}
 
 
 }

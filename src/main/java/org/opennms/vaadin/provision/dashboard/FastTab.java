@@ -26,6 +26,7 @@ import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.JobLogEntry;
 import org.opennms.vaadin.provision.model.Job.JobStatus;
+import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.Vrf;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -310,6 +311,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		
 		Map<String,Vrf> m_vrf;
 		Map<String, BackupProfile> m_backup;
+		Map<String, SnmpProfile> m_snmp;
 
 
 
@@ -337,6 +339,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 				logger.info("run: loading table backupprofile");
 				m_backup= getService().getBackupProfileContainer().getBackupProfileMap();
 				logger.info("run: loaded table backupprofile");
+
+				logger.info("run: loading table snmpprofile");
+				m_snmp= getService().getSnmpProfileContainer().getSnmpProfileMap();
+				logger.info("run: loaded table snmpprofile");
 
 				logger.info("run: loading table fastservicedevice");
 				checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
@@ -431,21 +437,14 @@ public class FastTab extends DashboardTab implements ClickListener {
 					
 					if (!checkduplicatedhostname(hostname) && !checkduplicatedipaddress(hostname)) {
 						Set<String> foreignIds = new HashSet<String>();
-						for (FastServiceDevice device : m_fastServiceDeviceMap
-								.get(hostname)) {
-							String ipaddr = device.getIpaddr();
-							if (m_onmsRequisitionNodeMap.containsKey(hostname)) {
-								foreignIds.add(hostname);
-							} else {
-								for (RequisitionNode rnode : m_onmsRequisitionNodeMap
-										.values()) {
-									if (rnode.getNodeLabel().startsWith(hostname)) {
-										foreignIds.add(rnode.getForeignId());
-										break;
-									}
-								}
-							}
-						}	
+						if (m_onmsRequisitionNodeMap.containsKey(hostname)) {
+							foreignIds.add(hostname);
+						} 
+						for (RequisitionNode rnode : m_onmsRequisitionNodeMap
+								.values()) {
+							if (rnode.getNodeLabel().startsWith(hostname)) 
+								foreignIds.add(rnode.getForeignId());
+						}
 						if (foreignIds.size() == 0) {
 							add(hostname);
 						} else if (foreignIds.size() == 1) {
@@ -620,6 +619,66 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
 						logger.info("Skipping service device. Cause: invalid hostname. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else if (device.getNotifyCategory() == null) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Null Notify Category");
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: null notify category. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else if (DashBoardUtils.isValidNotifyLevel(device.getNotifyCategory())) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Notify Category: " + device.getNotifyCategory());
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: invalid notify category. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else if (device.getSnmpprofile() == null) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Null Snmp Profile");
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: null Snmp Profile. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else if (!m_snmp.containsKey(device.getSnmpprofile())) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Snmp Profile: " + device.getSnmpprofile());
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: Invalid Snmp Profile. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else if (device.getBackupprofile() == null) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Null Backup Profile");
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: null Backup Profile. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
+					} else if (!m_backup.containsKey(device.getBackupprofile())) {
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(device.getHostname());
+						jloe.setIpaddr(device.getIpaddr());
+						jloe.setOrderCode(device.getOrderCode());
+						jloe.setJobid(job.getJobid());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Backup Profile: " + device.getSnmpprofile());
+						jloe.setNote(getNote(device));
+						logs.add(jloe);
+						logger.info("Skipping service device. Cause: Invalid Backup Profile. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
 					} else {
 						logger.info("Adding service device. hostname:  " + device.getHostname() + " ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
 						if (!m_fastServiceDeviceMap.containsKey(device.getHostname().toLowerCase())) {
@@ -971,6 +1030,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				updateNonFast(hostname,rnode);
 		}
 
+		@SuppressWarnings("deprecation")
 		private void updateNonFast(String hostname, RequisitionNode rnode) {
 			Set<String> ipaddresses = new HashSet<String>(); 
 			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
@@ -1029,6 +1089,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		}
 
+		@SuppressWarnings("deprecation")
 		private void updateFast(String hostname, RequisitionNode rnode) {
 			Set<String> ipaddresses = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
@@ -1110,9 +1171,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				update.put(DashBoardUtils.BUILDING, "");
 
 			Vrf vrf = m_vrf.get(reflink.getVrf());
-			String backupprofile = vrf.getBackupprofile();
-			if (refdevice.getBackupprofile() != null)
-				backupprofile = refdevice.getBackupprofile();
+			String backupprofile = refdevice.getBackupprofile();
 			String rnodebckprofile = DashBoardUtils.getBackupProfile(rnode, m_backup);
 			BackupProfile bck = null;
 			if (!backupprofile.equals(rnodebckprofile) && m_backup.containsKey(backupprofile)) {
@@ -1129,8 +1188,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			if (rnode.getCategory(vrf.getName()) == null)
 				categorytoAdd.add(vrf.getName());
 			String notiyCategory = vrf.getNotifylevel();
-			if (refdevice.getNotifyCategory() != null && !refdevice.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify)
-					&& DashBoardUtils.isValidNotifyLevel(refdevice.getNotifyCategory()))
+			if (refdevice.getNotifyCategory() != null && !refdevice.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
 				notiyCategory = refdevice.getNotifyCategory();
 			if (rnode.getCategory(notiyCategory) == null)
 				categorytoAdd.add(notiyCategory);
