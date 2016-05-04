@@ -48,17 +48,17 @@ public interface ProvisionRequisitionService extends RestFilterService{
     
     public RequisitionAsset getAsset(String foreignId, String name,String assetfieldname);
     
-    public Requisition add(Requisition requisition);
+    public void add(Requisition requisition);
     
-    public RequisitionNode add(String foreignSource, RequisitionNode rnode);
+    public void add(String foreignSource, RequisitionNode rnode);
     
-    public RequisitionInterface add(String foreignSource, String foreignid, RequisitionInterface rinterface);
+    public void add(String foreignSource, String foreignid, RequisitionInterface rinterface);
     
-    public RequisitionMonitoredService add(String foreignSource, String foreignid, String inet, RequisitionMonitoredService rservice);
+    public void add(String foreignSource, String foreignid, String inet, RequisitionMonitoredService rservice);
     
-    public RequisitionCategory add(String foreignSource, String foreignid, RequisitionCategory rcategory);
+    public void add(String foreignSource, String foreignid, RequisitionCategory rcategory);
     
-    public RequisitionAsset add(String foreignSource, String foreignid, RequisitionAsset rasset);
+    public void add(String foreignSource, String foreignid, RequisitionAsset rasset);
     
     public void sync(String foreignSource);
     

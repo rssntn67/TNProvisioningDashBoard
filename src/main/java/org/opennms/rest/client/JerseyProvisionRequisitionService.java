@@ -180,34 +180,34 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	@Override
-	public Requisition add(Requisition requisition) {
-		return getJerseyClient().post(Requisition.class, requisition, REQUISITIONS_PATH);
+	public void add(Requisition requisition) {
+		getJerseyClient().post(requisition, REQUISITIONS_PATH);
 	}
 
 	@Override
-	public RequisitionNode add(String name, RequisitionNode rnode) {
-		return getJerseyClient().post(RequisitionNode.class, rnode, buildNodesPath(name));
+	public void add(String name, RequisitionNode rnode) {
+		getJerseyClient().post(rnode, buildNodesPath(name));
 	}
 
 	@Override
-	public RequisitionInterface add(String name, String foreignid, RequisitionInterface rinterface) {
-		return getJerseyClient().post(RequisitionInterface.class, rinterface, buildInterfacesPath(name,foreignid));
+	public void add(String name, String foreignid, RequisitionInterface rinterface) {
+		getJerseyClient().post(rinterface, buildInterfacesPath(name,foreignid));
 	}
 
 	@Override
-	public RequisitionMonitoredService add(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
-		return getJerseyClient().post(RequisitionMonitoredService.class, rservice, buildServicesPath(name,foreignid,inet));
+	public void add(String name, String foreignid, String inet, RequisitionMonitoredService rservice) {
+		getJerseyClient().post(rservice, buildServicesPath(name,foreignid,inet));
 	}
 
 	@Override
-	public RequisitionCategory add(String name, String foreignid, RequisitionCategory rcategory) {
-		return getJerseyClient().post(RequisitionCategory.class, rcategory, buildCategoriesPath(name,foreignid));
+	public void add(String name, String foreignid, RequisitionCategory rcategory) {
+		getJerseyClient().post(rcategory, buildCategoriesPath(name,foreignid));
 
 	}
 
 	@Override
-	public RequisitionAsset add(String name, String foreignid, RequisitionAsset rasset) {
-		return getJerseyClient().post(RequisitionAsset.class, rasset, buildAssetsPath(name,foreignid));
+	public void add(String name, String foreignid, RequisitionAsset rasset) {
+		getJerseyClient().post(rasset, buildAssetsPath(name,foreignid));
 	}
 
 	@Override

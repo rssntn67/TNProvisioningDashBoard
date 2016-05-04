@@ -58,8 +58,8 @@ public class ProvisionForeignSourceServiceTest {
     @Ignore
     public void testList() throws Exception {
         ForeignSourceCollection nodelist = m_requisitionservice.getAll();
-        assertEquals(7, nodelist.size());
-        for (ForeignSource fs: nodelist) {
+        assertEquals(7, nodelist.getCount().intValue());
+        for (ForeignSource fs: nodelist.getForeignSources()) {
         	System.out.println(fs.getName());
         }
     }

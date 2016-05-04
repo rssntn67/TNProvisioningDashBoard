@@ -7,6 +7,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import java.util.logging.Logger;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -32,6 +33,7 @@ public class JerseyClientImpl {
         m_config = new DefaultApacheHttpClientConfig();
         m_config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,Boolean.TRUE);
         m_config.getProperties().put(ApacheHttpClientConfig.PROPERTY_PREEMPTIVE_AUTHENTICATION, Boolean.TRUE);
+        m_config.getProperties().put(ApacheHttpClientConfig.FEATURE_DISABLE_XML_SECURITY, Boolean.TRUE);
         m_config.getState().setCredentials(null, null,-1, username, password);
         m_client = ApacheHttpClient.create(m_config);
         m_url=url;
@@ -43,8 +45,11 @@ public class JerseyClientImpl {
     		return m_webResource.path(relativePath).queryParams(queryParams).header("Accept", "application/xml").accept(MediaType.APPLICATION_XML_TYPE).get(new GenericType<T>(clazz));
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		throw che;
     	}
-    	return null;
     }
 
     public <T> T get(Class<T> clazz,String relativePath) {
@@ -53,6 +58,9 @@ public class JerseyClientImpl {
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
     		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
     
@@ -62,6 +70,9 @@ public class JerseyClientImpl {
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
     		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
     
@@ -71,6 +82,9 @@ public class JerseyClientImpl {
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
     		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
 
@@ -80,6 +94,9 @@ public class JerseyClientImpl {
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
     		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
     
@@ -89,46 +106,44 @@ public class JerseyClientImpl {
     	} catch (UniformInterfaceException uie) {
     		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
     		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
 
-    public <T> T post(Class<T> clazz,Object o, String relativePath) {
+    public void post(Object o, String relativePath) {
     	try {
-    		m_webResource.path(relativePath).type(MediaType.APPLICATION_XML_TYPE).post(new GenericType<T>(clazz),o);
+    		ClientResponse cr = m_webResource.path(relativePath).type(MediaType.APPLICATION_XML_TYPE).post(ClientResponse.class,o);
+    		logger.info("POST: + "+ relativePath + "response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
-    		ClientResponse cr = uie.getResponse();
-    		if (cr.getStatusInfo().getStatusCode() == ClientResponse.Status.SEE_OTHER.getStatusCode() ) {
-    			String url = cr.getHeaders().getFirst("Location");
-    			if (url.startsWith(m_url)) {
-    				return get(clazz, url.substring(m_url.length()));
-    			}
-    		}
     		logger.warning("POST: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    	} catch (ClientHandlerException che) {
+    		logger.warning("POST: + "+ relativePath + "error: " + che.getLocalizedMessage());
     	}
-    	return null;
     }
     
     public void put(MultivaluedMap<String,String> o, String relativePath) {
        	try {
-       	    m_webResource.path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(o);
-      	} catch (UniformInterfaceException uie) {
-    		ClientResponse cr = uie.getResponse();
-    		if (cr.getStatusInfo().getStatusCode() == ClientResponse.Status.SEE_OTHER.getStatusCode() ) {
-    			String url = cr.getHeaders().getFirst("Location");
-    			if (url.startsWith(m_url)) {
-    				return;
-    			}
-    		}
+       		ClientResponse cr = m_webResource.path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(ClientResponse.class,o);
+    		logger.info("PUT: + "+ relativePath + "response: " + cr.getStatusInfo());
+    	} catch (UniformInterfaceException uie) {
     		logger.warning("PUT: + "+ relativePath + "error: " + uie.getLocalizedMessage());
-      	}
+    	} catch (ClientHandlerException che) {
+    		logger.warning("PUT: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    	}
     }
     
     public void delete(String relativePath) {
     	try {
-    		m_webResource.path(relativePath).delete();
+       		ClientResponse cr = m_webResource.path(relativePath).delete(ClientResponse.class);
+    		logger.info("DELETE: + "+ relativePath + "response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
     		logger.warning("DELETE: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+     	} catch (ClientHandlerException che) {
+    		logger.warning("DELETE: + "+ relativePath + "error: " + che.getLocalizedMessage());
     	}
+
     }
 
 }

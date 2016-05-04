@@ -93,17 +93,17 @@ public class JerseyProvisionForeignSourceService extends JerseyAbstractService
 
 	@Override
 	public void add(ForeignSource foreignSource) {
-		getJerseyClient().post(ForeignSource.class, foreignSource, buildForeignSourcePath(foreignSource.getName()));
+		getJerseyClient().post(foreignSource, buildForeignSourcePath(foreignSource.getName()));
 	}
 
 	@Override
 	public void addOrReplace(String name, DetectorWrapper detector) {
-		getJerseyClient().post(DetectorWrapper.class, detector, buildForeignSourceDetectorsPath(name));
+		getJerseyClient().post(detector, buildForeignSourceDetectorsPath(name));
 	}
 
 	@Override
 	public void addOrReplace(String name, PolicyWrapper policy) {
-		getJerseyClient().post(PolicyWrapper.class, policy, buildForeignSourcePoliciesPath(name));
+		getJerseyClient().post(policy, buildForeignSourcePoliciesPath(name));
 	}
 
 	@Override
