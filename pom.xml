@@ -88,19 +88,168 @@
 		</dependency>
 		<dependency>
 			<groupId>org.opennms</groupId>
+			<artifactId>opennms-config</artifactId>
+			<version>${opennms.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.opennms</groupId>
 			<artifactId>opennms-model</artifactId>
 			<version>${opennms.version}</version>
+			<exclusions>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>castor-dependencies</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>hibernate-dependencies</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>jaxb-dependencies</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>snmp-dependencies</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>oro</groupId>
+                	<artifactId>oro</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>commons-lang</groupId>
+                	<artifactId>commons-lang</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.api</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.logging</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.lib</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.xml</artifactId>
+            	</exclusion>
+         	     <exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-util</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.features.events</groupId>
+                	<artifactId>org.opennms.features.events.api</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.features.poller</groupId>
+                	<artifactId>org.opennms.features.poller.api</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-rrd-api</artifactId>
+            	</exclusion>
+        	</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.opennms</groupId>
 			<artifactId>opennms-provision-persistence</artifactId>
 			<version>${opennms.version}</version>
+			<exclusions>
+            	<exclusion>
+                	<groupId>commons-beanutils</groupId>
+                	<artifactId>commons-beanutils-core</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>jaxb-dependencies</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.xml</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.eclipse.jetty.orbit</groupId>
+                	<artifactId>javax.servlet</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>joda-time</groupId>
+                	<artifactId>joda-time</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-config</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-dao</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-provision-api</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>spring-dependencies</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>spring-web-dependencies</artifactId>
+            	</exclusion>
+        	</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.opennms</groupId>
 			<artifactId>opennms-web-api</artifactId>
 			<version>${opennms.version}</version>
 			<exclusions>
+         	    <exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>spring-web-dependencies</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>spring-dependencies</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.lib</artifactId>
+            	</exclusion>
+         	    <exclusion>
+                	<groupId>org.opennms.core</groupId>
+                	<artifactId>org.opennms.core.xml</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-config</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms</groupId>
+                	<artifactId>opennms-dao-api</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.features.poller</groupId>
+                	<artifactId>org.opennms.features.poller.remote</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.features.reporting</groupId>
+                	<artifactId>org.opennms.features.reporting.core</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>jfreechart-dependencies</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>servlet-dependencies</artifactId>
+            	</exclusion>
+            	<exclusion>
+                	<groupId>org.opennms.dependencies</groupId>
+                	<artifactId>spring-security-core-dependencies</artifactId>
+            	</exclusion>
             	<exclusion>
                 	<groupId>xerces</groupId>
                 	<artifactId>xercesImpl</artifactId>
