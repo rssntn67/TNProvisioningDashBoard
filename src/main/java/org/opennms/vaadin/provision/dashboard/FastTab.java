@@ -1008,7 +1008,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			}
 
 			secondary.remove(refdevice.getIpaddr());
-			getService().addNode(DashBoardUtils.TN, hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
+			getService().addFastNode(hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
 			
 			UI.getCurrent().access(new Runnable() {
 				

@@ -29,8 +29,12 @@ public class DashboardTabSheet extends CustomComponent implements
         m_tabsheet.addTab(m_loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
     	
         TrentinoNetworkTab tab=new TrentinoNetworkTab(service);
-    	m_tabsheet.addTab(tab, "rete TN", new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.addTab(tab, "Rete TN", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(tab).setEnabled(false);
+
+        MediaGatewayTab mtab=new MediaGatewayTab(service);
+    	m_tabsheet.addTab(mtab, "Media Gw", new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.getTab(mtab).setEnabled(false);
 
         VrfTab vrfTab=new VrfTab(service);
     	m_tabsheet.addTab(vrfTab, "Vrf", new ThemeResource("icons/16/users.png"));

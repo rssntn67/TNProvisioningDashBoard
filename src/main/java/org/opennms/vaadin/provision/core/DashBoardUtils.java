@@ -149,6 +149,9 @@ public class DashBoardUtils {
 
 	public static final String TN = "TrentinoNetwork";
 
+	public static final String MEDIAGATEWAY_CATEGORY = "MediaGateway";
+	public static final String MEDIAGATEWAY_NETWORK_CATEGORY = "Accesso";
+
 	public static boolean validNotifyCategory(String notifyCategory) {
 		for (String validcategory:m_notify_levels) {
 			if (validcategory.equals(notifyCategory))

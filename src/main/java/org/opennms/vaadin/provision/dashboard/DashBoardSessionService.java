@@ -39,6 +39,7 @@ import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.VrfDao;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
+import org.opennms.vaadin.provision.model.MediaGatewayNode;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
@@ -137,30 +138,36 @@ public class DashBoardSessionService implements Serializable {
 	}
 	
 	@SuppressWarnings("deprecation")
-	public BeanContainer<String, TrentinoNetworkNode> getRequisitionContainer(String label, String foreignSource) {
+	public BeanContainer<String, TrentinoNetworkNode> getTNContainer() {
 		BeanContainer<String, TrentinoNetworkNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 		
 		Map<String, BackupProfile> backupprofilemap = m_service.getBackupProfileContainer().getBackupProfileMap();
-		requisitionContainer.setBeanIdProperty(label);
+		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
 		
 		Collection<Vrf> vrfs = m_service.getVrfContainer().getVrfMap().values();
 		List<String> domains = m_service.getDnsDomainContainer().getDomains();
 		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
-
-		logger.info("getting requisition: " + foreignSource );
 		
-		Requisition req = m_onmsDao.getRequisition(foreignSource);
+		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN);
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
     	m_primaryipcollection.clear();
 		
 		for (RequisitionNode node : req.getNodes()) {
-			logger.info("parsing requisition: " + foreignSource +", foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
+			for (RequisitionInterface ip: node.getInterfaces()) {
+				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
+					m_primaryipcollection.add(ip.getIpAddr());
+				}
+			}
 		}
 		
 		for (RequisitionNode node : req.getNodes()) {
+			if (node.getCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY) != null) {
+				logger.info("skipping media gateway: foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
+				continue;
+			}
 			boolean valid = true;
 			String foreignId = node.getForeignId();
 			if (foreignId == null)
@@ -188,17 +195,18 @@ public class DashBoardSessionService implements Serializable {
 			String descr = null;
 			List<String> secondary = new ArrayList<String>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
-				logger.info("parsing requisition: " + foreignSource +", foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
+				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
 				if (ip.getSnmpPrimary() == null)
 					valid=false;
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
 				} else {
+					logger.info("adding secondary: " + ip.getIpAddr() + " foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
 					secondary.add(ip.getIpAddr());
 				}
 			}
-			
+
 			if (primary == null)
 				valid = false;
 			else if (hasInvalidIp(primary))
@@ -255,9 +263,6 @@ public class DashBoardSessionService implements Serializable {
 			if (node.getParentForeignId() != null)
 				parent =m_foreignIdNodeLabelMap.get(node.getParentForeignId());
 			
-			String snmpProfile =  null;
-			logger.info("parsing requisition: " + foreignSource +", foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "secondary: " + secondary);
-
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					descr, 
 					hostname, 
@@ -267,7 +272,7 @@ public class DashBoardSessionService implements Serializable {
 					networkCategory, 
 					notifCategory, 
 					threshCategory, 
-					snmpProfile, 
+					null, 
 					DashBoardUtils.getBackupProfile(node, backupprofilemap), 
 					city, 
 					address1, 
@@ -275,11 +280,128 @@ public class DashBoardSessionService implements Serializable {
 					valid, 
 					secondary.toArray(new String[secondary.size()]));
 			requisitionContainer.addBean(tnnode);
-			m_primaryipcollection.add(primary);
 		}
 		return requisitionContainer;
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	public BeanContainer<String, MediaGatewayNode> getMediaGatewayContainer() {
+		BeanContainer<String, MediaGatewayNode> requisitionContainer = new BeanContainer<String, MediaGatewayNode>(MediaGatewayNode.class);
+		
+		Map<String, BackupProfile> backupprofilemap = m_service.getBackupProfileContainer().getBackupProfileMap();
+		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
+		
+		List<String> domains = m_service.getDnsDomainContainer().getDomains();
+		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
+		
+		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN);
+    	m_foreignIdNodeLabelMap.clear();
+    	m_nodeLabelForeignIdMap.clear();
+    	m_primaryipcollection.clear();
+		
+		for (RequisitionNode node : req.getNodes()) {
+			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
+			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
+			for (RequisitionInterface ip: node.getInterfaces()) {
+				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
+					m_primaryipcollection.add(ip.getIpAddr());
+				}
+			}
+		}
+		
+		for (RequisitionNode node : req.getNodes()) {
+			if (node.getCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY) == null) {
+				continue;
+			}
+			boolean valid = true;
+			String foreignId = node.getForeignId();
+			if (foreignId == null)
+				valid = false;
+			String nodelabel = node.getNodeLabel();
+			if (nodelabel == null)
+				valid=false;
+
+			String vrf = null;
+			String hostname = null;
+			for (String tnvrf: domains) {
+				if (nodelabel.endsWith("."+tnvrf)) {
+					vrf = tnvrf;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
+					break;
+				}
+			}
+
+			if (vrf == null) {
+				hostname = nodelabel;
+				valid = false;
+			}
+			
+			String primary = null;
+			String descr = null;
+			List<String> secondary = new ArrayList<String>();
+			for (RequisitionInterface ip: node.getInterfaces()) {
+				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
+				if (ip.getSnmpPrimary() == null)
+					valid=false;
+				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
+					primary = ip.getIpAddr();
+					descr = ip.getDescr();
+				} else {
+					logger.info("adding secondary: " + ip.getIpAddr() + " foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
+					secondary.add(ip.getIpAddr());
+				}
+			}
+
+			if (primary == null)
+				valid = false;
+			else if (hasInvalidIp(primary))
+				valid = false;
+				
+			String networkCategory = null;
+			if (node.getCategory(DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY) != null) {
+				networkCategory = DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY;
+			}
+			if (networkCategory == null)
+				valid = false;
+
+			String city = null;
+			if (node.getCity() != null)
+				city = node.getCity();
+			else
+				valid = false;
+			
+			String address1 = null;
+			if (node.getAsset(DashBoardUtils.ADDRESS1) != null)
+				address1 = node.getAsset(DashBoardUtils.ADDRESS1).getValue();
+			else
+				valid = false;
+			
+			if (hasInvalidDnsBind9Label(nodelabel))
+				valid = false;
+			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
+				valid = false;		
+			
+			String parent = null;
+			if (node.getParentForeignId() != null)
+				parent =m_foreignIdNodeLabelMap.get(node.getParentForeignId());
+			
+			MediaGatewayNode tnnode = new MediaGatewayNode(
+					descr, 
+					hostname, 
+					vrf, 
+					primary, 
+					parent, 
+					networkCategory, 
+					null, 
+					DashBoardUtils.getBackupProfile(node, backupprofilemap), 
+					city, 
+					address1, 
+					foreignId, 
+					valid);
+			requisitionContainer.addBean(tnnode);
+		}
+		return requisitionContainer;	}
+
 	public void deleteNode(String foreignSource, RequisitionNode node) {
 		if (node == null)
 			return;
@@ -319,15 +441,25 @@ public class DashBoardSessionService implements Serializable {
 		addSecondaryInterface(foreignSource, foreignId, ipaddress,"Provided by Provision Dashboard");
 	}
 	
-	public void deleteNode(String foreignSource,TrentinoNetworkNode tnnode) {
+	public void deleteNode(TrentinoNetworkNode tnnode) {
 		logger.info("Deleting node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
 		if (tnnode.getPrimary() != null)
-			m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
+			m_onmsDao.deletePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		if (tnnode.getSecondary() != null) {
 			for (String iface: tnnode.getSecondary())
-				m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(iface));
+				m_onmsDao.deletePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyName(iface));
 		}
-		m_onmsDao.deleteRequisitionNode(foreignSource, tnnode.getForeignId());
+		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN, tnnode.getForeignId());
+		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
+		m_nodeLabelForeignIdMap.remove(nodelabel);
+		m_primaryipcollection.remove(tnnode.getPrimary());
+	}
+
+	public void deleteNode(MediaGatewayNode tnnode) {
+		logger.info("Deleting node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
+		if (tnnode.getPrimary() != null)
+			m_onmsDao.deletePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
+		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN, tnnode.getForeignId());
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
 		m_primaryipcollection.remove(tnnode.getPrimary());
@@ -425,7 +557,88 @@ public class DashBoardSessionService implements Serializable {
 		return false;
 	}
 
-	public void addNode(String foreignSource, TrentinoNetworkNode node) throws SQLException {
+	public void addMediaGatewayNode(MediaGatewayNode node) throws SQLException {
+		RequisitionNode requisitionNode = new RequisitionNode();
+		
+		requisitionNode.setForeignId(node.getForeignId());
+		
+		requisitionNode.setNodeLabel(node.getNodeLabel());
+		
+		if (node.getParent() != null) {
+			requisitionNode.setParentForeignId(m_nodeLabelForeignIdMap.get(node.getParent()));
+		}
+		
+		requisitionNode.setCity(node.getCity());
+		
+		RequisitionInterface iface = new RequisitionInterface();
+		iface.setSnmpPrimary(PrimaryType.PRIMARY);
+		iface.setIpAddr(node.getPrimary());
+		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
+		iface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
+		iface.setDescr(node.getDescr());
+		
+		requisitionNode.putInterface(iface);
+
+		requisitionNode.putCategory(new RequisitionCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY));
+		if (node.getNetworkCategory() != null) 
+			requisitionNode.putCategory(new RequisitionCategory(node.getNetworkCategory()));
+
+				
+		if (node.getCity() != null && node.getAddress1() != null)
+			requisitionNode.putAsset(new RequisitionAsset("description", node.getCity() + " - " + node.getAddress1()));
+		
+		if (node.getAddress1()  != null)
+			requisitionNode.putAsset(new RequisitionAsset("address1", node.getAddress1() ));
+		
+		for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
+			requisitionNode.putAsset(asset);
+		}
+		m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
+		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN, requisitionNode);
+		logger.info("Adding policy for interface: " + node.getPrimary());
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
+		
+		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
+		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
+		m_primaryipcollection.add(node.getPrimary());
+		node.clear();
+			
+	}
+
+	public void updateMediaGatewayNode(MediaGatewayNode node) {
+		Map<String, String> update = new HashMap<String, String>();
+
+		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
+				&& node.getPrimary() != null)
+			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
+		if (node.getUpdatemap().contains(DashBoardUtils.PARENT))
+			update.put(DashBoardUtils.PARENT,
+					m_nodeLabelForeignIdMap.get(node.getParent()));
+		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
+				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
+			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
+		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
+			update.put(DashBoardUtils.CITY, node.getCity());
+		if (node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
+			update.put(DashBoardUtils.ADDRESS1, node.getAddress1());
+		if (node.getUpdatemap().contains(DashBoardUtils.CITY)
+				|| node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
+			update.put(DashBoardUtils.DESCRIPTION, node.getCity() + " - "
+					+ node.getAddress1());
+		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
+				&& node.getBackupProfile() != null)
+			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
+		BackupProfile bck = m_service.getBackupProfileContainer().get(node.getBackupProfile());
+		updateNode(DashBoardUtils.TN, node.getForeignId(), node.getPrimary(),
+				node.getDescr(), update, node.getInterfToDel(),
+				node.getInterfToAdd(), node.getCategoriesToDel(),
+				node.getCategoriesToAdd(),bck);
+		node.clear();
+	}
+
+	public void addTNNode(TrentinoNetworkNode node) throws SQLException {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(node.getForeignId());
@@ -469,15 +682,46 @@ public class DashBoardSessionService implements Serializable {
 		}
 		m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
-		m_onmsDao.addRequisitionNode(foreignSource, requisitionNode);
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN, requisitionNode);
 		logger.info("Adding policy for interface: " + node.getPrimary());
-		m_onmsDao.addOrReplacePolicy(foreignSource, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
 		
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		m_primaryipcollection.add(node.getPrimary());
 		node.clear();
 			
+	}
+
+	public void updateTNNode(TrentinoNetworkNode node) {
+		Map<String, String> update = new HashMap<String, String>();
+
+		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
+				&& node.getPrimary() != null)
+			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
+		if (node.getUpdatemap().contains(DashBoardUtils.PARENT))
+			update.put(DashBoardUtils.PARENT,
+					m_nodeLabelForeignIdMap.get(node.getParent()));
+		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
+				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
+			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
+		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
+			update.put(DashBoardUtils.CITY, node.getCity());
+		if (node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
+			update.put(DashBoardUtils.ADDRESS1, node.getAddress1());
+		if (node.getUpdatemap().contains(DashBoardUtils.CITY)
+				|| node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
+			update.put(DashBoardUtils.DESCRIPTION, node.getCity() + " - "
+					+ node.getAddress1());
+		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
+				&& node.getBackupProfile() != null)
+			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
+		BackupProfile bck = m_service.getBackupProfileContainer().get(node.getBackupProfile());
+		updateNode(DashBoardUtils.TN, node.getForeignId(), node.getPrimary(),
+				node.getDescr(), update, node.getInterfToDel(),
+				node.getInterfToAdd(), node.getCategoriesToDel(),
+				node.getCategoriesToAdd(),bck);
+		node.clear();
 	}
 
 	public void updateNode(String foreignSource, String foreignId,
@@ -570,39 +814,8 @@ public class DashBoardSessionService implements Serializable {
 		}
 
 	}
-
-	public void updateNode(String foreignSource, TrentinoNetworkNode node) {
-		Map<String, String> update = new HashMap<String, String>();
-
-		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
-				&& node.getPrimary() != null)
-			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
-		if (node.getUpdatemap().contains(DashBoardUtils.PARENT))
-			update.put(DashBoardUtils.PARENT,
-					m_nodeLabelForeignIdMap.get(node.getParent()));
-		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
-				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
-			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
-		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
-			update.put(DashBoardUtils.CITY, node.getCity());
-		if (node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
-			update.put(DashBoardUtils.ADDRESS1, node.getAddress1());
-		if (node.getUpdatemap().contains(DashBoardUtils.CITY)
-				|| node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
-			update.put(DashBoardUtils.DESCRIPTION, node.getCity() + " - "
-					+ node.getAddress1());
-		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
-				&& node.getBackupProfile() != null)
-			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
-		BackupProfile bck = m_service.getBackupProfileContainer().get(node.getBackupProfile());
-		updateNode(foreignSource, node.getForeignId(), node.getPrimary(),
-				node.getDescr(), update, node.getInterfToDel(),
-				node.getInterfToAdd(), node.getCategoriesToDel(),
-				node.getCategoriesToAdd(),bck);
-		node.clear();
-	}
 	
-	public void addNode(String foreignSource, String foreignId, FastServiceDevice node, FastServiceLink link, Vrf vrf, Set<String> secondary) {
+	public void addFastNode(String foreignId, FastServiceDevice node, FastServiceLink link, Vrf vrf, Set<String> secondary) {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(foreignId);
@@ -673,12 +886,12 @@ public class DashBoardSessionService implements Serializable {
 		m_onmsDao.setSnmpInfo(node.getIpaddr(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpprofile()).getSnmpInfo());
 			
 		logger.info("Adding node with foreignId: " + foreignId + " primary: " + node.getIpaddr());
-		m_onmsDao.addRequisitionNode(foreignSource, requisitionNode);
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN, requisitionNode);
 		logger.info("Adding policy for interface: " + node.getIpaddr());
-		m_onmsDao.addOrReplacePolicy(foreignSource, DashBoardUtils.getPolicyWrapper(node.getIpaddr()));
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(node.getIpaddr()));
 		for (String ip: secondary) {
 			logger.info("Adding policy for interface: " + ip);
-			m_onmsDao.addOrReplacePolicy(foreignSource, DashBoardUtils.getPolicyWrapper(ip));			
+			m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(ip));			
 		}
 
 	}
