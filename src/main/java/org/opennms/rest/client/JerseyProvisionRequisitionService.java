@@ -16,6 +16,8 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNodeCollection;
 import org.opennms.rest.client.ProvisionRequisitionService;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 
 public class JerseyProvisionRequisitionService extends JerseyAbstractService implements
 		ProvisionRequisitionService {
@@ -33,7 +35,6 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	private static final String REQUISION_ASSET_PATH = "/assets";
 	
 	private static final String IMPORT_PATH = "/import";
-	private static final String IMPORT_NOSCAN_PATH = "import?rescanExisting=false";
 	
 	
 	private String buildRequisitionPath(String name) {
@@ -46,10 +47,6 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	
 	private String buildImportPath(String name) {
 		return buildRequisitionPath(name)+IMPORT_PATH;
-	}
-
-	private String buildImportNoScanPath(String name) {
-		return buildRequisitionPath(name)+IMPORT_NOSCAN_PATH;
 	}
 
 	private String buildNodesPath(String name) {
@@ -217,7 +214,9 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 
 	@Override
 	public void syncWithOutScanning(String name) {
-		getJerseyClient().put(null, buildImportNoScanPath(name));
+		MultivaluedMap<String, String> mvm = new MultivaluedMapImpl();
+		mvm.add("rescanExisting", "false");
+		getJerseyClient().put(mvm, buildImportPath(name));
 	}
 
 	@Override

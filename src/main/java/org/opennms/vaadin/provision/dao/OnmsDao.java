@@ -118,4 +118,8 @@ public class OnmsDao {
 	public OnmsIpInterfaceList getNodeIpInterfaces(Integer nodeId) {
 		return m_nodeService.getIpInterfaces(nodeId);
 	}
+	
+	public void sync(String foreignSource) {
+		m_provisionService.syncWithOutScanning(foreignSource);
+	}
 }

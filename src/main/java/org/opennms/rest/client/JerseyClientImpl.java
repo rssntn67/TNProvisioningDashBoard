@@ -104,10 +104,10 @@ public class JerseyClientImpl {
     	try{
     		return m_webResource.path(relativePath).queryParams(queryParams).accept(MediaType.TEXT_PLAIN).get(String.class);
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
@@ -115,33 +115,33 @@ public class JerseyClientImpl {
     public void post(Object o, String relativePath) {
     	try {
     		ClientResponse cr = m_webResource.path(relativePath).type(MediaType.APPLICATION_XML_TYPE).post(ClientResponse.class,o);
-    		logger.info("POST: + "+ relativePath + "response: " + cr.getStatusInfo());
+    		logger.info("POST: + "+ relativePath + " response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("POST: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("POST: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     	} catch (ClientHandlerException che) {
-    		logger.warning("POST: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("POST: + "+ relativePath + " error: " + che.getLocalizedMessage());
     	}
     }
     
-    public void put(MultivaluedMap<String,String> o, String relativePath) {
+    public void put(MultivaluedMap<String,String> mvm, String relativePath) {
        	try {
-       		ClientResponse cr = m_webResource.path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(ClientResponse.class,o);
-    		logger.info("PUT: + "+ relativePath + "response: " + cr.getStatusInfo());
+       		ClientResponse cr = m_webResource.queryParams(mvm).path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(ClientResponse.class);
+    		logger.info("PUT: + "+ relativePath + " response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("PUT: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("PUT: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     	} catch (ClientHandlerException che) {
-    		logger.warning("PUT: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("PUT: + "+ relativePath + " error: " + che.getLocalizedMessage());
     	}
     }
     
     public void delete(String relativePath) {
     	try {
        		ClientResponse cr = m_webResource.path(relativePath).delete(ClientResponse.class);
-    		logger.info("DELETE: + "+ relativePath + "response: " + cr.getStatusInfo());
+    		logger.info("DELETE: + "+ relativePath + " response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("DELETE: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("DELETE: + "+ relativePath + " error: " + uie.getLocalizedMessage());
      	} catch (ClientHandlerException che) {
-    		logger.warning("DELETE: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("DELETE: + "+ relativePath + " error: " + che.getLocalizedMessage());
     	}
 
     }

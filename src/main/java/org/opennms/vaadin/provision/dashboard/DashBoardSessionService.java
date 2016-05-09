@@ -693,5 +693,9 @@ public class DashBoardSessionService implements Serializable {
     public boolean isFastRunning() {
     	return m_service.getJobContainer().isFastRunning();
     }
+    
+    public void sync(String foregnSource) {
+    	m_onmsDao.sync(foregnSource);
+    }
 
 }

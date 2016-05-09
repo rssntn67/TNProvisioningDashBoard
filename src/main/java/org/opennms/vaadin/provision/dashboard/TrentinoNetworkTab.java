@@ -98,6 +98,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private BeanContainer<String, TrentinoNetworkNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 	private boolean loaded=false;
 
+	private Button m_syncRequisButton  = new Button("Sync");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
@@ -197,6 +198,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		HorizontalLayout topRightLayout = new HorizontalLayout();
 		topRightLayout.addComponent(m_addNewNodeButton);
+		topRightLayout.addComponent(m_syncRequisButton);
 		rightLayout.addComponent(new Panel(topRightLayout));
 
 		rightLayout.addComponent(m_editRequisitionNodeLayout);
@@ -590,6 +592,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 				selectItem();
 				m_requisitionContainer.removeAllContainerFilters();
 				hostname.focus();
+			}
+		});
+		
+		m_syncRequisButton.addClickListener(new ClickListener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				try {
+					getService().sync(DashBoardUtils.TN);
+					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN);
+					Notification.show("Sync " + DashBoardUtils.TN, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+				} catch (Exception e) {
+					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN + " " + e.getLocalizedMessage());
+					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+				}
+				
 			}
 		});
 
