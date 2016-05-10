@@ -1,9 +1,12 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
+import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.vaadin.annotations.Theme;
@@ -50,6 +53,7 @@ public class SnmpProfileTab extends DashboardTab {
 	private Button m_saveSnmpButton  = new Button("Salva Modifiche");
 	private Button m_removeSnmpButton  = new Button("Elimina Profilo Snmp");
 
+	private Set<String> m_fastSnmpProfile = new HashSet<String>();
 
 	private VerticalLayout m_editSnmpLayout  = new VerticalLayout();
 	
@@ -69,6 +73,9 @@ public class SnmpProfileTab extends DashboardTab {
 		if (!loaded) {
 			m_snmpContainer = getService().getSnmpProfileContainer();
 			m_snmpTable.setContainerDataSource(m_snmpContainer);
+			for (FastServiceDevice fsd: getService().getFastServiceDeviceContainer().getFastServiceDevices()) {
+				m_fastSnmpProfile.add(fsd.getSnmpprofile());
+			}
 			layout();
 			loaded=true;
 		}
@@ -315,8 +322,14 @@ public class SnmpProfileTab extends DashboardTab {
 		SnmpProfile snmp = m_snmpContainer.get(snmpId);
 		m_editorFields.setItemDataSource(snmp);
 		m_editSnmpLayout.setVisible(true);
-		m_saveSnmpButton.setEnabled(true);
-		m_removeSnmpButton.setEnabled(true);
+		if (m_fastSnmpProfile.contains(snmp.getName())) {
+			m_saveSnmpButton.setEnabled(false);
+			m_removeSnmpButton.setEnabled(false);
+			Notification.show("Cannot Modify Profile", "Snmp Profile is referenced in Fast", Type.WARNING_MESSAGE);
+		} else {
+			m_saveSnmpButton.setEnabled(true);
+			m_removeSnmpButton.setEnabled(true);
+		}
 	}
 
 	

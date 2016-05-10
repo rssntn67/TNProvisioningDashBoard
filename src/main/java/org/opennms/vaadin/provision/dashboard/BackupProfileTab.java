@@ -2,10 +2,13 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.FastServiceDevice;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -57,6 +60,8 @@ public class BackupProfileTab extends DashboardTab {
 	
 	private BeanFieldGroup<BackupProfile> m_editorFields     = new BeanFieldGroup<BackupProfile>(BackupProfile.class);
 
+	private Set<String> m_fastBackupProfile = new HashSet<String>();
+
 	/**
 	 * 
 	 */
@@ -71,6 +76,9 @@ public class BackupProfileTab extends DashboardTab {
 		if (!loaded) {
 			m_backupContainer = getService().getBackupProfileContainer();
 			m_backupTable.setContainerDataSource(m_backupContainer);
+			for (FastServiceDevice fsd: getService().getFastServiceDeviceContainer().getFastServiceDevices()) {
+				m_fastBackupProfile.add(fsd.getBackupprofile());
+			}
 			layout();
 			loaded=true;
 		}
@@ -349,8 +357,15 @@ public class BackupProfileTab extends DashboardTab {
 		BackupProfile backup = m_backupContainer.get(backupId);
 		m_editorFields.setItemDataSource(backup);
 		m_editBackupLayout.setVisible(true);
-		m_saveBackupButton.setEnabled(true);
-		m_removeBackupButton.setEnabled(true);
+		if (m_fastBackupProfile.contains(backup.getName())) {
+			m_saveBackupButton.setEnabled(false);
+			m_removeBackupButton.setEnabled(false);
+			Notification.show("Cannot Modify Profile", "Backup Profile is referenced in Fast", Type.WARNING_MESSAGE);
+		} else {
+			m_saveBackupButton.setEnabled(true);
+			m_removeBackupButton.setEnabled(true);
+		}
+
 	}
 
 	
