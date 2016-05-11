@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
 import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
-import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.VrfDao;
 import org.opennms.vaadin.provision.model.Vrf;
 
@@ -64,8 +62,6 @@ public class VrfTab extends DashboardTab {
 	private VrfDao m_vrfContainer;
 	private DnsDomainDao m_domainContainer;
 	private DnsSubDomainDao m_subdomainContainer;
-	private BackupProfileDao m_backupprofilecontainer;
-	private SnmpProfileDao m_snmpprofilecontainer;
 	private boolean loaded=false;
 
 	private Table m_vrfTable   	= new Table();
@@ -90,11 +86,9 @@ public class VrfTab extends DashboardTab {
 			m_subdomainContainer = getService().getDnsSubDomainContainer();
 			m_vrfContainer = getService().getVrfContainer();
 			m_vrfTable.setContainerDataSource(m_vrfContainer);
-			m_backupprofilecontainer = getService().getBackupProfileContainer();
-			m_snmpprofilecontainer = getService().getSnmpProfileContainer();
+			layout();
 			loaded=true;
 		}
-		layout();
 	}
 		
 	private void layout() {
