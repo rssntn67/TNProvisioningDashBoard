@@ -695,13 +695,15 @@ public class DashBoardSessionService implements Serializable {
 
 	public void updateTNNode(TrentinoNetworkNode node) {
 		Map<String, String> update = new HashMap<String, String>();
-
+		
 		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
 				&& node.getPrimary() != null)
 			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
-		if (node.getUpdatemap().contains(DashBoardUtils.PARENT))
+		if (node.getUpdatemap().contains(DashBoardUtils.PARENT)) {
+			logger.info("Updating parent: " + node.getParent());
 			update.put(DashBoardUtils.PARENT,
 					m_nodeLabelForeignIdMap.get(node.getParent()));
+		}
 		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
 				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
 			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
@@ -736,9 +738,10 @@ public class DashBoardSessionService implements Serializable {
 		MultivaluedMap<String, String> updatemap = new MultivaluedMapImpl();
 		List<RequisitionAsset> assetsToPut = new ArrayList<RequisitionAsset>();
 
-		if (update.containsKey(DashBoardUtils.PARENT))
-			updatemap.add("parent-foreign-id", m_nodeLabelForeignIdMap
-					.get(update.get(DashBoardUtils.PARENT)));
+		if (update.containsKey(DashBoardUtils.PARENT)) {
+			logger.info("UpdateMap: parent-node-id: " + update.get(DashBoardUtils.PARENT));
+			updatemap.add("parent-foreign-id", update.get(DashBoardUtils.PARENT));
+		}
 		if (update.containsKey(DashBoardUtils.LABEL))
 			updatemap.add("node-label", update.get(DashBoardUtils.LABEL));
 		if (update.containsKey(DashBoardUtils.CITY))
