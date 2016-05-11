@@ -3,8 +3,11 @@ package org.opennms.vaadin.provision.dashboard;
 import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -80,9 +83,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 		public boolean passesFilter(Object itemId, Item item) {
 			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();			
 			return (    node.getNodeLabel().contains(needle) 
-					&& ( needle1 == null || node.getNetworkCategory() == needle1 ) 
-					&& ( needle2 == null || node.getNotifCategory()   == needle2 )
-		            && ( needle3 == null || node.getThreshCategory()  == needle3 ) 
+					&& ( needle1 == null || node.getNetworkCategory().equals(needle1) ) 
+					&& ( needle2 == null || node.getNotifCategory().equals(needle2) )
+		            && ( needle3 == null || node.getThreshCategory().equals(needle3) ) 
 					);
 		}
 
@@ -156,11 +159,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
 		ComboBox parentComboBox = new ComboBox("Dipende da");
 
-		for (String snmpprofile: getService().getSnmpProfileContainer().getSnmpProfileMap().keySet()) {
+		List<String> snmpprofiles = new ArrayList<String>(getService().getSnmpProfileContainer().getSnmpProfileMap().keySet());
+		Collections.sort(snmpprofiles);
+		for (String snmpprofile: snmpprofiles) {
 			snmpComboBox.addItem(snmpprofile);
 		}
 
-		for (String backupprofile: getService().getBackupProfileContainer().getBackupProfileMap().keySet()) {
+		List<String> backupprofiles = new ArrayList<String>(getService().getBackupProfileContainer().getBackupProfileMap().keySet());
+		Collections.sort(backupprofiles);
+		for (String backupprofile: backupprofiles) {
 			backupComboBox.addItem(backupprofile);
 		}
 
@@ -223,7 +230,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		for (Vrf categories: getService().getVrfContainer().getVrfMap().values()) {
+		List<Vrf> vrfs = new ArrayList<Vrf>(getService().getVrfContainer().getVrfMap().values()); 
+		Collections.sort(vrfs);
+		for (Vrf categories: vrfs) {
 			networkCatSearchComboBox.addItem(categories);
 			networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
@@ -239,6 +248,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
+				m_editRequisitionNodeLayout.setVisible(false);
 				m_requisitionContainer.removeAllContainerFilters();
 				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
@@ -259,6 +269,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
+				m_editRequisitionNodeLayout.setVisible(false);
 				m_requisitionContainer.removeAllContainerFilters();
 				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
@@ -278,6 +289,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
+				m_editRequisitionNodeLayout.setVisible(false);
 				m_requisitionContainer.removeAllContainerFilters();
 				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText, networkCatSearchComboBox.getValue(),notifCatSearchComboBox.getValue(),threshCatSearchComboBox.getValue()));
 			}
@@ -295,11 +307,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		});
 
 		m_vrfsComboBox.removeAllItems();
-		for (final String vrfs: getService().getDnsDomainContainer().getDomains()) {
-			m_vrfsComboBox.addItem(vrfs);
+		for (final String domain: getService().getDnsDomainContainer().getDomains()) {
+			m_vrfsComboBox.addItem(domain);
 		}
 
-		for (Vrf categories: getService().getVrfContainer().getVrfMap().values()) {
+		for (Vrf categories: vrfs) {
 			networkCatComboBox.addItem(categories);
 			networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}

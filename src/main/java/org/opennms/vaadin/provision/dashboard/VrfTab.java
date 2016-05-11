@@ -2,6 +2,9 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
@@ -108,11 +111,15 @@ public class VrfTab extends DashboardTab {
 		ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
 		ComboBox backupComboBox  = new ComboBox("Backup Profile");
 
-		for (String snmpprofile: m_snmpprofilecontainer.getSnmpProfileMap().keySet()) {
+		List<String> snmpprofiles = new ArrayList<String>(getService().getSnmpProfileContainer().getSnmpProfileMap().keySet());
+		Collections.sort(snmpprofiles);
+		for (String snmpprofile: snmpprofiles) {
 			snmpComboBox.addItem(snmpprofile);
 		}
 
-		for (String backupprofile: m_backupprofilecontainer.getBackupProfileMap().keySet()) {
+		List<String> backupprofiles = new ArrayList<String>(getService().getBackupProfileContainer().getBackupProfileMap().keySet());
+		Collections.sort(backupprofiles);
+		for (String backupprofile: backupprofiles) {
 			backupComboBox.addItem(backupprofile);
 		}
 
@@ -477,7 +484,9 @@ public class VrfTab extends DashboardTab {
 			}
 		});
 
-		for (String kvrf: m_vrfContainer.getVrfMap().keySet()) {
+		List<String> vrfnames = new ArrayList<String>(m_vrfContainer.getVrfMap().keySet());
+		Collections.sort(vrfnames);
+		for (String kvrf: vrfnames) {
 			vrfSearchComboBox.addItem(kvrf);
 		}
 		vrfSearchComboBox.setInvalidAllowed(false);

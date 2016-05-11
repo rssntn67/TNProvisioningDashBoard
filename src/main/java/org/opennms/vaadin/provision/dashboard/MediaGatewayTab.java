@@ -3,7 +3,10 @@ package org.opennms.vaadin.provision.dashboard;
 import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -132,11 +135,15 @@ public class MediaGatewayTab extends DashboardTab {
 		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
 		ComboBox parentComboBox = new ComboBox("Dipende da");
 
-		for (String snmpprofile: getService().getSnmpProfileContainer().getSnmpProfileMap().keySet()) {
+		List<String> snmpprofiles = new ArrayList<String>(getService().getSnmpProfileContainer().getSnmpProfileMap().keySet());
+		Collections.sort(snmpprofiles);
+		for (String snmpprofile: snmpprofiles) {
 			snmpComboBox.addItem(snmpprofile);
 		}
 
-		for (String backupprofile: getService().getBackupProfileContainer().getBackupProfileMap().keySet()) {
+		List<String> backupprofiles = new ArrayList<String>(getService().getBackupProfileContainer().getBackupProfileMap().keySet());
+		Collections.sort(backupprofiles);
+		for (String backupprofile: backupprofiles) {
 			backupComboBox.addItem(backupprofile);
 		}
 

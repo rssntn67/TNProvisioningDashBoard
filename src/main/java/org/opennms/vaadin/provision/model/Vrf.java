@@ -1,6 +1,31 @@
 package org.opennms.vaadin.provision.model;
 
-public class Vrf {
+public class Vrf implements Comparable<Vrf> {
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((m_name == null) ? 0 : m_name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Vrf other = (Vrf) obj;
+		if (m_name == null) {
+			if (other.m_name != null)
+				return false;
+		} else if (!m_name.equals(other.m_name))
+			return false;
+		return true;
+	}
+
 	private String m_name; 
 	private String m_notifylevel;
 	private String m_networklevel;
@@ -66,6 +91,13 @@ public class Vrf {
 	}
 	public void setSnmpprofile(String snmpprofile) {
 		m_snmpprofile = snmpprofile;
+	}
+
+	@Override
+	public int compareTo(Vrf o) {
+		if (m_networklevel.equals(o.getNetworklevel()))
+			return m_name.compareTo(o.getName());
+		return m_networklevel.compareTo(o.getNetworklevel());
 	}
 		
 }
