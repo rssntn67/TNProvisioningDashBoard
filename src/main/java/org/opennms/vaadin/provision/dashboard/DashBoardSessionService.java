@@ -148,7 +148,7 @@ public class DashBoardSessionService implements Serializable {
 		List<String> domains = m_service.getDnsDomainContainer().getDomains();
 		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
 		
-		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN);
+		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
     	m_primaryipcollection.clear();
@@ -294,7 +294,7 @@ public class DashBoardSessionService implements Serializable {
 		List<String> domains = m_service.getDnsDomainContainer().getDomains();
 		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
 		
-		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN);
+		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
     	m_primaryipcollection.clear();
@@ -442,27 +442,31 @@ public class DashBoardSessionService implements Serializable {
 	}
 	
 	public void deleteNode(TrentinoNetworkNode tnnode) {
-		logger.info("Deleting node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
+		logger.info("Deleting TN node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
 		if (tnnode.getPrimary() != null)
-			m_onmsDao.deletePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
+			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		if (tnnode.getSecondary() != null) {
 			for (String iface: tnnode.getSecondary())
-				m_onmsDao.deletePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyName(iface));
+				m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(iface));
 		}
-		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN, tnnode.getForeignId());
+		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
 		m_primaryipcollection.remove(tnnode.getPrimary());
 	}
 
 	public void deleteNode(MediaGatewayNode tnnode) {
-		logger.info("Deleting node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
+		logger.info("Deleting media gateway node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
 		if (tnnode.getPrimary() != null)
-			m_onmsDao.deletePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
-		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN, tnnode.getForeignId());
+			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
+		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
 		m_primaryipcollection.remove(tnnode.getPrimary());
+		RequisitionNode mediagateway = getMediaGateway();
+		if (mediagateway == null)
+			return;
+		m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(), tnnode.getPrimary());
 	}
 
 	public void deleteInterface(String foreignSource,String foreignId, String ipaddr) {
@@ -557,6 +561,23 @@ public class DashBoardSessionService implements Serializable {
 		return false;
 	}
 
+	public RequisitionNode getMediaGateway() {
+		for (RequisitionNode reqnode: m_onmsDao.getRequisition(DashBoardUtils.SIVN_REQU_NAME).getNodes()) {
+			if (reqnode.getNodeLabel().equals("mediagateway")) {
+				return reqnode;
+			}
+		}
+		return null;
+	}
+	
+	public void createMediaGateway() {
+		RequisitionNode requisitionNode = new RequisitionNode();
+		requisitionNode.setForeignId("mediagateway");
+		requisitionNode.setNodeLabel("mediagateway");
+		requisitionNode.putCategory(new RequisitionCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY));
+		m_onmsDao.addRequisitionNode(DashBoardUtils.SIVN_REQU_NAME, requisitionNode);
+	}
+
 	public void addMediaGatewayNode(MediaGatewayNode node) throws SQLException {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
@@ -575,7 +596,6 @@ public class DashBoardSessionService implements Serializable {
 		iface.setIpAddr(node.getPrimary());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
-		iface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
 		iface.setDescr(node.getDescr());
 		
 		requisitionNode.putInterface(iface);
@@ -596,14 +616,24 @@ public class DashBoardSessionService implements Serializable {
 		}
 		m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
-		m_onmsDao.addRequisitionNode(DashBoardUtils.TN, requisitionNode);
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
 		logger.info("Adding policy for interface: " + node.getPrimary());
-		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
 		
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		m_primaryipcollection.add(node.getPrimary());
 		node.clear();
+		RequisitionNode mediagateway = getMediaGateway();
+		if (mediagateway == null )
+			return;
+		RequisitionInterface mgiface = new RequisitionInterface();
+		mgiface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+		mgiface.setIpAddr(node.getPrimary());
+		mgiface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
+		mgiface.setDescr(node.getDescr());
+		
+		m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
 			
 	}
 
@@ -631,11 +661,25 @@ public class DashBoardSessionService implements Serializable {
 				&& node.getBackupProfile() != null)
 			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
 		BackupProfile bck = m_service.getBackupProfileContainer().get(node.getBackupProfile());
-		updateNode(DashBoardUtils.TN, node.getForeignId(), node.getPrimary(),
+		updateNode(DashBoardUtils.TN_REQU_NAME, node.getForeignId(), node.getPrimary(),
 				node.getDescr(), update, node.getInterfToDel(),
 				node.getInterfToAdd(), node.getCategoriesToDel(),
 				node.getCategoriesToAdd(),bck);
 		node.clear();
+		RequisitionNode mediagateway = getMediaGateway();
+		if (mediagateway == null) {
+			return;
+		}
+		for (String ipaddr : node.getInterfToDel()) 
+			m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SI_REQU_NAME, mediagateway.getForeignId(), ipaddr);
+		for (String ipaddr : node.getInterfToAdd()) {
+			RequisitionInterface mgiface = new RequisitionInterface();
+			mgiface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+			mgiface.setIpAddr(ipaddr);
+			mgiface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
+			mgiface.setDescr(node.getDescr());
+			m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
+		}		
 	}
 
 	public void addTNNode(TrentinoNetworkNode node) throws SQLException {
@@ -682,9 +726,9 @@ public class DashBoardSessionService implements Serializable {
 		}
 		m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
-		m_onmsDao.addRequisitionNode(DashBoardUtils.TN, requisitionNode);
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
 		logger.info("Adding policy for interface: " + node.getPrimary());
-		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
 		
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
@@ -719,7 +763,7 @@ public class DashBoardSessionService implements Serializable {
 				&& node.getBackupProfile() != null)
 			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
 		BackupProfile bck = m_service.getBackupProfileContainer().get(node.getBackupProfile());
-		updateNode(DashBoardUtils.TN, node.getForeignId(), node.getPrimary(),
+		updateNode(DashBoardUtils.TN_REQU_NAME, node.getForeignId(), node.getPrimary(),
 				node.getDescr(), update, node.getInterfToDel(),
 				node.getInterfToAdd(), node.getCategoriesToDel(),
 				node.getCategoriesToAdd(),bck);
@@ -889,12 +933,12 @@ public class DashBoardSessionService implements Serializable {
 		m_onmsDao.setSnmpInfo(node.getIpaddr(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpprofile()).getSnmpInfo());
 			
 		logger.info("Adding node with foreignId: " + foreignId + " primary: " + node.getIpaddr());
-		m_onmsDao.addRequisitionNode(DashBoardUtils.TN, requisitionNode);
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
 		logger.info("Adding policy for interface: " + node.getIpaddr());
-		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(node.getIpaddr()));
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getIpaddr()));
 		for (String ip: secondary) {
 			logger.info("Adding policy for interface: " + ip);
-			m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN, DashBoardUtils.getPolicyWrapper(ip));			
+			m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(ip));			
 		}
 
 	}

@@ -133,7 +133,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
 				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
 					logger.info("No Requisition Found: "+e.getLocalizedMessage());
-					getService().createRequisition(DashBoardUtils.TN);
+					getService().createRequisition(DashBoardUtils.TN_REQU_NAME);
 					load();
 					return;
 				}
@@ -424,7 +424,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				@Override public void buttonClick(ClickEvent event) {
 					try {
 						String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
-						getService().deleteInterface(DashBoardUtils.TN, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
+						getService().deleteInterface(DashBoardUtils.TN_REQU_NAME, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
 								ip);
 			        source.getContainerDataSource().removeItem(itemId);
 			        Set<String> secondary = new HashSet<String>();
@@ -461,7 +461,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					try {
 						TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 						if (node.getForeignId() != null) {
-							getService().addSecondaryInterface(DashBoardUtils.TN,m_editorFields.getItemDataSource().getBean().getForeignId(),
+							getService().addSecondaryInterface(DashBoardUtils.TN_REQU_NAME,m_editorFields.getItemDataSource().getBean().getForeignId(),
 									ip);
 							IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 							Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
@@ -613,12 +613,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				try {
-					getService().sync(DashBoardUtils.TN);
-					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN);
-					Notification.show("Sync " + DashBoardUtils.TN, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+					getService().sync(DashBoardUtils.TN_REQU_NAME);
+					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN_REQU_NAME);
+					Notification.show("Sync " + DashBoardUtils.TN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
-					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN + " " + e.getLocalizedMessage());
-					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
+					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
 				
 			}
@@ -736,7 +736,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				m_descrComboBox.addItem(node.getDescr());
 			
 			m_secondaryIpComboBox.removeAllItems();
-			for (String ip: getService().getIpAddresses(DashBoardUtils.TN,node.getNodeLabel()) ) {
+			for (String ip: getService().getIpAddresses(DashBoardUtils.TN_REQU_NAME,node.getNodeLabel()) ) {
 				if (ip.equals(node.getPrimary()))
 					continue;
 				boolean add=true;

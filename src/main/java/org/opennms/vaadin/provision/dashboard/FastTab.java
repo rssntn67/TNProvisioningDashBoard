@@ -352,9 +352,9 @@ public class FastTab extends DashboardTab implements ClickListener {
 				checkfastlinks(getService().getFastServiceLinkContainer().getFastServiceLinks());
 				logger.info("run: loaded table fastservicelink");
 				
-				logger.info("run: loading requisition: " + DashBoardUtils.TN);
-				checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN));
-				logger.info("run: loaded requisition: " + DashBoardUtils.TN);
+				logger.info("run: loading requisition: " + DashBoardUtils.TN_REQU_NAME);
+				checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN_REQU_NAME));
+				logger.info("run: loaded requisition: " + DashBoardUtils.TN_REQU_NAME);
 
 			} catch (final ProvisionDashboardException e) {
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
@@ -1053,7 +1053,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			
 			if (iptoAdd.isEmpty() && ipToDel.isEmpty())
 				return;
-			getService().updateNode(DashBoardUtils.TN,rnode.getForeignId(),primary,"provided by FAST",
+			getService().updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),primary,"provided by FAST",
 					new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),null);
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 
@@ -1217,7 +1217,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			}
 			if (update.isEmpty() && categorytoAdd.isEmpty() && categoryToDel.isEmpty() && iptoAdd.isEmpty() && ipToDel.isEmpty())
 				return;
-			getService().updateNode(DashBoardUtils.TN,rnode.getForeignId(),refdevice.getIpaddr(),"provided by FAST",update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,bck);
+			getService().updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),refdevice.getIpaddr(),"provided by FAST",update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,bck);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(refdevice.getHostname());
 			jloe.setIpaddr(refdevice.getIpaddr());
@@ -1264,7 +1264,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		}
 		
 		private void deleteNode(String foreignId, RequisitionNode rnode) {
-			getService().deleteNode(DashBoardUtils.TN, rnode);
+			getService().deleteNode(DashBoardUtils.TN_REQU_NAME, rnode);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(foreignId);
 			jloe.setIpaddr("NA");
@@ -1284,7 +1284,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		}
 		
 		private void deleteInterface(String foreignId, RequisitionNode rnode, String ipaddr) {
-			getService().deleteInterface(DashBoardUtils.TN, foreignId, ipaddr);
+			getService().deleteInterface(DashBoardUtils.TN_REQU_NAME, foreignId, ipaddr);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(foreignId);
 			jloe.setIpaddr(ipaddr);

@@ -147,7 +147,9 @@ public class DashBoardUtils {
 		return null;
 	}
 
-	public static final String TN = "TrentinoNetwork";
+	public static final String TN_REQU_NAME = "TrentinoNetwork";
+	public static final String SI_REQU_NAME = "SI";
+	public static final String SIVN_REQU_NAME = "SIVirtualNodes";
 
 	public static final String MEDIAGATEWAY_CATEGORY = "MediaGateway";
 	public static final String MEDIAGATEWAY_NETWORK_CATEGORY = "Accesso";

@@ -106,15 +106,29 @@ public class MediaGatewayTab extends DashboardTab {
 	public void load() {
 		if (!loaded) {
 			try {
+				if (getService().getMediaGateway() == null ) {
+					getService().createMediaGateway();
+				}
+			} catch (UniformInterfaceException e) {
+				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
+				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
+					logger.info("No Requisition Found: "+e.getLocalizedMessage());
+					getService().createRequisition(DashBoardUtils.SIVN_REQU_NAME);
+					load();
+					return;
+				}
+			}
+			
+			try {
 				m_requisitionContainer = getService().getMediaGatewayContainer();
 				m_requisitionTable.setContainerDataSource(m_requisitionContainer);
 				layout();
 				loaded=true;
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
-				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
 					logger.info("No Requisition Found: "+e.getLocalizedMessage());
-					getService().createRequisition(DashBoardUtils.TN);
+					getService().createRequisition(DashBoardUtils.TN_REQU_NAME);
 					load();
 					return;
 				}
@@ -383,12 +397,12 @@ public class MediaGatewayTab extends DashboardTab {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				try {
-					getService().sync(DashBoardUtils.TN);
-					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN);
-					Notification.show("Sync " + DashBoardUtils.TN, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+					getService().sync(DashBoardUtils.TN_REQU_NAME);
+					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN_REQU_NAME);
+					Notification.show("Sync " + DashBoardUtils.TN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
-					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN + " " + e.getLocalizedMessage());
-					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
+					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
 				
 			}
