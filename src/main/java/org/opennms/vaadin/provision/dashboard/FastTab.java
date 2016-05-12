@@ -674,7 +674,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
 						jloe.setJobid(job.getJobid());
-						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Backup Profile: " + device.getSnmpprofile());
+						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Backup Profile: " + device.getBackupprofile());
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
 						logger.info("Skipping service device. Cause: Invalid Backup Profile. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));

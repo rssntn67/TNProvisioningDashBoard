@@ -707,19 +707,19 @@ public class TrentinoNetworkTab extends DashboardTab {
 		Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
 		if (!duplicatednodeLabels.isEmpty()) {
 			logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
-			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicatednodeLabels.toArray()), Type.WARNING_MESSAGE);
+			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicatednodeLabels.toArray()), Type.ERROR_MESSAGE);
 		}
 
 		Set<String> duplicatedForeignIds= getService().checkUniqueForeignId();
 		if (!duplicatedForeignIds.isEmpty()) {
 			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicatedForeignIds.toArray()));
-			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.WARNING_MESSAGE);
+			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.ERROR_MESSAGE);
 		}
 
 		Set<String> duplicatedPrimaries= getService().checkUniquePrimary();
 		if (!duplicatedPrimaries.isEmpty()) {
 			logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
-			Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.WARNING_MESSAGE);
+			Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.ERROR_MESSAGE);
 		}
 	}
 
