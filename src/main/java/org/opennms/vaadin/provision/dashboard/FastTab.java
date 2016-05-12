@@ -105,9 +105,35 @@ public class FastTab extends DashboardTab implements ClickListener {
 		if (event.getButton() == m_fast) {
 			m_logTable.setVisible(false);
 			m_logTable.setContainerDataSource(new BeanItemContainer<JobLogEntry>(JobLogEntry.class) );
-	        UI.getCurrent().setPollInterval(2000);
-	        	        
+	        
+			int jobid = m_jobcontainer.getLastJobId().getValue();
+			logger.info ("found last job with id: " + jobid);
+			
+	        Job job = new Job();
+			job.setUsername(getService().getUser());
+			job.setJobdescr("Fast sync: ");
+			job.setJobstatus(JobStatus.RUNNING);
+			job.setJobstart(new Date());
+			
+			try {
+				commitJob(job);
+			} catch (SQLException e) {
+				logger.warning("failed creating job: " + e.getLocalizedMessage());
+		        Notification.show("Fast Integration - Status: Cannot Create Job", "Ask Administrator", Type.ERROR_MESSAGE);
+		        return;
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			int curjobid = m_jobcontainer.getLastJobId().getValue();
+			logger.info ("created job with id: " + curjobid);
+			job.setJobid(curjobid);
 	        FastIntegrationRunnable runnable = new FastIntegrationRunnable();
+			runnable.setJob(job);
+	        UI.getCurrent().setPollInterval(2000);
 	        Thread thread = new Thread(runnable);
 	        thread.start();		
 	        
@@ -115,16 +141,26 @@ public class FastTab extends DashboardTab implements ClickListener {
 	        Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);
 		}
 	}
-
+	
+	public void commitJob(Job job) throws SQLException {
+		if (job.getJobid() == null)
+			m_jobcontainer.add(job);
+		else
+			m_jobcontainer.save(new RowId(new Object[]{job.getJobid()}), job);
+		m_jobcontainer.commit();
+		
+	}
+	
 	abstract class FastTabAbstractRunnable {
 		double current = 0.0;
-	    Job job = new Job();
+	    Job m_job;
 		BeanItemContainer<JobLogEntry> m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
 
+		public void setJob(Job job) {
+			m_job = job;
+		}
+		
 		public void startJob() {
-			Integer jobId = commitJob(job);
-			logger.info ("created job with id: " + jobId);
-			job.setJobid(jobId);
 			UI.getCurrent().access(new Runnable() {
 				@Override
 				public void run() {
@@ -140,7 +176,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 		}
 		
 		public void endJob() {
-			commitJob(job);
 			UI.getCurrent().access(new Runnable() {
 
 				@Override
@@ -159,49 +194,9 @@ public class FastTab extends DashboardTab implements ClickListener {
 			});
 
 		}
-		
-		public void endNotStartedJob() {
-			UI.getCurrent().access(new Runnable() {
-
-				@Override
-				public void run() {
-
-					m_progress.setValue(new Float(0.0));
-					m_progress.setEnabled(false);
-					m_progress.setVisible(false);
-
-					m_fast.setEnabled(true);
-					m_panel.setCaption("Fast Integration - Status: Ready");
-
-					Notification.show("Cannot start job", "Ask Administrator", Type.ERROR_MESSAGE);
-					// Stop polling
-					UI.getCurrent().setPollInterval(-1);
-				}
-			});
-
-		}
-		
-		public int commitJob(Job job) {
-			if (job.getJobid() == null)
-				m_jobcontainer.add(job);
-			else
-				m_jobcontainer.save(new RowId(new Object[]{job.getJobid()}), job);
-			try {
-				m_jobcontainer.commit();;
-			} catch (UnsupportedOperationException e) {
-				e.printStackTrace();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} catch (java.lang.IllegalStateException e) {
-				e.printStackTrace();
-			}
-			
-			return m_jobcontainer.getLastJobId().getValue();
-
-		}
-		
+				
 		public void log(JobLogEntry jLogE) {
-			jLogE.setJobid(job.getJobid());
+			jLogE.setJobid(m_job.getJobid());
 			m_logcontainer.addBean(jLogE);
 		}
 
@@ -294,7 +289,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 	}
 
-	class FastIntegrationRunnable  extends FastTabAbstractRunnable implements Runnable{
+	class FastIntegrationRunnable  extends FastTabAbstractRunnable implements Runnable {
 
 		Map<String, FastServiceLink>           m_fastServiceLinkMap = new HashMap<String, FastServiceLink>();
 		
@@ -316,19 +311,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		@Override
 		public void run() {
-			job.setUsername(getService().getUser());
-			job.setJobdescr("Fast sync: ");
-			job.setJobstatus(JobStatus.RUNNING);
-			job.setJobstart(new Date());
-			try {
-				logger.info("run:creating job in jobs table");
-				startJob();
-				logger.info("run: created job in jobs table");
-			} catch (final Exception e) {
-				logger.log(Level.SEVERE,"Cannot create job", e);
-				endNotStartedJob();
-				return;
-			}
+			startJob();
 
 			try {
 				logger.info("run: loading table vrf");
@@ -357,41 +340,41 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 			} catch (final ProvisionDashboardException e) {
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
-				job.setJobstatus(JobStatus.FAILED);
-				job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+				m_job.setJobstatus(JobStatus.FAILED);
+				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			} catch (final Exception e) {
 				logger.log(Level.WARNING,"Failed init check fast integration", e);
-				job.setJobstatus(JobStatus.FAILED);
-				job.setJobdescr("FAST sync: Failed init check Fast. Error: " + e.getMessage());
+				m_job.setJobstatus(JobStatus.FAILED);
+				m_job.setJobdescr("FAST sync: Failed init check Fast. Error: " + e.getMessage());
 			}
 
 			try {
-				if (job.getJobstatus() == JobStatus.RUNNING) {
+				if (m_job.getJobstatus() == JobStatus.RUNNING) {
 					logger.info("run: sync Fast devices with Requisition");
 					sync();
 					logger.info("run: sync Fast devices with Requisition");
 				}
-				job.setJobstatus(JobStatus.SUCCESS);
-				job.setJobdescr("FAST sync: Done");
+				m_job.setJobstatus(JobStatus.SUCCESS);
+				m_job.setJobdescr("FAST sync: Done");
 			} catch (final ProvisionDashboardException e) {
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
-				job.setJobstatus(JobStatus.FAILED);
-				job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+				m_job.setJobstatus(JobStatus.FAILED);
+				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			} catch (final Exception e) {
 				logger.log(Level.SEVERE,"Failed syncing Fast devices with Requisition", e);
-				job.setJobstatus(JobStatus.FAILED);
-				job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+				m_job.setJobstatus(JobStatus.FAILED);
+				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			}
 			
-			job.setJobend(new Date());
+			endJob();
+			m_job.setJobend(new Date());
 
 			try {
 				logger.info("ending job in jobs table");
-				endJob();
+				commitJob(m_job);
 				logger.info("run: ended job in jobs table");
 			} catch (final Exception e) {
 				logger.log(Level.WARNING,"Cannot end job in job table", e);
-				endNotStartedJob();
 			}
 
 		}
@@ -505,7 +488,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(rnode.getForeignId());
 					jloe.setIpaddr("NA");
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: Duplicated Foreign Id in Requisition");
 					jloe.setNote(getNote(rnode));
 					logs.add(jloe);
@@ -521,7 +504,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(rnode.getForeignId());
 				jloe.setIpaddr("NA");
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: Duplicated Foreign Id in Requisition");
 				jloe.setNote(getNote(rnode));
 				logs.add(jloe);
@@ -533,7 +516,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						final JobLogEntry jloe = new JobLogEntry();
 						jloe.setHostname(rnode.getForeignId());
 						jloe.setIpaddr("NA");
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: Null Ip Address in Requisition");
 						jloe.setNote(getNote(rnode) + getNote(riface));
 						logs.add(jloe);
@@ -543,7 +526,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						final JobLogEntry jloe = new JobLogEntry();
 						jloe.setHostname(rnode.getForeignId());
 						jloe.setIpaddr(riface.getIpAddr());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: Invalid Ip Address in Requisition");
 						jloe.setNote(getNote(rnode) + getNote(riface));
 						logs.add(jloe);
@@ -554,7 +537,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						final JobLogEntry jloe = new JobLogEntry();
 						jloe.setHostname(rnode.getForeignId());
 						jloe.setIpaddr(riface.getIpAddr());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: Duplicated Ip Address in Requisition");
 						jloe.setNote("ForeignIds found: " + m_onmsIpForeignIdMap.get(riface.getIpAddr()) + getNote(rnode) + getNote(riface));
 						logs.add(jloe);
@@ -572,7 +555,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(foreignId);
 				jloe.setIpaddr(dupipaddr);
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: Duplicated Ip Address in Requisition");
 				jloe.setNote("ForeignIds found: " + foreignId);
 				logs.add(jloe);
@@ -603,7 +586,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Ip Address");
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -613,7 +596,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Hostname");
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -623,7 +606,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Null Notify Category");
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -633,7 +616,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Notify Category: " + device.getNotifyCategory());
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -643,7 +626,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Null Snmp Profile");
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -653,7 +636,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Snmp Profile: " + device.getSnmpprofile());
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -663,7 +646,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Null Backup Profile");
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -673,7 +656,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 						jloe.setHostname(device.getHostname());
 						jloe.setIpaddr(device.getIpaddr());
 						jloe.setOrderCode(device.getOrderCode());
-						jloe.setJobid(job.getJobid());
+						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: skipping FAST device. Cause: Invalid Backup Profile: " + device.getBackupprofile());
 						jloe.setNote(getNote(device));
 						logs.add(jloe);
@@ -700,7 +683,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname("NA");
 					jloe.setIpaddr("NA");
 					jloe.setOrderCode(device.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service device. Cause: null hostname and null ip address");
 					jloe.setNote(getNote(device));
 					logs.add(jloe);
@@ -710,7 +693,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(device.getHostname());
 					jloe.setIpaddr("NA");
 					jloe.setOrderCode(device.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service device. Cause: null ip address");
 					jloe.setNote(getNote(device));
 					logs.add(jloe);
@@ -720,7 +703,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname("NA");
 					jloe.setIpaddr(device.getIpaddr());
 					jloe.setOrderCode(device.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service device. Cause: null hostname");
 					jloe.setNote(getNote(device));
 					logs.add(jloe);
@@ -744,7 +727,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 							jloe.setHostname(hostname);
 							jloe.setIpaddr(ipaddr);
 							jloe.setOrderCode(device.getOrderCode());
-							jloe.setJobid(job.getJobid());
+							jloe.setJobid(m_job.getJobid());
 							jloe.setDescription("FAST sync: Same ip found on different hostnames");
 							jloe.setNote("hostnames:" + hostnames + getNote(device));
 							logs.add(jloe);
@@ -774,7 +757,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(link.getDeliveryDeviceClientSide());
 					jloe.setIpaddr("NA");
 					jloe.setOrderCode("NA");
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service link. Cause: null order_code");
 					jloe.setNote(getNote(link));
 					logs.add(jloe);
@@ -786,7 +769,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(link.getDeliveryDeviceClientSide());
 					jloe.setIpaddr("NA");
 					jloe.setOrderCode(link.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service link. Cause: null Vrf");
 					jloe.setNote(getNote(link));
 					logs.add(jloe);
@@ -798,7 +781,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(link.getDeliveryDeviceClientSide());
 					jloe.setIpaddr("NA");
 					jloe.setOrderCode(link.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service link. Cause: invalid Vrf");
 					jloe.setNote(getNote(link));
 					logs.add(jloe);
@@ -811,7 +794,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(link.getDeliveryDeviceClientSide());
 					jloe.setIpaddr("NA");
 					jloe.setOrderCode(link.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service link. Cause: duplicated order_code");
 					jloe.setNote(getNote(link));
 					logs.add(jloe);
@@ -828,7 +811,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				jloe.setHostname(link.getDeliveryDeviceClientSide());
 				jloe.setIpaddr("NA");
 				jloe.setOrderCode(link.getOrderCode());
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: skipping service link. Cause: duplicated order_code");
 				jloe.setNote(getNote(link));
 				logs.add(jloe);
@@ -856,7 +839,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(hostname);
 					jloe.setIpaddr(device.getIpaddr());
 					jloe.setOrderCode(device.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service device. Cause: duplicated foreign id in requisition");
 					jloe.setNote("Hostname correspond to a duplicated foreignid: " + hostname + getNote(device));
 					logger.info("skipping service device. Cause: duplicated foreignid in requisition: " + hostname + getNote(device));
@@ -889,7 +872,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 					jloe.setHostname(device.getHostname());
 					jloe.setIpaddr(device.getIpaddr());
 					jloe.setOrderCode(device.getOrderCode());
-					jloe.setJobid(job.getJobid());
+					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service device. Cause: duplicated ipaddr in requisition");
 					jloe.setNote(getNote(device) + " Duplicated ips: " + ipaddr);
 					logger.info("skipping service device. Cause: duplicated ipaddr in requisition " + getNote(device) + " Duplicated ips: " + ipaddr);
@@ -919,7 +902,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				jloe.setHostname(device.getHostname());
 				jloe.setIpaddr(device.getIpaddr());
 				jloe.setOrderCode(device.getOrderCode());
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: skipping service device. Cause: Mismatch hostname/foreignIds");
 				jloe.setNote("hostname/foreignIds" + hostname + "/"+ foreignIds + getNote(device)  );
 				logger.info("skipping service device. Cause: Mismatch hostname/foreignIds" + hostname + "/"
@@ -948,7 +931,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				jloe.setHostname(device.getHostname());
 				jloe.setIpaddr(device.getIpaddr());
 				jloe.setOrderCode(device.getOrderCode());
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: skipping add service device. Cause: No Valid ref device for order_code");
 				jloe.setNote(getNote(device));
 				logger.info("skipping service add device. Cause: No Valid ref device for order_code " + getNote(device));
@@ -994,7 +977,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				jloe.setHostname(device.getHostname());
 				jloe.setIpaddr(device.getIpaddr());
 				jloe.setOrderCode(device.getOrderCode());
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: added service device.");
 				jloe.setNote(getNote(device));
 				logs.add(jloe);
@@ -1050,7 +1033,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				jloe.setHostname(hostname);
 				jloe.setIpaddr("NA");
 				jloe.setOrderCode("NA");
-				jloe.setJobid(job.getJobid());
+				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: changed Fast Ip.");
 				jloe.setNote("Updates: " + ipaddresses + rnode);
 			
@@ -1109,7 +1092,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			jloe.setHostname(refdevice.getHostname());
 			jloe.setIpaddr(refdevice.getIpaddr());
 			jloe.setOrderCode(refdevice.getOrderCode());
-			jloe.setJobid(job.getJobid());
+			jloe.setJobid(m_job.getJobid());
 			jloe.setDescription("FAST sync: updated service device.");
 			jloe.setNote("Updates:" + refdevice);
 			
@@ -1156,7 +1139,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			jloe.setHostname(foreignId);
 			jloe.setIpaddr("NA");
 			jloe.setOrderCode("NA");
-			jloe.setJobid(job.getJobid());
+			jloe.setJobid(m_job.getJobid());
 			jloe.setDescription("FAST sync: node deleted");
 			jloe.setNote(getNote(rnode));
 			logger.info("delete node" + getNote(rnode));
@@ -1176,7 +1159,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			jloe.setHostname(foreignId);
 			jloe.setIpaddr(ipaddr);
 			jloe.setOrderCode("NA");
-			jloe.setJobid(job.getJobid());
+			jloe.setJobid(m_job.getJobid());
 			jloe.setDescription("FAST sync: interface deleted");
 			jloe.setNote(getNote(rnode));
 			logger.info("delete interface node" + getNote(rnode));
