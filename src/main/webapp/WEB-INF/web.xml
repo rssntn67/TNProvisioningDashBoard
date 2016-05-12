@@ -15,8 +15,23 @@
             <param-value>org.opennms.vaadin.provision.dashboard.DashboardUI</param-value>
         </init-param>
     </servlet>
+    <servlet>
+		<servlet-name>FAST</servlet-name>
+		<servlet-class>
+			com.vaadin.server.VaadinServlet
+		</servlet-class>
+		<init-param>
+		<param-name>UI</param-name>
+		<param-value>org.opennms.vaadin.provision.dashboard.FastUI</param-value>
+	</init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FAST</servlet-name>
+        <url-pattern>/FAST/*</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>TNPD</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
+    
 </web-app>
