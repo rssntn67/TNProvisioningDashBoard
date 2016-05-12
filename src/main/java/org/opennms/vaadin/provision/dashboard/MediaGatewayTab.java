@@ -397,6 +397,15 @@ public class MediaGatewayTab extends DashboardTab {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				try {
+					getService().sync(DashBoardUtils.SIVN_REQU_NAME);
+					logger.info("Sync succeed foreing source: " + DashBoardUtils.SIVN_REQU_NAME);
+					Notification.show("Sync " + DashBoardUtils.SIVN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+				} catch (Exception e) {
+					logger.warning("Sync Failed foreign source: " + DashBoardUtils.SIVN_REQU_NAME + " " + e.getLocalizedMessage());
+					Notification.show("Sync Failed foreign source" + DashBoardUtils.SIVN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+				}
+				
+				try {
 					getService().sync(DashBoardUtils.TN_REQU_NAME);
 					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN_REQU_NAME);
 					Notification.show("Sync " + DashBoardUtils.TN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);

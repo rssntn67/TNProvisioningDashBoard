@@ -40,6 +40,7 @@ import org.opennms.vaadin.provision.dao.VrfDao;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
+import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
@@ -637,6 +638,14 @@ public class DashBoardSessionService implements Serializable {
 			
 	}
 
+	public void addSINode(SistemiInformativiNode node) {
+		
+	}
+	
+	public void updateSINode(SistemiInformativiNode node) {
+		
+	}
+
 	public void updateMediaGatewayNode(MediaGatewayNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 
@@ -770,6 +779,122 @@ public class DashBoardSessionService implements Serializable {
 		node.clear();
 	}
 
+	public boolean updateNonFastNode(RequisitionNode rnode,Set<String> ipaddresses, String primary) {
+		List<String> iptoAdd = new ArrayList<String>();
+		List<String> ipToDel = new ArrayList<String>();
+		for (String ip : ipaddresses) {
+			if (rnode.getInterface(ip) == null)
+				iptoAdd.add(ip);
+		}
+		for (RequisitionInterface riface: rnode.getInterfaces()) {
+			if (riface.getDescr().contains("FAST") && !ipaddresses.contains(riface.getIpAddr()))
+				ipToDel.add(riface.getIpAddr());
+		}
+		
+		if (iptoAdd.isEmpty() && ipToDel.isEmpty())
+			return false;
+		updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),primary,"provided by FAST",
+				new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),null);
+		return true;
+	}
+	
+	public boolean updateFastNode(String nodelabel, FastServiceLink reflink, RequisitionNode rnode, FastServiceDevice refdevice, Vrf vrf, BackupProfile bck,Set<String> ipaddresses ) {
+		Map<String,String> update = new HashMap<String, String>();
+		if (!rnode.getNodeLabel().equals(nodelabel))
+			update.put(DashBoardUtils.LABEL, nodelabel);
+
+		if (refdevice.getCity() != null && !refdevice.getCity().equals(rnode.getCity()))
+			update.put(DashBoardUtils.CITY, refdevice.getCity());
+		else if (refdevice.getCity() == null && rnode.getCity() != null)
+			update.put(DashBoardUtils.CITY, "");
+
+		StringBuffer address1 = new StringBuffer();
+		if (refdevice.getAddressDescr() != null)
+			address1.append(refdevice.getAddressDescr());
+		if (refdevice.getAddressName() != null) {
+			if (address1.length() > 0)
+				address1.append(" ");
+			address1.append(refdevice.getAddressName());
+		}
+		if (refdevice.getAddressNumber() != null) {
+			if (address1.length() > 0)
+				address1.append(" ");
+			address1.append(refdevice.getAddressNumber());
+		}
+
+		if (address1.length() > 0 && rnode.getAsset("address1") == null)
+			update.put(DashBoardUtils.ADDRESS1, address1.toString());
+		else if (address1.length() > 0 && !address1.toString().equals(rnode.getAsset("address1").getValue()))
+			update.put(DashBoardUtils.ADDRESS1, address1.toString());
+		else if (address1.length() == 0 && rnode.getAsset("address1") != null && rnode.getAsset("address1").getValue() != null && !"".equals(rnode.getAsset("address1").getValue()))
+			update.put(DashBoardUtils.ADDRESS1, "");
+		
+		if (update.containsKey(DashBoardUtils.CITY) || update.containsKey(DashBoardUtils.ADDRESS1))
+			update.put(DashBoardUtils.DESCRIPTION, refdevice.getCity() + " - " + address1.toString());
+		
+		if (reflink.getDeliveryCode() != null && rnode.getAsset("circuitId") == null) {
+			update.put(DashBoardUtils.CIRCUITID, reflink.getDeliveryCode());
+			update.put(DashBoardUtils.BUILDING_SCALAR, reflink.getDeliveryCode());
+		} else if (reflink.getDeliveryCode() != null &&  !reflink.getDeliveryCode().equals(rnode.getAsset("circuitId").getValue())) {
+			update.put(DashBoardUtils.CIRCUITID, reflink.getDeliveryCode());
+			update.put(DashBoardUtils.BUILDING_SCALAR, reflink.getDeliveryCode());
+		} else if (reflink.getDeliveryCode() == null && rnode.getAsset("circuitId") != null && rnode.getAsset("circuitId").getValue() != null && !"".equals(rnode.getAsset("circuitId").getValue()) ) {
+			update.put(DashBoardUtils.CIRCUITID, "");
+			update.put(DashBoardUtils.BUILDING_SCALAR, "");
+		}					
+		if (refdevice.getIstat() != null && reflink.getSiteCode() !=  null && rnode.getAsset("building") == null)
+			update.put(DashBoardUtils.BUILDING, refdevice.getIstat()+"-"+reflink.getSiteCode());
+		else if (refdevice.getIstat() != null && reflink.getSiteCode() !=  null 
+				&& !rnode.getAsset("building").getValue().equals(refdevice.getIstat()+"-"+reflink.getSiteCode()))
+			update.put(DashBoardUtils.BUILDING, refdevice.getIstat()+"-"+reflink.getSiteCode());
+		else if ((refdevice.getIstat() == null || reflink.getSiteCode() ==  null) && rnode.getAsset("building") != null)
+			update.put(DashBoardUtils.BUILDING, "");
+		
+		if (bck != null) 
+			update.put(DashBoardUtils.BACKUP_PROFILE, bck.getName());
+
+		List<String> categorytoAdd = new ArrayList<String>();
+		List<String> categoryToDel = new ArrayList<String>();
+		List<String> all = new ArrayList<String>();
+		
+		if (rnode.getCategory(vrf.getNetworklevel()) == null)
+			categorytoAdd.add(vrf.getNetworklevel());
+		if (rnode.getCategory(vrf.getName()) == null)
+			categorytoAdd.add(vrf.getName());
+		String notiyCategory = vrf.getNotifylevel();
+		if (refdevice.getNotifyCategory() != null && !refdevice.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
+			notiyCategory = refdevice.getNotifyCategory();
+		if (rnode.getCategory(notiyCategory) == null)
+			categorytoAdd.add(notiyCategory);
+		if (rnode.getCategory(vrf.getThresholdlevel()) == null)
+			categorytoAdd.add(vrf.getThresholdlevel());
+		
+		all.add(vrf.getNetworklevel());
+		all.add(vrf.getName());
+		all.add(notiyCategory);
+		all.add(vrf.getThresholdlevel());
+		
+		for (RequisitionCategory category: rnode.getCategories()) {
+			if (!all.contains(category.getName()))
+				categoryToDel.add(category.getName());
+		}
+		
+		List<String> iptoAdd = new ArrayList<String>();
+		List<String> ipToDel = new ArrayList<String>();
+		for (String ip : ipaddresses) {
+			if (rnode.getInterface(ip) == null)
+				iptoAdd.add(ip);
+		}
+		for (RequisitionInterface riface: rnode.getInterfaces()) {
+			if (!ipaddresses.contains(riface.getIpAddr()))
+				ipToDel.add(riface.getIpAddr());
+		}
+		if (update.isEmpty() && categorytoAdd.isEmpty() && categoryToDel.isEmpty() && iptoAdd.isEmpty() && ipToDel.isEmpty())
+			return false;
+		updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),refdevice.getIpaddr(),"provided by FAST",update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,bck);
+		return true;
+	}
+
 	public void updateNode(String foreignSource, String foreignId,
 			String primary, String descr, Map<String, String> update,
 			List<String> interfaceToDel, List<String> interfaceToAdd,
@@ -786,10 +911,13 @@ public class DashBoardSessionService implements Serializable {
 			logger.info("UpdateMap: parent-node-id: " + update.get(DashBoardUtils.PARENT));
 			updatemap.add("parent-foreign-id", update.get(DashBoardUtils.PARENT));
 		}
+		if (update.containsKey(DashBoardUtils.BUILDING_SCALAR))
+			updatemap.add("building", update.get(DashBoardUtils.BUILDING_SCALAR));
 		if (update.containsKey(DashBoardUtils.LABEL))
 			updatemap.add("node-label", update.get(DashBoardUtils.LABEL));
 		if (update.containsKey(DashBoardUtils.CITY))
 			updatemap.add("city", update.get(DashBoardUtils.CITY));
+
 		if (update.containsKey(DashBoardUtils.ADDRESS1))
 			assetsToPut.add(new RequisitionAsset("address1", update
 					.get(DashBoardUtils.ADDRESS1)));
@@ -799,11 +927,51 @@ public class DashBoardSessionService implements Serializable {
 		if (update.containsKey(DashBoardUtils.BUILDING))
 			assetsToPut.add(new RequisitionAsset("building", update
 					.get(DashBoardUtils.BUILDING)));
-		if (update.containsKey(DashBoardUtils.CIRCUITID)) {
-			updatemap.add("building", update.get(DashBoardUtils.CIRCUITID));
+		if (update.containsKey(DashBoardUtils.CIRCUITID))
 			assetsToPut.add(new RequisitionAsset("circuitId", update
 					.get(DashBoardUtils.CIRCUITID)));
-		}
+		if (update.containsKey(DashBoardUtils.LEASEEXPIRES))
+			assetsToPut.add(new RequisitionAsset("leaseExpires", update
+					.get(DashBoardUtils.LEASEEXPIRES)));
+		if (update.containsKey(DashBoardUtils.LEASE))
+			assetsToPut.add(new RequisitionAsset("lease", update
+					.get(DashBoardUtils.LEASE)));
+		if (update.containsKey(DashBoardUtils.VENDORPHONE))
+			assetsToPut.add(new RequisitionAsset("vendorPhone", update
+					.get(DashBoardUtils.VENDORPHONE)));
+		if (update.containsKey(DashBoardUtils.VENDOR))
+			assetsToPut.add(new RequisitionAsset("vendor", update
+					.get(DashBoardUtils.VENDOR)));
+		if (update.containsKey(DashBoardUtils.SLOT))
+			assetsToPut.add(new RequisitionAsset("slot", update
+					.get(DashBoardUtils.SLOT)));
+		if (update.containsKey(DashBoardUtils.RACK))
+			assetsToPut.add(new RequisitionAsset("rack", update
+					.get(DashBoardUtils.RACK)));
+		if (update.containsKey(DashBoardUtils.ROOM))
+			assetsToPut.add(new RequisitionAsset("room", update
+					.get(DashBoardUtils.ROOM)));
+		if (update.containsKey(DashBoardUtils.OPERATINGSYSTEM))
+			assetsToPut.add(new RequisitionAsset("operatingSystem", update
+					.get(DashBoardUtils.OPERATINGSYSTEM)));
+		if (update.containsKey(DashBoardUtils.DATEINSTALLED))
+			assetsToPut.add(new RequisitionAsset("dateInstalled", update
+					.get(DashBoardUtils.DATEINSTALLED)));
+		if (update.containsKey(DashBoardUtils.ASSETNUMBER))
+			assetsToPut.add(new RequisitionAsset("assetNumber", update
+					.get(DashBoardUtils.ASSETNUMBER)));
+		if (update.containsKey(DashBoardUtils.SERIALNUMBER))
+			assetsToPut.add(new RequisitionAsset("serialNumber", update
+					.get(DashBoardUtils.SERIALNUMBER)));
+		if (update.containsKey(DashBoardUtils.CATEGORY))
+			assetsToPut.add(new RequisitionAsset("category", update
+					.get(DashBoardUtils.CATEGORY)));
+		if (update.containsKey(DashBoardUtils.MODELNUMBER))
+			assetsToPut.add(new RequisitionAsset("modelNumber", update
+					.get(DashBoardUtils.MODELNUMBER)));
+		if (update.containsKey(DashBoardUtils.MANUFACTURER))
+			assetsToPut.add(new RequisitionAsset("manufacturer", update
+					.get(DashBoardUtils.MANUFACTURER)));
 
 		if (!updatemap.isEmpty())
 			m_onmsDao

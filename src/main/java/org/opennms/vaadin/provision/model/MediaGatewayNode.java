@@ -147,9 +147,9 @@ public class MediaGatewayNode implements Serializable {
 	public void setNetworkCategory(String networkCategory) {
 		if (networkCategory.equals(m_networkCategory))
 			return;
-		m_categoriesToDel.add(m_networkCategory);
+		m_categoriesToDel.add(new String(m_networkCategory));
 		m_categoriesToAdd.add(networkCategory);
-		
+		m_networkCategory = networkCategory;
 	}
 		
 	public String getVrf() {

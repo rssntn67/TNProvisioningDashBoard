@@ -12,7 +12,8 @@ public class DashBoardUtils {
 	public static final String[] m_network_levels = {
 		"Backbone",
 		"Distribuzione",
-		"Accesso"
+		"Accesso",
+		"LAN"
 	};
 
 	public static final String[] m_notify_levels = {
@@ -27,6 +28,38 @@ public class DashBoardUtils {
 	public static final String[] m_threshold_levels = {
 		"ThresholdWARNING",
 		"ThresholdALERT"
+	};
+
+	public static final String[] m_virtual_levels = {
+		"VmVz",
+		"VmKVM",
+		"Docker",
+		"VmLXC",
+		"VmVMWare"
+	};
+
+	public static final String[] m_physical_levels = {
+		"Proxmox",
+		"Storage",
+		"ESX",
+		"OpenStack",
+		"PDU",
+		"IPMA"
+	};
+
+	public static final String[] m_server_levels = {
+		"VirtualServer",
+		"PhysicalDevice"
+	};	
+	
+	public static final String[] m_server_others = {
+		"Videoconferenza",
+		"VideoconferenzaTerminali",
+		"Videosorveglianza",
+		"Voip",
+		"Sicurezza",
+		"Testbed",
+		"Eworks"
 	};
 
 	public static final String LABEL = "nodeLabel";
@@ -45,13 +78,29 @@ public class DashBoardUtils {
 	public static final String VRF = "vrf";
 	public static final String PARENT = "parent";
 	public static final String VALID = "valid";
-
+	public static final String CITY    = "city";
+	public static final String BUILDING_SCALAR = "building_scalar";
 
 	public static final String DESCRIPTION = "description";
-	public static final String CITY    = "city";
 	public static final String ADDRESS1 = "address1";
 	public static final String BUILDING = "building";
 	public static final String CIRCUITID = "circuitId";
+	
+	public static final String LEASEEXPIRES = "leaseExpires" ;
+	public static final String LEASE = "lease";
+	public static final String VENDORPHONE = "vendorPhone";
+	public static final String VENDOR = "vendor";
+	public static final String SLOT = "slot";
+	public static final String RACK = "rack";
+	public static final String ROOM = "room";
+	public static final String OPERATINGSYSTEM = "operatingSystem";
+	public static final String DATEINSTALLED = "dateInstalled";
+	public static final String ASSETNUMBER = "assetNumber";
+	public static final String SERIALNUMBER = "serialNumber";
+	public static final String CATEGORY = "category";
+	public static final String MODELNUMBER = "modelNumber";
+	public static final String MANUFACTURER = "manufacturer";
+
 
 	public static final String m_fast_default_notify = "Default";
 	
