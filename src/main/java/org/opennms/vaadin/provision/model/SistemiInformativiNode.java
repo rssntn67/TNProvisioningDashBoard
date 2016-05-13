@@ -21,12 +21,12 @@ public class SistemiInformativiNode implements Serializable {
 
 	private List<String> m_categoriesToAdd = new ArrayList<String>();
 	private List<String> m_categoriesToDel = new ArrayList<String>();
-    
 	private List<String> m_interfToAdd = new ArrayList<String>();
 	private List<String> m_interfToDel = new ArrayList<String>();
 
 	private Map<String,Set<String>> m_serviceToAdd = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> m_serviceToDel = new HashMap<String, Set<String>>();
+	// This contains all the ip->service in secondary table but does not contain primary->icmp and primary-snmp
 	private Map<String,Set<String>> m_serviceMap   = new HashMap<String, Set<String>>();
 
 	private String m_label;
@@ -81,8 +81,8 @@ public class SistemiInformativiNode implements Serializable {
 	
 	public void clear() {
 		m_updatemap.clear();
-		m_interfToDel.clear();
 		m_interfToAdd.clear();
+		m_interfToDel.clear();
 		m_categoriesToDel.clear();
 		m_categoriesToAdd.clear();
 		m_serviceToAdd.clear();
@@ -191,14 +191,25 @@ public class SistemiInformativiNode implements Serializable {
 	public String getPrimary() {
 		return m_primary;
 	}
-	
+
 	public void setPrimary(String primary) {
 		if (m_primary != null && m_primary.equals(primary))
 			return;
-		if ( m_primary != null) 
+		if ( m_primary != null && !m_serviceMap.containsKey(m_primary)) 
 			m_interfToDel.add(new String(m_primary));
-
-		m_interfToAdd.add(new String(primary));
+		if (m_primary != null && m_serviceMap.containsKey(m_primary)) {
+			if (!m_serviceToDel.containsKey(m_primary))
+				m_serviceToDel.put(m_primary, new HashSet<String>());
+			m_serviceToDel.get(m_primary).add("ICMP");
+			m_serviceToDel.get(m_primary).add("SNMP");
+		}
+		if (!m_serviceMap.containsKey(primary))
+			m_interfToAdd.add(primary);
+		if (!m_serviceToAdd.containsKey(primary))
+			m_serviceToAdd.put(primary, new HashSet<String>());
+		m_serviceToAdd.get(primary).add("ICMP");
+		m_serviceToAdd.get(primary).add("SNMP");
+		
 		m_primary = primary;
 	}
 		
@@ -519,10 +530,13 @@ public class SistemiInformativiNode implements Serializable {
 	}
 	
 	public void addService(String ip, String service) {
+		if ("ICMP".equals(service) || "SNMP".equals(service))
+				return;
 		if (m_interfToDel.contains(ip))
 			m_interfToDel.remove(ip);
 		if (!m_serviceMap.containsKey(ip)) {
-			m_interfToAdd.add(ip);
+			if (!ip.equals(m_primary))
+				m_interfToAdd.add(ip);
 			m_serviceMap.put(ip, new HashSet<String>());
 		}
 		m_serviceMap.get(ip).add(service);
@@ -533,6 +547,8 @@ public class SistemiInformativiNode implements Serializable {
 	}
 
 	public void delService(String ip, String service) {
+		if ("ICMP".equals(service) || "SNMP".equals(service))
+			return;
 		if (!m_serviceMap.containsKey(ip))
 			return;
 		m_serviceMap.get(ip).remove(service);
@@ -541,13 +557,15 @@ public class SistemiInformativiNode implements Serializable {
 			removeip = true;
 		if (removeip) {
 			m_serviceMap.remove(ip);
-			m_interfToDel.add(ip);
+			if (!ip.equals(m_primary)) {
+				m_serviceToDel.remove(ip);
+				m_interfToDel.add(ip);
+			}
 		} else {
 			if (!m_serviceToDel.containsKey(ip))
 				m_serviceToDel.put(ip, new HashSet<String>());
 			m_serviceToDel.get(ip).add(service);
-		}
-			
+		}			
 	}
 
 }

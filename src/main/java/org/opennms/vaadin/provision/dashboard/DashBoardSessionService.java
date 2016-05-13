@@ -138,7 +138,7 @@ public class DashBoardSessionService implements Serializable {
 		m_user = username;
 	}
 
-	@SuppressWarnings("deprecation")
+	//FIXME
 	public BeanContainer<String, SistemiInformativiNode> getSIContainer() {
 		BeanContainer<String, SistemiInformativiNode> requisitionContainer = new BeanContainer<String, SistemiInformativiNode>(SistemiInformativiNode.class);
 		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
@@ -697,6 +697,8 @@ public class DashBoardSessionService implements Serializable {
 				requisitionNode.putCategory(new RequisitionCategory(node.getServerLevelCategory()[1]));
 		}
 		
+		requisitionNode.putCategory(new RequisitionCategory(DashBoardUtils.TN_REQU_NAME));
+		
 		if (node.getNotifCategory() != null)
 			requisitionNode.putCategory(new RequisitionCategory(node.getNotifCategory()));
 		
@@ -764,8 +766,58 @@ public class DashBoardSessionService implements Serializable {
 		node.clear();
 
 	}
-	
+	//FIXME
 	public void updateSINode(SistemiInformativiNode node) {
+		Map<String, String> update = new HashMap<String, String>();
+		
+		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
+				&& node.getPrimary() != null)
+			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
+		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
+				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
+			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
+		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
+			update.put(DashBoardUtils.CITY, node.getCity());
+		if (node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
+			update.put(DashBoardUtils.ADDRESS1, node.getAddress1());
+		if (node.getUpdatemap().contains(DashBoardUtils.BUILDING))
+			update.put(DashBoardUtils.BUILDING_SCALAR, node.getBuilding());
+		if (node.getUpdatemap().contains(DashBoardUtils.LEASEEXPIRES));
+			update.put(DashBoardUtils.LEASEEXPIRES, node.getLeaseExpires());
+		if (node.getUpdatemap().contains(DashBoardUtils.LEASE))
+			update.put(DashBoardUtils.LEASE, node.getLease());
+		if (node.getUpdatemap().contains(DashBoardUtils.VENDORPHONE))
+			update.put(DashBoardUtils.VENDORPHONE, node.getVendorPhone());
+		if (node.getUpdatemap().contains(DashBoardUtils.VENDOR))
+			update.put(DashBoardUtils.VENDOR, node.getVendor());
+		if (node.getUpdatemap().contains(DashBoardUtils.SLOT))
+			update.put(DashBoardUtils.SLOT, node.getSlot());
+		if (node.getUpdatemap().contains(DashBoardUtils.RACK))
+			update.put(DashBoardUtils.RACK, node.getRack());
+		if (node.getUpdatemap().contains(DashBoardUtils.ROOM))
+			update.put(DashBoardUtils.ROOM, node.getRoom());
+		if (node.getUpdatemap().contains(DashBoardUtils.OPERATINGSYSTEM))
+			update.put(DashBoardUtils.OPERATINGSYSTEM, node.getOperatingSystem());
+		if (node.getUpdatemap().contains(DashBoardUtils.DATEINSTALLED))
+			update.put(DashBoardUtils.DATEINSTALLED, node.getDateInstalled());
+		if (node.getUpdatemap().contains(DashBoardUtils.ASSETNUMBER))
+			update.put(DashBoardUtils.ASSETNUMBER, node.getAssetNumber());
+		if (node.getUpdatemap().contains(DashBoardUtils.SERIALNUMBER))
+			update.put(DashBoardUtils.SERIALNUMBER, node.getSerialNumber());
+		if (node.getUpdatemap().contains(DashBoardUtils.CATEGORY))
+			update.put(DashBoardUtils.CATEGORY, node.getCategory());
+		if (node.getUpdatemap().contains(DashBoardUtils.MODELNUMBER))
+			update.put(DashBoardUtils.MODELNUMBER, node.getModelNumber());
+		if (node.getUpdatemap().contains(DashBoardUtils.MANUFACTURER))
+			update.put(DashBoardUtils.MANUFACTURER, node.getManufacturer());
+		if (node.getUpdatemap().contains(DashBoardUtils.DESCRIPTION))
+			update.put(DashBoardUtils.DESCRIPTION, node.getDescription());
+		
+		updateNode(DashBoardUtils.SI_REQU_NAME, node.getForeignId(), node.getPrimary(),
+				node.getDescr(), update, node.getInterfToDel(),
+				node.getInterfToAdd(), node.getCategoriesToDel(),
+				node.getCategoriesToAdd(),node.getServiceToDel(),node.getServiceToAdd());
+		node.clear();
 		
 	}
 
@@ -1154,9 +1206,10 @@ public class DashBoardSessionService implements Serializable {
 
 	}
 
+	//FIXME
 	public void updateNode(String foreignSource, String foreignId,
 			String primary, String descr, Map<String, String> update,
-			List<String> interfaceToDel, List<String> interfaceToAdd,
+			List<String> interfaceToDel,List<String> interfaceToAdd,
 			List<String> categoriesToDel, List<String> categoriesToAdd, Map<String,Set<String>> serviceToDel, Map<String,Set<String>> serviceToAdd) {
 		
 		if (update.containsKey(DashBoardUtils.SNMP_PROFILE) && primary != null)

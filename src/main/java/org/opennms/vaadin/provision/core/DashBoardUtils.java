@@ -10,9 +10,7 @@ import org.opennms.vaadin.provision.model.BackupProfile;
 public class DashBoardUtils {
 
 	public static final String[] service_list = {
-		"ICMP",
 		"StrafePing",
-		"SNMP",
 		"HTTP",
 		"HTTP-8080",
 		"HTTP-8000",
