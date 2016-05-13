@@ -36,6 +36,10 @@ public class DashboardTabSheet extends CustomComponent implements
     	m_tabsheet.addTab(mtab, "Media Gw", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(mtab).setEnabled(false);
 
+    	SistemiInformativiTab stab=new SistemiInformativiTab(service);
+    	m_tabsheet.addTab(stab, "SI", new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.getTab(stab).setEnabled(false);
+
         VrfTab vrfTab=new VrfTab(service);
     	m_tabsheet.addTab(vrfTab, "Vrf", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(vrfTab).setEnabled(false);

@@ -25,9 +25,9 @@ public class SistemiInformativiNode implements Serializable {
 	private List<String> m_interfToAdd = new ArrayList<String>();
 	private List<String> m_interfToDel = new ArrayList<String>();
 
-	private Map<String,List<String>> m_serviceToAdd = new HashMap<String, List<String>>();
-	private Map<String,List<String>> m_serviceToDel = new HashMap<String, List<String>>();
-	private Map<String,List<String>> m_serviceMap   = new HashMap<String, List<String>>();
+	private Map<String,Set<String>> m_serviceToAdd = new HashMap<String, Set<String>>();
+	private Map<String,Set<String>> m_serviceToDel = new HashMap<String, Set<String>>();
+	private Map<String,Set<String>> m_serviceMap   = new HashMap<String, Set<String>>();
 
 	private String m_label;
 	private String m_descr;
@@ -35,11 +35,11 @@ public class SistemiInformativiNode implements Serializable {
 	private String m_vrf;
 	private String m_primary;
 
-	private String m_serverTypeCategory;
-	private String m_serverSpecCategory;
+	private String[] m_serverLevelCategory;
 	private String m_managedByCategory;
 	private String m_notifCategory;
-	private String m_optionalByCategory;
+	private String m_optionalCategory;
+	private String m_prodCategory;
 
 	private String m_snmpProfile;
 	
@@ -79,6 +79,17 @@ public class SistemiInformativiNode implements Serializable {
 		m_valid=false;
 	}
 	
+	public void clear() {
+		m_updatemap.clear();
+		m_interfToDel.clear();
+		m_interfToAdd.clear();
+		m_categoriesToDel.clear();
+		m_categoriesToAdd.clear();
+		m_serviceToAdd.clear();
+		m_serviceToDel.clear();
+	}
+
+
 	public String getForeignId() {
 		return m_foreignId;
 	}
@@ -199,14 +210,6 @@ public class SistemiInformativiNode implements Serializable {
 		m_valid = valid;
 	}	
 	
-	public void clear() {
-		m_updatemap.clear();
-		m_interfToDel.clear();
-		m_interfToAdd.clear();
-		m_categoriesToDel.clear();
-		m_categoriesToAdd.clear();
-	}
-
 	public Set<String> getUpdatemap() {
 		return m_updatemap;
 	}
@@ -215,15 +218,15 @@ public class SistemiInformativiNode implements Serializable {
 		m_foreignId = foreignId;
 	}
 
-	public Map<String, List<String>> getServiceToAdd() {
+	public Map<String, Set<String>> getServiceToAdd() {
 		return m_serviceToAdd;
 	}
 
-	public Map<String, List<String>> getServiceToDel() {
+	public Map<String, Set<String>> getServiceToDel() {
 		return m_serviceToDel;
 	}
 
-	public Map<String, List<String>> getServiceMap() {
+	public Map<String, Set<String>> getServiceMap() {
 		return m_serviceMap;
 	}
 
@@ -231,12 +234,8 @@ public class SistemiInformativiNode implements Serializable {
 		return m_label;
 	}
 
-	public String getServerTypeCategory() {
-		return m_serverTypeCategory;
-	}
-
-	public String getServerSpecCategory() {
-		return m_serverSpecCategory;
+	public String[] getServerLevelCategory() {
+		return m_serverLevelCategory;
 	}
 
 	public String getManagedByCategory() {
@@ -247,8 +246,8 @@ public class SistemiInformativiNode implements Serializable {
 		return m_notifCategory;
 	}
 
-	public String getOptionalByCategory() {
-		return m_optionalByCategory;
+	public String getOptionalCategory() {
+		return m_optionalCategory;
 	}
 
 	public String getDescription() {
@@ -315,27 +314,65 @@ public class SistemiInformativiNode implements Serializable {
 		return m_manufacturer;
 	}
 
-	public void setServerTypeCategory(String serverTypeCategory) {
-		if (m_serverTypeCategory != null && m_serverTypeCategory.equals(serverTypeCategory) )
-			return;
-		if (m_serverTypeCategory != null)
-			m_categoriesToDel.add(new String(m_serverTypeCategory));
-		if (serverTypeCategory != null)
-			m_categoriesToAdd.add(serverTypeCategory);
-
-		m_serverTypeCategory = serverTypeCategory;
+	public String getProdCategory() {
+		return m_prodCategory;
 	}
 
-	public void setServerSpecCategory(String serverSpecCategory) {
-		if (m_serverSpecCategory != null && m_serverSpecCategory.equals(serverSpecCategory) )
-			return;
-		if (m_serverSpecCategory != null)
-			m_categoriesToDel.add(new String(m_serverSpecCategory));
-		if (serverSpecCategory != null)
-			m_categoriesToAdd.add(serverSpecCategory);
+
+	public void setServerLevelCategory(String[] serverLevelCategory) {
 		
-		m_serverSpecCategory = serverSpecCategory;
+		if (m_serverLevelCategory == null && serverLevelCategory == null)
+			return;
+		
+		if (m_serverLevelCategory != null && serverLevelCategory == null) {
+			if (m_serverLevelCategory[0] != null)
+				m_categoriesToDel.add(new String(m_serverLevelCategory[0]));
+			if (m_serverLevelCategory[1] != null)
+				m_categoriesToDel.add(new String(m_serverLevelCategory[1]));
+			m_serverLevelCategory = serverLevelCategory;
+			return;
+		}
+		
+		if (m_serverLevelCategory == null && serverLevelCategory != null) {
+			if (serverLevelCategory[0] != null)
+				m_categoriesToAdd.add(new String(serverLevelCategory[0]));
+			if (serverLevelCategory[1] != null)
+				m_categoriesToAdd.add(new String(serverLevelCategory[1]));
+			m_serverLevelCategory = serverLevelCategory;
+			return;
+		}
+
+		if (m_serverLevelCategory[0] != null && m_serverLevelCategory[0].equals(serverLevelCategory[0]) && 
+			    m_serverLevelCategory[1] != null && m_serverLevelCategory[1].equals(serverLevelCategory[1])) {
+				return;
+		}
+		
+
+		if (m_serverLevelCategory[0] != null && m_serverLevelCategory[0].equals(serverLevelCategory[0])) {
+			if (m_serverLevelCategory[1] != null)
+				m_categoriesToDel.add(new String(m_serverLevelCategory[1]));
+			if (serverLevelCategory[1] != null)
+				m_categoriesToAdd.add(serverLevelCategory[1]);
+		} else if (m_serverLevelCategory[1] != null && m_serverLevelCategory[1].equals(serverLevelCategory[1])) {
+			if (m_serverLevelCategory[0] != null)
+				m_categoriesToDel.add(new String(m_serverLevelCategory[0]));
+			if (serverLevelCategory[0] != null)
+				m_categoriesToAdd.add(serverLevelCategory[0]);
+		}
+		m_serverLevelCategory = serverLevelCategory;
 	}
+
+	public void setProdCategory(String prodCategory) {
+		if (m_prodCategory != null && m_prodCategory.equals(prodCategory) )
+			return;
+		if (m_prodCategory != null)
+			m_categoriesToDel.add(new String(m_prodCategory));
+		if (prodCategory != null)
+			m_categoriesToAdd.add(prodCategory);
+		
+		m_prodCategory = prodCategory;
+	}
+
 
 	public void setManagedByCategory(String managedByCategory) {
 		if (m_managedByCategory != null && m_managedByCategory.equals(managedByCategory) )
@@ -359,14 +396,14 @@ public class SistemiInformativiNode implements Serializable {
 		m_notifCategory = notifCategory;
 	}
 
-	public void setOptionalByCategory(String optionalByCategory) {
-		if (m_optionalByCategory.equals(optionalByCategory) )
+	public void setOptionalCategory(String optionalCategory) {
+		if (m_optionalCategory.equals(optionalCategory) )
 			return;
-		if (m_optionalByCategory != null)
-			m_categoriesToDel.add(new String(m_optionalByCategory));
-		if (optionalByCategory != null)
-			m_categoriesToAdd.add(optionalByCategory);
-		m_optionalByCategory = optionalByCategory;
+		if (m_optionalCategory != null)
+			m_categoriesToDel.add(new String(m_optionalCategory));
+		if (optionalCategory != null)
+			m_categoriesToAdd.add(optionalCategory);
+		m_optionalCategory = optionalCategory;
 	}
 
 	public void setDescription(String description) {
@@ -480,5 +517,37 @@ public class SistemiInformativiNode implements Serializable {
 		m_updatemap.add(DashBoardUtils.MANUFACTURER);
 		m_manufacturer = manufacturer;
 	}
+	
+	public void addService(String ip, String service) {
+		if (m_interfToDel.contains(ip))
+			m_interfToDel.remove(ip);
+		if (!m_serviceMap.containsKey(ip)) {
+			m_interfToAdd.add(ip);
+			m_serviceMap.put(ip, new HashSet<String>());
+		}
+		m_serviceMap.get(ip).add(service);
 		
+		if (!m_serviceToAdd.containsKey(ip))
+			m_serviceToAdd.put(ip, new HashSet<String>());
+		m_serviceToAdd.get(ip).add(service);
+	}
+
+	public void delService(String ip, String service) {
+		if (!m_serviceMap.containsKey(ip))
+			return;
+		m_serviceMap.get(ip).remove(service);
+		boolean removeip = false;
+		if (m_serviceMap.get(ip).isEmpty()) 
+			removeip = true;
+		if (removeip) {
+			m_serviceMap.remove(ip);
+			m_interfToDel.add(ip);
+		} else {
+			if (!m_serviceToDel.containsKey(ip))
+				m_serviceToDel.put(ip, new HashSet<String>());
+			m_serviceToDel.get(ip).add(service);
+		}
+			
+	}
+
 }

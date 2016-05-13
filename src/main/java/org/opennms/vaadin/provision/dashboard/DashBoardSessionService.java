@@ -137,7 +137,17 @@ public class DashBoardSessionService implements Serializable {
 		logger.info("logged in user: " + username + "@" + url);
 		m_user = username;
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	public BeanContainer<String, SistemiInformativiNode> getSIContainer() {
+		BeanContainer<String, SistemiInformativiNode> requisitionContainer = new BeanContainer<String, SistemiInformativiNode>(SistemiInformativiNode.class);
+		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
+		List<String> domains = m_service.getDnsDomainContainer().getDomains();
+		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
+		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.SI_REQU_NAME);
+		return requisitionContainer;
+	}
+
 	@SuppressWarnings("deprecation")
 	public BeanContainer<String, TrentinoNetworkNode> getTNContainer() {
 		BeanContainer<String, TrentinoNetworkNode> requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
@@ -441,6 +451,11 @@ public class DashBoardSessionService implements Serializable {
 	public void addSecondaryInterface(String foreignSource,String foreignId,String ipaddress) {
 		addSecondaryInterface(foreignSource, foreignId, ipaddress,"Provided by Provision Dashboard");
 	}
+
+	public void deleteNode(SistemiInformativiNode sinode) {
+		logger.info("Deleting SI node with foreignId: " + sinode.getForeignId() + " primary: " + sinode.getPrimary());
+		m_onmsDao.deleteRequisitionNode(DashBoardUtils.SI_REQU_NAME, sinode.getForeignId());
+	}
 	
 	public void deleteNode(TrentinoNetworkNode tnnode) {
 		logger.info("Deleting TN node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
@@ -639,7 +654,115 @@ public class DashBoardSessionService implements Serializable {
 	}
 
 	public void addSINode(SistemiInformativiNode node) {
+		RequisitionNode requisitionNode = new RequisitionNode();
 		
+		requisitionNode.setForeignId(node.getForeignId());
+		
+		requisitionNode.setNodeLabel(node.getNodeLabel());
+				
+		requisitionNode.setCity(node.getCity());
+		requisitionNode.setBuilding(node.getBuilding());
+		
+		RequisitionInterface iface = new RequisitionInterface();
+		iface.setSnmpPrimary(PrimaryType.PRIMARY);
+		iface.setIpAddr(node.getPrimary());
+		iface.setDescr(node.getDescr());
+		Set<String> primaryservices = node.getServiceMap().get(node.getPrimary());
+		if (primaryservices == null ) {
+			primaryservices = new HashSet<String>();
+		} 
+		primaryservices.add("ICMP");
+		primaryservices.add("SNMP");
+		for (String service: primaryservices)
+			iface.putMonitoredService(new RequisitionMonitoredService(service));
+		requisitionNode.putInterface(iface);
+
+		for (String ip : node.getServiceMap().keySet()) {
+			if (ip.equals(node.getPrimary()))
+				continue;
+			RequisitionInterface face = new RequisitionInterface();
+			face.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+			face.setIpAddr(ip);
+			face.setDescr(node.getDescr());
+			for (String service: node.getServiceMap().get(ip)) {
+				face.putMonitoredService(new RequisitionMonitoredService(service));
+			}
+			requisitionNode.putInterface(face);
+		}
+		
+		if (node.getServerLevelCategory() != null) {
+			if (node.getServerLevelCategory()[0] != null)
+				requisitionNode.putCategory(new RequisitionCategory(node.getServerLevelCategory()[0]));
+			if (node.getServerLevelCategory()[1] != null)
+				requisitionNode.putCategory(new RequisitionCategory(node.getServerLevelCategory()[1]));
+		}
+		
+		if (node.getNotifCategory() != null)
+			requisitionNode.putCategory(new RequisitionCategory(node.getNotifCategory()));
+		
+		if (node.getProdCategory() != null)
+			requisitionNode.putCategory(new RequisitionCategory(node.getProdCategory()));
+
+		if (node.getManagedByCategory() != null)
+			requisitionNode.putCategory(new RequisitionCategory(node.getManagedByCategory()));
+
+		if (node.getOptionalCategory() != null)
+			requisitionNode.putCategory(new RequisitionCategory(node.getOptionalCategory()));
+		
+		if (node.getAddress1()  != null)
+			requisitionNode.putAsset(new RequisitionAsset("address1", node.getAddress1() ));
+
+		if (node.getLeaseExpires() != null)
+			requisitionNode.putAsset(new RequisitionAsset("leaseExpires", node.getLeaseExpires() ));
+
+		if (node.getLease() != null)
+			requisitionNode.putAsset(new RequisitionAsset("lease", node.getLease() ));
+
+		if (node.getVendorPhone() != null)
+			requisitionNode.putAsset(new RequisitionAsset("vendorPhone", node.getVendorPhone() ));
+
+		if (node.getVendor() != null)
+			requisitionNode.putAsset(new RequisitionAsset("vendor", node.getVendor() ));
+
+		if (node.getSlot() != null)
+			requisitionNode.putAsset(new RequisitionAsset("slot", node.getSlot() ));
+
+		if (node.getRack() != null)
+			requisitionNode.putAsset(new RequisitionAsset("rack", node.getRack() ));
+
+		if (node.getRoom() != null)
+			requisitionNode.putAsset(new RequisitionAsset("room", node.getRoom() ));
+
+		if (node.getOperatingSystem() != null)
+			requisitionNode.putAsset(new RequisitionAsset("operatingSystem", node.getOperatingSystem() ));
+
+		if (node.getDateInstalled() != null)
+			requisitionNode.putAsset(new RequisitionAsset("dateInstalled", node.getDateInstalled() ));
+
+		if (node.getAssetNumber() != null)
+			requisitionNode.putAsset(new RequisitionAsset("assetNumber", node.getAssetNumber() ));
+
+		if (node.getSerialNumber() != null)
+			requisitionNode.putAsset(new RequisitionAsset("serialNumber", node.getSerialNumber() ));
+
+		if (node.getCategory() != null)
+			requisitionNode.putAsset(new RequisitionAsset("category", node.getCategory() ));
+
+		if (node.getModelNumber() != null)
+			requisitionNode.putAsset(new RequisitionAsset("modelNumber", node.getModelNumber() ));
+
+		if (node.getManufacturer() != null)
+			requisitionNode.putAsset(new RequisitionAsset("manufacturer", node.getManufacturer() ));
+
+		if (node.getDescription() != null)
+			requisitionNode.putAsset(new RequisitionAsset("description", node.getDescription() ));
+
+		m_onmsDao.setSnmpInfo(node.getPrimary(), m_service.getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
+		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
+		m_onmsDao.addRequisitionNode(DashBoardUtils.SI_REQU_NAME, requisitionNode);
+		
+		node.clear();
+
 	}
 	
 	public void updateSINode(SistemiInformativiNode node) {
@@ -675,6 +798,7 @@ public class DashBoardSessionService implements Serializable {
 				node.getInterfToAdd(), node.getCategoriesToDel(),
 				node.getCategoriesToAdd(),bck);
 		node.clear();
+		
 		RequisitionNode mediagateway = getMediaGateway();
 		if (mediagateway == null) {
 			return;
@@ -1028,6 +1152,124 @@ public class DashBoardSessionService implements Serializable {
 					foreignId);
 		}
 
+	}
+
+	public void updateNode(String foreignSource, String foreignId,
+			String primary, String descr, Map<String, String> update,
+			List<String> interfaceToDel, List<String> interfaceToAdd,
+			List<String> categoriesToDel, List<String> categoriesToAdd, Map<String,Set<String>> serviceToDel, Map<String,Set<String>> serviceToAdd) {
+		
+		if (update.containsKey(DashBoardUtils.SNMP_PROFILE) && primary != null)
+			m_onmsDao.setSnmpInfo(primary, m_service.getSnmpProfileContainer()
+					.getSnmpProfile(update.get(DashBoardUtils.SNMP_PROFILE))
+					.getSnmpInfo());
+
+		MultivaluedMap<String, String> updatemap = new MultivaluedMapImpl();
+		List<RequisitionAsset> assetsToPut = new ArrayList<RequisitionAsset>();
+
+		if (update.containsKey(DashBoardUtils.PARENT)) {
+			logger.info("UpdateMap: parent-node-id: " + update.get(DashBoardUtils.PARENT));
+			updatemap.add("parent-foreign-id", update.get(DashBoardUtils.PARENT));
+		}
+		if (update.containsKey(DashBoardUtils.BUILDING_SCALAR))
+			updatemap.add("building", update.get(DashBoardUtils.BUILDING_SCALAR));
+		if (update.containsKey(DashBoardUtils.LABEL))
+			updatemap.add("node-label", update.get(DashBoardUtils.LABEL));
+		if (update.containsKey(DashBoardUtils.CITY))
+			updatemap.add("city", update.get(DashBoardUtils.CITY));
+
+		if (update.containsKey(DashBoardUtils.ADDRESS1))
+			assetsToPut.add(new RequisitionAsset("address1", update
+					.get(DashBoardUtils.ADDRESS1)));
+		if (update.containsKey(DashBoardUtils.DESCRIPTION))
+			assetsToPut.add(new RequisitionAsset("description", update
+					.get(DashBoardUtils.DESCRIPTION)));
+		if (update.containsKey(DashBoardUtils.BUILDING))
+			assetsToPut.add(new RequisitionAsset("building", update
+					.get(DashBoardUtils.BUILDING)));
+		if (update.containsKey(DashBoardUtils.CIRCUITID))
+			assetsToPut.add(new RequisitionAsset("circuitId", update
+					.get(DashBoardUtils.CIRCUITID)));
+		if (update.containsKey(DashBoardUtils.LEASEEXPIRES))
+			assetsToPut.add(new RequisitionAsset("leaseExpires", update
+					.get(DashBoardUtils.LEASEEXPIRES)));
+		if (update.containsKey(DashBoardUtils.LEASE))
+			assetsToPut.add(new RequisitionAsset("lease", update
+					.get(DashBoardUtils.LEASE)));
+		if (update.containsKey(DashBoardUtils.VENDORPHONE))
+			assetsToPut.add(new RequisitionAsset("vendorPhone", update
+					.get(DashBoardUtils.VENDORPHONE)));
+		if (update.containsKey(DashBoardUtils.VENDOR))
+			assetsToPut.add(new RequisitionAsset("vendor", update
+					.get(DashBoardUtils.VENDOR)));
+		if (update.containsKey(DashBoardUtils.SLOT))
+			assetsToPut.add(new RequisitionAsset("slot", update
+					.get(DashBoardUtils.SLOT)));
+		if (update.containsKey(DashBoardUtils.RACK))
+			assetsToPut.add(new RequisitionAsset("rack", update
+					.get(DashBoardUtils.RACK)));
+		if (update.containsKey(DashBoardUtils.ROOM))
+			assetsToPut.add(new RequisitionAsset("room", update
+					.get(DashBoardUtils.ROOM)));
+		if (update.containsKey(DashBoardUtils.OPERATINGSYSTEM))
+			assetsToPut.add(new RequisitionAsset("operatingSystem", update
+					.get(DashBoardUtils.OPERATINGSYSTEM)));
+		if (update.containsKey(DashBoardUtils.DATEINSTALLED))
+			assetsToPut.add(new RequisitionAsset("dateInstalled", update
+					.get(DashBoardUtils.DATEINSTALLED)));
+		if (update.containsKey(DashBoardUtils.ASSETNUMBER))
+			assetsToPut.add(new RequisitionAsset("assetNumber", update
+					.get(DashBoardUtils.ASSETNUMBER)));
+		if (update.containsKey(DashBoardUtils.SERIALNUMBER))
+			assetsToPut.add(new RequisitionAsset("serialNumber", update
+					.get(DashBoardUtils.SERIALNUMBER)));
+		if (update.containsKey(DashBoardUtils.CATEGORY))
+			assetsToPut.add(new RequisitionAsset("category", update
+					.get(DashBoardUtils.CATEGORY)));
+		if (update.containsKey(DashBoardUtils.MODELNUMBER))
+			assetsToPut.add(new RequisitionAsset("modelNumber", update
+					.get(DashBoardUtils.MODELNUMBER)));
+		if (update.containsKey(DashBoardUtils.MANUFACTURER))
+			assetsToPut.add(new RequisitionAsset("manufacturer", update
+					.get(DashBoardUtils.MANUFACTURER)));
+
+		if (!updatemap.isEmpty())
+			m_onmsDao
+					.updateRequisitionNode(foreignSource, foreignId, updatemap);
+
+		for (String ip : interfaceToDel) {
+			m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ip);
+		}
+
+		for (String ip : interfaceToAdd) {
+			RequisitionInterface iface = new RequisitionInterface();
+			iface.setIpAddr(ip);
+			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+			iface.setDescr(descr);
+			if (primary.equals(ip)) {
+				m_primaryipcollection.add(ip);
+				iface.putMonitoredService(new RequisitionMonitoredService(
+						"SNMP"));
+				iface.setSnmpPrimary(PrimaryType.PRIMARY);
+			} else {
+				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+			}
+			m_onmsDao.addRequisitionInterface(foreignSource, foreignId, iface);
+		}
+
+		for (RequisitionAsset asset : assetsToPut) {
+			m_onmsDao.addRequisitionAsset(foreignSource, foreignId, asset);
+		}
+
+		for (String category : categoriesToDel) {
+			m_onmsDao.deleteRequisitionCategory(foreignSource, foreignId,
+					category);
+		}
+
+		for (String category : categoriesToAdd) {
+			m_onmsDao.addRequisitionCategory(foreignSource, foreignId,
+					new RequisitionCategory(category));
+		}
 	}
 	
 	public void addFastNode(String foreignId, FastServiceDevice node, FastServiceLink link, Vrf vrf, Set<String> secondary) {
