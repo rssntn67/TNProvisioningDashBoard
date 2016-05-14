@@ -131,7 +131,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				loaded=true;
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
-				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
 					logger.info("No Requisition Found: "+e.getLocalizedMessage());
 					getService().createRequisition(DashBoardUtils.TN_REQU_NAME);
 					load();

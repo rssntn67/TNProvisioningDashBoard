@@ -138,13 +138,199 @@ public class DashBoardSessionService implements Serializable {
 		m_user = username;
 	}
 
-	//FIXME
+	@SuppressWarnings("deprecation")
 	public BeanContainer<String, SistemiInformativiNode> getSIContainer() {
 		BeanContainer<String, SistemiInformativiNode> requisitionContainer = new BeanContainer<String, SistemiInformativiNode>(SistemiInformativiNode.class);
 		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
 		List<String> domains = m_service.getDnsDomainContainer().getDomains();
 		List<String> subdomains = m_service.getDnsSubDomainContainer().getSubdomains();
-		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.SI_REQU_NAME);
+		for (RequisitionNode node : m_onmsDao.getRequisition(DashBoardUtils.SI_REQU_NAME).getNodes()) {
+			boolean valid = true;
+			String foreignId = node.getForeignId();
+			if (foreignId == null)
+				valid = false;
+			String nodelabel = node.getNodeLabel();
+			if (nodelabel == null)
+				valid=false;
+
+			String vrf = null;
+			String hostname = null;
+			for (String tnvrf: domains) {
+				if (nodelabel.endsWith("."+tnvrf)) {
+					vrf = tnvrf;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
+					break;
+				}
+			}
+
+			if (vrf == null) {
+				hostname = nodelabel;
+				valid = false;
+			}
+			
+			String primary = null;
+			String descr = null;
+			Map<String, Set<String>> serviceMap = new HashMap<String, Set<String>>();
+			for (RequisitionInterface ip: node.getInterfaces()) {
+				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
+				if (ip.getSnmpPrimary() == null)
+					valid=false;
+				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
+					primary = ip.getIpAddr();
+					descr = ip.getDescr();
+				} 
+				for (RequisitionMonitoredService service: ip.getMonitoredServices()) {
+					if (primary != null && ip.getIpAddr().equals(primary) && (service.getServiceName().equals("ICMP") || service.getServiceName().equals("SNMP")))
+						continue;
+					Set<String> services = serviceMap.get(ip.getIpAddr());
+					if (services == null)
+						services = new HashSet<String>();
+					services.add(service.getServiceName());
+					serviceMap.put(ip.getIpAddr(), services);
+				}
+			}
+
+			if (primary == null)
+				valid = false;
+			else if (hasInvalidIp(primary))
+				valid = false;
+
+			String[] serverLevelCategory = null;
+			for (String[] levels : DashBoardUtils.m_server_levels) {
+				if (node.getCategory(levels[0]) != null && node.getCategory(levels[1]) != null) {
+					serverLevelCategory = levels;
+					break;
+				}
+			}
+			if (serverLevelCategory == null)
+				valid = false;
+
+			String managedByCategory = null;
+			for (String[] managedby: DashBoardUtils.m_server_managedby) {
+				if (node.getCategory(managedby[0]) != null) {
+					managedByCategory = managedby[0];
+					break;
+				}				
+			}
+			if (managedByCategory == null)
+				valid = false;
+			
+			String notifCategory = null;
+			for (String notif: DashBoardUtils.m_server_notif) {
+				if (node.getCategory(notif) != null) {
+					notifCategory = notif;
+					break;
+				}				
+			}
+
+			String optionalCategory = null;
+			for (String option: DashBoardUtils.m_server_optional) {
+				if (node.getCategory(option) != null) {
+					optionalCategory = option;
+					break;
+				}				
+			}
+
+			String prodCategory = null;
+			for (String prod: DashBoardUtils.m_server_prod) {
+				if (node.getCategory(prod) != null) {
+					prodCategory = prod;
+					break;
+				}				
+			}
+
+			String tnCategory = null;
+			if (node.getCategory(DashBoardUtils.TN_REQU_NAME) == null) {
+				logger.info("no TrentinoNetwork category on SI node: foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
+				valid = false;
+			} else {
+				tnCategory = DashBoardUtils.TN_REQU_NAME;
+			}
+			
+			String city = node.getCity();
+			String building = node.getBuilding();
+			
+			String address1 = null;
+			if (node.getAsset(DashBoardUtils.ADDRESS1) != null)
+				address1 = node.getAsset(DashBoardUtils.ADDRESS1).getValue();
+
+			String description = null;
+			if (node.getAsset(DashBoardUtils.DESCRIPTION) != null)
+				description = node.getAsset(DashBoardUtils.DESCRIPTION).getValue();
+
+			String leaseExpires = null;
+			if (node.getAsset(DashBoardUtils.LEASEEXPIRES) != null)
+				leaseExpires = node.getAsset(DashBoardUtils.LEASEEXPIRES).getValue();
+
+			String lease = null;
+			if (node.getAsset(DashBoardUtils.LEASE) != null)
+				lease = node.getAsset(DashBoardUtils.LEASE).getValue();
+			
+			String vendorPhone = null;
+			if (node.getAsset(DashBoardUtils.VENDORPHONE) != null)
+				vendorPhone = node.getAsset(DashBoardUtils.VENDORPHONE).getValue();
+
+			String vendor = null;
+			if (node.getAsset(DashBoardUtils.VENDOR) != null)
+				vendor = node.getAsset(DashBoardUtils.VENDOR).getValue();
+
+			String slot = null;
+			if (node.getAsset(DashBoardUtils.SLOT) != null)
+				slot = node.getAsset(DashBoardUtils.SLOT).getValue();
+
+			String rack = null;
+			if (node.getAsset(DashBoardUtils.RACK) != null)
+				rack = node.getAsset(DashBoardUtils.RACK).getValue();
+
+			String room = null;
+			if (node.getAsset(DashBoardUtils.ROOM) != null)
+				room = node.getAsset(DashBoardUtils.ROOM).getValue();
+
+			String operatingSystem = null;
+			if (node.getAsset(DashBoardUtils.OPERATINGSYSTEM) != null)
+				operatingSystem = node.getAsset(DashBoardUtils.OPERATINGSYSTEM).getValue();
+
+			String dateInstalled = null;
+			if (node.getAsset(DashBoardUtils.DATEINSTALLED) != null)
+				dateInstalled = node.getAsset(DashBoardUtils.DATEINSTALLED).getValue();
+
+			String assetNumber = null;
+			if (node.getAsset(DashBoardUtils.ASSETNUMBER) != null)
+				assetNumber = node.getAsset(DashBoardUtils.ASSETNUMBER).getValue();
+
+			String serialNumber = null;
+			if (node.getAsset(DashBoardUtils.SERIALNUMBER) != null)
+				serialNumber = node.getAsset(DashBoardUtils.SERIALNUMBER).getValue();
+
+			String category = null;
+			if (node.getAsset(DashBoardUtils.CATEGORY) != null)
+				category = node.getAsset(DashBoardUtils.CATEGORY).getValue();
+
+			String modelNumber = null;
+			if (node.getAsset(DashBoardUtils.MODELNUMBER) != null)
+				modelNumber = node.getAsset(DashBoardUtils.MODELNUMBER).getValue();
+
+			String manufacturer = null;
+			if (node.getAsset(DashBoardUtils.MANUFACTURER) != null)
+				manufacturer = node.getAsset(DashBoardUtils.MANUFACTURER).getValue();
+
+			if (hasInvalidDnsBind9Label(nodelabel))
+				valid = false;
+			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
+				valid = false;		
+
+			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, vrf, primary, 
+					serverLevelCategory, managedByCategory, notifCategory, optionalCategory, 
+					prodCategory, tnCategory, 
+					city, address1, description, building, 
+					leaseExpires, lease, vendorPhone, vendor, 
+					slot, rack, room, 
+					operatingSystem, dateInstalled, 
+					assetNumber, serialNumber, category, 
+					modelNumber, manufacturer, 
+					foreignId, valid);
+			requisitionContainer.addBean(sinode);
+		}
 		return requisitionContainer;
 	}
 
@@ -217,7 +403,8 @@ public class DashBoardSessionService implements Serializable {
 					secondary.add(ip.getIpAddr());
 				}
 			}
-
+			if (descr == null)
+				descr = "Provisioned By TNPD";
 			if (primary == null)
 				valid = false;
 			else if (hasInvalidIp(primary))
@@ -766,7 +953,6 @@ public class DashBoardSessionService implements Serializable {
 		node.clear();
 
 	}
-	//FIXME
 	public void updateSINode(SistemiInformativiNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 		
@@ -1206,7 +1392,6 @@ public class DashBoardSessionService implements Serializable {
 
 	}
 
-	//FIXME
 	public void updateNode(String foreignSource, String foreignId,
 			String primary, String descr, Map<String, String> update,
 			List<String> interfaceToDel,List<String> interfaceToAdd,
@@ -1294,20 +1479,35 @@ public class DashBoardSessionService implements Serializable {
 			m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ip);
 		}
 
+		for (String ip: serviceToDel.keySet()) {
+			if (interfaceToDel.contains(ip))
+				continue;
+			for (String service: serviceToDel.get(ip)) {
+				m_onmsDao.deleteRequisitionservice(foreignSource, foreignId, ip, service);
+			}
+		}
+		
 		for (String ip : interfaceToAdd) {
 			RequisitionInterface iface = new RequisitionInterface();
 			iface.setIpAddr(ip);
-			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 			iface.setDescr(descr);
 			if (primary.equals(ip)) {
-				m_primaryipcollection.add(ip);
-				iface.putMonitoredService(new RequisitionMonitoredService(
-						"SNMP"));
 				iface.setSnmpPrimary(PrimaryType.PRIMARY);
 			} else {
 				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
 			}
+			for (String service: serviceToAdd.get(ip)) {
+				iface.putMonitoredService(new RequisitionMonitoredService(service));
+			}
 			m_onmsDao.addRequisitionInterface(foreignSource, foreignId, iface);
+		}
+
+		for (String ip: serviceToAdd.keySet()) {
+			if (interfaceToAdd.contains(ip))
+				continue;
+			for (String service: serviceToAdd.get(ip)) {
+				m_onmsDao.addRequisitionservice(foreignSource, foreignId, ip, new RequisitionMonitoredService(service));
+			}
 		}
 
 		for (RequisitionAsset asset : assetsToPut) {

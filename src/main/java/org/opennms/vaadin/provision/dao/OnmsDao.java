@@ -3,13 +3,13 @@ package org.opennms.vaadin.provision.dao;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
@@ -86,7 +86,11 @@ public class OnmsDao {
 	public void addRequisitionInterface(String foreignSource,String foreignid, RequisitionInterface riface) {
 		m_provisionService.add(foreignSource, foreignid, riface);
 	}
-	
+
+	public void addRequisitionservice(String foreignSource,String foreignid, String ip,RequisitionMonitoredService service) {
+		m_provisionService.add(foreignSource, foreignid, ip,service);
+	}
+
 	public void addOrReplacePolicy(String foreignSource,PolicyWrapper policy) {
 		m_foreignSourceService.addOrReplace(foreignSource, policy);
 	}
@@ -101,6 +105,10 @@ public class OnmsDao {
 
 	public void deleteRequisitionInterface(String foreignSource, String foreignId, String ipaddr) {
 		m_provisionService.deleteInterface(foreignSource, foreignId,ipaddr);	
+	}
+
+	public void deleteRequisitionservice(String foreignSource,String foreignid, String ip,String service) {
+		m_provisionService.deleteService(foreignSource, foreignid, ip,service);
 	}
 
 	public void deleteRequisitionCategory(String foreignSource,String foreignId, String category) {

@@ -143,7 +143,7 @@ public class SistemiInformativiTab extends DashboardTab {
 				loaded=true;
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
-				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
 					logger.info("No Requisition Found: "+e.getLocalizedMessage());
 					getService().createRequisition(DashBoardUtils.SI_REQU_NAME);
 					load();
@@ -171,6 +171,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		final ComboBox prodComboBox  = new ComboBox("Production Category");
 		final ComboBox notifComboBox  = new ComboBox("Notification Category");
 		final ComboBox optionalComboBox  = new ComboBox("Optional Category");
+		final ComboBox tnComboBox  = new ComboBox("TN Category");
 
 		final ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
 
@@ -386,7 +387,7 @@ public class SistemiInformativiTab extends DashboardTab {
 								serverLevelSearchComboBox.getValue(),
 								managedBySearchComboBox.getValue(),
 								notifSearchComboBox.getValue(),
-								optionalComboBox.getValue(),
+								optionalSearchComboBox.getValue(),
 								prodSearchComboBox.getValue()));
 			}
 		});
@@ -402,8 +403,8 @@ public class SistemiInformativiTab extends DashboardTab {
 		}
 
 		for (String[] category: DashBoardUtils.m_server_managedby) {
-			managedBySearchComboBox.addItem(category[0]);
-			managedBySearchComboBox.setItemCaption(category[0], category[1]);
+			managedByComboBox.addItem(category[0]);
+			managedByComboBox.setItemCaption(category[0], category[1]);
 		}
 
 		for (String prod: DashBoardUtils.m_server_prod) {
@@ -418,6 +419,8 @@ public class SistemiInformativiTab extends DashboardTab {
 			optionalComboBox.addItem(option);
 		}
 
+		tnComboBox.addItem("TrentinoNetwork");
+		
 		m_descrComboBox.setInvalidAllowed(false);
 		m_descrComboBox.setNullSelectionAllowed(false);
 		m_descrComboBox.setWidth(8, Unit.CM);
@@ -468,7 +471,6 @@ public class SistemiInformativiTab extends DashboardTab {
 		primary.setImmediate(true);
 		primary.addValidator(new IpValidator());
 
-		m_secondaryIpAddressTable.setCaption("Altri ip da monitorare");
 		m_secondaryIpAddressTable.setHeight(180,Unit.PIXELS);
 		m_secondaryIpAddressTable.setWidth(300,Unit.PIXELS);
 		m_secondaryIpAddressTable.setSelectable(true);
@@ -550,6 +552,11 @@ public class SistemiInformativiTab extends DashboardTab {
 
 		optionalComboBox.setInvalidAllowed(false);
 		optionalComboBox.setNullSelectionAllowed(false);
+
+		tnComboBox.setInvalidAllowed(false);
+		tnComboBox.setNullSelectionAllowed(false);
+		tnComboBox.setRequired(true);
+		tnComboBox.setRequiredError("E' necessario scegliere la categoria");
 
 		snmpComboBox.setInvalidAllowed(false);
 		snmpComboBox.setNullSelectionAllowed(false);
@@ -638,6 +645,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		m_editorFields.bind(notifComboBox, DashBoardUtils.NOTIF_CATEGORY);
 		m_editorFields.bind(managedByComboBox, DashBoardUtils.SERVER_MANAGED_BY_CATEGORY);
 		m_editorFields.bind(optionalComboBox, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
+		m_editorFields.bind(tnComboBox, DashBoardUtils.SERVER_TN_CATEGORY);
 		m_editorFields.bind(city,DashBoardUtils.CITY);
 	    m_editorFields.bind(address, DashBoardUtils.ADDRESS1);
 	    m_editorFields.bind(building, DashBoardUtils.BUILDING);
@@ -671,9 +679,11 @@ public class SistemiInformativiTab extends DashboardTab {
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
 		centerGeneralInfo.setMargin(true);
 
-		HorizontalLayout bottomRightGeneralInfo = new HorizontalLayout();
-		bottomRightGeneralInfo.addComponent(m_secondaryIpTextBox);
-		bottomRightGeneralInfo.addComponent(m_serviceComboBox);
+		VerticalLayout bottomRightGeneralInfo = new VerticalLayout();
+		HorizontalLayout bottomRightGeneralInfoTop = new HorizontalLayout();
+		bottomRightGeneralInfoTop.addComponent(m_secondaryIpTextBox);
+		bottomRightGeneralInfoTop.addComponent(m_serviceComboBox);
+		bottomRightGeneralInfo.addComponent(bottomRightGeneralInfoTop);
 		bottomRightGeneralInfo.addComponent(addSecondaryServiceButton);
 		
 		FormLayout rightGeneralInfo = new FormLayout();
@@ -681,32 +691,51 @@ public class SistemiInformativiTab extends DashboardTab {
 		rightGeneralInfo.addComponent(m_secondaryIpAddressTable);
 		rightGeneralInfo.addComponent(bottomRightGeneralInfo);
 				
-		HorizontalLayout catLayout = new HorizontalLayout();
-		catLayout.setSizeFull();
-		catLayout.addComponent(managedByComboBox);
-		catLayout.addComponent(prodComboBox);
-		catLayout.addComponent(notifComboBox);
-		catLayout.addComponent(optionalComboBox);
-		catLayout.addComponent(snmpComboBox);
+		HorizontalLayout catLayout1 = new HorizontalLayout();
+		catLayout1.setSizeFull();
+		catLayout1.addComponent(snmpComboBox);
+		HorizontalLayout catLayout2 = new HorizontalLayout();
+		catLayout2.setSizeFull();
+		catLayout2.addComponent(managedByComboBox);
+		catLayout2.addComponent(prodComboBox);
+		catLayout2.addComponent(notifComboBox);
+		HorizontalLayout catLayout3 = new HorizontalLayout();
+		catLayout3.setSizeFull();
+		catLayout3.addComponent(tnComboBox);
+		catLayout3.addComponent(optionalComboBox);
 		
 		
-		HorizontalLayout assetLayout = new HorizontalLayout();
-		assetLayout.setSizeFull();
-		assetLayout.addComponent(leaseexpires);
-		assetLayout.addComponent(lease);
-		assetLayout.addComponent(vendorPhone);
-		assetLayout.addComponent(vendor);
-		assetLayout.addComponent(slot);
-		assetLayout.addComponent(rack);
-		assetLayout.addComponent(room);
-		assetLayout.addComponent(city);
-		assetLayout.addComponent(address);
-		assetLayout.addComponent(building);
-		assetLayout.addComponent(operatingSystem);
-		assetLayout.addComponent(category);
-		assetLayout.addComponent(modelNumber);
-		assetLayout.addComponent(manufacturer);
-		assetLayout.addComponent(description);
+		HorizontalLayout assetLayout11 = new HorizontalLayout();
+		assetLayout11.setSizeFull();
+		assetLayout11.addComponent(leaseexpires);
+		assetLayout11.addComponent(lease);
+		HorizontalLayout assetLayout12 = new HorizontalLayout();
+		assetLayout12.setSizeFull();
+		assetLayout12.addComponent(vendorPhone);
+		assetLayout12.addComponent(vendor);
+		HorizontalLayout assetLayout21 = new HorizontalLayout();
+		assetLayout21.setSizeFull();
+		assetLayout21.addComponent(slot);
+		assetLayout21.addComponent(rack);
+		HorizontalLayout assetLayout22 = new HorizontalLayout();
+		assetLayout22.setSizeFull();
+		assetLayout22.addComponent(modelNumber);
+		assetLayout22.addComponent(manufacturer);
+		HorizontalLayout assetLayout31 = new HorizontalLayout();
+		assetLayout31.setSizeFull();
+		assetLayout31.addComponent(city);
+		assetLayout31.addComponent(address);
+		HorizontalLayout assetLayout32 = new HorizontalLayout();
+		assetLayout32.setSizeFull();
+		assetLayout32.addComponent(building);
+		assetLayout32.addComponent(room);
+		HorizontalLayout assetLayout4 = new HorizontalLayout();
+		assetLayout4.setSizeFull();
+		assetLayout4.addComponent(category);
+		assetLayout4.addComponent(operatingSystem);
+		HorizontalLayout assetLayout5 = new HorizontalLayout();
+		assetLayout5.setSizeFull();
+		assetLayout5.addComponent(description);
 				
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
@@ -719,8 +748,17 @@ public class SistemiInformativiTab extends DashboardTab {
 				
 		FormLayout profileInfo = new FormLayout();
 		profileInfo.addComponent(new Label("Dati Asset e Profili"));
-		profileInfo.addComponent(assetLayout);
-		profileInfo.addComponent(catLayout);
+		profileInfo.addComponent(catLayout1);
+		profileInfo.addComponent(catLayout2);
+		profileInfo.addComponent(catLayout3);
+		profileInfo.addComponent(assetLayout11);
+		profileInfo.addComponent(assetLayout12);
+		profileInfo.addComponent(assetLayout21);
+		profileInfo.addComponent(assetLayout22);
+		profileInfo.addComponent(assetLayout31);
+		profileInfo.addComponent(assetLayout32);
+		profileInfo.addComponent(assetLayout4);
+		profileInfo.addComponent(assetLayout5);
 
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);

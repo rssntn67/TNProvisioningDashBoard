@@ -27,7 +27,7 @@ public class SistemiInformativiNode implements Serializable {
 	private Map<String,Set<String>> m_serviceToAdd = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> m_serviceToDel = new HashMap<String, Set<String>>();
 	// This contains all the ip->service in secondary table but does not contain primary->icmp and primary-snmp
-	private Map<String,Set<String>> m_serviceMap   = new HashMap<String, Set<String>>();
+	private Map<String,Set<String>> m_serviceMap;  
 
 	private String m_label;
 	private String m_descr;
@@ -40,6 +40,7 @@ public class SistemiInformativiNode implements Serializable {
 	private String m_notifCategory;
 	private String m_optionalCategory;
 	private String m_prodCategory;
+	private String m_TrentinoNetworkCategory;
 
 	private String m_snmpProfile;
 	
@@ -66,6 +67,51 @@ public class SistemiInformativiNode implements Serializable {
 	
 	protected boolean m_valid = true;
 	
+	public SistemiInformativiNode(
+			Map<String, Set<String>> serviceMap, String descr, String hostname,
+			String vrf, String primary, String[] serverLevelCategory,
+			String managedByCategory, String notifCategory,
+			String optionalCategory, String prodCategory, String tnCategory,
+			String city, String address1, String description, String building,
+			String leaseExpires, String lease, String vendorPhone,
+			String vendor, String slot, String rack, String room,
+			String operatingSystem, String dateInstalled, String assetNumber,
+			String serialNumber, String category, String modelNumber,
+			String manufacturer, String foreignId, boolean valid) {
+		super();
+		m_serviceMap = serviceMap;
+		m_descr = descr;
+		m_hostname = hostname;
+		m_vrf = vrf;
+		m_primary = primary;
+		m_serverLevelCategory = serverLevelCategory;
+		m_managedByCategory = managedByCategory;
+		m_notifCategory = notifCategory;
+		m_optionalCategory = optionalCategory;
+		m_prodCategory = prodCategory;
+		m_TrentinoNetworkCategory = tnCategory;
+		m_city = city;
+		m_address1 = address1;
+		m_description = description;
+		m_building = building;
+		m_leaseExpires = leaseExpires;
+		m_lease = lease;
+		m_vendorPhone = vendorPhone;
+		m_vendor = vendor;
+		m_slot = slot;
+		m_rack = rack;
+		m_room = room;
+		m_operatingSystem = operatingSystem;
+		m_dateInstalled = dateInstalled;
+		m_assetNumber = assetNumber;
+		m_serialNumber = serialNumber;
+		m_category = category;
+		m_modelNumber = modelNumber;
+		m_manufacturer = manufacturer;
+		m_foreignId = foreignId;
+		m_valid = valid;
+	}
+
 	public SistemiInformativiNode(String label) {
 		m_label = label;
 		m_primary="0.0.0.0";
@@ -77,6 +123,7 @@ public class SistemiInformativiNode implements Serializable {
 		m_descr="Provided by Provision Dashboard";
 		
 		m_valid=false;
+		m_serviceMap = new HashMap<String, Set<String>>();
 	}
 	
 	public void clear() {
@@ -121,10 +168,11 @@ public class SistemiInformativiNode implements Serializable {
 	}
 
 	public void setCity(String city) {
-		if (m_city != null && m_city.equals(city))
+		if (city == null)
+			city="";
+		if (city.equals(m_city))
 			return;
-		if (city != null)
-			m_updatemap.add(DashBoardUtils.CITY);
+		m_updatemap.add(DashBoardUtils.CITY);
 		m_city = city;		
 	}
 		
@@ -166,13 +214,11 @@ public class SistemiInformativiNode implements Serializable {
 		return m_address1;
 	}
 	public void setAddress1(String address) {
-		if (m_address1 !=  null && m_address1.equals(address))
+		if (address == null)
+			address = "";
+		if (address.equals(m_address1))
 			return;
-		if (m_address1 ==  null && address == null)
-			return;
-		if (address != null ) {
-			m_updatemap.add(DashBoardUtils.ADDRESS1);
-		}
+		m_updatemap.add(DashBoardUtils.ADDRESS1);
 		m_address1 = address;
 	}
 	
@@ -329,6 +375,10 @@ public class SistemiInformativiNode implements Serializable {
 		return m_prodCategory;
 	}
 
+	public String getTrentinoNetworkCategory() {
+		return m_TrentinoNetworkCategory;
+	}
+
 
 	public void setServerLevelCategory(String[] serverLevelCategory) {
 		
@@ -373,6 +423,14 @@ public class SistemiInformativiNode implements Serializable {
 		m_serverLevelCategory = serverLevelCategory;
 	}
 
+	public void setTrentinoNetworkCategory(String tnCategory) {
+		if (m_TrentinoNetworkCategory != null && m_TrentinoNetworkCategory.equals(tnCategory) )
+			return;
+		m_categoriesToAdd.add(tnCategory);
+		
+		m_TrentinoNetworkCategory = tnCategory;
+	}
+
 	public void setProdCategory(String prodCategory) {
 		if (m_prodCategory != null && m_prodCategory.equals(prodCategory) )
 			return;
@@ -397,7 +455,7 @@ public class SistemiInformativiNode implements Serializable {
 	}
 
 	public void setNotifCategory(String notifCategory) {
-		if (m_notifCategory.equals(notifCategory) )
+		if (m_notifCategory != null && m_notifCategory.equals(notifCategory) )
 			return;
 		if (m_notifCategory != null)
 			m_categoriesToDel.add(new String(m_notifCategory));
@@ -408,7 +466,7 @@ public class SistemiInformativiNode implements Serializable {
 	}
 
 	public void setOptionalCategory(String optionalCategory) {
-		if (m_optionalCategory.equals(optionalCategory) )
+		if (m_optionalCategory != null && m_optionalCategory.equals(optionalCategory) )
 			return;
 		if (m_optionalCategory != null)
 			m_categoriesToDel.add(new String(m_optionalCategory));
@@ -418,112 +476,144 @@ public class SistemiInformativiNode implements Serializable {
 	}
 
 	public void setDescription(String description) {
-		if (description != null && description.equals(m_description) )
+		if (description == null)
+			description="";
+		if (description.equals(m_description) )
 			return;
 		m_updatemap.add(DashBoardUtils.DESCRIPTION);
 		m_description = description;
 	}
 
 	public void setBuilding(String building) {
-		if (building != null && building.equals(m_building) )
+		if (building == null)
+			building="";
+		if (building.equals(m_building) )
 			return;
 		m_updatemap.add(DashBoardUtils.BUILDING);
 		m_building = building;
 	}
 
 	public void setLeaseExpires(String leaseExpires) {
-		if (leaseExpires != null && leaseExpires.equals(m_leaseExpires) )
+		if (leaseExpires == null)
+			leaseExpires="";
+		if (leaseExpires.equals(m_leaseExpires) )
 			return;
 		m_updatemap.add(DashBoardUtils.LEASEEXPIRES);
 		m_leaseExpires = leaseExpires;
 	}
 
 	public void setLease(String lease) {
-		if (lease != null && lease.equals(m_lease) )
+		if (lease == null)
+			lease="";
+		if (lease.equals(m_lease) )
 			return;
 		m_updatemap.add(DashBoardUtils.LEASE);
 		m_lease = lease;
 	}
 
 	public void setVendorPhone(String vendorPhone) {
-		if (vendorPhone != null && vendorPhone.equals(m_vendorPhone) )
+		if (vendorPhone == null)
+			vendorPhone="";
+		if (vendorPhone.equals(m_vendorPhone) )
 			return;
 		m_updatemap.add(DashBoardUtils.VENDORPHONE);
 		m_vendorPhone = vendorPhone;
 	}
 
 	public void setVendor(String vendor) {
-		if (vendor != null && vendor.equals(m_vendor) )
+		if (vendor == null)
+			vendor="";
+		if (vendor.equals(m_vendor) )
 			return;
 		m_updatemap.add(DashBoardUtils.VENDOR);
 		m_vendor = vendor;
 	}
 
 	public void setSlot(String slot) {
-		if (slot != null && slot.equals(m_slot) )
+		if (slot == null)
+			slot="";
+		if (slot.equals(m_slot) )
 			return;
 		m_updatemap.add(DashBoardUtils.SLOT);
 		m_slot = slot;
 	}
 
 	public void setRack(String rack) {
-		if (rack != null && rack.equals(m_rack) )
+		if (rack == null)
+			rack="";
+		if (rack.equals(m_rack) )
 			return;
 		m_updatemap.add(DashBoardUtils.RACK);
 		m_rack = rack;
 	}
 
 	public void setRoom(String room) {
-		if (room != null && room.equals(m_room) )
+		if (room == null)
+			room="";
+		if (room.equals(m_room) )
 			return;
-		m_updatemap.add(DashBoardUtils.BUILDING);
+		m_updatemap.add(DashBoardUtils.ROOM);
 		m_room = room;
 	}
 
 	public void setOperatingSystem(String operatingSystem) {
-		if (operatingSystem != null && operatingSystem.equals(m_operatingSystem) )
+		if (operatingSystem == null)
+			operatingSystem="";
+		if (operatingSystem.equals(m_operatingSystem) )
 			return;
 		m_updatemap.add(DashBoardUtils.OPERATINGSYSTEM);
 		m_operatingSystem = operatingSystem;
 	}
 
 	public void setDateInstalled(String dateInstalled) {
-		if (dateInstalled != null && dateInstalled.equals(m_dateInstalled) )
+		if (dateInstalled == null)
+			dateInstalled="";
+		if (dateInstalled.equals(m_dateInstalled) )
 			return;
 		m_updatemap.add(DashBoardUtils.DATEINSTALLED);
 		m_dateInstalled = dateInstalled;
 	}
 
 	public void setAssetNumber(String assetNumber) {
-		if (assetNumber != null && assetNumber.equals(m_assetNumber) )
+		if (assetNumber == null)
+			assetNumber="";
+		if (assetNumber.equals(m_assetNumber) )
 			return;
 		m_updatemap.add(DashBoardUtils.ASSETNUMBER);
 		m_assetNumber = assetNumber;
 	}
 
 	public void setSerialNumber(String serialNumber) {
-		if (serialNumber != null && serialNumber.equals(m_serialNumber) )
+		if (serialNumber == null)
+			serialNumber="";
+		if (serialNumber.equals(m_serialNumber) )
 			return;
 		m_updatemap.add(DashBoardUtils.SERIALNUMBER);
 		m_serialNumber = serialNumber;
 	}
 
 	public void setCategory(String category) {
-		if (category != null && category.equals(m_category) )
+		if (category == null)
+			category="Server";
+		if (category.equals(m_category) )
 			return;
 		m_updatemap.add(DashBoardUtils.CATEGORY);
 		m_category = category;
 	}
 
 	public void setModelNumber(String modelNumber) {
-		if (modelNumber != null && modelNumber.equals(m_modelNumber) )
+		if (modelNumber == null)
+			modelNumber="";
+		if (modelNumber.equals(m_modelNumber) )
 			return;
 		m_updatemap.add(DashBoardUtils.MODELNUMBER);
 		m_modelNumber = modelNumber;
 	}
 
 	public void setManufacturer(String manufacturer) {
-		if (manufacturer != null && manufacturer.equals(m_manufacturer) )
+		if (manufacturer == null)
+			manufacturer="";
+		if (manufacturer.equals(m_manufacturer) )
 			return;
 		m_updatemap.add(DashBoardUtils.MANUFACTURER);
 		m_manufacturer = manufacturer;

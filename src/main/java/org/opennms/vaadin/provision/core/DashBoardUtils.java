@@ -213,6 +213,7 @@ public class DashBoardUtils {
 	public static final String SERVER_MANAGED_BY_CATEGORY   = "managedByCategory";
 	public static final String SERVER_OPTIONAL_CATEGORY  = "optionalCategory";
 	public static final String SERVER_PROD_CATEGORY  = "prodCategory";
+	public static final String SERVER_TN_CATEGORY  = "trentinoNetworkCategory";
 	public static final String NETWORK_CATEGORY = "networkCategory";
 	public static final String NOTIF_CATEGORY   = "notifCategory";
 	public static final String THRESH_CATEGORY  = "threshCategory";
