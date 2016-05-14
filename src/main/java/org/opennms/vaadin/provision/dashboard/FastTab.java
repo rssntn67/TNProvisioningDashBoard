@@ -103,8 +103,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_fast) {
-			m_logTable.setVisible(false);
-			m_logTable.setContainerDataSource(new BeanItemContainer<JobLogEntry>(JobLogEntry.class) );
 	        
 			int jobid = m_jobcontainer.getLastJobId().getValue();
 			logger.info ("found last job with id: " + jobid);
@@ -130,12 +128,17 @@ public class FastTab extends DashboardTab implements ClickListener {
 			}
 			int curjobid = m_jobcontainer.getLastJobId().getValue();
 			logger.info ("created job with id: " + curjobid);
+			m_logTable.setVisible(false);
+			BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
+			m_logTable.setContainerDataSource(joblogcontainer);
 			job.setJobid(curjobid);
 	        FastIntegrationRunnable runnable = new FastIntegrationRunnable();
 			runnable.setJob(job);
+			runnable.setJobLogContainer(joblogcontainer);
 	        UI.getCurrent().setPollInterval(2000);
 	        Thread thread = new Thread(runnable);
 	        thread.start();		
+			m_logTable.setVisible(true);
 	        
 	        m_panel.setCaption("Fast Integration - Status: Running");
 	        Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);
@@ -154,12 +157,16 @@ public class FastTab extends DashboardTab implements ClickListener {
 	abstract class FastTabAbstractRunnable {
 		double current = 0.0;
 	    Job m_job;
-		BeanItemContainer<JobLogEntry> m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
+		BeanItemContainer<JobLogEntry> m_logcontainer;
 
 		public void setJob(Job job) {
 			m_job = job;
 		}
 		
+		public void setJobLogContainer(BeanItemContainer<JobLogEntry> logcontainer) {
+			m_logcontainer = logcontainer;
+		}
+
 		public void startJob() {
 			UI.getCurrent().access(new Runnable() {
 				@Override
@@ -168,9 +175,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 			        m_progress.setIndeterminate(true);
 			        m_progress.setVisible(true);
 			        m_progress.setEnabled(true);
-			        
-					m_logTable.setContainerDataSource(m_logcontainer);
-					m_logTable.setVisible(true);
 				}
 			});
 		}
