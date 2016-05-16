@@ -34,6 +34,7 @@ import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
 import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
 import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
 import org.opennms.vaadin.provision.dao.JobDao;
+import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.VrfDao;
@@ -106,6 +107,10 @@ public class DashBoardSessionService implements Serializable {
 
 	public JobDao getJobContainer() {
 		return m_service.getJobContainer();
+	}
+
+	public JobLogDao getJobLogContainer() {
+		return m_service.getJobLogContainer();
 	}
 
 	public DashBoardService getService() {

@@ -19,6 +19,7 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.JobDao;
+import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
@@ -33,6 +34,8 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
+import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -56,7 +59,8 @@ public class FastTab extends DashboardTab implements ClickListener {
     private Button m_fast = new Button("Start Fast Integration");
     final ProgressBar m_progress = new ProgressBar();
 
-    private JobDao m_jobcontainer;
+    private JobDao m_jobdao;
+    private JobLogDao m_joblogdao;
     private boolean m_loaded = false;
     
     private Table m_jobTable =  new Table();
@@ -75,8 +79,9 @@ public class FastTab extends DashboardTab implements ClickListener {
 	public void load() {
 		if (m_loaded) 
 			return;
-		m_jobcontainer = getService().getJobContainer();
-		m_jobTable.setContainerDataSource(m_jobcontainer);
+		m_jobdao = getService().getJobContainer();
+		m_joblogdao = getService().getJobLogContainer();
+		m_jobTable.setContainerDataSource(m_jobdao);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstatus","jobstart","jobend"});
 		m_panel.setContent(getFastBox());
 		setCompositionRoot(m_panel);
@@ -92,7 +97,25 @@ public class FastTab extends DashboardTab implements ClickListener {
 	    m_progress.setEnabled(false);
 	    m_progress.setVisible(false);
         
-        HorizontalLayout tablelayout = new HorizontalLayout();
+	    m_jobTable.setSelectable(true);
+	    m_jobTable.setImmediate(true);
+	    m_jobTable.addItemClickListener(new ItemClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void itemClick(ItemClickEvent event) {
+				BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
+				Integer jobid = (Integer)event.getItem().getItemProperty("jobid").getValue();
+				for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
+					joblogcontainer.addBean(jlog);
+				m_logTable.setContainerDataSource(joblogcontainer);
+			}
+		});
+	    HorizontalLayout tablelayout = new HorizontalLayout();
         layout.addComponent(m_jobTable);
         layout.addComponent(m_logTable);
         layout.addComponent(tablelayout);
@@ -104,7 +127,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_fast) {
 	        
-			int jobid = m_jobcontainer.getLastJobId().getValue();
+			int jobid = m_jobdao.getLastJobId().getValue();
 			logger.info ("found last job with id: " + jobid);
 			
 	        Job job = new Job();
@@ -126,7 +149,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			int curjobid = m_jobcontainer.getLastJobId().getValue();
+			int curjobid = m_jobdao.getLastJobId().getValue();
 			logger.info ("created job with id: " + curjobid);
 			m_logTable.setVisible(false);
 			BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
@@ -147,10 +170,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 	
 	public void commitJob(Job job) throws SQLException {
 		if (job.getJobid() == null)
-			m_jobcontainer.add(job);
+			m_jobdao.add(job);
 		else
-			m_jobcontainer.save(new RowId(new Object[]{job.getJobid()}), job);
-		m_jobcontainer.commit();
+			m_jobdao.save(new RowId(new Object[]{job.getJobid()}), job);
+		m_jobdao.commit();
 		
 	}
 	
@@ -184,7 +207,14 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 				@Override
 				public void run() {
-
+					
+					for (JobLogEntry joblog: m_logcontainer.getItemIds())
+						m_joblogdao.add(joblog);
+					try {
+						m_jobdao.commit();
+					} catch (SQLException e) {
+						logger.warning("Exception saving logs: " + e.getLocalizedMessage());
+					}
 					m_progress.setValue(new Float(0.0));
 					m_progress.setEnabled(false);
 					m_progress.setVisible(false);

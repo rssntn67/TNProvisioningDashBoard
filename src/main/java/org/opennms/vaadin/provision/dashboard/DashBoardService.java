@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
@@ -13,6 +12,7 @@ import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
 import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
 import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
 import org.opennms.vaadin.provision.dao.JobDao;
+import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.VrfDao;
 
@@ -51,6 +51,7 @@ public class DashBoardService extends VaadinServletService implements Serializab
 	private FastServiceDeviceDao m_fastservicedevicecontainer;
 	private FastServiceLinkDao   m_fastservicelinkcontainer;
 	private JobDao               m_jobcontainer;
+	private JobLogDao            m_joblogcontainer;
     private boolean              m_initdb;
 	
 	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
@@ -95,6 +96,11 @@ public class DashBoardService extends VaadinServletService implements Serializab
 	    TableQuery jtq = new TableQuery("jobs", m_pool);
 	    jtq.setVersionColumn("versionid");
 		m_jobcontainer = new JobDao(jtq);
+		
+		TableQuery jltq = new TableQuery("joblogs", m_pool);
+	    jltq.setVersionColumn("versionid");
+		m_joblogcontainer = new JobLogDao(jltq);
+
 		logger.info("connected to database: " + m_config.getDbUrl());
 		} catch (Exception e) {
 		logger.log(Level.SEVERE,"createServletService: cannot init postgres", e);
@@ -144,6 +150,10 @@ public class DashBoardService extends VaadinServletService implements Serializab
 		return m_jobcontainer;
 	}
 
+	public JobLogDao getJobLogContainer() {
+		return m_joblogcontainer;
+	}
+
 	public void setSnmpprofilecontainer(SnmpProfileDao snmpprofilecontainer) {
 		m_snmpprofilecontainer = snmpprofilecontainer;
 	}
@@ -176,6 +186,10 @@ public class DashBoardService extends VaadinServletService implements Serializab
 
 	public void setJobcontainer(JobDao jobcontainer) {
 		m_jobcontainer = jobcontainer;
+	}	
+
+	public void setJobLogcontainer(JobLogDao joblogcontainer) {
+		m_joblogcontainer = joblogcontainer;
 	}	
 
 }

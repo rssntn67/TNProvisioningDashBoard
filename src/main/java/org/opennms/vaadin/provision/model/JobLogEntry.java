@@ -2,6 +2,7 @@ package org.opennms.vaadin.provision.model;
 
 public class JobLogEntry {
 
+	private int m_joblogid;
 	private int m_jobid;
 	private String m_hostname;
 	private String m_ipaddr;
@@ -9,6 +10,13 @@ public class JobLogEntry {
 	private String m_description;
 	private String m_note;
 
+	public int getJoblogid() {
+		return m_joblogid;
+	}
+	
+	public void setJoblogid(int joblogid) {
+		m_joblogid = joblogid;
+	}
 	public int getJobid() {
 		return m_jobid;
 	}
