@@ -110,9 +110,11 @@ public class FastTab extends DashboardTab implements ClickListener {
 			public void itemClick(ItemClickEvent event) {
 				BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
 				Integer jobid = (Integer)event.getItem().getItemProperty("jobid").getValue();
+				logger.info ("selected job with id: " + jobid);
 				for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
 					joblogcontainer.addBean(jlog);
 				m_logTable.setContainerDataSource(joblogcontainer);
+				m_logTable.setVisible(true);
 			}
 		});
 	    HorizontalLayout tablelayout = new HorizontalLayout();
@@ -146,7 +148,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			int curjobid = m_jobdao.getLastJobId().getValue();
@@ -203,18 +204,18 @@ public class FastTab extends DashboardTab implements ClickListener {
 		}
 		
 		public void endJob() {
+			for (JobLogEntry joblog: m_logcontainer.getItemIds())
+				m_joblogdao.add(joblog);
+			try {
+				m_joblogdao.commit();
+			} catch (SQLException e) {
+				logger.warning("Exception saving logs: " + e.getLocalizedMessage());
+			}
 			UI.getCurrent().access(new Runnable() {
 
 				@Override
 				public void run() {
 					
-					for (JobLogEntry joblog: m_logcontainer.getItemIds())
-						m_joblogdao.add(joblog);
-					try {
-						m_jobdao.commit();
-					} catch (SQLException e) {
-						logger.warning("Exception saving logs: " + e.getLocalizedMessage());
-					}
 					m_progress.setValue(new Float(0.0));
 					m_progress.setEnabled(false);
 					m_progress.setVisible(false);
@@ -1038,7 +1039,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		}
 				
-		//FIXME no update snmp profile for performance trouble
 		private void update(String hostname, RequisitionNode rnode) {
 			if (isManagedByFast(rnode))
 				updateFast(hostname, rnode);
