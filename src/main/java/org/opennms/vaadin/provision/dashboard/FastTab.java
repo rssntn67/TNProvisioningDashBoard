@@ -1147,7 +1147,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		private boolean isManagedByFast(RequisitionNode rnode) {
 			if (rnode.getCategory(DashBoardUtils.m_network_levels[2]) != null) {
 				for (RequisitionInterface riface: rnode.getInterfaces()) {
-					if (!riface.getDescr().contains("FAST") || !riface.getDescr().contains("NeaNMS"))
+					if (!riface.getDescr().contains("FAST") && !riface.getDescr().contains("NeaNMS"))
 						return false;
 				}
 				return true;
