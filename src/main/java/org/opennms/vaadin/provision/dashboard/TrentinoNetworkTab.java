@@ -83,9 +83,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 		public boolean passesFilter(Object itemId, Item item) {
 			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();			
 			return (    node.getNodeLabel().contains(needle) 
-					&& ( needle1 == null || node.getNetworkCategory().equals(needle1) ) 
-					&& ( needle2 == null || node.getNotifCategory().equals(needle2) )
-		            && ( needle3 == null || node.getThreshCategory().equals(needle3) ) 
+					&& ( needle1 == null || needle1.equals(node.getNetworkCategory()) ) 
+					&& ( needle2 == null || needle2.equals(node.getNotifCategory()) )
+		            && ( needle3 == null || needle3.equals(node.getThreshCategory()) ) 
 					);
 		}
 

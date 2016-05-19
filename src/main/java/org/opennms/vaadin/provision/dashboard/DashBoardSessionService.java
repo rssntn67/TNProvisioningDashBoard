@@ -1146,7 +1146,7 @@ public class DashBoardSessionService implements Serializable {
 		node.clear();
 	}
 
-	public boolean updateNonFastNode(RequisitionNode rnode,Set<String> ipaddresses, String primary) {
+	public boolean updateNonFastNode(RequisitionNode rnode,Set<String> ipaddresses) {
 		List<String> iptoAdd = new ArrayList<String>();
 		List<String> ipToDel = new ArrayList<String>();
 		for (String ip : ipaddresses) {
@@ -1160,7 +1160,7 @@ public class DashBoardSessionService implements Serializable {
 		
 		if (iptoAdd.isEmpty() && ipToDel.isEmpty())
 			return false;
-		updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),primary,"provided by FAST",
+		updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),null,"provided by FAST",
 				new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),null);
 		return true;
 	}
@@ -1356,7 +1356,7 @@ public class DashBoardSessionService implements Serializable {
 			iface.setIpAddr(ip);
 			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 			iface.setDescr(descr);
-			if (primary.equals(ip)) {
+			if ( primary!= null && primary.equals(ip)) {
 				m_primaryipcollection.add(ip);
 				iface.putMonitoredService(new RequisitionMonitoredService(
 						"SNMP"));

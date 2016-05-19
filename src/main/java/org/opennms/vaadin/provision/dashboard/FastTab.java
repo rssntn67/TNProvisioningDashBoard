@@ -1046,21 +1046,13 @@ public class FastTab extends DashboardTab implements ClickListener {
 				updateNonFast(hostname,rnode);
 		}
 
-		@SuppressWarnings("deprecation")
 		private void updateNonFast(String hostname, RequisitionNode rnode) {
 			Set<String> ipaddresses = new HashSet<String>(); 
 			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
 				ipaddresses.add(device.getIpaddr());
 			}
-			String primary = null;
-			for (RequisitionInterface riface: rnode.getInterfaces()) {
-				if (riface.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
-					primary = riface.getIpAddr();
-					break;
-				}
-			}
 
-			if (!getService().updateNonFastNode(rnode,ipaddresses, primary))
+			if (!getService().updateNonFastNode(rnode,ipaddresses))
 				return;
 
 				final JobLogEntry jloe = new JobLogEntry();
@@ -1068,8 +1060,8 @@ public class FastTab extends DashboardTab implements ClickListener {
 				jloe.setIpaddr("NA");
 				jloe.setOrderCode("NA");
 				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: changed Fast Ip.");
-				jloe.setNote("Updates: " + ipaddresses + rnode);
+				jloe.setDescription("FAST sync: updated Fast Ip.");
+				jloe.setNote(getNote(rnode));
 			
 			UI.getCurrent().access(new Runnable() {
 				
@@ -1128,7 +1120,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			jloe.setOrderCode(refdevice.getOrderCode());
 			jloe.setJobid(m_job.getJobid());
 			jloe.setDescription("FAST sync: updated service device.");
-			jloe.setNote("Updates:" + refdevice);
+			jloe.setNote(getNote(refdevice));
 			
 			UI.getCurrent().access(new Runnable() {
 				
@@ -1155,7 +1147,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		private boolean isManagedByFast(RequisitionNode rnode) {
 			if (rnode.getCategory(DashBoardUtils.m_network_levels[2]) != null) {
 				for (RequisitionInterface riface: rnode.getInterfaces()) {
-					if (!riface.getDescr().contains("FAST"))
+					if (!riface.getDescr().contains("FAST") || !riface.getDescr().contains("NeaNMS"))
 						return false;
 				}
 				return true;
