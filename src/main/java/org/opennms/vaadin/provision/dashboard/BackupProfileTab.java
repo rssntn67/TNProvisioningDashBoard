@@ -73,6 +73,7 @@ public class BackupProfileTab extends DashboardTab {
 
 	@Override
 	public void load() {
+		updateTabHead();
 		if (!loaded) {
 			m_backupContainer = getService().getBackupProfileContainer();
 			m_backupTable.setContainerDataSource(m_backupContainer);
@@ -95,7 +96,7 @@ public class BackupProfileTab extends DashboardTab {
 		final ComboBox  backup_auto = new ComboBox("Select Autoenable");
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		setCompositionRoot(splitPanel);
+		getCore().addComponent(splitPanel);
 		
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);

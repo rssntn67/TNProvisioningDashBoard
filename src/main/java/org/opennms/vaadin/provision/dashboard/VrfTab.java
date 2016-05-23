@@ -81,6 +81,7 @@ public class VrfTab extends DashboardTab {
 
 	@Override
 	public void load() {
+		updateTabHead();
 		if (!loaded) {
 			m_domainContainer = getService().getDnsDomainContainer();
 			m_subdomainContainer = getService().getDnsSubDomainContainer();
@@ -118,7 +119,7 @@ public class VrfTab extends DashboardTab {
 		}
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		setCompositionRoot(splitPanel);
+		getCore().addComponent(splitPanel);
 		
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);

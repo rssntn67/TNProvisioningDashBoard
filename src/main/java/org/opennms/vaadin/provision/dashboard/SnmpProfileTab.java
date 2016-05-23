@@ -70,6 +70,7 @@ public class SnmpProfileTab extends DashboardTab {
 
 	@Override
 	public void load() {
+		updateTabHead();
 		if (!loaded) {
 			m_snmpContainer = getService().getSnmpProfileContainer();
 			m_snmpTable.setContainerDataSource(m_snmpContainer);
@@ -89,7 +90,7 @@ public class SnmpProfileTab extends DashboardTab {
 		ComboBox snmp_time = new ComboBox("Timeout (ms)");
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		setCompositionRoot(splitPanel);
+		getCore().addComponent(splitPanel);
 		
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);

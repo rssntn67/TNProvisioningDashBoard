@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
+import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -135,6 +138,7 @@ public class SistemiInformativiTab extends DashboardTab {
 
 	@Override
 	public void load() {
+		updateTabHead();
 		if (!loaded) {
 			try {
 				m_requisitionContainer = getService().getSIContainer();
@@ -156,7 +160,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		}
 	}
 	
-	private void layout() { 
+	private void layout() {
 		final ComboBox serverLevelSearchComboBox = new ComboBox("Select Server Type");
 		final ComboBox managedBySearchComboBox  = new ComboBox("Select Server Managed by Group");
 		final ComboBox prodSearchComboBox      = new ComboBox("Select Production Category");
@@ -175,14 +179,20 @@ public class SistemiInformativiTab extends DashboardTab {
 
 		final ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
 
-		List<String> snmpprofiles = new ArrayList<String>(getService().getSnmpProfileContainer().getSnmpProfileMap().keySet());
+		Map<String,SnmpProfile> snmpprofilemap = 
+				getService().getSnmpProfileContainer().getSnmpProfileMap();
+		List<String> snmpprofiles = new ArrayList<String>(snmpprofilemap.keySet());
 		Collections.sort(snmpprofiles);
 		for (String snmpprofile: snmpprofiles) {
 			snmpComboBox.addItem(snmpprofile);
+			snmpComboBox.setItemCaption(snmpprofile, 
+					snmpprofile + 
+					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
+					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
 		}
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		setCompositionRoot(splitPanel);
+		getCore().addComponent(splitPanel);
 		
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);

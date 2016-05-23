@@ -77,6 +77,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 	@Override
 	public void load() {
+		updateTabHead();
 		if (m_loaded) 
 			return;
 		m_jobdao = getService().getJobContainer();
@@ -84,7 +85,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		m_jobTable.setContainerDataSource(m_jobdao);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstatus","jobstart","jobend"});
 		m_panel.setContent(getFastBox());
-		setCompositionRoot(m_panel);
+		getCore().addComponent(m_panel);
 		m_fast.addClickListener(this);
     	m_loaded = true;
 	}

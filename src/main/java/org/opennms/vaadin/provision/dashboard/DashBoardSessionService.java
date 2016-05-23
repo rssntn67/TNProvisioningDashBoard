@@ -71,6 +71,7 @@ public class DashBoardSessionService implements Serializable {
 
 	private OnmsDao m_onmsDao;
 	private String m_user;
+	private String m_url;
 	private DashBoardService m_service;
 	
 	public DashBoardConfig getConfig() {
@@ -130,7 +131,7 @@ public class DashBoardSessionService implements Serializable {
 	}
 
 	public void logout() {
-		logger.info("logged out: " + m_user);
+		logger.info("logged out: user: " + m_user + " url: " + m_url);
 		m_onmsDao.destroy();
 	}
 	
@@ -141,6 +142,7 @@ public class DashBoardSessionService implements Serializable {
 		m_onmsDao.getSnmpInfo("127.0.0.1");
 		logger.info("logged in user: " + username + "@" + url);
 		m_user = username;
+		m_url = url;
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1662,5 +1664,13 @@ public class DashBoardSessionService implements Serializable {
     public void sync(String foregnSource) {
     	m_onmsDao.sync(foregnSource);
     }
+
+	public String getUrl() {
+		return m_url;
+	}
+
+	public void setUrl(String url) {
+		m_url = url;
+	}
 
 }

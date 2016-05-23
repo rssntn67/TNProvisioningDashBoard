@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
+import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -104,6 +107,7 @@ public class MediaGatewayTab extends DashboardTab {
 
 	@Override
 	public void load() {
+		updateTabHead();
 		if (!loaded) {
 			try {
 				if (getService().getMediaGateway() == null ) {
@@ -149,20 +153,31 @@ public class MediaGatewayTab extends DashboardTab {
 		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
 		ComboBox parentComboBox = new ComboBox("Dipende da");
 
-		List<String> snmpprofiles = new ArrayList<String>(getService().getSnmpProfileContainer().getSnmpProfileMap().keySet());
+		Map<String,SnmpProfile> snmpprofilemap = 
+				getService().getSnmpProfileContainer().getSnmpProfileMap();
+		List<String> snmpprofiles = new ArrayList<String>(snmpprofilemap.keySet());
 		Collections.sort(snmpprofiles);
 		for (String snmpprofile: snmpprofiles) {
 			snmpComboBox.addItem(snmpprofile);
+			snmpComboBox.setItemCaption(snmpprofile, 
+					snmpprofile + 
+					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
+					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
 		}
 
-		List<String> backupprofiles = new ArrayList<String>(getService().getBackupProfileContainer().getBackupProfileMap().keySet());
+		Map<String,BackupProfile> bckupprofilemap = 
+				getService().getBackupProfileContainer().getBackupProfileMap();
+		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
 		Collections.sort(backupprofiles);
 		for (String backupprofile: backupprofiles) {
 			backupComboBox.addItem(backupprofile);
+			backupComboBox.setItemCaption(backupprofile, 
+					backupprofile +
+					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
 		}
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		setCompositionRoot(splitPanel);
+		getCore().addComponent(splitPanel);
 		
 		VerticalLayout leftLayout = new VerticalLayout();
 		splitPanel.addComponent(leftLayout);
