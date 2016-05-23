@@ -444,7 +444,15 @@ public class DashBoardSessionService implements Serializable {
 			}
 			if (threshCategory == null)
 				valid = false;
-			
+
+			String slaCategory = null;
+			for (String slacat: DashBoardUtils.m_sla_levels) {
+				if (node.getCategory(slacat) != null ) {
+					slaCategory = slacat;
+					break;
+				}
+			}
+
 			String city = null;
 			if (node.getCity() != null)
 				city = node.getCity();
@@ -466,6 +474,16 @@ public class DashBoardSessionService implements Serializable {
 			if (node.getParentForeignId() != null)
 				parent =m_foreignIdNodeLabelMap.get(node.getParentForeignId());
 			
+			String building = null;
+			if (node.getAsset(DashBoardUtils.BUILDING) != null)
+				building = node.getAsset(DashBoardUtils.BUILDING).getValue();
+			
+			String circuitId = null;
+			if (node.getAsset(DashBoardUtils.CIRCUITID) != null)
+				circuitId = node.getAsset(DashBoardUtils.CIRCUITID).getValue();
+			else if (node.getBuilding() != null) 
+				circuitId = node.getBuilding();
+
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					descr, 
 					hostname, 
@@ -481,7 +499,10 @@ public class DashBoardSessionService implements Serializable {
 					address1, 
 					foreignId, 
 					valid, 
-					secondary.toArray(new String[secondary.size()]));
+					secondary.toArray(new String[secondary.size()]),
+					slaCategory,
+					building,
+					circuitId);
 			requisitionContainer.addBean(tnnode);
 		}
 		return requisitionContainer;
@@ -1090,13 +1111,24 @@ public class DashBoardSessionService implements Serializable {
 		
 		if (node.getThreshCategory() != null)
 			requisitionNode.putCategory(new RequisitionCategory(node.getThreshCategory()));
+
+		if (node.getSlaCategory() != null)
+			requisitionNode.putCategory(new RequisitionCategory(node.getSlaCategory()));
 		
+
 		if (node.getCity() != null && node.getAddress1() != null)
 			requisitionNode.putAsset(new RequisitionAsset("description", node.getCity() + " - " + node.getAddress1()));
 		
 		if (node.getAddress1()  != null)
 			requisitionNode.putAsset(new RequisitionAsset("address1", node.getAddress1() ));
 		
+		if (node.getCircuitId() != null) {
+			requisitionNode.putAsset(new RequisitionAsset("circuitId", node.getCircuitId() ));
+			requisitionNode.setBuilding(node.getCircuitId());
+		}
+		
+		if (node.getBuilding() != null)
+			requisitionNode.putAsset(new RequisitionAsset("building", node.getBuilding() ));
 		for ( RequisitionAsset asset : m_service.getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
 			requisitionNode.putAsset(asset);
 		}
@@ -1129,6 +1161,12 @@ public class DashBoardSessionService implements Serializable {
 			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
 		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
 			update.put(DashBoardUtils.CITY, node.getCity());
+		if (node.getUpdatemap().contains(DashBoardUtils.BUILDING))
+			update.put(DashBoardUtils.BUILDING, node.getBuilding());
+		if (node.getUpdatemap().contains(DashBoardUtils.CIRCUITID)) {
+			update.put(DashBoardUtils.CIRCUITID, node.getCircuitId());
+			update.put(DashBoardUtils.BUILDING_SCALAR, node.getCircuitId());
+		}
 		if (node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
 			update.put(DashBoardUtils.ADDRESS1, node.getAddress1());
 		if (node.getUpdatemap().contains(DashBoardUtils.CITY)
@@ -1284,7 +1322,6 @@ public class DashBoardSessionService implements Serializable {
 			updatemap.add("node-label", update.get(DashBoardUtils.LABEL));
 		if (update.containsKey(DashBoardUtils.CITY))
 			updatemap.add("city", update.get(DashBoardUtils.CITY));
-
 		if (update.containsKey(DashBoardUtils.ADDRESS1))
 			assetsToPut.add(new RequisitionAsset("address1", update
 					.get(DashBoardUtils.ADDRESS1)));

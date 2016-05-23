@@ -164,6 +164,12 @@ public class DashBoardUtils {
 		"ThresholdALERT"
 	};
 	
+	public static final String[] m_sla_levels = {
+		"noApssSlaReport",
+		"noMittSlaReport",
+		"noPatSlaReport"
+	};
+	
 	public static final String[][] m_server_levels = {
 		{"VirtualServer","VmVz"},
 		{"VirtualServer","VmKVM"},
@@ -217,6 +223,7 @@ public class DashBoardUtils {
 	public static final String NETWORK_CATEGORY = "networkCategory";
 	public static final String NOTIF_CATEGORY   = "notifCategory";
 	public static final String THRESH_CATEGORY  = "threshCategory";
+	public static final String SLA_CATEGORY  = "slaCategory";
 
 	public static final String DESCR = "descr";
 	public static final String HOST = "hostname";

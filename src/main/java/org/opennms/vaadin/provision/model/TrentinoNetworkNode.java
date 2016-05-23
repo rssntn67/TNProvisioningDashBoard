@@ -35,12 +35,15 @@ public class TrentinoNetworkNode implements Serializable {
 	private Vrf m_networkCategory;
 	private String m_notifCategory;
 	private String m_threshCategory;
+	private String m_slaCategory;
 
 	private String m_snmpProfile;
 	private String m_backupProfile;
 	
 	private String m_city;
 	private String m_address1;
+	private String m_building;
+	private String m_circuitId;
 	
 	private String m_foreignId;
 	
@@ -81,7 +84,10 @@ public class TrentinoNetworkNode implements Serializable {
 			String address1, 
 			String foreignId, 
 			boolean valid, 
-			String[] secondary) {
+			String[] secondary,
+			String slaCategory,
+			String building,
+			String circuitId) {
 		super();
 		m_label = null;
 		m_descr = descr;
@@ -99,6 +105,9 @@ public class TrentinoNetworkNode implements Serializable {
 		m_foreignId = foreignId;
 		m_valid = valid;
 		m_secondary = secondary;
+		m_slaCategory = slaCategory;
+		m_building = building;
+		m_circuitId = circuitId;
 
 	}
 
@@ -317,5 +326,51 @@ public class TrentinoNetworkNode implements Serializable {
 	
 	public void setSecondary(String[] secondary) {
 		m_secondary=secondary;
+	}
+
+	public String getBuilding() {
+		return m_building;
+	}
+
+	public void setBuilding(String building) {
+		if (m_building !=  null && m_building.equals(building))
+			return;
+		if (m_building ==  null && building == null)
+			return;
+		if (building != null ) {
+			m_updatemap.add(DashBoardUtils.BUILDING);
+		}
+		m_building = building;
+	}
+
+	public String getCircuitId() {
+		return m_circuitId;
+	}
+
+	public void setCircuitId(String circuitId) {
+		if (m_circuitId !=  null && m_circuitId.equals(circuitId))
+			return;
+		if (m_circuitId ==  null && circuitId == null)
+			return;
+		if (circuitId != null ) {
+			m_updatemap.add(DashBoardUtils.CIRCUITID);
+		}
+		m_circuitId = circuitId;
+	}
+
+	public String getSlaCategory() {
+		return m_slaCategory;
+	}
+
+	public void setSlaCategory(String slaCategory) {
+		if (slaCategory != null && slaCategory.equals(m_slaCategory))
+			return;
+		if (m_slaCategory != null) {
+			m_categoriesToDel.add(m_slaCategory);
+		}
+		if (slaCategory != null) { 
+			m_categoriesToAdd.add(slaCategory);
+		}
+		m_slaCategory = slaCategory;
 	}
 }
