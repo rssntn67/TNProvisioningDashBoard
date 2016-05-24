@@ -799,4 +799,10 @@ public class VrfTab extends DashboardTab {
 	       }
 	}
 	
+	@Override
+	public String getName() {
+		return "VrfProfileTab";
+	}
+
+	
 }

@@ -76,6 +76,11 @@ public class FastTab extends DashboardTab implements ClickListener {
 	}
 
 	@Override
+	public String getName() {
+		return "FastTab";
+	}
+
+	@Override
 	public void load() {
 		updateTabHead();
 		if (m_loaded) 

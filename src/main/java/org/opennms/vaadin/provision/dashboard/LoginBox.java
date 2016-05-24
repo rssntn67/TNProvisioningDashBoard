@@ -35,7 +35,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	 */
 	private static final long serialVersionUID = -363579873686942087L;
 
-	private static final String s_panellogincaption="- Log In - Trentino Network Provisioning Dashboard 3.0.0 Build May 23th 2016 20:30 CET";
+	private static final String s_panellogincaption="- Log In - Trentino Network Provisioning Dashboard 3.0.0 Build May 24th 2016 17:00 CET";
 	private Panel m_panel  = new Panel(s_panellogincaption);
     private ComboBox m_select = new ComboBox("Select Domain");
     private TextField m_username = new TextField("Username:");
@@ -139,7 +139,14 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    
 	    Iterator<Component> ite = m_tabs.iterator();
 	    while (ite.hasNext()) {
-	    	m_tabs.getTab(ite.next()).setEnabled(true);
+	    	try {
+	    		DashboardTab dashboardTab = (DashboardTab) ite.next();
+	    		if (m_service.getConfig().isTabDisabled(dashboardTab.getName()))
+	    			continue;
+	    		m_tabs.getTab(dashboardTab).setEnabled(true);
+	    	} catch (Exception e) {
+	    		logger.log(Level.INFO,"Log tab always enabled");
+	    	}
 	    }
 	}
 		

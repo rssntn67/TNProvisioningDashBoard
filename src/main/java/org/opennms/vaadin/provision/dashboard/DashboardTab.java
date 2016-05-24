@@ -41,6 +41,8 @@ public abstract class DashboardTab extends CustomComponent {
 
 	public abstract void load();
 	
+	public abstract String getName();
+	
 	public DashBoardSessionService getService() {
 		return m_service;
 	}

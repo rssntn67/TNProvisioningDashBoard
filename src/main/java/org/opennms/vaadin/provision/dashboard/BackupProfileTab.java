@@ -390,4 +390,11 @@ public class BackupProfileTab extends DashboardTab {
 	       }
 	}
 
+
+
+	@Override
+	public String getName() {
+		return "BackupProfileTab";
+	}
+
 }

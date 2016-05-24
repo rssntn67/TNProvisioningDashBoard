@@ -81,4 +81,10 @@ public class DashBoardConfig {
 			return "Oof6Eezu";
 		
 	}
+	
+	public boolean isTabDisabled(String tabName) {
+		if (m_configuration.getProperty(tabName) != null && "disabled".equals(m_configuration.getProperty(tabName)))
+			return true;
+		return false;
+	}
 }

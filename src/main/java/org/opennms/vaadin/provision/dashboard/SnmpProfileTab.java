@@ -353,5 +353,11 @@ public class SnmpProfileTab extends DashboardTab {
 	             throw new InvalidValueException("DuplicatedSnmpProfileValidator: trovato un duplicato della profilo snmp: " + snmp);
 	       }
 	}
+	
+	@Override
+	public String getName() {
+		return "SnmpProfileTab";
+	}
+
 
 }

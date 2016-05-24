@@ -678,5 +678,11 @@ public class MediaGatewayTab extends DashboardTab {
                                " Labels may not start or end with a hyphen.");
 		}
 	}
+	
+	@Override
+	public String getName() {
+		return "MediaGatewayTab";
+	}
+
 
 }
