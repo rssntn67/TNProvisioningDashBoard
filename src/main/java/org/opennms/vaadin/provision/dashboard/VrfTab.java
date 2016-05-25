@@ -70,6 +70,7 @@ public class VrfTab extends DashboardTab {
 	private Button m_removeVrfButton  = new Button("Elimina VRF");
 
 	private VerticalLayout m_editVrfLayout  = new VerticalLayout();
+	TextField m_name_vrf = new TextField("Vrf");
 	
 	private BeanFieldGroup<Vrf> m_editorFields;
 
@@ -98,7 +99,6 @@ public class VrfTab extends DashboardTab {
 		final ComboBox threshCatSearchComboBox  = new ComboBox("Select Vrf Threshold Level");
 		final ComboBox vrfSearchComboBox        = new ComboBox("Select Vrf");
 
-		TextField vrf = new TextField("Vrf");
 		final ComboBox domainComboBox = new ComboBox("Dominio");
 		ComboBox networkCatComboBox = new ComboBox("Network Level");
 		ComboBox notifCatComboBox   = new ComboBox("Notification Level");
@@ -523,14 +523,15 @@ public class VrfTab extends DashboardTab {
 			threshCatComboBox.addItem(threshold);
 		}
 
-		vrf.setSizeFull();
-		vrf.setWidth(4, Unit.CM);
-		vrf.setHeight(6, Unit.MM);
-		vrf.setRequired(true);
-		vrf.setRequiredError("vrf non deve essere vuota");
-		vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]+$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
-		vrf.addValidator(new DuplicatedVrfValidator());
-		vrf.setImmediate(true);
+		m_name_vrf.setSizeFull();
+		m_name_vrf.setWidth(4, Unit.CM);
+		m_name_vrf.setHeight(6, Unit.MM);
+		m_name_vrf.setRequired(true);
+		m_name_vrf.setRequiredError("vrf non deve essere vuota");
+		m_name_vrf.addValidator(new RegexpValidator("^[A-Z][A-Za-z\\-0-9]*[A-Za-z0-9]+$", "la vrf deve iniziare con una maiuscola e contenere codici alfanumerici"));
+		m_name_vrf.addValidator(new DuplicatedVrfValidator());
+		m_name_vrf.setEnabled(false);
+		m_name_vrf.setImmediate(true);
 
 		networkCatComboBox.setInvalidAllowed(false);
 		networkCatComboBox.setNullSelectionAllowed(false);
@@ -567,7 +568,7 @@ public class VrfTab extends DashboardTab {
 
         m_editorFields = new BeanFieldGroup<Vrf>(Vrf.class);
 		m_editorFields.setBuffered(true);
-		m_editorFields.bind(vrf, VRF);
+		m_editorFields.bind(m_name_vrf, VRF);
 		m_editorFields.bind(networkCatComboBox, NETWORK_LEVEL);
 		m_editorFields.bind(domainComboBox, DNS_DOMAIN);
 		m_editorFields.bind(snmpComboBox, SNMP_PROFILE);
@@ -577,7 +578,7 @@ public class VrfTab extends DashboardTab {
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
-		leftGeneralInfo.addComponent(vrf);
+		leftGeneralInfo.addComponent(m_name_vrf);
 		leftGeneralInfo.addComponent(networkCatComboBox);
 		leftGeneralInfo.addComponent(domainComboBox);
 		
@@ -623,6 +624,7 @@ public class VrfTab extends DashboardTab {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
+				m_name_vrf.setEnabled(true);
 				m_vrfTable.select(null);
 				m_editorFields.setItemDataSource(new Vrf());
 				m_editVrfLayout.setVisible(true);
@@ -722,6 +724,7 @@ public class VrfTab extends DashboardTab {
 		Vrf vrf =m_vrfContainer.get(vrfId);
 		m_editorFields.setItemDataSource(vrf);
 		m_editVrfLayout.setVisible(true);
+		m_name_vrf.setEnabled(false);
 		m_saveVrfButton.setEnabled(true);
 		m_removeVrfButton.setEnabled(true);
 	}
@@ -801,7 +804,7 @@ public class VrfTab extends DashboardTab {
 	
 	@Override
 	public String getName() {
-		return "VrfProfileTab";
+		return "VrfTab";
 	}
 
 	

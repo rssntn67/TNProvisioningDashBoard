@@ -57,7 +57,8 @@ public class BackupProfileTab extends DashboardTab {
 	private Button m_removeBackupButton  = new Button("Elimina Profilo Backup");
 
 	private VerticalLayout m_editBackupLayout  = new VerticalLayout();
-	
+	TextField m_backup_name = new TextField("Nome");
+
 	private BeanFieldGroup<BackupProfile> m_editorFields     = new BeanFieldGroup<BackupProfile>(BackupProfile.class);
 
 	private Set<String> m_fastBackupProfile = new HashSet<String>();
@@ -88,7 +89,6 @@ public class BackupProfileTab extends DashboardTab {
 	private void layout() {
 		final ComboBox backupSearchComboBox        = new ComboBox("Select Backup Profile");
 
-		TextField backup_name = new TextField("Nome");
 		TextField backup_user = new TextField("Username");
 		TextField backup_pass = new TextField("Password");
 		final TextField backup_ena  = new TextField("Enable");
@@ -167,14 +167,14 @@ public class BackupProfileTab extends DashboardTab {
 		});
 
 
-		backup_name.setSizeFull();
-		backup_name.setWidth(4, Unit.CM);
-		backup_name.setHeight(6, Unit.MM);
-		backup_name.setRequired(true);
-		backup_name.setRequiredError("il nome del profilo non deve essere vuoto");
-		backup_name.addValidator(new RegexpValidator("^[A-Za-z][A-Za-z\\-_0-9]*$", "il profilo backup deve iniziare con un carattere alfabetico"));
-		backup_name.addValidator(new DuplicatedBackupProfileValidator());
-		backup_name.setImmediate(true);
+		m_backup_name.setSizeFull();
+		m_backup_name.setWidth(4, Unit.CM);
+		m_backup_name.setHeight(6, Unit.MM);
+		m_backup_name.setRequired(true);
+		m_backup_name.setRequiredError("il nome del profilo non deve essere vuoto");
+		m_backup_name.addValidator(new RegexpValidator("^[A-Za-z][A-Za-z\\-_0-9]*$", "il profilo backup deve iniziare con un carattere alfabetico"));
+		m_backup_name.addValidator(new DuplicatedBackupProfileValidator());
+		m_backup_name.setImmediate(true);
 
 		backup_user.setRequired(true);
 		backup_user.setRequiredError("E' necessario specificare un Username");
@@ -219,7 +219,7 @@ public class BackupProfileTab extends DashboardTab {
 		backup_conn.addItem("telnet");
 		
 		m_editorFields.setBuffered(true);
-		m_editorFields.bind(backup_name, BACKUP_PROFILE_NAME);
+		m_editorFields.bind(m_backup_name, BACKUP_PROFILE_NAME);
 		m_editorFields.bind(backup_user, BACKUP_USERNAME);
 		m_editorFields.bind(backup_pass, BACKUP_PASSWORD);
 		m_editorFields.bind(backup_ena,  BACKUP_ENABLE);
@@ -228,7 +228,7 @@ public class BackupProfileTab extends DashboardTab {
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
-		leftGeneralInfo.addComponent(backup_name);
+		leftGeneralInfo.addComponent(m_backup_name);
 		leftGeneralInfo.addComponent(backup_user);
 		leftGeneralInfo.addComponent(backup_pass);
 		leftGeneralInfo.addComponent(backup_auto);
@@ -359,13 +359,15 @@ public class BackupProfileTab extends DashboardTab {
 		m_editorFields.setItemDataSource(backup);
 		m_editBackupLayout.setVisible(true);
 		if (m_fastBackupProfile.contains(backup.getName())) {
-			m_saveBackupButton.setEnabled(false);
-			m_removeBackupButton.setEnabled(false);
-			Notification.show("Cannot Modify Profile", "Backup Profile is referenced in Fast", Type.WARNING_MESSAGE);
-		} else {
-			m_saveBackupButton.setEnabled(true);
-			m_removeBackupButton.setEnabled(true);
-		}
+				m_backup_name.setEnabled(false);
+				m_saveBackupButton.setEnabled(true);
+				m_removeBackupButton.setEnabled(false);
+				Notification.show("Delete and Modify Name not permitted", "Name is referenced in Fast", Type.WARNING_MESSAGE);
+			} else {
+				m_backup_name.setEnabled(true);
+				m_saveBackupButton.setEnabled(true);
+				m_removeBackupButton.setEnabled(true);
+			}
 
 	}
 

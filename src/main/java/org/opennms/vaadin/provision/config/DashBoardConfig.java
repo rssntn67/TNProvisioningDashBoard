@@ -83,16 +83,27 @@ public class DashBoardConfig {
 	}
 	
 	public boolean isTabDisabled(String tabName, String username) {
-		if (m_configuration.getProperty(tabName) == null)
+		logger.info("Checking Authorization: Tab: " + tabName + " User: " + username);
+		if (m_configuration.getProperty(tabName) == null) {
+			logger.info("Null property, Authorization Denied: Tab: " + tabName + " User: " + username);
 				return true;
-		if ("enabled".equals(m_configuration.getProperty(tabName)))
-			return false;
-		if ("disabled".equals(m_configuration.getProperty(tabName)))
-			return true;
-		for (String autorizeduser: m_configuration.getProperty(tabName).split(",")) {
-			if (autorizeduser.equals(username))
-				return false;
 		}
+		if ("enabled".equals(m_configuration.getProperty(tabName))) {
+			logger.info("enabled found, Authorization Granted: Tab: " + tabName + " User: " + username);
+			return false;
+		}
+		if ("disabled".equals(m_configuration.getProperty(tabName))) {
+			logger.info("disabled found, Authorization Denied: Tab: " + tabName + " User: " + username);
+			return true;
+		}
+		for (String autorizeduser: m_configuration.getProperty(tabName).split(",")) {
+			logger.info("checking user:" + autorizeduser + " Tab: " + tabName + " User: " + username);
+			if (autorizeduser.equals(username)) {
+				logger.info("user found, Authorization Granted: Tab: " + tabName + " User: " + username);
+				return false;
+			}
+		}
+		logger.info("no user found, Authorization Denied: Tab: " + tabName + " User: " + username);
 		return true;
 	}
 }
