@@ -141,7 +141,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    while (ite.hasNext()) {
 	    	try {
 	    		DashboardTab dashboardTab = (DashboardTab) ite.next();
-	    		if (m_service.getConfig().isTabDisabled(dashboardTab.getName()))
+	    		if (m_service.getConfig().isTabDisabled(dashboardTab.getName(),m_username.getValue()))
 	    			continue;
 	    		m_tabs.getTab(dashboardTab).setEnabled(true);
 	    	} catch (Exception e) {

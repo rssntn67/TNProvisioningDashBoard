@@ -56,6 +56,7 @@ public class SnmpProfileTab extends DashboardTab {
 	private Set<String> m_fastSnmpProfile = new HashSet<String>();
 
 	private VerticalLayout m_editSnmpLayout  = new VerticalLayout();
+	TextField m_snmp_name = new TextField("Nome");
 	
 	private BeanFieldGroup<SnmpProfile> m_editorFields     = new BeanFieldGroup<SnmpProfile>(SnmpProfile.class);
 
@@ -84,7 +85,6 @@ public class SnmpProfileTab extends DashboardTab {
 
 	private void layout() {
 		final ComboBox snmpSearchComboBox        = new ComboBox("Select Snmp Profile");
-		TextField snmp_name = new TextField("Nome");
 		TextField snmp_comm = new TextField("Community");
 		ComboBox snmp_vers = new ComboBox("Version v1|v2c");
 		ComboBox snmp_time = new ComboBox("Timeout (ms)");
@@ -161,14 +161,14 @@ public class SnmpProfileTab extends DashboardTab {
 		});
 
 
-		snmp_name.setSizeFull();
-		snmp_name.setWidth(4, Unit.CM);
-		snmp_name.setHeight(6, Unit.MM);
-		snmp_name.setRequired(true);
-		snmp_name.setRequiredError("il nome del profilo non deve essere vuoto");
-		snmp_name.addValidator(new RegexpValidator("^[A-Za-z][A-Za-z\\-_0-9]*$", "il profilo snmp deve iniziare con un carattere alfabetico"));
-		snmp_name.addValidator(new DuplicatedSnmpProfileValidator());
-		snmp_name.setImmediate(true);
+		m_snmp_name.setSizeFull();
+		m_snmp_name.setWidth(4, Unit.CM);
+		m_snmp_name.setHeight(6, Unit.MM);
+		m_snmp_name.setRequired(true);
+		m_snmp_name.setRequiredError("il nome del profilo non deve essere vuoto");
+		m_snmp_name.addValidator(new RegexpValidator("^[A-Za-z][A-Za-z\\-_0-9]*$", "il profilo snmp deve iniziare con un carattere alfabetico"));
+		m_snmp_name.addValidator(new DuplicatedSnmpProfileValidator());
+		m_snmp_name.setImmediate(true);
 
 		snmp_comm.setRequired(true);
 		snmp_comm.setRequiredError("E' necessario specificare una community");
@@ -188,14 +188,14 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_time.addItem("5000");
 
 		m_editorFields.setBuffered(true);
-		m_editorFields.bind(snmp_name, SNMP_PROFILE_NAME);
+		m_editorFields.bind(m_snmp_name, SNMP_PROFILE_NAME);
 		m_editorFields.bind(snmp_comm, SNMP_COMMUNITY);
 		m_editorFields.bind(snmp_vers, SNMP_VERSION);
 		m_editorFields.bind(snmp_time, SNMP_TIMEOUT);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
-		leftGeneralInfo.addComponent(snmp_name);
+		leftGeneralInfo.addComponent(m_snmp_name);
 		leftGeneralInfo.addComponent(snmp_comm);
 		leftGeneralInfo.addComponent(snmp_vers);
 		leftGeneralInfo.addComponent(snmp_time);
@@ -324,10 +324,12 @@ public class SnmpProfileTab extends DashboardTab {
 		m_editorFields.setItemDataSource(snmp);
 		m_editSnmpLayout.setVisible(true);
 		if (m_fastSnmpProfile.contains(snmp.getName())) {
-			m_saveSnmpButton.setEnabled(false);
+			m_snmp_name.setEnabled(false);
+			m_saveSnmpButton.setEnabled(true);
 			m_removeSnmpButton.setEnabled(false);
-			Notification.show("Cannot Modify Profile", "Snmp Profile is referenced in Fast", Type.WARNING_MESSAGE);
+			Notification.show("Delete and Modify Name not permitted", "Name is referenced in Fast", Type.WARNING_MESSAGE);
 		} else {
+			m_snmp_name.setEnabled(true);
 			m_saveSnmpButton.setEnabled(true);
 			m_removeSnmpButton.setEnabled(true);
 		}
