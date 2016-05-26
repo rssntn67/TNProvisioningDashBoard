@@ -11,7 +11,13 @@ import java.util.logging.Logger;
 
 public class DashBoardConfig {
 
-	protected static final String PROPERTIES_FILE_PATH = "/etc/tomcat7/provision-dashboard.properties";
+	protected static final String PROPERTIES_FILE_PATH = "/provision-dashboard.properties";
+	protected static final String[] PROPERTIES_FILE_PATHS = {
+		"/opt/opennms/etc/provision-dashboard.properties",
+		"/etc/opennms/provision-dashboard.properties",
+		"/etc/tomcat7/provision-dashboard.properties",
+		"/usr/share/tomcat/conf/provision-dashboard.properties"
+	};
 	protected static final String PROPERTIES_URLS_KEY = "urls";
 	protected static final String PROPERTIES_URL_ROOT_KEY = "url.";
 	protected static final String PROPERTIES_DB_URL_KEY = "db_url";
@@ -28,16 +34,20 @@ public class DashBoardConfig {
 	private final static Logger logger = Logger.getLogger(DashBoardConfig.class.getName());	
 
 	public void reload() {
-    	File file = new File(PROPERTIES_FILE_PATH);
-    	if (file.exists() && file.isFile()) {
-    		try {
-    			m_configuration.load(new FileInputStream(file));
-    			logger.info("Loaded Configuration file: " + PROPERTIES_FILE_PATH );
-    		} catch (IOException ex) {
-    			logger.log(Level.INFO, "Cannot load configuration file: ", ex );
+		File file = new File(PROPERTIES_FILE_PATH);
+		for (String name: PROPERTIES_FILE_PATHS) {
+    	File curfile = new File(name);
+    		if (curfile.exists() && curfile.isFile()) {
+    			file = curfile;
     		}
-  
-    	}
+		}
+		try {
+			m_configuration.load(new FileInputStream(file));
+			logger.info("Loaded Configuration file: " + PROPERTIES_FILE_PATH );
+		} catch (IOException ex) {
+			logger.log(Level.INFO, "Cannot load configuration file: ", ex );
+		}
+
 	}
 
 	public DashBoardConfig() {
