@@ -86,7 +86,7 @@ public class DashBoardSessionService implements Serializable {
 	private String m_url;
 	private DashBoardService m_service;
 
-	public void ReloadDashBoardConfig() {
+	public void reloadDashBoardConfig() {
 		m_service.getConfig().reload();
 	}
 	
@@ -200,6 +200,8 @@ public class DashBoardSessionService implements Serializable {
 	}
 		
 	public void init() throws SQLException {
+		reloadDashBoardConfig();
+		
 		logger.info("init session:" + this);
 		TableQuery snmptq = new TableQuery("snmpprofiles", m_service.getPool());
 		snmptq.setVersionColumn("versionid");
