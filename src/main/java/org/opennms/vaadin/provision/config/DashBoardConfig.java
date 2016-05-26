@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class DashBoardConfig {
 
-	protected static final String PROPERTIES_FILE_PATH = "/provision-dashboard.properties";
+	protected static final String PROPERTIES_FILE_PATH = "provision-dashboard.properties";
 	protected static final String[] PROPERTIES_FILE_PATHS = {
 		"/opt/opennms/etc/provision-dashboard.properties",
 		"/etc/opennms/provision-dashboard.properties",
@@ -34,16 +34,22 @@ public class DashBoardConfig {
 	private final static Logger logger = Logger.getLogger(DashBoardConfig.class.getName());	
 
 	public void reload() {
-		File file = new File(PROPERTIES_FILE_PATH);
 		for (String name: PROPERTIES_FILE_PATHS) {
-    	File curfile = new File(name);
-    		if (curfile.exists() && curfile.isFile()) {
-    			file = curfile;
+			File file = new File(name);
+    		if (file.exists() && file.isFile()) {
+    			try {
+    				m_configuration.load(new FileInputStream(file));
+    				logger.info("Loaded Configuration file: " + file.getPath());
+    				return;
+    			} catch (IOException ex) {
+    				logger.log(Level.INFO, "Cannot load configuration file: ", ex );
+    			}
     		}
 		}
 		try {
-			m_configuration.load(new FileInputStream(file));
-			logger.info("Loaded Configuration file: " + PROPERTIES_FILE_PATH );
+			m_configuration.load(
+					this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE_PATH));
+			logger.info("Loaded Classpath DefaultConfiguration file: " + PROPERTIES_FILE_PATH);
 		} catch (IOException ex) {
 			logger.log(Level.INFO, "Cannot load configuration file: ", ex );
 		}
@@ -52,7 +58,6 @@ public class DashBoardConfig {
 
 	public DashBoardConfig() {
 		super();
-		reload();
 	}
 
 	public String[] getUrls() {

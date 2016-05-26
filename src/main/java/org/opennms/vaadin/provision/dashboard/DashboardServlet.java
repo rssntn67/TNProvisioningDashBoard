@@ -21,7 +21,6 @@ public class DashboardServlet extends VaadinServlet {
 	@Override
 	protected void servletInitialized()
 	            throws ServletException {
-		logger.info("servletInitialized: calling.");
         super.servletInitialized();		    
 	}
 

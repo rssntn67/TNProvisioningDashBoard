@@ -1,5 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,7 +28,8 @@ import com.vaadin.ui.UI;
 @PreserveOnRefresh
 public class DashboardUI extends UI {
 
-	private final static Logger logger = Logger.getLogger(DashboardTab.class.getName());
+	private final static Logger logger = Logger.getLogger(DashboardTab.class
+			.getName());
 
 	/**
 	 * 
@@ -35,27 +37,45 @@ public class DashboardUI extends UI {
 	private static final long serialVersionUID = -5948892618258879832L;
 
 	protected void init(VaadinRequest request) {
-		
-		DashBoardService service = (DashBoardService)VaadinSession.getCurrent().getService();
-		
-		if (!service.isInitdb()) {
-			AbsoluteLayout layout = new AbsoluteLayout();
-			layout.setWidth("800px");
-			layout.setHeight("600px");
-			Panel panel = new Panel("L'applicazione non e' disponibile");
-			panel.setContent(new Label("Accesso al database non dispobile, contattare l'amministratore di sistema"));
-			panel.setWidth("500px");
-			layout.addComponent(panel,"left: 150px; top: 100px;");
-			setContent(layout);
-			logger.log(Level.WARNING,"Init Failed per accesso database");
-			Notification.show("Init Failed", "Problemi di Accesso al profile database", Notification.Type.ERROR_MESSAGE);
+
+		DashBoardService service = (DashBoardService) VaadinSession
+				.getCurrent().getService();
+
+		if (!service.ready()) {
+			layoutInitError("Init Failed per accesso database", 
+					"L'applicazione non e' disponibile",
+					"Accesso al database non dispobile, contattare l'amministratore di sistema");
 			return;
 		}
 
 		DashBoardSessionService sessionservice = new DashBoardSessionService();
-    	sessionservice.setService(service);
-    	sessionservice.setOnmsDao(new OnmsDao());
-    	setContent(new DashboardTabSheet(sessionservice));	    
+		sessionservice.setService(service);
+		sessionservice.setOnmsDao(new OnmsDao());
+		try {
+			sessionservice.init();
+		} catch (SQLException e) {
+			layoutInitError(e.getMessage(), 
+					"L'applicazione non e' disponibile", 
+					"Accesso al database non dispobile, riprovare piu' tardi");
+			return;
+		}
+		setContent(new DashboardTabSheet(sessionservice));
+	}
+
+	private void layoutInitError(String error, String message, String label) {
+		AbsoluteLayout layout = new AbsoluteLayout();
+		layout.setWidth("800px");
+		layout.setHeight("600px");
+		Panel panel = new Panel(message);
+		panel.setContent(new Label(label));
+		panel.setWidth("500px");
+		layout.addComponent(panel, "left: 150px; top: 100px;");
+		setContent(layout);
+		logger.log(Level.WARNING, error);
+		Notification
+				.show(error,
+						label,
+						Notification.Type.ERROR_MESSAGE);
 	}
 
 }
