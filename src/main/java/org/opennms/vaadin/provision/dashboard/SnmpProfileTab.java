@@ -188,8 +188,10 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_time.setRequiredError("E' necessario specificare il timeout");
 		snmp_time.setImmediate(true);
 		snmp_time.addItem("1800");
+		snmp_time.addItem("3000");
 		snmp_time.addItem("3600");
 		snmp_time.addItem("5000");
+		snmp_time.addItem("10000");
 
 		snmp_retries.setRequired(true);
 		snmp_retries.setRequiredError("E' necessario specificare il numero di retry");
