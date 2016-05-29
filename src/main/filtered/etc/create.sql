@@ -24,7 +24,15 @@ create table snmpprofiles (
 	community text,
 	version text,
 	timeout text,
+	retries text,
+	maxvarsperpdu text,
     versionid integer not null default 0
+);
+
+create table ipsnmpprofile (
+	ipaddr text primary key,
+	snmpprofile text not null,
+	versionid integer not null default 0
 );
 
 create table dnsdomains (
@@ -80,8 +88,6 @@ create table fasttariff (
 	tariff_description text,
 	tariff varchar(32)
 );
-
-create sequence jobs_jobid_seq minvalue 1;	
 
 create table jobs (
  jobid serial primary key,

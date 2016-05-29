@@ -32,6 +32,8 @@ public class SnmpProfileDao extends SQLContainer {
 		getContainerProperty(snmpId, "community").setValue(snmp.getCommunity());
 		getContainerProperty(snmpId, "version").setValue(snmp.getVersion());
 		getContainerProperty(snmpId, "timeout").setValue(snmp.getTimeout());
+		getContainerProperty(snmpId, "retries").setValue(snmp.getRetries());
+		getContainerProperty(snmpId, "maxvarsperpdu").setValue(snmp.getMaxvarsperpdu());
 	}
 	
 	public synchronized void saveOrUpdate(Object id, SnmpProfile snmpprofile) {
@@ -47,13 +49,19 @@ public class SnmpProfileDao extends SQLContainer {
 	
 	@SuppressWarnings("unchecked")
 	public synchronized Map<String, SnmpProfile> getSnmpProfileMap() {
-    	Map<String, SnmpProfile> snmpProfiles = new HashMap<String, SnmpProfile>();
-        for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
+		Map<String, SnmpProfile> snmpProfiles = new HashMap<String, SnmpProfile>();
+		for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
 			Item snmpprofiletableRow = getItem(i.next());
-			snmpProfiles.put(snmpprofiletableRow.getItemProperty("name").getValue().toString(),
-					new SnmpProfile(snmpprofiletableRow.getItemProperty("name"),snmpprofiletableRow.getItemProperty("community"), 
-							snmpprofiletableRow.getItemProperty("version"), 
-							snmpprofiletableRow.getItemProperty("timeout")));
+			snmpProfiles.put(snmpprofiletableRow.getItemProperty("name")
+					.getValue().toString(),
+					new SnmpProfile(
+							snmpprofiletableRow.getItemProperty("name"),
+							snmpprofiletableRow.getItemProperty("community"),
+							snmpprofiletableRow.getItemProperty("version"),
+							snmpprofiletableRow.getItemProperty("timeout"),
+							snmpprofiletableRow.getItemProperty("maxvarsperpdu"),
+							snmpprofiletableRow.getItemProperty("retries")
+							));
 		}
 		return snmpProfiles;
 	}
@@ -67,7 +75,9 @@ public class SnmpProfileDao extends SQLContainer {
 				snmptableRow.getItemProperty("name"),
 				snmptableRow.getItemProperty("community"),
 				snmptableRow.getItemProperty("version"),
-				snmptableRow.getItemProperty("timeout")
+				snmptableRow.getItemProperty("timeout"),
+				snmptableRow.getItemProperty("maxvarsperpdu"),
+				snmptableRow.getItemProperty("retries")
 				);
 		
 	}

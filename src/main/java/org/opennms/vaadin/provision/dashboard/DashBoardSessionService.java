@@ -33,6 +33,7 @@ import org.opennms.vaadin.provision.dao.DnsDomainDao;
 import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
 import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
 import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
+import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
@@ -64,6 +65,7 @@ public class DashBoardSessionService implements Serializable {
 	 * 
 	 */
 
+	private IpSnmpProfileDao     m_ipsnmpprofilecontainer;
 	private SnmpProfileDao       m_snmpprofilecontainer;
 	private BackupProfileDao     m_backupprofilecontainer;
 	private VrfDao               m_vrfcontainer;
@@ -93,7 +95,11 @@ public class DashBoardSessionService implements Serializable {
 	public DashBoardConfig getConfig() {
 		return m_service.getConfig();
 	}
-	
+
+	public IpSnmpProfileDao getIpSnmpProfileContainer() {
+		return m_ipsnmpprofilecontainer;
+	}
+
 	public SnmpProfileDao getSnmpProfileContainer() {
 		return m_snmpprofilecontainer;
 	}
@@ -128,6 +134,10 @@ public class DashBoardSessionService implements Serializable {
 
 	public JobLogDao getJobLogContainer() {
 		return m_joblogcontainer;
+	}
+
+	public void setIpSnmpprofilecontainer(IpSnmpProfileDao ipsnmpprofilecontainer) {
+		m_ipsnmpprofilecontainer = ipsnmpprofilecontainer;
 	}
 
 	public void setSnmpprofilecontainer(SnmpProfileDao snmpprofilecontainer) {
@@ -203,6 +213,11 @@ public class DashBoardSessionService implements Serializable {
 		reloadDashBoardConfig();
 		
 		logger.info("init session:" + this);
+
+		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_service.getPool());
+		ipsnmptq.setVersionColumn("versionid");
+        m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
+
 		TableQuery snmptq = new TableQuery("snmpprofiles", m_service.getPool());
 		snmptq.setVersionColumn("versionid");
         m_snmpprofilecontainer = new SnmpProfileDao(snmptq);
@@ -741,7 +756,10 @@ public class DashBoardSessionService implements Serializable {
 		for (Entry<String, SnmpProfile> snmpprofileentry : getSnmpProfileContainer().getSnmpProfileMap().entrySet()) {
 			if (info.getReadCommunity().equals(snmpprofileentry.getValue().getCommunity()) &&
 				info.getVersion().equals(snmpprofileentry.getValue().getVersion()) &&	
-				info.getTimeout().intValue() == Integer.parseInt(snmpprofileentry.getValue().getTimeout()))
+				info.getTimeout().intValue() == Integer.parseInt(snmpprofileentry.getValue().getTimeout()) &&
+				info.getMaxVarsPerPdu().intValue() == Integer.parseInt(snmpprofileentry.getValue().getMaxvarsperpdu()) &&
+				info.getRetries().intValue() == Integer.parseInt(snmpprofileentry.getValue().getRetries()) 
+				)
 				return snmpprofileentry.getKey();
 		}
 		return null;

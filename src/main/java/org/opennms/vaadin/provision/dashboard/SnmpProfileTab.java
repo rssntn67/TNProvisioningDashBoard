@@ -39,10 +39,12 @@ import com.vaadin.ui.Notification.Type;
 @Theme("runo")
 public class SnmpProfileTab extends DashboardTab {
 
-	public static final String SNMP_PROFILE_NAME = "name";
-	public static final String SNMP_COMMUNITY    = "community";
-	public static final String SNMP_VERSION      = "version";
-	public static final String SNMP_TIMEOUT      = "timeout";
+	public static final String SNMP_PROFILE_NAME  = "name";
+	public static final String SNMP_COMMUNITY     = "community";
+	public static final String SNMP_VERSION       = "version";
+	public static final String SNMP_TIMEOUT       = "timeout";
+	public static final String SNMP_RETRIES       = "retries";
+	public static final String SNMP_MAXVARSPERPDU = "maxvarsperpdu";
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private SnmpProfileDao m_snmpContainer;
@@ -88,6 +90,8 @@ public class SnmpProfileTab extends DashboardTab {
 		TextField snmp_comm = new TextField("Community");
 		ComboBox snmp_vers = new ComboBox("Version v1|v2c");
 		ComboBox snmp_time = new ComboBox("Timeout (ms)");
+		ComboBox snmp_retries = new ComboBox("Retries");
+		ComboBox snmp_max = new ComboBox("MaxVarsPerPdu");
 
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		getCore().addComponent(splitPanel);
@@ -187,11 +191,27 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_time.addItem("3600");
 		snmp_time.addItem("5000");
 
+		snmp_retries.setRequired(true);
+		snmp_retries.setRequiredError("E' necessario specificare il numero di retry");
+		snmp_retries.setImmediate(true);
+		snmp_retries.addItem("1");
+		snmp_retries.addItem("3");
+		snmp_retries.addItem("5");
+
+		snmp_max.setRequired(true);
+		snmp_max.setRequiredError("E' necessario specificare il numero di retry");
+		snmp_max.setImmediate(true);
+		snmp_max.addItem("1");
+		snmp_max.addItem("5");
+		snmp_max.addItem("10");
+
 		m_editorFields.setBuffered(true);
 		m_editorFields.bind(m_snmp_name, SNMP_PROFILE_NAME);
 		m_editorFields.bind(snmp_comm, SNMP_COMMUNITY);
 		m_editorFields.bind(snmp_vers, SNMP_VERSION);
 		m_editorFields.bind(snmp_time, SNMP_TIMEOUT);
+		m_editorFields.bind(snmp_retries, SNMP_RETRIES);
+		m_editorFields.bind(snmp_max, SNMP_MAXVARSPERPDU);
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
@@ -199,6 +219,8 @@ public class SnmpProfileTab extends DashboardTab {
 		leftGeneralInfo.addComponent(snmp_comm);
 		leftGeneralInfo.addComponent(snmp_vers);
 		leftGeneralInfo.addComponent(snmp_time);
+		leftGeneralInfo.addComponent(snmp_retries);
+		leftGeneralInfo.addComponent(snmp_max);
 		
 		HorizontalLayout catLayout = new HorizontalLayout();
 		catLayout.setSizeFull();
