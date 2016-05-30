@@ -18,11 +18,13 @@ import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
+import org.opennms.vaadin.provision.model.IpSnmpProfile;
 import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.JobLogEntry;
 import org.opennms.vaadin.provision.model.Job.JobStatus;
@@ -61,6 +63,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
     private JobDao m_jobdao;
     private JobLogDao m_joblogdao;
+    private IpSnmpProfileDao m_ipSnmpProfileDao;
     private boolean m_loaded = false;
     
     private Table m_jobTable =  new Table();
@@ -87,6 +90,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			return;
 		m_jobdao = getService().getJobContainer();
 		m_joblogdao = getService().getJobLogContainer();
+		m_ipSnmpProfileDao = getService().getIpSnmpProfileContainer();
 		m_jobTable.setContainerDataSource(m_jobdao);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstatus","jobstart","jobend"});
 		m_panel.setContent(getFastBox());
@@ -216,6 +220,12 @@ public class FastTab extends DashboardTab implements ClickListener {
 				m_joblogdao.commit();
 			} catch (SQLException e) {
 				logger.warning("Exception saving logs: " + e.getLocalizedMessage());
+			}
+			
+			try {
+				m_ipSnmpProfileDao.commit();
+			} catch (SQLException e) {
+				logger.warning("Exception saving ipsnmpmap: " + e.getLocalizedMessage());
 			}
 			UI.getCurrent().access(new Runnable() {
 
@@ -347,6 +357,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 		Map<String,Vrf> m_vrf;
 		Map<String, BackupProfile> m_backup;
 		Map<String, SnmpProfile> m_snmp;
+		Map<String, IpSnmpProfile> m_ipsnmp;
 
 
 
@@ -366,6 +377,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 				logger.info("run: loading table snmpprofile");
 				m_snmp= getService().getSnmpProfileContainer().getSnmpProfileMap();
 				logger.info("run: loaded table snmpprofile");
+
+				logger.info("run: loading table ip snmpprofile");
+				m_ipsnmp= getService().getIpSnmpProfileContainer().getIpSnmpProfileMap();
+				logger.info("run: loaded table ip snmpprofile");
 
 				logger.info("run: loading table fastservicedevice");
 				checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
@@ -1117,7 +1132,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 			BackupProfile bck = null;
 			if (!backupprofile.equals(rnodebckprofile) && m_backup.containsKey(backupprofile))
 				bck = m_backup.get(backupprofile);
-
+			
 			if (!getService().updateFastNode(nodelabel, reflink, rnode, refdevice, m_vrf.get(reflink.getVrf()), bck, ipaddresses)) 
 				return;
 			final JobLogEntry jloe = new JobLogEntry();
@@ -1135,6 +1150,54 @@ public class FastTab extends DashboardTab implements ClickListener {
 					log(jloe);
 				}
 			});
+			
+			updateSnmp(refdevice);
+
+		}
+		
+		private void updateSnmp(FastServiceDevice refdevice) {
+			String snmpprofile = refdevice.getSnmpprofile();
+			IpSnmpProfile savedsnmpprofile = m_ipsnmp.get(refdevice.getIpaddr());
+			if ( savedsnmpprofile == null ) {
+				logger.info("FAST sync: set snmp profile: " + snmpprofile);
+				getService().getOnmsDao().setSnmpInfo(refdevice.getIpaddr(), m_snmp.get(snmpprofile).getSnmpInfo());
+				m_ipSnmpProfileDao.add(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
+				final JobLogEntry jloe = new JobLogEntry();
+				jloe.setHostname(refdevice.getHostname());
+				jloe.setIpaddr(refdevice.getIpaddr());
+				jloe.setOrderCode(refdevice.getOrderCode());
+				jloe.setJobid(m_job.getJobid());
+				jloe.setDescription("FAST sync: set snmp profile: " + snmpprofile);
+				jloe.setNote(getNote(refdevice));
+				
+				UI.getCurrent().access(new Runnable() {
+					
+					@Override
+					public void run() {
+						log(jloe);
+					}
+				});
+			} else if ( !snmpprofile.equals(savedsnmpprofile.getSnmprofile())) {
+				logger.info("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
+				getService().getOnmsDao().setSnmpInfo(refdevice.getIpaddr(), m_snmp.get(snmpprofile).getSnmpInfo());
+				m_ipSnmpProfileDao.update(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
+				final JobLogEntry jloe = new JobLogEntry();
+				jloe.setHostname(refdevice.getHostname());
+				jloe.setIpaddr(refdevice.getIpaddr());
+				jloe.setOrderCode(refdevice.getOrderCode());
+				jloe.setJobid(m_job.getJobid());
+				jloe.setDescription("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
+				jloe.setNote(getNote(refdevice));
+				
+				UI.getCurrent().access(new Runnable() {
+					
+					@Override
+					public void run() {
+						log(jloe);
+					}
+				});
+			}
+			
 
 		}
 

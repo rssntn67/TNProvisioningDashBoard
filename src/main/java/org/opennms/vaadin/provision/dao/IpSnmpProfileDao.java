@@ -23,49 +23,61 @@ public class IpSnmpProfileDao extends SQLContainer {
 	}
 
 	public synchronized void add(IpSnmpProfile snmp) {
-		save(addItem(),snmp);
+		save(addItem(), snmp);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public synchronized void save(Object snmpId, IpSnmpProfile ipsnmp) {
-		getContainerProperty(snmpId, "ip").setValue(ipsnmp.getIp());
-		getContainerProperty(snmpId, "snmpprofile").setValue(ipsnmp.getSnmprofile());
+		getContainerProperty(snmpId, "ipaddr").setValue(
+				ipsnmp.getIp());
+		getContainerProperty(snmpId, "snmpprofile").setValue(
+				ipsnmp.getSnmprofile());
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	public synchronized void update(IpSnmpProfile snmp) {
+		for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
+			Item ipsnmpprofiletableRow = getItem(i.next());
+			String ip = (String) ipsnmpprofiletableRow.getItemProperty("ipaddr")
+					.getValue();
+			if (snmp.getIp().equals(ip))
+				ipsnmpprofiletableRow.getItemProperty("snmpprofile").setValue(
+						snmp.getSnmprofile());
+		}
+	}
+
 	public synchronized void saveOrUpdate(Object id, IpSnmpProfile snmpprofile) {
 		if (id == null)
-			save(super.addItem(),snmpprofile);
+			save(super.addItem(), snmpprofile);
 		else
 			save(id, snmpprofile);
 	}
-	
+
 	public synchronized IpSnmpProfile getSnmpProfile(String ip) {
 		return getIpSnmpProfileMap().get(ip);
 	}
-	
+
 	public synchronized Map<String, IpSnmpProfile> getIpSnmpProfileMap() {
 		Map<String, IpSnmpProfile> ipSnmpProfiles = new HashMap<String, IpSnmpProfile>();
 		for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
 			Item ipsnmpprofiletableRow = getItem(i.next());
-			ipSnmpProfiles.put(ipsnmpprofiletableRow.getItemProperty("ip")
-					.getValue().toString(),
-					new IpSnmpProfile(
-							(String)ipsnmpprofiletableRow.getItemProperty("ip").getValue(),
-							(String)ipsnmpprofiletableRow.getItemProperty("snmpprofile").getValue()
-							));
+			ipSnmpProfiles.put(ipsnmpprofiletableRow.getItemProperty("ipaddr")
+					.getValue().toString(), new IpSnmpProfile(
+					(String) ipsnmpprofiletableRow.getItemProperty("ipaddr")
+							.getValue(), (String) ipsnmpprofiletableRow
+							.getItemProperty("snmpprofile").getValue()));
 		}
 		return ipSnmpProfiles;
 	}
-	
+
 	public synchronized IpSnmpProfile get(Object ipsnmpId) {
 		Item ipsnmptableRow = getItem(ipsnmpId);
-		if (ipsnmptableRow == null )
+		if (ipsnmptableRow == null)
 			return null;
-		return 					new IpSnmpProfile(
-				(String)ipsnmptableRow.getItemProperty("ip").getValue(),
-				(String)ipsnmptableRow.getItemProperty("snmpprofile").getValue()
-				);
-		
+		return new IpSnmpProfile((String) ipsnmptableRow.getItemProperty("ipaddr")
+				.getValue(), (String) ipsnmptableRow.getItemProperty(
+				"snmpprofile").getValue());
+
 	}
 
 }
