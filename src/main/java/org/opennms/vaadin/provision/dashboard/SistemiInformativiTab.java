@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
@@ -556,9 +555,9 @@ public class SistemiInformativiTab extends DashboardTab {
 
 		
 		notifComboBox.setInvalidAllowed(false);
-		notifComboBox.setNullSelectionAllowed(false);
-		notifComboBox.setRequired(true);
-		notifComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
+		notifComboBox.setNullSelectionAllowed(true);
+//		notifComboBox.setRequired(true);
+//		notifComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 
 		optionalComboBox.setInvalidAllowed(false);
 		optionalComboBox.setNullSelectionAllowed(false);
