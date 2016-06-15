@@ -1097,7 +1097,8 @@ public class DashBoardSessionService implements Serializable {
 	public void updateSINode(SistemiInformativiNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 		
-		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
+		if ((node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE) ||
+				node.getUpdatemap().contains(DashBoardUtils.PRIMARY))
 				&& node.getPrimary() != null)
 			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
 		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
@@ -1151,7 +1152,8 @@ public class DashBoardSessionService implements Serializable {
 	public void updateMediaGatewayNode(MediaGatewayNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 
-		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
+		if ((node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE) ||
+				node.getUpdatemap().contains(DashBoardUtils.PRIMARY))
 				&& node.getPrimary() != null)
 			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
 		if (node.getUpdatemap().contains(DashBoardUtils.PARENT))
@@ -1263,7 +1265,8 @@ public class DashBoardSessionService implements Serializable {
 	public void updateTNNode(TrentinoNetworkNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 		
-		if (node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE)
+		if ((node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE) ||
+				node.getUpdatemap().contains(DashBoardUtils.PRIMARY))
 				&& node.getPrimary() != null)
 			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
 		if (node.getUpdatemap().contains(DashBoardUtils.PARENT)) {

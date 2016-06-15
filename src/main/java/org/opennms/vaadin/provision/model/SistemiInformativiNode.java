@@ -255,6 +255,7 @@ public class SistemiInformativiNode implements Serializable {
 			m_serviceToAdd.put(primary, new HashSet<String>());
 		m_serviceToAdd.get(primary).add("ICMP");
 		m_serviceToAdd.get(primary).add("SNMP");
+		m_updatemap.add(DashBoardUtils.PRIMARY);
 		
 		m_primary = primary;
 	}

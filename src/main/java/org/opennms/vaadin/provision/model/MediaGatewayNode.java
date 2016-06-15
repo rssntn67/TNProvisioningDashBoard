@@ -234,6 +234,7 @@ public class MediaGatewayNode implements Serializable {
 			m_interfToDel.add(new String(m_primary));
 
 		m_interfToAdd.add(new String(primary));
+		m_updatemap.add(DashBoardUtils.PRIMARY);
 		m_primary = primary;
 	}
 		
