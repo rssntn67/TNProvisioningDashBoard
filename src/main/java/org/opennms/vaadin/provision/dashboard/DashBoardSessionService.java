@@ -1321,8 +1321,15 @@ public class DashBoardSessionService implements Serializable {
 		return true;
 	}
 	
-	public boolean updateFastNode(String nodelabel, FastServiceLink reflink, RequisitionNode rnode, FastServiceDevice refdevice, Vrf vrf, BackupProfile bck,Set<String> ipaddresses ) {
+	public boolean updateFastNode(String nodelabel, FastServiceLink reflink,
+			RequisitionNode rnode, FastServiceDevice refdevice, Vrf vrf,
+			BackupProfile bck, Set<String> ipaddresses,
+			boolean updateSnmpProfile) {
 		Map<String,String> update = new HashMap<String, String>();
+		
+		if (updateSnmpProfile)
+			update.put(DashBoardUtils.SNMP_PROFILE, refdevice.getSnmpprofile());
+		
 		if (!rnode.getNodeLabel().equals(nodelabel))
 			update.put(DashBoardUtils.LABEL, nodelabel);
 

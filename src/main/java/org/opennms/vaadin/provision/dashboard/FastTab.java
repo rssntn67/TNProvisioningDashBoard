@@ -1046,7 +1046,9 @@ public class FastTab extends DashboardTab implements ClickListener {
 			}
 
 			secondary.remove(refdevice.getIpaddr());
+			updateSnmp(refdevice);
 			getService().addFastNode(hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
+			
 			
 			UI.getCurrent().access(new Runnable() {
 				
@@ -1057,7 +1059,6 @@ public class FastTab extends DashboardTab implements ClickListener {
 					}
 				}
 			});
-
 		}
 				
 		private void update(String hostname, RequisitionNode rnode) {
@@ -1133,7 +1134,18 @@ public class FastTab extends DashboardTab implements ClickListener {
 			if (!backupprofile.equals(rnodebckprofile) && m_backup.containsKey(backupprofile))
 				bck = m_backup.get(backupprofile);
 			
-			if (!getService().updateFastNode(nodelabel, reflink, rnode, refdevice, m_vrf.get(reflink.getVrf()), bck, ipaddresses)) 
+			if (
+					!getService().updateFastNode(
+						nodelabel, 
+						reflink, 
+						rnode, 
+						refdevice, 
+						m_vrf.get(reflink.getVrf()), 
+						bck, 
+						ipaddresses,
+						updateSnmp(refdevice)
+					)
+				)
 				return;
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(refdevice.getHostname());
@@ -1151,16 +1163,14 @@ public class FastTab extends DashboardTab implements ClickListener {
 				}
 			});
 			
-			updateSnmp(refdevice);
 
 		}
 		
-		private void updateSnmp(FastServiceDevice refdevice) {
+		private boolean updateSnmp(FastServiceDevice refdevice) {
 			String snmpprofile = refdevice.getSnmpprofile();
 			IpSnmpProfile savedsnmpprofile = m_ipsnmp.get(refdevice.getIpaddr());
 			if ( savedsnmpprofile == null ) {
 				logger.info("FAST sync: set snmp profile: " + snmpprofile);
-				getService().getOnmsDao().setSnmpInfo(refdevice.getIpaddr(), m_snmp.get(snmpprofile).getSnmpInfo());
 				m_ipSnmpProfileDao.add(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(refdevice.getHostname());
@@ -1177,9 +1187,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 						log(jloe);
 					}
 				});
-			} else if ( !snmpprofile.equals(savedsnmpprofile.getSnmprofile())) {
+				return true;
+			} 
+			if ( !snmpprofile.equals(savedsnmpprofile.getSnmprofile())) {
 				logger.info("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
-				getService().getOnmsDao().setSnmpInfo(refdevice.getIpaddr(), m_snmp.get(snmpprofile).getSnmpInfo());
 				m_ipSnmpProfileDao.update(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(refdevice.getHostname());
@@ -1196,8 +1207,10 @@ public class FastTab extends DashboardTab implements ClickListener {
 						log(jloe);
 					}
 				});
+				return true;
 			}
 			
+			return false;
 
 		}
 
