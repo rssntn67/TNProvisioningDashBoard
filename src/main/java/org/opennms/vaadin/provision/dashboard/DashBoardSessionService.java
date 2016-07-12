@@ -323,9 +323,9 @@ public class DashBoardSessionService implements Serializable {
 				valid = false;
 
 			String managedByCategory = null;
-			for (String[] managedby: DashBoardUtils.m_server_managedby) {
-				if (node.getCategory(managedby[0]) != null) {
-					managedByCategory = managedby[0];
+			for (String managedby: DashBoardUtils.m_server_managedby) {
+				if (node.getCategory(managedby) != null) {
+					managedByCategory = managedby;
 					break;
 				}				
 			}
@@ -340,11 +340,10 @@ public class DashBoardSessionService implements Serializable {
 				}				
 			}
 
-			String optionalCategory = null;
+			Set<String> optionalCategory = new HashSet<String>();
 			for (String option: DashBoardUtils.m_server_optional) {
 				if (node.getCategory(option) != null) {
-					optionalCategory = option;
-					break;
+					optionalCategory.add(option);
 				}				
 			}
 
@@ -1036,9 +1035,10 @@ public class DashBoardSessionService implements Serializable {
 		if (node.getManagedByCategory() != null)
 			requisitionNode.putCategory(new RequisitionCategory(node.getManagedByCategory()));
 
-		if (node.getOptionalCategory() != null)
-			requisitionNode.putCategory(new RequisitionCategory(node.getOptionalCategory()));
-		
+		if (node.getOptionalCategory() != null) {
+			for (String optionCat: node.getOptionalCategory())
+				requisitionNode.putCategory(new RequisitionCategory(optionCat));
+		}		
 		if (node.getAddress1()  != null)
 			requisitionNode.putAsset(new RequisitionAsset("address1", node.getAddress1() ));
 

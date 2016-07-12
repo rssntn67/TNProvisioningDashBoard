@@ -42,6 +42,7 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnGenerator;
@@ -173,7 +174,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		final ComboBox managedByComboBox  = new ComboBox("Managed by Category");
 		final ComboBox prodComboBox  = new ComboBox("Production Category");
 		final ComboBox notifComboBox  = new ComboBox("Notification Category");
-		final ComboBox optionalComboBox  = new ComboBox("Optional Category");
+		final OptionGroup optionalGroup  = new OptionGroup("Optional Category");
 		final ComboBox tnComboBox  = new ComboBox("TN Category");
 
 		final ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
@@ -279,9 +280,8 @@ public class SistemiInformativiTab extends DashboardTab {
 			}
 		});
 
-		for (String[] category: DashBoardUtils.m_server_managedby) {
-			managedBySearchComboBox.addItem(category[0]);
-			managedBySearchComboBox.setItemCaption(category[0], category[1]);
+		for (String category: DashBoardUtils.m_server_managedby) {
+			managedBySearchComboBox.addItem(category);
 		}
 		managedBySearchComboBox.setInvalidAllowed(false);
 		managedBySearchComboBox.setNullSelectionAllowed(true);		
@@ -411,9 +411,8 @@ public class SistemiInformativiTab extends DashboardTab {
 			serverLevelComboBox.setItemCaption(categories, categories[0]+" - " + categories[1]);
 		}
 
-		for (String[] category: DashBoardUtils.m_server_managedby) {
-			managedByComboBox.addItem(category[0]);
-			managedByComboBox.setItemCaption(category[0], category[1]);
+		for (String category: DashBoardUtils.m_server_managedby) {
+			managedByComboBox.addItem(category);
 		}
 
 		for (String prod: DashBoardUtils.m_server_prod) {
@@ -425,7 +424,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		}
 
 		for (String option: DashBoardUtils.m_server_optional) {
-			optionalComboBox.addItem(option);
+			optionalGroup.addItem(option);
 		}
 
 		tnComboBox.addItem("TrentinoNetwork");
@@ -550,8 +549,8 @@ public class SistemiInformativiTab extends DashboardTab {
 
 		prodComboBox.setInvalidAllowed(false);
 		prodComboBox.setNullSelectionAllowed(false);
-		prodComboBox.setRequired(true);
-		prodComboBox.setRequiredError("E' necessario scegliere una categoria per la produzione");
+//		prodComboBox.setRequired(true);
+//		prodComboBox.setRequiredError("E' necessario scegliere una categoria per la produzione");
 
 		
 		notifComboBox.setInvalidAllowed(false);
@@ -559,9 +558,11 @@ public class SistemiInformativiTab extends DashboardTab {
 //		notifComboBox.setRequired(true);
 //		notifComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 
-		optionalComboBox.setInvalidAllowed(false);
-		optionalComboBox.setNullSelectionAllowed(false);
-
+		optionalGroup.setInvalidAllowed(false);
+		optionalGroup.setNullSelectionAllowed(false);
+		optionalGroup.setImmediate(true);
+		optionalGroup.setMultiSelect(true);
+		
 		tnComboBox.setInvalidAllowed(false);
 		tnComboBox.setNullSelectionAllowed(false);
 		tnComboBox.setRequired(true);
@@ -653,7 +654,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		m_editorFields.bind(prodComboBox, DashBoardUtils.SERVER_PROD_CATEGORY);
 		m_editorFields.bind(notifComboBox, DashBoardUtils.NOTIF_CATEGORY);
 		m_editorFields.bind(managedByComboBox, DashBoardUtils.SERVER_MANAGED_BY_CATEGORY);
-		m_editorFields.bind(optionalComboBox, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
+		m_editorFields.bind(optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
 		m_editorFields.bind(tnComboBox, DashBoardUtils.SERVER_TN_CATEGORY);
 		m_editorFields.bind(city,DashBoardUtils.CITY);
 	    m_editorFields.bind(address, DashBoardUtils.ADDRESS1);
@@ -707,37 +708,46 @@ public class SistemiInformativiTab extends DashboardTab {
 		catLayout2.setSizeFull();
 		catLayout2.addComponent(managedByComboBox);
 		catLayout2.addComponent(prodComboBox);
-		catLayout2.addComponent(notifComboBox);
 		HorizontalLayout catLayout3 = new HorizontalLayout();
 		catLayout3.setSizeFull();
 		catLayout3.addComponent(tnComboBox);
-		catLayout3.addComponent(optionalComboBox);
+		catLayout3.addComponent(notifComboBox);
+		
+		HorizontalLayout catLayout4 = new HorizontalLayout();
+		catLayout4.setSizeFull();
+		catLayout4.addComponent(optionalGroup);
 		
 		
 		HorizontalLayout assetLayout11 = new HorizontalLayout();
 		assetLayout11.setSizeFull();
 		assetLayout11.addComponent(leaseexpires);
 		assetLayout11.addComponent(lease);
+		
 		HorizontalLayout assetLayout12 = new HorizontalLayout();
 		assetLayout12.setSizeFull();
 		assetLayout12.addComponent(vendorPhone);
 		assetLayout12.addComponent(vendor);
+		
 		HorizontalLayout assetLayout21 = new HorizontalLayout();
 		assetLayout21.setSizeFull();
 		assetLayout21.addComponent(slot);
 		assetLayout21.addComponent(rack);
+		
 		HorizontalLayout assetLayout22 = new HorizontalLayout();
 		assetLayout22.setSizeFull();
 		assetLayout22.addComponent(modelNumber);
 		assetLayout22.addComponent(manufacturer);
+		
 		HorizontalLayout assetLayout31 = new HorizontalLayout();
 		assetLayout31.setSizeFull();
 		assetLayout31.addComponent(city);
 		assetLayout31.addComponent(address);
+		
 		HorizontalLayout assetLayout32 = new HorizontalLayout();
 		assetLayout32.setSizeFull();
 		assetLayout32.addComponent(building);
 		assetLayout32.addComponent(room);
+		
 		HorizontalLayout assetLayout4 = new HorizontalLayout();
 		assetLayout4.setSizeFull();
 		assetLayout4.addComponent(category);
@@ -756,23 +766,33 @@ public class SistemiInformativiTab extends DashboardTab {
 
 				
 		FormLayout profileInfo = new FormLayout();
-		profileInfo.addComponent(new Label("Dati Asset e Profili"));
+		profileInfo.addComponent(new Label("Profiles"));
 		profileInfo.addComponent(catLayout1);
 		profileInfo.addComponent(catLayout2);
 		profileInfo.addComponent(catLayout3);
-		profileInfo.addComponent(assetLayout11);
-		profileInfo.addComponent(assetLayout12);
-		profileInfo.addComponent(assetLayout21);
-		profileInfo.addComponent(assetLayout22);
-		profileInfo.addComponent(assetLayout31);
-		profileInfo.addComponent(assetLayout32);
-		profileInfo.addComponent(assetLayout4);
-		profileInfo.addComponent(assetLayout5);
+		
+		FormLayout optionCat = new FormLayout();
+		optionCat.addComponent(new Label("Option Categories"));
+		optionCat.addComponent(catLayout4);
+		
+		FormLayout assetInfo = new FormLayout();
+		assetInfo.addComponent(new Label("Asset Data"));
+
+		assetInfo.addComponent(assetLayout11);
+		assetInfo.addComponent(assetLayout12);
+		assetInfo.addComponent(assetLayout21);
+		assetInfo.addComponent(assetLayout22);
+		assetInfo.addComponent(assetLayout31);
+		assetInfo.addComponent(assetLayout32);
+		assetInfo.addComponent(assetLayout4);
+		assetInfo.addComponent(assetLayout5);
 
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);
 		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
 		m_editRequisitionNodeLayout.addComponent(new Panel(profileInfo));
+		m_editRequisitionNodeLayout.addComponent(new Panel(optionCat));
+		m_editRequisitionNodeLayout.addComponent(new Panel(assetInfo));
 
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);				

@@ -184,9 +184,8 @@ public class DashBoardUtils {
 		{"PhysicalDevice","IPMA"}
 	};	
 	
-	public static final String[][] m_server_managedby = {
-		{"ServerSI","Managed By ICT"},
-		{"ManagedByIngRete", "Managed By Servizi"}
+	public static final String[] m_server_managedby = {
+		"ServerSI", "ServerINS"
 	};
 
 	public static final String[] m_server_notif = {
@@ -205,8 +204,8 @@ public class DashBoardUtils {
 	};
 
 	public static final String[] m_server_prod = {
-		"produzione",
-		"sviluppo"
+		"Produzione",
+		"Sviluppo"
 	};
 	
 	public static final String LABEL = "nodeLabel";

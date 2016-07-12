@@ -38,7 +38,7 @@ public class SistemiInformativiNode implements Serializable {
 	private String[] m_serverLevelCategory;
 	private String m_managedByCategory;
 	private String m_notifCategory;
-	private String m_optionalCategory;
+	private Set<String> m_optionalCategory;
 	private String m_prodCategory;
 	private String m_TrentinoNetworkCategory;
 
@@ -71,7 +71,7 @@ public class SistemiInformativiNode implements Serializable {
 			Map<String, Set<String>> serviceMap, String descr, String hostname,
 			String vrf, String primary, String[] serverLevelCategory,
 			String managedByCategory, String notifCategory,
-			String optionalCategory, String prodCategory, String tnCategory,
+			Set<String> optionalCategory, String prodCategory, String tnCategory,
 			String city, String address1, String description, String building,
 			String leaseExpires, String lease, String vendorPhone,
 			String vendor, String slot, String rack, String room,
@@ -304,7 +304,7 @@ public class SistemiInformativiNode implements Serializable {
 		return m_notifCategory;
 	}
 
-	public String getOptionalCategory() {
+	public Set<String> getOptionalCategory() {
 		return m_optionalCategory;
 	}
 
@@ -466,13 +466,14 @@ public class SistemiInformativiNode implements Serializable {
 		m_notifCategory = notifCategory;
 	}
 
-	public void setOptionalCategory(String optionalCategory) {
+	public void setOptionalCategory(Set<String> optionalCategory) {
+		
 		if (m_optionalCategory != null && m_optionalCategory.equals(optionalCategory) )
 			return;
 		if (m_optionalCategory != null)
-			m_categoriesToDel.add(new String(m_optionalCategory));
+			m_categoriesToDel.addAll(m_optionalCategory);
 		if (optionalCategory != null)
-			m_categoriesToAdd.add(optionalCategory);
+			m_categoriesToAdd.addAll(optionalCategory);
 		m_optionalCategory = optionalCategory;
 	}
 
