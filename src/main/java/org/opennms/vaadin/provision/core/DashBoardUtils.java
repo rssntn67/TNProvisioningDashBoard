@@ -147,7 +147,8 @@ public class DashBoardUtils {
 		"Backbone",
 		"Distribuzione",
 		"Accesso",
-		"LAN"
+		"LAN",
+		"Dedicati"
 	};
 
 	public static final String[] m_notify_levels = {
@@ -185,22 +186,22 @@ public class DashBoardUtils {
 	};	
 	
 	public static final String[] m_server_managedby = {
-		"ServerSI", "ServerINS"
+		"ManagedByICT", "ManagedByServizi","ManagedByIngRete"
 	};
 
 	public static final String[] m_server_notif = {
-		"RepSI",
-		"RepINS"
+		"RepFonia"
 	};
 	
 	public static final String[] m_server_optional = {
+		"VoIP",
 		"Videoconferenza",
 		"VideoconferenzaTerminali",
 		"Videosorveglianza",
-		"Voip",
-		"Sicurezza",
+		"ControlloAccessi",
+		"TrentinoWifi",
 		"Testbed",
-		"Eworks"
+		"Ydam"
 	};
 
 	public static final String[] m_server_prod = {
