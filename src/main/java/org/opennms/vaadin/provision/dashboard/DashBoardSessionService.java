@@ -566,6 +566,14 @@ public class DashBoardSessionService implements Serializable {
 				}
 			}
 
+			Set<String> optionalCategory = new HashSet<String>();
+			for (String option: DashBoardUtils.m_server_optional) {
+				if (node.getCategory(option) != null) {
+					optionalCategory.add(option);
+				}				
+			}
+
+
 			String city = null;
 			if (node.getCity() != null)
 				city = node.getCity();

@@ -47,6 +47,8 @@ public class TrentinoNetworkNode implements Serializable {
 	
 	private String m_foreignId;
 	
+	private Set<String> m_optionalCategory;
+
 	protected boolean m_valid = true;
 	
 	public TrentinoNetworkNode(String label, Categoria vrf) {
@@ -111,6 +113,9 @@ public class TrentinoNetworkNode implements Serializable {
 
 	}
 
+	public Set<String> getOptionalCategory() {
+		return m_optionalCategory;
+	}
 
 	public String getForeignId() {
 		return m_foreignId;
@@ -374,4 +379,16 @@ public class TrentinoNetworkNode implements Serializable {
 		}
 		m_slaCategory = slaCategory;
 	}
+	
+	public void setOptionalCategory(Set<String> optionalCategory) {
+		
+		if (m_optionalCategory != null && m_optionalCategory.equals(optionalCategory) )
+			return;
+		if (m_optionalCategory != null)
+			m_categoriesToDel.addAll(m_optionalCategory);
+		if (optionalCategory != null)
+			m_categoriesToAdd.addAll(optionalCategory);
+		m_optionalCategory = optionalCategory;
+	}
+
 }

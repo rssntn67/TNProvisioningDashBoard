@@ -44,6 +44,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
@@ -168,6 +169,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		final ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
 		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
 		ComboBox parentComboBox = new ComboBox("Dipende da");
+		final OptionGroup optionalGroup  = new OptionGroup("Optional Category");
 
 		Map<String,SnmpProfile> snmpprofilemap = 
 				getService().getSnmpProfileContainer().getSnmpProfileMap();
@@ -395,6 +397,10 @@ public class TrentinoNetworkTab extends DashboardTab {
 			slaCatComboBox.addItem(sla);
 		}
 		
+		for (String option: DashBoardUtils.m_server_optional) {
+			optionalGroup.addItem(option);
+		}
+
 		m_descrComboBox.setInvalidAllowed(false);
 		m_descrComboBox.setNullSelectionAllowed(false);
 		m_descrComboBox.setWidth(8, Unit.CM);
@@ -597,7 +603,11 @@ public class TrentinoNetworkTab extends DashboardTab {
 		circuiId.setWidth(8, Unit.CM);
 		circuiId.setHeight(6, Unit.MM);
 
-		
+		optionalGroup.setInvalidAllowed(false);
+		optionalGroup.setNullSelectionAllowed(false);
+		optionalGroup.setImmediate(true);
+		optionalGroup.setMultiSelect(true);
+
 		m_editorFields.setBuffered(true);
 		m_editorFields.bind(m_descrComboBox, DashBoardUtils.DESCR);
 		m_editorFields.bind(hostname, DashBoardUtils.HOST);
@@ -610,6 +620,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(notifCatComboBox, DashBoardUtils.NOTIF_CATEGORY);
 		m_editorFields.bind(threshCatComboBox, DashBoardUtils.THRESH_CATEGORY);
 		m_editorFields.bind(slaCatComboBox, DashBoardUtils.SLA_CATEGORY);
+		m_editorFields.bind(optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
 		m_editorFields.bind(city,DashBoardUtils.CITY);
 	    m_editorFields.bind(address, DashBoardUtils.ADDRESS1);
 		m_editorFields.bind(building,DashBoardUtils.BUILDING);
@@ -650,7 +661,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		profLayout.setSizeFull();
 		profLayout.addComponent(snmpComboBox);
 		profLayout.addComponent(backupComboBox);
-				
+		
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
 		generalInfo.addComponent(centerGeneralInfo);
@@ -665,10 +676,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 		profileInfo.addComponent(profLayout);
 		profileInfo.addComponent(catLayout);
 
+		HorizontalLayout catLayout4 = new HorizontalLayout();
+		catLayout4.setSizeFull();
+		catLayout4.addComponent(optionalGroup);
+
+		FormLayout optionCat = new FormLayout();
+		optionCat.addComponent(new Label("Option Categories"));
+		optionCat.addComponent(catLayout4);
+
+		
 		m_editRequisitionNodeLayout.setMargin(true);
 		m_editRequisitionNodeLayout.setVisible(false);
 		m_editRequisitionNodeLayout.addComponent(new Panel(generalInfo));
 		m_editRequisitionNodeLayout.addComponent(new Panel(profileInfo));
+		m_editRequisitionNodeLayout.addComponent(new Panel(optionCat));
 
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);				
