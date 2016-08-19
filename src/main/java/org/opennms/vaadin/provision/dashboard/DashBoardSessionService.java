@@ -354,6 +354,8 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}				
 			}
+			if (prodCategory == null)
+				valid = false;
 
 			String tnCategory = null;
 			if (node.getCategory(DashBoardUtils.TN_REQU_NAME) == null) {

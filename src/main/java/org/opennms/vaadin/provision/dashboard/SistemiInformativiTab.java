@@ -549,8 +549,8 @@ public class SistemiInformativiTab extends DashboardTab {
 
 		prodComboBox.setInvalidAllowed(false);
 		prodComboBox.setNullSelectionAllowed(false);
-//		prodComboBox.setRequired(true);
-//		prodComboBox.setRequiredError("E' necessario scegliere una categoria per la produzione");
+		prodComboBox.setRequired(true);
+		prodComboBox.setRequiredError("E' necessario scegliere una categoria per la produzione");
 
 		
 		notifComboBox.setInvalidAllowed(false);
