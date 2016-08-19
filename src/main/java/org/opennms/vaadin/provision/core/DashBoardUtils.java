@@ -182,7 +182,8 @@ public class DashBoardUtils {
 		{"PhysicalDevice","ESX"},
 		{"PhysicalDevice","OpenStack"},
 		{"PhysicalDevice","PDU"},
-		{"PhysicalDevice","IPMA"}
+		{"PhysicalDevice","IPMA"},
+		{"PhysicalDevice","Appliance"}
 	};	
 	
 	public static final String[] m_server_managedby = {
