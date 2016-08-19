@@ -40,9 +40,9 @@ public class DashboardTabSheet extends CustomComponent implements
     	m_tabsheet.addTab(stab, "SI", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(stab).setEnabled(false);
 
-        VrfTab vrfTab=new VrfTab(service);
-    	m_tabsheet.addTab(vrfTab, "Vrf", new ThemeResource("icons/16/users.png"));
-    	m_tabsheet.getTab(vrfTab).setEnabled(false);
+        CategorieTab catTab=new CategorieTab(service);
+    	m_tabsheet.addTab(catTab, "Categorie", new ThemeResource("icons/16/users.png"));
+    	m_tabsheet.getTab(catTab).setEnabled(false);
     	
     	SnmpProfileTab snmpTab = new SnmpProfileTab(service);
         m_tabsheet.addTab(snmpTab, "Profili Snmp",new ThemeResource("icons/16/users.png"));

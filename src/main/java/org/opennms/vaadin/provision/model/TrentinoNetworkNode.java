@@ -32,7 +32,7 @@ public class TrentinoNetworkNode implements Serializable {
 	private String[] m_secondary;
 	private String m_parent;
 
-	private Vrf m_networkCategory;
+	private Categoria m_networkCategory;
 	private String m_notifCategory;
 	private String m_threshCategory;
 	private String m_slaCategory;
@@ -49,7 +49,7 @@ public class TrentinoNetworkNode implements Serializable {
 	
 	protected boolean m_valid = true;
 	
-	public TrentinoNetworkNode(String label, Vrf vrf) {
+	public TrentinoNetworkNode(String label, Categoria vrf) {
 		m_label = label;
 		m_primary="0.0.0.0";
 		m_hostname="";
@@ -75,7 +75,7 @@ public class TrentinoNetworkNode implements Serializable {
 			String vrf, 
 			String primary, 
 			String parent,
-			Vrf networkCategory, 
+			Categoria networkCategory, 
 			String notifCategory,
 			String threshCategory, 
 			String snmpProfile, 
@@ -163,11 +163,11 @@ public class TrentinoNetworkNode implements Serializable {
 		m_city = city;		
 	}
 
-	public Vrf getNetworkCategory() {
+	public Categoria getNetworkCategory() {
 		return m_networkCategory;
 	}
 
-	public void setNetworkCategory(Vrf networkCategory) {
+	public void setNetworkCategory(Categoria networkCategory) {
 		if (networkCategory.getName().equals(m_networkCategory.getName()))
 			return;
 		m_categoriesToDel.add(m_networkCategory.getName());
@@ -220,7 +220,7 @@ public class TrentinoNetworkNode implements Serializable {
 		if (m_vrf != null && m_vrf.equals(vrf))
 			return;
 		m_vrf = vrf;
-		m_updatemap.add(DashBoardUtils.VRF);
+		m_updatemap.add(DashBoardUtils.CAT);
 	}
 
     public String getDescr() {

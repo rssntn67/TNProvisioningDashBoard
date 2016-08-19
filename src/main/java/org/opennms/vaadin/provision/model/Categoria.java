@@ -1,6 +1,6 @@
 package org.opennms.vaadin.provision.model;
 
-public class Vrf implements Comparable<Vrf> {
+public class Categoria implements Comparable<Categoria> {
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -17,7 +17,7 @@ public class Vrf implements Comparable<Vrf> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Vrf other = (Vrf) obj;
+		Categoria other = (Categoria) obj;
 		if (m_name == null) {
 			if (other.m_name != null)
 				return false;
@@ -34,11 +34,11 @@ public class Vrf implements Comparable<Vrf> {
 	private String m_backupprofile;
 	private String m_snmpprofile;
 	
-	public Vrf() {
+	public Categoria() {
 		
 	}
 
-	public Vrf(String name, String notifylevel, String networklevel,
+	public Categoria(String name, String notifylevel, String networklevel,
 			String dnsdomain, String thresholdlevel, String backupprofile,
 			String snmpprofile) {
 		super();
@@ -94,7 +94,7 @@ public class Vrf implements Comparable<Vrf> {
 	}
 
 	@Override
-	public int compareTo(Vrf o) {
+	public int compareTo(Categoria o) {
 		if (m_networklevel.equals(o.getNetworklevel()))
 			return m_name.compareTo(o.getName());
 		return m_networklevel.compareTo(o.getNetworklevel());

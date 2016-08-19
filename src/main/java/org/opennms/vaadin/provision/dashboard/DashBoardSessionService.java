@@ -38,7 +38,7 @@ import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
-import org.opennms.vaadin.provision.dao.VrfDao;
+import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
@@ -46,7 +46,7 @@ import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
-import org.opennms.vaadin.provision.model.Vrf;
+import org.opennms.vaadin.provision.model.Categoria;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -68,7 +68,7 @@ public class DashBoardSessionService implements Serializable {
 	private IpSnmpProfileDao     m_ipsnmpprofilecontainer;
 	private SnmpProfileDao       m_snmpprofilecontainer;
 	private BackupProfileDao     m_backupprofilecontainer;
-	private VrfDao               m_vrfcontainer;
+	private CategoriaDao         m_catcontainer;
 	private DnsDomainDao         m_dnsdomaincontainer;
 	private DnsSubDomainDao      m_dnssubdomaincontainer;
 	private FastServiceDeviceDao m_fastservicedevicecontainer;
@@ -108,8 +108,8 @@ public class DashBoardSessionService implements Serializable {
 		return m_backupprofilecontainer;
 	}
 
-	public VrfDao getVrfContainer() {
-    	return m_vrfcontainer;
+	public CategoriaDao getCatContainer() {
+    	return m_catcontainer;
     }
 
 	public FastServiceDeviceDao getFastServiceDeviceContainer() {
@@ -148,8 +148,8 @@ public class DashBoardSessionService implements Serializable {
 		m_backupprofilecontainer = backupprofilecontainer;
 	}
 
-	public void setVrfcontainer(VrfDao vrfcontainer) {
-		m_vrfcontainer = vrfcontainer;
+	public void setCatcontainer(CategoriaDao catcontainer) {
+		m_catcontainer = catcontainer;
 	}
 
 	public void setDnsdomaincontainer(DnsDomainDao dnsdomaincontainer) {
@@ -226,9 +226,9 @@ public class DashBoardSessionService implements Serializable {
 		bcktq.setVersionColumn("versionid");
 		m_backupprofilecontainer = new BackupProfileDao(bcktq);
 
-		TableQuery vrftq = new TableQuery("vrf", m_service.getPool());
-		vrftq.setVersionColumn("versionid");
-	    m_vrfcontainer =  new VrfDao(vrftq);	
+		TableQuery cattq = new TableQuery("vrf", m_service.getPool());
+		cattq.setVersionColumn("versionid");
+	    m_catcontainer =  new CategoriaDao(cattq);	
 	    
 	    TableQuery dnstq = new TableQuery("dnsdomains", m_service.getPool());
 	    dnstq.setVersionColumn("versionid");
@@ -270,17 +270,17 @@ public class DashBoardSessionService implements Serializable {
 			if (nodelabel == null)
 				valid=false;
 
-			String vrf = null;
+			String cat = null;
 			String hostname = null;
-			for (String tnvrf: domains) {
-				if (nodelabel.endsWith("."+tnvrf)) {
-					vrf = tnvrf;
-					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
+			for (String tncat: domains) {
+				if (nodelabel.endsWith("."+tncat)) {
+					cat = tncat;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(cat)-1);
 					break;
 				}
 			}
 
-			if (vrf == null) {
+			if (cat == null) {
 				hostname = nodelabel;
 				valid = false;
 			}
@@ -435,7 +435,7 @@ public class DashBoardSessionService implements Serializable {
 			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
 				valid = false;		
 
-			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, vrf, primary, 
+			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, cat, primary, 
 					serverLevelCategory, managedByCategory, notifCategory, optionalCategory, 
 					prodCategory, tnCategory, 
 					city, address1, description, building, 
@@ -457,7 +457,7 @@ public class DashBoardSessionService implements Serializable {
 		Map<String, BackupProfile> backupprofilemap = getBackupProfileContainer().getBackupProfileMap();
 		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
 		
-		Collection<Vrf> vrfs = getVrfContainer().getVrfMap().values();
+		Collection<Categoria> cats = getCatContainer().getCatMap().values();
 		List<String> domains = getDnsDomainContainer().getDomains();
 		List<String> subdomains = getDnsSubDomainContainer().getSubdomains();
 		
@@ -489,17 +489,17 @@ public class DashBoardSessionService implements Serializable {
 			if (nodelabel == null)
 				valid=false;
 
-			String vrf = null;
+			String cat = null;
 			String hostname = null;
-			for (String tnvrf: domains) {
-				if (nodelabel.endsWith("."+tnvrf)) {
-					vrf = tnvrf;
-					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
+			for (String tncat: domains) {
+				if (nodelabel.endsWith("."+tncat)) {
+					cat = tncat;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(cat)-1);
 					break;
 				}
 			}
 
-			if (vrf == null) {
+			if (cat == null) {
 				hostname = nodelabel;
 				valid = false;
 			}
@@ -526,10 +526,10 @@ public class DashBoardSessionService implements Serializable {
 			else if (hasInvalidIp(primary))
 				valid = false;
 				
-			Vrf networkCategory = null;
-			for (Vrf lvrf: vrfs) {
-				if (node.getCategory(lvrf.getName()) != null && node.getCategory(lvrf.getNetworklevel()) != null) {
-					networkCategory = lvrf;
+			Categoria networkCategory = null;
+			for (Categoria lcat: cats) {
+				if (node.getCategory(lcat.getName()) != null && node.getCategory(lcat.getNetworklevel()) != null) {
+					networkCategory = lcat;
 					break;
 				}
 			}
@@ -598,7 +598,7 @@ public class DashBoardSessionService implements Serializable {
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					descr, 
 					hostname, 
-					vrf, 
+					cat, 
 					primary, 
 					parent, 
 					networkCategory, 
@@ -656,17 +656,17 @@ public class DashBoardSessionService implements Serializable {
 			if (nodelabel == null)
 				valid=false;
 
-			String vrf = null;
+			String cat = null;
 			String hostname = null;
-			for (String tnvrf: domains) {
-				if (nodelabel.endsWith("."+tnvrf)) {
-					vrf = tnvrf;
-					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
+			for (String tncat: domains) {
+				if (nodelabel.endsWith("."+tncat)) {
+					cat = tncat;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(cat)-1);
 					break;
 				}
 			}
 
-			if (vrf == null) {
+			if (cat == null) {
 				hostname = nodelabel;
 				valid = false;
 			}
@@ -723,7 +723,7 @@ public class DashBoardSessionService implements Serializable {
 			MediaGatewayNode tnnode = new MediaGatewayNode(
 					descr, 
 					hostname, 
-					vrf, 
+					cat, 
 					primary, 
 					parent, 
 					networkCategory, 
@@ -1102,7 +1102,7 @@ public class DashBoardSessionService implements Serializable {
 				&& node.getPrimary() != null)
 			update.put(DashBoardUtils.SNMP_PROFILE, node.getSnmpProfile());
 		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
-				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
+				|| node.getUpdatemap().contains(DashBoardUtils.CAT))
 			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
 		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
 			update.put(DashBoardUtils.CITY, node.getCity());
@@ -1160,7 +1160,7 @@ public class DashBoardSessionService implements Serializable {
 			update.put(DashBoardUtils.PARENT,
 					m_nodeLabelForeignIdMap.get(node.getParent()));
 		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
-				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
+				|| node.getUpdatemap().contains(DashBoardUtils.CAT))
 			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
 		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
 			update.put(DashBoardUtils.CITY, node.getCity());
@@ -1275,7 +1275,7 @@ public class DashBoardSessionService implements Serializable {
 					m_nodeLabelForeignIdMap.get(node.getParent()));
 		}
 		if (node.getUpdatemap().contains(DashBoardUtils.HOST)
-				|| node.getUpdatemap().contains(DashBoardUtils.VRF))
+				|| node.getUpdatemap().contains(DashBoardUtils.CAT))
 			update.put(DashBoardUtils.LABEL, node.getNodeLabel());
 		if (node.getUpdatemap().contains(DashBoardUtils.CITY))
 			update.put(DashBoardUtils.CITY, node.getCity());
@@ -1322,7 +1322,7 @@ public class DashBoardSessionService implements Serializable {
 	}
 	
 	public boolean updateFastNode(String nodelabel, FastServiceLink reflink,
-			RequisitionNode rnode, FastServiceDevice refdevice, Vrf vrf,
+			RequisitionNode rnode, FastServiceDevice refdevice, Categoria cat,
 			BackupProfile bck, Set<String> ipaddresses,
 			boolean updateSnmpProfile) {
 		Map<String,String> update = new HashMap<String, String>();
@@ -1387,22 +1387,22 @@ public class DashBoardSessionService implements Serializable {
 		List<String> categoryToDel = new ArrayList<String>();
 		List<String> all = new ArrayList<String>();
 		
-		if (rnode.getCategory(vrf.getNetworklevel()) == null)
-			categorytoAdd.add(vrf.getNetworklevel());
-		if (rnode.getCategory(vrf.getName()) == null)
-			categorytoAdd.add(vrf.getName());
-		String notiyCategory = vrf.getNotifylevel();
+		if (rnode.getCategory(cat.getNetworklevel()) == null)
+			categorytoAdd.add(cat.getNetworklevel());
+		if (rnode.getCategory(cat.getName()) == null)
+			categorytoAdd.add(cat.getName());
+		String notiyCategory = cat.getNotifylevel();
 		if (refdevice.getNotifyCategory() != null && !refdevice.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
 			notiyCategory = refdevice.getNotifyCategory();
 		if (rnode.getCategory(notiyCategory) == null)
 			categorytoAdd.add(notiyCategory);
-		if (rnode.getCategory(vrf.getThresholdlevel()) == null)
-			categorytoAdd.add(vrf.getThresholdlevel());
+		if (rnode.getCategory(cat.getThresholdlevel()) == null)
+			categorytoAdd.add(cat.getThresholdlevel());
 		
-		all.add(vrf.getNetworklevel());
-		all.add(vrf.getName());
+		all.add(cat.getNetworklevel());
+		all.add(cat.getName());
 		all.add(notiyCategory);
-		all.add(vrf.getThresholdlevel());
+		all.add(cat.getThresholdlevel());
 		
 		for (RequisitionCategory category: rnode.getCategories()) {
 			if (!all.contains(category.getName()))
@@ -1692,11 +1692,11 @@ public class DashBoardSessionService implements Serializable {
 		}
 	}
 	
-	public void addFastNode(String foreignId, FastServiceDevice node, FastServiceLink link, Vrf vrf, Set<String> secondary) {
+	public void addFastNode(String foreignId, FastServiceDevice node, FastServiceLink link, Categoria cat, Set<String> secondary) {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(foreignId);
-		requisitionNode.setNodeLabel(foreignId+"."+vrf.getDnsdomain());
+		requisitionNode.setNodeLabel(foreignId+"."+cat.getDnsdomain());
 		
 		if (node.getCity() != null)
 			requisitionNode.setCity(node.getCity());
@@ -1720,16 +1720,16 @@ public class DashBoardSessionService implements Serializable {
 			requisitionNode.putInterface(ifacesecondary);
 		}
 
-		requisitionNode.putCategory(new RequisitionCategory(vrf.getNetworklevel()));
-		requisitionNode.putCategory(new RequisitionCategory(vrf.getName()));
+		requisitionNode.putCategory(new RequisitionCategory(cat.getNetworklevel()));
+		requisitionNode.putCategory(new RequisitionCategory(cat.getName()));
 		
 		if (node.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
-			requisitionNode.putCategory(new RequisitionCategory(vrf.getNotifylevel()));
+			requisitionNode.putCategory(new RequisitionCategory(cat.getNotifylevel()));
 		else
 			requisitionNode.putCategory(new RequisitionCategory(node.getNotifyCategory()));
 			
 		
-		requisitionNode.putCategory(new RequisitionCategory(vrf.getThresholdlevel()));
+		requisitionNode.putCategory(new RequisitionCategory(cat.getThresholdlevel()));
 		
 		StringBuffer address1 = new StringBuffer();
 		if (node.getAddressDescr() != null)

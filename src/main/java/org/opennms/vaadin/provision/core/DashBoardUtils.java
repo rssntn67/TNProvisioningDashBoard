@@ -228,7 +228,7 @@ public class DashBoardUtils {
 	public static final String DESCR = "descr";
 	public static final String HOST = "hostname";
 	public static final String PRIMARY = "primary";
-	public static final String VRF = "vrf";
+	public static final String CAT = "vrf";
 	public static final String PARENT = "parent";
 	public static final String VALID = "valid";
 	public static final String CITY    = "city";

@@ -184,7 +184,7 @@ public class SistemiInformativiNode implements Serializable {
 		if (m_vrf != null && m_vrf.equals(vrf))
 			return;
 		m_vrf = vrf;
-		m_updatemap.add(DashBoardUtils.VRF);
+		m_updatemap.add(DashBoardUtils.CAT);
 	}
 
     public String getDescr() {

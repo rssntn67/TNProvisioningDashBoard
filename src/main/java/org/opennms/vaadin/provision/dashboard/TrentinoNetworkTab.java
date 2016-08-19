@@ -16,7 +16,7 @@ import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
-import org.opennms.vaadin.provision.model.Vrf;
+import org.opennms.vaadin.provision.model.Categoria;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -67,7 +67,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		 */
 		private static final long serialVersionUID = 1L;
 		private String   needle="";
-		private Vrf needle1=null;
+		private Categoria needle1=null;
 		private String   needle2=null;
 		private String   needle3=null;
 		private String   needle4=null;
@@ -76,7 +76,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			if ( o != null)
 				needle = (String) o;
 			if ( c1 != null) 
-				needle1 = (Vrf) c1;
+				needle1 = (Categoria) c1;
 			if ( c2 != null)
 				needle2 = (String) c2;
 			if ( c3 != null)
@@ -122,7 +122,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private ComboBox m_secondaryIpComboBox = new ComboBox("Seleziona indirizzo ip");
 	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
 	private Table m_secondaryIpAddressTable = new Table();
-	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
+	private ComboBox m_domainComboBox = new ComboBox("Dominio");
 
 	public TrentinoNetworkTab(DashBoardSessionService service) {
 		super(service);
@@ -252,9 +252,9 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		List<Vrf> vrfs = new ArrayList<Vrf>(getService().getVrfContainer().getVrfMap().values()); 
-		Collections.sort(vrfs);
-		for (Vrf categories: vrfs) {
+		List<Categoria> cats = new ArrayList<Categoria>(getService().getCatContainer().getCatMap().values()); 
+		Collections.sort(cats);
+		for (Categoria categories: cats) {
 			networkCatSearchComboBox.addItem(categories);
 			networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
@@ -373,12 +373,12 @@ public class TrentinoNetworkTab extends DashboardTab {
 			}
 		});
 
-		m_vrfsComboBox.removeAllItems();
+		m_domainComboBox.removeAllItems();
 		for (final String domain: getService().getDnsDomainContainer().getDomains()) {
-			m_vrfsComboBox.addItem(domain);
+			m_domainComboBox.addItem(domain);
 		}
 
-		for (Vrf categories: vrfs) {
+		for (Categoria categories: cats) {
 			networkCatComboBox.addItem(categories);
 			networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
@@ -423,20 +423,20 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void valueChange(ValueChangeEvent event) {
 				TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 				if (node.getForeignId() == null) {
-					m_vrfsComboBox.select(((Vrf)networkCatComboBox.getValue()).getDnsdomain());
-					notifCatComboBox.select(((Vrf)networkCatComboBox.getValue()).getNotifylevel());
-					threshCatComboBox.select(((Vrf)networkCatComboBox.getValue()).getThresholdlevel());
-					backupComboBox.select(((Vrf)networkCatComboBox.getValue()).getBackupprofile());
-					snmpComboBox.select(((Vrf)networkCatComboBox.getValue()).getSnmpprofile());
+					m_domainComboBox.select(((Categoria)networkCatComboBox.getValue()).getDnsdomain());
+					notifCatComboBox.select(((Categoria)networkCatComboBox.getValue()).getNotifylevel());
+					threshCatComboBox.select(((Categoria)networkCatComboBox.getValue()).getThresholdlevel());
+					backupComboBox.select(((Categoria)networkCatComboBox.getValue()).getBackupprofile());
+					snmpComboBox.select(((Categoria)networkCatComboBox.getValue()).getSnmpprofile());
 				}
 			}
 		});
 
-		m_vrfsComboBox.setInvalidAllowed(false);
-		m_vrfsComboBox.setNullSelectionAllowed(false);
-		m_vrfsComboBox.setRequired(true);
-		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
-		m_vrfsComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		m_domainComboBox.setInvalidAllowed(false);
+		m_domainComboBox.setNullSelectionAllowed(false);
+		m_domainComboBox.setRequired(true);
+		m_domainComboBox.setRequiredError("Bisogna scegliere un dominio valido");
+		m_domainComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		    /**
 			 * 
 			 */
@@ -444,7 +444,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			@Override
 		    public void valueChange(ValueChangeEvent event) {
-	        	logger.info("vrf combo box value change:"+ m_vrfsComboBox.getValue());
+	        	logger.info("domain combo box value change:"+ m_domainComboBox.getValue());
 		        try {
 		            hostname.validate();
 		            hostname.setComponentError(null); // MAGIC CODE HERE!!!
@@ -453,7 +453,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		        }
 		    }
 		});
-		m_vrfsComboBox.setImmediate(true);
+		m_domainComboBox.setImmediate(true);
 
 				
 		primary.setRequired(true);
@@ -602,7 +602,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		m_editorFields.bind(m_descrComboBox, DashBoardUtils.DESCR);
 		m_editorFields.bind(hostname, DashBoardUtils.HOST);
 		m_editorFields.bind(networkCatComboBox, DashBoardUtils.NETWORK_CATEGORY);
-		m_editorFields.bind(m_vrfsComboBox, DashBoardUtils.VRF);
+		m_editorFields.bind(m_domainComboBox, DashBoardUtils.CAT);
 		m_editorFields.bind(primary,DashBoardUtils.PRIMARY);
 		m_editorFields.bind(parentComboBox, DashBoardUtils.PARENT);
 		m_editorFields.bind(snmpComboBox, DashBoardUtils.SNMP_PROFILE);
@@ -620,7 +620,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		leftGeneralInfo.addComponent(m_descrComboBox);
 		leftGeneralInfo.addComponent(hostname);
 		leftGeneralInfo.addComponent(networkCatComboBox);
-		leftGeneralInfo.addComponent(m_vrfsComboBox);
+		leftGeneralInfo.addComponent(m_domainComboBox);
 		leftGeneralInfo.addComponent(primary);
 		leftGeneralInfo.addComponent(parentComboBox);
 		leftGeneralInfo.addComponent(city);
@@ -682,7 +682,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 			public void buttonClick(ClickEvent event) {
 				BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,new TrentinoNetworkNode("notSavedHost"+newHost++,
-						getService().getVrfContainer().getVrfMap().values().iterator().next()));
+						getService().getCatContainer().getCatMap().values().iterator().next()));
 				networkCatSearchComboBox.select(null);
 				networkCatSearchComboBox.setValue(null);
 				notifCatSearchComboBox.select(null);
@@ -889,7 +889,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		@Override
 		public void validate(Object value) throws InvalidValueException {
 			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("SubdomainValidator: validating hostname: " + hostname);
 			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getDnsSubDomainContainer().getSubdomains()))
 	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
@@ -962,7 +962,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			if (node.getForeignId() != null)
 				return;
 			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("DuplicatedNodelabelValidator: validating label: " + nodelabel);
 	        if (getService().hasDuplicatedNodelabel(nodelabel))
 	             throw new InvalidValueException("DuplicatedNodelabelValidator: trovato un duplicato della node label: " + nodelabel);
@@ -977,7 +977,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("DnsNodeLabelValidator: validating nodelabel: " + nodelabel);
 	         if (DashBoardUtils.hasInvalidDnsBind9Label(nodelabel))
 	             throw new InvalidValueException("DnsNodeLabelValidator: Dns name: '" + nodelabel + "' is not well formed. The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +

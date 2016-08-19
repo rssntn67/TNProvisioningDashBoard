@@ -99,7 +99,7 @@ public class MediaGatewayTab extends DashboardTab {
 	Integer newHost = 0;
 	
 	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
-	private ComboBox m_vrfsComboBox = new ComboBox("Dominio");
+	private ComboBox m_domainComboBox = new ComboBox("Dominio");
 
 	public MediaGatewayTab(DashBoardSessionService service) {
 		super(service);
@@ -242,9 +242,9 @@ public class MediaGatewayTab extends DashboardTab {
 			}
 		});
 
-		m_vrfsComboBox.removeAllItems();
-		for (final String vrfs: getService().getDnsDomainContainer().getDomains()) {
-			m_vrfsComboBox.addItem(vrfs);
+		m_domainComboBox.removeAllItems();
+		for (final String domain: getService().getDnsDomainContainer().getDomains()) {
+			m_domainComboBox.addItem(domain);
 		}
 
 		networkCatComboBox.addItem(DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY);
@@ -270,11 +270,11 @@ public class MediaGatewayTab extends DashboardTab {
 		networkCatComboBox.setRequiredError("E' necessario selezionare la categoria di rete");
 		networkCatComboBox.setImmediate(true);
 
-		m_vrfsComboBox.setInvalidAllowed(false);
-		m_vrfsComboBox.setNullSelectionAllowed(false);
-		m_vrfsComboBox.setRequired(true);
-		m_vrfsComboBox.setRequiredError("Bisogna scegliere un dominio valido");
-		m_vrfsComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		m_domainComboBox.setInvalidAllowed(false);
+		m_domainComboBox.setNullSelectionAllowed(false);
+		m_domainComboBox.setRequired(true);
+		m_domainComboBox.setRequiredError("Bisogna scegliere un dominio valido");
+		m_domainComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 		    /**
 			 * 
 			 */
@@ -282,7 +282,7 @@ public class MediaGatewayTab extends DashboardTab {
 
 			@Override
 		    public void valueChange(ValueChangeEvent event) {
-	        	logger.info("vrf combo box value change:"+ m_vrfsComboBox.getValue());
+	        	logger.info("domain combo box value change:"+ m_domainComboBox.getValue());
 		        try {
 		            hostname.validate();
 		            hostname.setComponentError(null); // MAGIC CODE HERE!!!
@@ -291,7 +291,7 @@ public class MediaGatewayTab extends DashboardTab {
 		        }
 		    }
 		});
-		m_vrfsComboBox.setImmediate(true);
+		m_domainComboBox.setImmediate(true);
 
 				
 		primary.setRequired(true);
@@ -329,7 +329,7 @@ public class MediaGatewayTab extends DashboardTab {
 		m_editorFields.bind(m_descrComboBox, DashBoardUtils.DESCR);
 		m_editorFields.bind(hostname, DashBoardUtils.HOST);
 		m_editorFields.bind(networkCatComboBox, DashBoardUtils.NETWORK_CATEGORY);
-		m_editorFields.bind(m_vrfsComboBox, DashBoardUtils.VRF);
+		m_editorFields.bind(m_domainComboBox, DashBoardUtils.CAT);
 		m_editorFields.bind(primary,DashBoardUtils.PRIMARY);
 		m_editorFields.bind(parentComboBox, DashBoardUtils.PARENT);
 		m_editorFields.bind(snmpComboBox, DashBoardUtils.SNMP_PROFILE);
@@ -342,7 +342,7 @@ public class MediaGatewayTab extends DashboardTab {
 		leftGeneralInfo.addComponent(m_descrComboBox);
 		leftGeneralInfo.addComponent(hostname);
 		leftGeneralInfo.addComponent(networkCatComboBox);
-		leftGeneralInfo.addComponent(m_vrfsComboBox);
+		leftGeneralInfo.addComponent(m_domainComboBox);
 		leftGeneralInfo.addComponent(primary);
 		leftGeneralInfo.addComponent(parentComboBox);
 		leftGeneralInfo.addComponent(city);
@@ -578,7 +578,7 @@ public class MediaGatewayTab extends DashboardTab {
 		@Override
 		public void validate(Object value) throws InvalidValueException {
 			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("SubdomainValidator: validating hostname: " + hostname);
 			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getDnsSubDomainContainer().getSubdomains()))
 	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
@@ -651,7 +651,7 @@ public class MediaGatewayTab extends DashboardTab {
 			if (node.getForeignId() != null)
 				return;
 			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("DuplicatedNodelabelValidator: validating label: " + nodelabel);
 	        if (getService().hasDuplicatedNodelabel(nodelabel))
 	             throw new InvalidValueException("DuplicatedNodelabelValidator: trovato un duplicato della node label: " + nodelabel);
@@ -666,7 +666,7 @@ public class MediaGatewayTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_vrfsComboBox.getValue();
+			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("DnsNodeLabelValidator: validating nodelabel: " + nodelabel);
 	         if (DashBoardUtils.hasInvalidDnsBind9Label(nodelabel))
 	             throw new InvalidValueException("DnsNodeLabelValidator: Dns name: '" + nodelabel + "' is not well formed. The definitive descriptions of the rules for forming domain names appear in RFC 1035, RFC 1123, and RFC 2181." +

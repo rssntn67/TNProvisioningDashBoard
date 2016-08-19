@@ -462,7 +462,7 @@ public class SistemiInformativiTab extends DashboardTab {
 
 			@Override
 		    public void valueChange(ValueChangeEvent event) {
-	        	logger.info("vrf combo box value change:"+ m_domainComboBox.getValue());
+	        	logger.info("domain combo box value change:"+ m_domainComboBox.getValue());
 		        try {
 		            hostname.validate();
 		            hostname.setComponentError(null); // MAGIC CODE HERE!!!
@@ -648,7 +648,7 @@ public class SistemiInformativiTab extends DashboardTab {
 		m_editorFields.bind(m_descrComboBox, DashBoardUtils.DESCR);
 		m_editorFields.bind(hostname, DashBoardUtils.HOST);
 		m_editorFields.bind(serverLevelComboBox, DashBoardUtils.SERVER_LEVEL_CATEGORY);
-		m_editorFields.bind(m_domainComboBox, DashBoardUtils.VRF);
+		m_editorFields.bind(m_domainComboBox, DashBoardUtils.CAT);
 		m_editorFields.bind(primary,DashBoardUtils.PRIMARY);
 		m_editorFields.bind(snmpComboBox, DashBoardUtils.SNMP_PROFILE);
 		m_editorFields.bind(prodComboBox, DashBoardUtils.SERVER_PROD_CATEGORY);

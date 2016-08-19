@@ -29,7 +29,7 @@ import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.JobLogEntry;
 import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.SnmpProfile;
-import org.opennms.vaadin.provision.model.Vrf;
+import org.opennms.vaadin.provision.model.Categoria;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.Theme;
@@ -354,7 +354,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 		Set<String> m_onmsDuplicatedForeignId  = new HashSet<String>();
 		
-		Map<String,Vrf> m_vrf;
+		Map<String,Categoria> m_vrf;
 		Map<String, BackupProfile> m_backup;
 		Map<String, SnmpProfile> m_snmp;
 		Map<String, IpSnmpProfile> m_ipsnmp;
@@ -367,7 +367,7 @@ public class FastTab extends DashboardTab implements ClickListener {
 
 			try {
 				logger.info("run: loading table vrf");
-				m_vrf = getService().getVrfContainer().getVrfMap();
+				m_vrf = getService().getCatContainer().getCatMap();
 				logger.info("run: loaded table vrf");
 
 				logger.info("run: loading table backupprofile");
