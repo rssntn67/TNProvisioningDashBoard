@@ -623,7 +623,8 @@ public class DashBoardSessionService implements Serializable {
 					secondary.toArray(new String[secondary.size()]),
 					slaCategory,
 					building,
-					circuitId);
+					circuitId,
+					optionalCategory);
 			requisitionContainer.addBean(tnnode);
 		}
 		return requisitionContainer;
@@ -1241,7 +1242,10 @@ public class DashBoardSessionService implements Serializable {
 
 		if (node.getSlaCategory() != null)
 			requisitionNode.putCategory(new RequisitionCategory(node.getSlaCategory()));
-		
+		if (node.getOptionalCategory() != null) {
+			for (String optionCat: node.getOptionalCategory())
+				requisitionNode.putCategory(new RequisitionCategory(optionCat));
+		}		
 
 		if (node.getCity() != null && node.getAddress1() != null)
 			requisitionNode.putAsset(new RequisitionAsset("description", node.getCity() + " - " + node.getAddress1()));

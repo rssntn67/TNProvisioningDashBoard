@@ -61,7 +61,7 @@ public class TrentinoNetworkNode implements Serializable {
 
 		m_networkCategory = vrf; 
 		m_vrf = vrf.getDnsdomain();
-		m_notifCategory = vrf.getNetworklevel();
+		m_notifCategory = vrf.getNotifylevel();
 		m_threshCategory = vrf.getThresholdlevel();
 		m_backupProfile = vrf.getBackupprofile();
 		m_snmpProfile = vrf.getSnmpprofile();
@@ -89,7 +89,8 @@ public class TrentinoNetworkNode implements Serializable {
 			String[] secondary,
 			String slaCategory,
 			String building,
-			String circuitId) {
+			String circuitId,
+			Set<String> optionCategory) {
 		super();
 		m_label = null;
 		m_descr = descr;
@@ -110,6 +111,7 @@ public class TrentinoNetworkNode implements Serializable {
 		m_slaCategory = slaCategory;
 		m_building = building;
 		m_circuitId = circuitId;
+		m_optionalCategory = optionCategory;
 
 	}
 
@@ -190,6 +192,8 @@ public class TrentinoNetworkNode implements Serializable {
 	}
 	
 	public void setNotifCategory(String notifCategory) {
+		System.out.println("m_notifCategory: "+ m_notifCategory);
+		System.out.println("notifCategory: "+ notifCategory);
 		if (notifCategory != null && notifCategory.equals(m_notifCategory))
 			return;
 		if (m_notifCategory != null) {
@@ -381,7 +385,6 @@ public class TrentinoNetworkNode implements Serializable {
 	}
 	
 	public void setOptionalCategory(Set<String> optionalCategory) {
-		
 		if (m_optionalCategory != null && m_optionalCategory.equals(optionalCategory) )
 			return;
 		if (m_optionalCategory != null)
