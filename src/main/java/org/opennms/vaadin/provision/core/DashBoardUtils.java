@@ -140,6 +140,13 @@ public class DashBoardUtils {
 		"Process-rsyslogd",
 		"RadiusAuthTestBed",
 		"HTTP-9080",
+                "CSAdmin",
+                "CSAuth",
+                "CSDbSync",
+                "CSLog",
+                "CSMon",
+                "CSRadius",
+                "CSTacacs",
 		"Postgres5435"
 	};
 
