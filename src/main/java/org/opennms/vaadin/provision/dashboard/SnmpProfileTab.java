@@ -49,7 +49,7 @@ public class SnmpProfileTab extends DashboardTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private SnmpProfileDao m_snmpContainer;
 	private boolean loaded = false;
-	
+	private boolean add = false;
 	private Table m_snmpTable   	= new Table();
 	private Button m_addSnmpButton  = new Button("Nuovo Profilo Snmp");
 	private Button m_saveSnmpButton  = new Button("Salva Modifiche");
@@ -181,11 +181,13 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_vers.setRequired(true);
 		snmp_vers.setRequiredError("E' necessario specificare una versione");
 		snmp_vers.setImmediate(true);
+		snmp_vers.setNullSelectionAllowed(false);
 		snmp_vers.addItem("v1");
 		snmp_vers.addItem("v2c");
 
 		snmp_time.setRequired(true);
 		snmp_time.setRequiredError("E' necessario specificare il timeout");
+		snmp_time.setNullSelectionAllowed(false);
 		snmp_time.setImmediate(true);
 		snmp_time.addItem("1800");
 		snmp_time.addItem("3000");
@@ -196,6 +198,7 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_retries.setRequired(true);
 		snmp_retries.setRequiredError("E' necessario specificare il numero di retry");
 		snmp_retries.setImmediate(true);
+		snmp_retries.setNullSelectionAllowed(false);
 		snmp_retries.addItem("1");
 		snmp_retries.addItem("3");
 		snmp_retries.addItem("5");
@@ -203,6 +206,7 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_max.setRequired(true);
 		snmp_max.setRequiredError("E' necessario specificare il numero di retry");
 		snmp_max.setImmediate(true);
+		snmp_max.setNullSelectionAllowed(false);
 		snmp_max.addItem("1");
 		snmp_max.addItem("5");
 		snmp_max.addItem("10");
@@ -248,11 +252,13 @@ public class SnmpProfileTab extends DashboardTab {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
+				add = true;
 				m_snmpTable.unselect(null);
 				m_editorFields.setItemDataSource(new SnmpProfile());
 				m_editSnmpLayout.setVisible(true);
 				m_saveSnmpButton.setEnabled(true);
-				m_removeSnmpButton.setEnabled(true);
+				m_removeSnmpButton.setEnabled(false);
+				m_addSnmpButton.setEnabled(false);
 			}
 		});
 		
@@ -260,30 +266,31 @@ public class SnmpProfileTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				Object snmpId = m_snmpTable.getValue();
 				try {
 					m_editorFields.commit();
 				} catch (CommitException ce) {
-					logger.warning("Save Snmp Profile Failed: " + ce.getLocalizedMessage());
-					Notification.show("Save Snmp Profile Failed", ce.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					ce.printStackTrace();
+					logger.warning("Save Snmp Profile Failed: " + ce.getMessage());
+					Notification.show("Save Snmp Profile Failed", ce.getMessage(), Type.ERROR_MESSAGE);
+					add=false;
+					return;
 				}
-				
+
 				SnmpProfile snmp = m_editorFields.getItemDataSource().getBean();
-				Integer versionid = null;
-				if (snmpId == null) {
-					versionid = 0;
+				if (add) {
 					logger.info("Adding Snmp Profile: " + snmp.getName());
 					m_snmpContainer.add(snmp);
+					snmpSearchComboBox.addItem(snmp.getName());
 				} else {
 					logger.info("Updating Snmp Profile: " + snmp.getName());
-					m_snmpContainer.save(snmpId,snmp);
+					m_snmpContainer.save(m_snmpTable.getValue(),snmp);
 				}
-				if (versionid != null) 
-					snmpSearchComboBox.addItem(snmp.getName());
+				add=false;
 				try {
 					m_snmpContainer.commit();
 					m_snmpTable.select(null);
 					m_editSnmpLayout.setVisible(false);
+					m_addSnmpButton.setEnabled(true);
 					logger.info("Saved Snmp Profile: " + snmp.getName());
 					Notification.show("Save", "Snmp Profile " + snmp.getName()+ " Saved", Type.HUMANIZED_MESSAGE);
 				} catch (UnsupportedOperationException uoe) {

@@ -50,6 +50,7 @@ public class BackupProfileTab extends DashboardTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private BackupProfileDao m_backupContainer;
 	private boolean loaded = false;
+	private boolean add = false;
 	
 	private Table m_backupTable   	= new Table();
 	private Button m_addBackupButton  = new Button("Nuovo Profilo Backup");
@@ -259,11 +260,13 @@ public class BackupProfileTab extends DashboardTab {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
+				add=true;
 				m_backupTable.unselect(null);
 				m_editorFields.setItemDataSource(new BackupProfile());
 				m_editBackupLayout.setVisible(true);
 				m_saveBackupButton.setEnabled(true);
-				m_removeBackupButton.setEnabled(true);
+				m_removeBackupButton.setEnabled(false);
+				m_addBackupButton.setEnabled(false);
 			}
 		});
 		
@@ -271,30 +274,31 @@ public class BackupProfileTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				Object backupId = m_backupTable.getValue();
 				try {
 					m_editorFields.commit();
 				} catch (CommitException ce) {
-					logger.warning("Save Backup Profile Failed: " + ce.getLocalizedMessage());
-					Notification.show("Save Backup Profile Failed", ce.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					ce.printStackTrace();
+					logger.warning("Save Backup Profile Failed: " + ce.getMessage());
+					Notification.show("Save Backup Profile Failed", ce.getMessage(), Type.ERROR_MESSAGE);
+					add=false;
+					return;
 				}
 				
 				BackupProfile backup = m_editorFields.getItemDataSource().getBean();
-				Integer versionid = null;
-				if (backupId == null) {
-					versionid = 0;
+				if (add) {
 					logger.info("Adding Backup Profile: " + backup.getName());
 					m_backupContainer.add(backup);
+					backupSearchComboBox.addItem(backup.getName());
 				} else {
 					logger.info("Updating Backup Profile: " + backup.getName());
-					m_backupContainer.save(backupId, backup);
+					m_backupContainer.save(m_backupTable.getValue(), backup);
 				}
-				if (versionid != null) 
-					backupSearchComboBox.addItem(backup.getName());
+				add=false;
 				try {
 					m_backupContainer.commit();
 					m_backupTable.select(null);
 					m_editBackupLayout.setVisible(false);
+					m_addBackupButton.setEnabled(true);
 					logger.info("Saved Backup Profile: " + backup.getName());
 					Notification.show("Save", "Backup Profile " + backup.getName()+ " Saved", Type.HUMANIZED_MESSAGE);
 				} catch (UnsupportedOperationException uoe) {

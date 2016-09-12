@@ -63,6 +63,7 @@ public class CategorieTab extends DashboardTab {
 	private DnsDomainDao m_domainContainer;
 	private DnsSubDomainDao m_subdomainContainer;
 	private boolean loaded=false;
+	private boolean add=false;
 
 	private Table m_catTable   	= new Table();
 	private Button m_addCatButton  = new Button("Nuova");
@@ -629,7 +630,9 @@ public class CategorieTab extends DashboardTab {
 				m_editorFields.setItemDataSource(new Categoria());
 				m_editCatLayout.setVisible(true);
 				m_saveCatButton.setEnabled(true);
-				m_removeCatButton.setEnabled(true);
+				m_removeCatButton.setEnabled(false);
+				m_addCatButton.setEnabled(false);
+				add=true;
 			}
 		});
 		
@@ -637,30 +640,31 @@ public class CategorieTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 
 			public void buttonClick(ClickEvent event) {
-				Object catId = m_catTable.getValue();
 				try {
 					m_editorFields.commit();
 				} catch (CommitException ce) {
-					logger.warning("Save Categoria Failed: " + ce.getLocalizedMessage());
-					Notification.show("Save Categoria Failed", ce.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					ce.printStackTrace();
+					logger.warning("Save Categoria Failed: " + ce.getMessage());
+					Notification.show("Save Categoria Failed", ce.getMessage(), Type.ERROR_MESSAGE);
+					add=false;
+					return;
 				}
 				
 				Categoria cat = m_editorFields.getItemDataSource().getBean();
-				Integer versionid = null;
-				if (catId == null) {
-					versionid = 0;
+				if (add) {
 					logger.info("Adding Categoria: " + cat.getName());
 					m_catContainer.add(cat);
+					catSearchComboBox.addItem(cat.getName());
 				} else {
 					logger.info("Updating Categoria: " + cat.getName());
-					m_catContainer.save(catId, cat);
+					m_catContainer.save(m_catTable.getValue(), cat);
 				}
-				if (versionid != null) 
-					catSearchComboBox.addItem(cat.getName());
+				add=false;
 				try {
 					m_catContainer.commit();
 					m_catTable.select(null);
 					m_editCatLayout.setVisible(false);
+					m_addCatButton.setEnabled(true);
 					logger.info("Saved Categoria: " + cat.getName());
 					Notification.show("Save", "Categoria " + cat.getName()+ " Saved", Type.HUMANIZED_MESSAGE);
 				} catch (UnsupportedOperationException uoe) {
