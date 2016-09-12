@@ -40,7 +40,6 @@ import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
@@ -53,7 +52,7 @@ import com.vaadin.ui.VerticalLayout;
 
 @Title("TNPD - Fast Integration")
 @Theme("runo")
-public class FastTab extends DashboardTab implements ClickListener {
+public class FastTab extends DashboardTab {
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 
@@ -176,6 +175,8 @@ public class FastTab extends DashboardTab implements ClickListener {
 	        
 	        m_panel.setCaption("Fast Integration - Status: Running");
 	        Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);
+		} else {
+			super.buttonClick(event);
 		}
 	}
 	

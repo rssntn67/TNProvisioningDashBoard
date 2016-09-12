@@ -1,9 +1,14 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 
@@ -13,7 +18,7 @@ import com.vaadin.ui.VerticalLayout;
  * app a web page showing your UI is automatically generated. Or you may choose to 
  * embed your UI to an existing web page. 
  */
-public abstract class DashboardTab extends CustomComponent {
+public abstract class DashboardTab extends CustomComponent implements ClickListener {
 
 	/**
 	 * 
@@ -22,6 +27,7 @@ public abstract class DashboardTab extends CustomComponent {
 	private DashBoardSessionService m_service;
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
+    private Button m_logout = new Button("Logout");
 
 
 	/*
@@ -29,14 +35,18 @@ public abstract class DashboardTab extends CustomComponent {
 	 * up your user interface here.
 	 */
 	DashboardTab(DashBoardSessionService service) {
+    	m_logout.addClickListener(this);
+    	m_logout.setImmediate(true);
 		m_service = service;
 		m_core = new VerticalLayout();
-		m_headPanel = new Panel();
 		setCompositionRoot(m_core);
 		HorizontalLayout head = new HorizontalLayout();
 		head.setSizeFull();
-		head.addComponent(m_headPanel);
-		m_core.addComponent(head);
+		head.addComponent(m_logout);	
+		head.setMargin(true);
+		head.setSpacing(true);
+		m_headPanel = new Panel(head);
+		m_core.addComponent(m_headPanel);
 	}
 
 	public abstract void load();
@@ -55,4 +65,24 @@ public abstract class DashboardTab extends CustomComponent {
 	public ComponentContainer getCore() {
 		return m_core;
 	}
+	
+	@Override
+	public void buttonClick(ClickEvent event) {
+		if (event.getButton() == m_logout) {
+	    	logout();
+	    }
+	}
+	
+	private void logout() {
+		if (m_service.isFastRunning()) {
+			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
+			return;
+		}
+		m_service.logout();
+	    getUI().getSession().close();
+	    getUI().getPage().setLocation(getUI().getPage().getLocation());
+	    
+	}
+
+
 }
