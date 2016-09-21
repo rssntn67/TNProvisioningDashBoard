@@ -192,8 +192,6 @@ public class TrentinoNetworkNode implements Serializable {
 	}
 	
 	public void setNotifCategory(String notifCategory) {
-		System.out.println("m_notifCategory: "+ m_notifCategory);
-		System.out.println("notifCategory: "+ notifCategory);
 		if (notifCategory != null && notifCategory.equals(m_notifCategory))
 			return;
 		if (m_notifCategory != null) {
