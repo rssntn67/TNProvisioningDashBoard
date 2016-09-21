@@ -69,8 +69,7 @@ public class MediaGatewayNode implements Serializable {
 			String backupProfile,
 			String city, 
 			String address1, 
-			String foreignId, 
-			boolean valid) {
+			String foreignId) {
 		super();
 		m_label = null;
 		m_descr = descr;
@@ -84,8 +83,6 @@ public class MediaGatewayNode implements Serializable {
 		m_city = city;
 		m_address1 = address1;
 		m_foreignId = foreignId;
-		m_valid = valid;
-
 	}
 
 

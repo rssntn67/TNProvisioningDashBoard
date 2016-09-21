@@ -1,8 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidDnsBind9Label;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasInvalidIp;
+import static org.opennms.vaadin.provision.core.DashBoardUtils.valid;
 
 import java.io.Serializable;
 import java.sql.SQLException;
@@ -260,38 +258,28 @@ public class DashBoardSessionService implements Serializable {
 		BeanContainer<String, SistemiInformativiNode> requisitionContainer = new BeanContainer<String, SistemiInformativiNode>(SistemiInformativiNode.class);
 		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
 		List<String> domains = getDnsDomainContainer().getDomains();
-		List<String> subdomains = getDnsSubDomainContainer().getSubdomains();
 		for (RequisitionNode node : m_onmsDao.getRequisition(DashBoardUtils.SI_REQU_NAME).getNodes()) {
-			boolean valid = true;
 			String foreignId = node.getForeignId();
-			if (foreignId == null)
-				valid = false;
 			String nodelabel = node.getNodeLabel();
-			if (nodelabel == null)
-				valid=false;
 
-			String cat = null;
+			String vrf = null;
 			String hostname = null;
 			for (String tncat: domains) {
 				if (nodelabel.endsWith("."+tncat)) {
-					cat = tncat;
-					hostname = nodelabel.substring(0,nodelabel.indexOf(cat)-1);
+					vrf = tncat;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
 					break;
 				}
 			}
 
-			if (cat == null) {
+			if (vrf == null) {
 				hostname = nodelabel;
-				valid = false;
 			}
-			
 			String primary = null;
 			String descr = null;
 			Map<String, Set<String>> serviceMap = new HashMap<String, Set<String>>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
-				if (ip.getSnmpPrimary() == null)
-					valid=false;
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
@@ -307,11 +295,6 @@ public class DashBoardSessionService implements Serializable {
 				}
 			}
 
-			if (primary == null)
-				valid = false;
-			else if (hasInvalidIp(primary))
-				valid = false;
-
 			String[] serverLevelCategory = null;
 			for (String[] levels : DashBoardUtils.m_server_levels) {
 				if (node.getCategory(levels[0]) != null && node.getCategory(levels[1]) != null) {
@@ -319,8 +302,6 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}
 			}
-			if (serverLevelCategory == null)
-				valid = false;
 
 			String managedByCategory = null;
 			for (String managedby: DashBoardUtils.m_server_managedby) {
@@ -329,9 +310,6 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}				
 			}
-			if (managedByCategory == null)
-				valid = false;
-			
 			String notifCategory = null;
 			for (String notif: DashBoardUtils.m_server_notif) {
 				if (node.getCategory(notif) != null) {
@@ -354,17 +332,14 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}				
 			}
-			if (prodCategory == null)
-				valid = false;
 
 			String tnCategory = null;
 			if (node.getCategory(DashBoardUtils.TN_REQU_NAME) == null) {
 				logger.info("no TrentinoNetwork category on SI node: foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
-				valid = false;
 			} else {
 				tnCategory = DashBoardUtils.TN_REQU_NAME;
 			}
-			
+
 			String city = node.getCity();
 			String building = node.getBuilding();
 			
@@ -431,13 +406,7 @@ public class DashBoardSessionService implements Serializable {
 			String manufacturer = null;
 			if (node.getAsset(DashBoardUtils.MANUFACTURER) != null)
 				manufacturer = node.getAsset(DashBoardUtils.MANUFACTURER).getValue();
-
-			if (hasInvalidDnsBind9Label(nodelabel))
-				valid = false;
-			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
-				valid = false;		
-
-			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, cat, primary, 
+			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, vrf, primary, 
 					serverLevelCategory, managedByCategory, notifCategory, optionalCategory, 
 					prodCategory, tnCategory, 
 					city, address1, description, building, 
@@ -446,9 +415,11 @@ public class DashBoardSessionService implements Serializable {
 					operatingSystem, dateInstalled, 
 					assetNumber, serialNumber, category, 
 					modelNumber, manufacturer, 
-					foreignId, valid);
+					foreignId);
+			sinode.setValid(isValid(sinode));
 			requisitionContainer.addBean(sinode);
 		}
+
 		return requisitionContainer;
 	}
 
@@ -461,7 +432,6 @@ public class DashBoardSessionService implements Serializable {
 		
 		Collection<Categoria> cats = getCatContainer().getCatMap().values();
 		List<String> domains = getDnsDomainContainer().getDomains();
-		List<String> subdomains = getDnsSubDomainContainer().getSubdomains();
 		
 		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
     	m_foreignIdNodeLabelMap.clear();
@@ -483,36 +453,27 @@ public class DashBoardSessionService implements Serializable {
 				logger.info("skipping media gateway: foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
 				continue;
 			}
-			boolean valid = true;
 			String foreignId = node.getForeignId();
-			if (foreignId == null)
-				valid = false;
 			String nodelabel = node.getNodeLabel();
-			if (nodelabel == null)
-				valid=false;
 
-			String cat = null;
+			String vrf = null;
 			String hostname = null;
 			for (String tncat: domains) {
 				if (nodelabel.endsWith("."+tncat)) {
-					cat = tncat;
-					hostname = nodelabel.substring(0,nodelabel.indexOf(cat)-1);
+					vrf = tncat;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
 					break;
 				}
 			}
 
-			if (cat == null) {
+			if (vrf == null) 
 				hostname = nodelabel;
-				valid = false;
-			}
 			
 			String primary = null;
 			String descr = null;
 			List<String> secondary = new ArrayList<String>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
-				if (ip.getSnmpPrimary() == null)
-					valid=false;
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
@@ -523,10 +484,6 @@ public class DashBoardSessionService implements Serializable {
 			}
 			if (descr == null)
 				descr = "Provisioned By TNPD";
-			if (primary == null)
-				valid = false;
-			else if (hasInvalidIp(primary))
-				valid = false;
 				
 			Categoria networkCategory = null;
 			for (Categoria lcat: cats) {
@@ -535,8 +492,6 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}
 			}
-			if (networkCategory == null)
-				valid = false;
 
 			String notifCategory=null;
 			for (String fcat: DashBoardUtils.m_notify_levels) {
@@ -545,8 +500,6 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}
 			}
-			if (notifCategory == null)
-				valid = false;
 			
 			String threshCategory = null;
 			for (String tcat: DashBoardUtils.m_threshold_levels) {
@@ -555,8 +508,6 @@ public class DashBoardSessionService implements Serializable {
 					break;
 				}
 			}
-			if (threshCategory == null)
-				valid = false;
 
 			String slaCategory = null;
 			for (String slacat: DashBoardUtils.m_sla_levels) {
@@ -577,19 +528,10 @@ public class DashBoardSessionService implements Serializable {
 			String city = null;
 			if (node.getCity() != null)
 				city = node.getCity();
-			else
-				valid = false;
-			
+
 			String address1 = null;
 			if (node.getAsset(DashBoardUtils.ADDRESS1) != null)
 				address1 = node.getAsset(DashBoardUtils.ADDRESS1).getValue();
-			else
-				valid = false;
-			
-			if (hasInvalidDnsBind9Label(nodelabel))
-				valid = false;
-			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
-				valid = false;		
 			
 			String parent = null;
 			if (node.getParentForeignId() != null)
@@ -608,7 +550,7 @@ public class DashBoardSessionService implements Serializable {
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					descr, 
 					hostname, 
-					cat, 
+					vrf, 
 					primary, 
 					parent, 
 					networkCategory, 
@@ -619,12 +561,12 @@ public class DashBoardSessionService implements Serializable {
 					city, 
 					address1, 
 					foreignId, 
-					valid, 
 					secondary.toArray(new String[secondary.size()]),
 					slaCategory,
 					building,
 					circuitId,
 					optionalCategory);
+			tnnode.setValid(isValid(tnnode));
 			requisitionContainer.addBean(tnnode);
 		}
 		return requisitionContainer;
@@ -638,7 +580,6 @@ public class DashBoardSessionService implements Serializable {
 		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
 		
 		List<String> domains = getDnsDomainContainer().getDomains();
-		List<String> subdomains = getDnsSubDomainContainer().getSubdomains();
 		
 		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
     	m_foreignIdNodeLabelMap.clear();
@@ -659,36 +600,27 @@ public class DashBoardSessionService implements Serializable {
 			if (node.getCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY) == null) {
 				continue;
 			}
-			boolean valid = true;
 			String foreignId = node.getForeignId();
-			if (foreignId == null)
-				valid = false;
 			String nodelabel = node.getNodeLabel();
-			if (nodelabel == null)
-				valid=false;
 
-			String cat = null;
+			String vrf = null;
 			String hostname = null;
 			for (String tncat: domains) {
 				if (nodelabel.endsWith("."+tncat)) {
-					cat = tncat;
-					hostname = nodelabel.substring(0,nodelabel.indexOf(cat)-1);
+					vrf = tncat;
+					hostname = nodelabel.substring(0,nodelabel.indexOf(vrf)-1);
 					break;
 				}
 			}
 
-			if (cat == null) {
+			if (vrf == null) 
 				hostname = nodelabel;
-				valid = false;
-			}
 			
 			String primary = null;
 			String descr = null;
 			List<String> secondary = new ArrayList<String>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
-				if (ip.getSnmpPrimary() == null)
-					valid=false;
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
@@ -698,34 +630,18 @@ public class DashBoardSessionService implements Serializable {
 				}
 			}
 
-			if (primary == null)
-				valid = false;
-			else if (hasInvalidIp(primary))
-				valid = false;
-				
 			String networkCategory = null;
 			if (node.getCategory(DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY) != null) {
 				networkCategory = DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY;
 			}
-			if (networkCategory == null)
-				valid = false;
 
 			String city = null;
 			if (node.getCity() != null)
 				city = node.getCity();
-			else
-				valid = false;
-			
+
 			String address1 = null;
 			if (node.getAsset(DashBoardUtils.ADDRESS1) != null)
 				address1 = node.getAsset(DashBoardUtils.ADDRESS1).getValue();
-			else
-				valid = false;
-			
-			if (hasInvalidDnsBind9Label(nodelabel))
-				valid = false;
-			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
-				valid = false;		
 			
 			String parent = null;
 			if (node.getParentForeignId() != null)
@@ -734,7 +650,7 @@ public class DashBoardSessionService implements Serializable {
 			MediaGatewayNode tnnode = new MediaGatewayNode(
 					descr, 
 					hostname, 
-					cat, 
+					vrf, 
 					primary, 
 					parent, 
 					networkCategory, 
@@ -742,8 +658,8 @@ public class DashBoardSessionService implements Serializable {
 					DashBoardUtils.getBackupProfile(node, backupprofilemap), 
 					city, 
 					address1, 
-					foreignId, 
-					valid);
+					foreignId);
+			tnnode.setValid(isValid(tnnode));
 			requisitionContainer.addBean(tnnode);
 		}
 		return requisitionContainer;	}
@@ -1811,6 +1727,18 @@ public class DashBoardSessionService implements Serializable {
 
 	public void setUrl(String url) {
 		m_url = url;
+	}
+	
+	public boolean isValid(TrentinoNetworkNode node) {
+		return valid(node,getDnsSubDomainContainer().getSubdomains());
+	}
+
+	public boolean isValid(SistemiInformativiNode node) {
+		return valid(node,getDnsSubDomainContainer().getSubdomains());
+	}
+
+	public boolean isValid(MediaGatewayNode node) {
+		return valid(node,getDnsSubDomainContainer().getSubdomains());
 	}
 
 }

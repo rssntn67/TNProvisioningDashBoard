@@ -6,6 +6,9 @@ import java.util.Map;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.MediaGatewayNode;
+import org.opennms.vaadin.provision.model.SistemiInformativiNode;
+import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 
 public class DashBoardUtils {
 
@@ -372,5 +375,111 @@ public class DashBoardUtils {
 		return false;
 	}
 
+	public static boolean valid(SistemiInformativiNode node, List<String> subdomains) {
+		if (node.getForeignId() == null)
+			return false;
+		if (node.getNodeLabel() == null)
+			return false;
+		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
+			return false;
+		if (node.getVrf() == null) 
+			return false;
+		if (node.getPrimary() == null)
+			return false;
+		else if (hasInvalidIp(node.getPrimary()))
+			return false;
+		if (node.getServerLevelCategory() == null)
+			return false;
+		if (node.getManagedByCategory() == null)
+			return false;
+		if (node.getProdCategory() == null)
+			return false;
+		if (node.getTrentinoNetworkCategory() == null)
+			return false;
+		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
+				node.getNodeLabel(),subdomains))
+			return false;		
+		return true;
+	}
+
+	public static boolean valid(TrentinoNetworkNode node, List<String> subdomains) {
+		if (node.getForeignId() == null)
+			return false;
+		if (node.getNodeLabel() == null)
+			return false;
+		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
+			return false;
+		if (node.getVrf() == null) 
+			return false;
+		if (node.getPrimary() == null)
+			return false;
+		else if (hasInvalidIp(node.getPrimary()))
+			return false;
+		if (node.getNetworkCategory() == null)
+			return false;
+		if (node.getNotifCategory() == null)
+			return false;
+		if (node.getThreshCategory() == null)
+			return false;
+		if (node.getCity() == null)
+			return false;
+		if (node.getAddress1() == null)
+			return false;
+		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
+				node.getNodeLabel(),subdomains))
+			return false;		
+		return true;
+	}
+
+	/*
+	 * 			boolean valid = true;
+			if (foreignId == null)
+				valid = false;
+			if (nodelabel == null)
+				valid=false;
+			if (vrf == null) 
+				valid = false;
+			if (primary == null)
+				valid = false;
+			else if (hasInvalidIp(primary))
+				valid = false;				
+			if (networkCategory == null)
+				valid = false;
+			if (node.getCity() == null)
+				valid = false;
+			if (address1 == null)
+				valid = false;
+			if (hasInvalidDnsBind9Label(nodelabel))
+				valid = false;
+			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
+				valid = false;		
+			
+
+	 */
+	
+	public static boolean valid(MediaGatewayNode node, List<String> subdomains) {
+		if (node.getForeignId() == null)
+			return false;
+		if (node.getNodeLabel() == null)
+			return false;
+		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
+			return false;
+		if (node.getVrf() == null) 
+			return false;
+		if (node.getPrimary() == null)
+			return false;
+		else if (hasInvalidIp(node.getPrimary()))
+			return false;
+		if (node.getNetworkCategory() == null)
+			return false;
+		if (node.getCity() == null)
+			return false;
+		if (node.getAddress1() == null)
+			return false;
+		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
+				node.getNodeLabel(),subdomains))
+			return false;		
+		return true;
+	}
 
 }

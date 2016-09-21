@@ -754,6 +754,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 					} else {
 						getService().updateTNNode(node);
+						node.setValid(getService().isValid(node));
 						logger.info("Updated: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 					}

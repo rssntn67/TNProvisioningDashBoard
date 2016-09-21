@@ -77,7 +77,7 @@ public class SistemiInformativiNode implements Serializable {
 			String vendor, String slot, String rack, String room,
 			String operatingSystem, String dateInstalled, String assetNumber,
 			String serialNumber, String category, String modelNumber,
-			String manufacturer, String foreignId, boolean valid) {
+			String manufacturer, String foreignId) {
 		super();
 		m_serviceMap = serviceMap;
 		m_descr = descr;
@@ -109,7 +109,6 @@ public class SistemiInformativiNode implements Serializable {
 		m_modelNumber = modelNumber;
 		m_manufacturer = manufacturer;
 		m_foreignId = foreignId;
-		m_valid = valid;
 	}
 
 	public SistemiInformativiNode(String label) {

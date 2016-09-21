@@ -85,7 +85,6 @@ public class TrentinoNetworkNode implements Serializable {
 			String city, 
 			String address1, 
 			String foreignId, 
-			boolean valid, 
 			String[] secondary,
 			String slaCategory,
 			String building,
@@ -106,7 +105,6 @@ public class TrentinoNetworkNode implements Serializable {
 		m_city = city;
 		m_address1 = address1;
 		m_foreignId = foreignId;
-		m_valid = valid;
 		m_secondary = secondary;
 		m_slaCategory = slaCategory;
 		m_building = building;
