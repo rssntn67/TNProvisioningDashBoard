@@ -1181,10 +1181,10 @@ public class DashBoardSessionService implements Serializable {
 				|| node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
 			update.put(DashBoardUtils.DESCRIPTION, node.getCity() + " - "
 					+ node.getAddress1());
+		BackupProfile bck = null;
 		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
 				&& node.getBackupProfile() != null)
-			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
-		BackupProfile bck = getBackupProfileContainer().get(node.getBackupProfile());
+			bck = getBackupProfileContainer().getBackupProfile(node.getBackupProfile());
 		updateNode(DashBoardUtils.TN_REQU_NAME, node.getForeignId(), node.getPrimary(),
 				node.getDescr(), update, node.getInterfToDel(),
 				node.getInterfToAdd(), node.getCategoriesToDel(),
@@ -1305,10 +1305,11 @@ public class DashBoardSessionService implements Serializable {
 				|| node.getUpdatemap().contains(DashBoardUtils.ADDRESS1))
 			update.put(DashBoardUtils.DESCRIPTION, node.getCity() + " - "
 					+ node.getAddress1());
+		BackupProfile bck = null;
 		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
-				&& node.getBackupProfile() != null)
-			update.put(DashBoardUtils.BACKUP_PROFILE, node.getBackupProfile());
-		BackupProfile bck = getBackupProfileContainer().get(node.getBackupProfile());
+				&& node.getBackupProfile() != null) {
+			bck = getBackupProfileContainer().getBackupProfile(node.getBackupProfile());
+		}		
 		updateNode(DashBoardUtils.TN_REQU_NAME, node.getForeignId(), node.getPrimary(),
 				node.getDescr(), update, node.getInterfToDel(),
 				node.getInterfToAdd(), node.getCategoriesToDel(),
@@ -1394,9 +1395,6 @@ public class DashBoardSessionService implements Serializable {
 		else if ((refdevice.getIstat() == null || reflink.getSiteCode() ==  null) && rnode.getAsset("building") != null)
 			update.put(DashBoardUtils.BUILDING, "");
 		
-		if (bck != null) 
-			update.put(DashBoardUtils.BACKUP_PROFILE, bck.getName());
-
 		List<String> categorytoAdd = new ArrayList<String>();
 		List<String> categoryToDel = new ArrayList<String>();
 		List<String> all = new ArrayList<String>();
@@ -1435,14 +1433,19 @@ public class DashBoardSessionService implements Serializable {
 		}
 		if (update.isEmpty() && categorytoAdd.isEmpty() && categoryToDel.isEmpty() && iptoAdd.isEmpty() && ipToDel.isEmpty())
 			return false;
-		updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),refdevice.getIpaddr(),"provided by FAST",update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,bck);
+		updateNode(DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),
+				refdevice.getIpaddr(),
+				"provided by FAST",
+				update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,
+				bck);
 		return true;
 	}
 
 	public void updateNode(String foreignSource, String foreignId,
 			String primary, String descr, Map<String, String> update,
 			List<String> interfaceToDel, List<String> interfaceToAdd,
-			List<String> categoriesToDel, List<String> categoriesToAdd, BackupProfile bck) {
+			List<String> categoriesToDel, List<String> categoriesToAdd, 
+			BackupProfile bck) {
 		if (update.containsKey(DashBoardUtils.SNMP_PROFILE) && primary != null)
 			m_onmsDao.setSnmpInfo(primary, getSnmpProfileContainer()
 					.getSnmpProfile(update.get(DashBoardUtils.SNMP_PROFILE))
@@ -1559,7 +1562,7 @@ public class DashBoardSessionService implements Serializable {
 					new RequisitionCategory(category));
 		}
 
-		if (update.containsKey(DashBoardUtils.BACKUP_PROFILE) && bck != null) {
+		if (bck != null) {
 			for (RequisitionAsset asset : bck.getRequisitionAssets().getAssets()) {
 				m_onmsDao.addRequisitionAsset(foreignSource, foreignId, asset);
 			}
