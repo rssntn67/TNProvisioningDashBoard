@@ -5,7 +5,7 @@
 	<groupId>org.opennms</groupId>
 	<artifactId>provisiondashboard</artifactId>
 	<packaging>war</packaging>
-	<version>3.0.0</version>
+	<version>3.0.1</version>
 	<name>Provisioning Dashboard Web Application</name>
 
 	<properties>
