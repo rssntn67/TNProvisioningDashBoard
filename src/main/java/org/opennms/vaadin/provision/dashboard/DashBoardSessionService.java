@@ -588,6 +588,10 @@ public class DashBoardSessionService implements Serializable {
 			else if (node.getBuilding() != null) 
 				circuitId = node.getBuilding();
 
+			String snmpProfile = null;
+			if (primary != null && m_ipSnmpMap.containsKey(primary))
+				snmpProfile= m_ipSnmpMap.get(primary).getSnmprofile();
+			
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					descr, 
 					hostname, 
@@ -597,7 +601,7 @@ public class DashBoardSessionService implements Serializable {
 					networkCategory, 
 					notifCategory, 
 					threshCategory, 
-					m_ipSnmpMap.get(primary).getSnmprofile(), 
+					snmpProfile, 
 					DashBoardUtils.getBackupProfile(node, backupprofilemap), 
 					city, 
 					address1, 
