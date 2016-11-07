@@ -740,16 +740,15 @@ public class TrentinoNetworkTab extends DashboardTab {
 
 		m_populateSnmpButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void buttonClick(ClickEvent event) {
 				try {
 					getService().syncSnmpProfile(DashBoardUtils.TN_REQU_NAME);
-					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN_REQU_NAME);
-					Notification.show("Sync " + DashBoardUtils.TN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+					logger.info("Sync db with snmp profiles for Requisition: " + DashBoardUtils.TN_REQU_NAME);
+					Notification.show("Sync Snmp profile: " + DashBoardUtils.TN_REQU_NAME, " Done ", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
-					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
-					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+					logger.warning("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
+					Notification.show("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 				}
 				
 			}
@@ -900,7 +899,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				String snmpProfile=null;
 				if (node.getPrimary() != null) {
 					try {
-					snmpProfile = getService().getSnmpProfileName(node.getPrimary());
+						snmpProfile = getService().getSnmpProfileName(node.getPrimary());
 					} catch (SQLException sqle) {
 						logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
 						Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);

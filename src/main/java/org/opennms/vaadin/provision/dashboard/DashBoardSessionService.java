@@ -255,6 +255,23 @@ public class DashBoardSessionService implements Serializable {
 
 	}
 
+	public void syncSnmpProfile(String primary, String snmpprofile) throws SQLException{
+		if (primary == null || snmpprofile == null)
+			return;
+		IpSnmpProfile ipSnmpProfile= new IpSnmpProfile(primary,snmpprofile); 
+		if (m_ipSnmpMap.containsKey(primary)) {
+			if (m_ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
+				return;
+			logger.info("syncSnmpProfile: update primary ip/snmpprofile: " + primary+"/"+snmpprofile );
+			m_ipsnmpprofilecontainer.update(ipSnmpProfile);
+		}  else {
+			logger.info("syncSnmpProfile: adding primary ip/snmpprofile: " + primary+"/"+snmpprofile );
+			m_ipsnmpprofilecontainer.add(ipSnmpProfile);				
+		}
+		m_ipSnmpMap.put(primary, ipSnmpProfile);
+		m_ipsnmpprofilecontainer.commit();
+	}
+	
 	public void syncSnmpProfile(String requisition) throws SQLException {
 		for (String primary: m_primaryipcollection) {
 			String snmpprofile = getSnmpProfileName(primary);
@@ -270,9 +287,10 @@ public class DashBoardSessionService implements Serializable {
 			}  else {
 				logger.info("syncSnmpProfile: adding primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 				m_ipsnmpprofilecontainer.add(ipSnmpProfile);				
-			}			
+			}
 			m_ipSnmpMap.put(primary, ipSnmpProfile);
 		}
+		m_ipsnmpprofilecontainer.commit();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -579,7 +597,7 @@ public class DashBoardSessionService implements Serializable {
 					networkCategory, 
 					notifCategory, 
 					threshCategory, 
-					null, 
+					m_ipSnmpMap.get(primary).getSnmprofile(), 
 					DashBoardUtils.getBackupProfile(node, backupprofilemap), 
 					city, 
 					address1, 

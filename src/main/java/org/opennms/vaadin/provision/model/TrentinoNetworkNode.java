@@ -110,7 +110,6 @@ public class TrentinoNetworkNode implements Serializable {
 		m_building = building;
 		m_circuitId = circuitId;
 		m_optionalCategory = optionCategory;
-
 	}
 
 	public Set<String> getOptionalCategory() {
