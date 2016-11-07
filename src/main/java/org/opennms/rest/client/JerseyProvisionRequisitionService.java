@@ -220,6 +220,13 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	@Override
+	public void syncDb(String name) {
+		MultivaluedMap<String, String> mvm = new MultivaluedMapImpl();
+		mvm.add("rescanExisting", "dbonly");
+		getJerseyClient().put(mvm, buildImportPath(name));
+	}
+
+	@Override
 	public void delete(String name) {
 		getJerseyClient().delete(buildRequisitionPath(name));
 	}

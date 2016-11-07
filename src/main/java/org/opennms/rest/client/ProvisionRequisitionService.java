@@ -61,7 +61,9 @@ public interface ProvisionRequisitionService extends RestFilterService{
     public void add(String foreignSource, String foreignid, RequisitionAsset rasset);
     
     public void sync(String foreignSource);
-    
+
+    public void syncDb(String foreignSource);
+
     public void syncWithOutScanning(String foreignSource);
     
     public void delete(String foreignSource);
