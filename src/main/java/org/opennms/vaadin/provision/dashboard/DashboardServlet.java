@@ -6,9 +6,11 @@ import javax.servlet.ServletException;
 
 import com.vaadin.server.DeploymentConfiguration;
 import com.vaadin.server.ServiceException;
+import com.vaadin.server.SessionDestroyEvent;
+import com.vaadin.server.SessionDestroyListener;
 import com.vaadin.server.VaadinServlet;
 
-public class DashboardServlet extends VaadinServlet {
+public class DashboardServlet extends VaadinServlet implements SessionDestroyListener{
 
 	private final static Logger logger = Logger.getLogger(DashboardServlet.class.getName());
 
@@ -33,5 +35,13 @@ public class DashboardServlet extends VaadinServlet {
 	    return service;
 	}
 	
-	
+	@Override
+    public void sessionDestroy(SessionDestroyEvent event) {
+		logger.info("sessionDestroy: destroy Dashboard Session Service: " + event.getSession());
+		DashBoardService service = (DashBoardService) event.getService();
+		DashBoardSessionService sessionservice = (DashBoardSessionService) event.getSession();
+		logger.info("sessionDestroy: logout user: " + sessionservice.getUser());
+		service.unregisterSession(sessionservice);
+		sessionservice.logout();
+    }
 }

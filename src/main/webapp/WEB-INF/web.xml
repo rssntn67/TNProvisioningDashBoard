@@ -6,6 +6,10 @@
         <param-name>productionMode</param-name>
         <param-value>true</param-value>
     </context-param>
+	<context-param>
+    	<param-name>heartbeatInterval</param-name>
+    	<param-value>1200</param-value>
+	</context-param>
     <servlet>
         <servlet-name>TNPD</servlet-name>
         <servlet-class>org.opennms.vaadin.provision.dashboard.DashboardServlet</servlet-class>

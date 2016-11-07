@@ -55,15 +55,21 @@ import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.model.OnmsIpInterface;
 
 import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.util.sqlcontainer.query.TableQuery;
+import com.vaadin.server.VaadinSession;
 
-public class DashBoardSessionService implements Serializable {
+public class DashBoardSessionService extends VaadinSession implements Serializable {
+
+	public DashBoardSessionService(DashBoardService service) {
+		super(service);
+		m_onmsDao = new OnmsDao();
+	}
 
 	/**
 	 * 
 	 */
-
 	private IpSnmpProfileDao     m_ipsnmpprofilecontainer;
 	private SnmpProfileDao       m_snmpprofilecontainer;
 	private BackupProfileDao     m_backupprofilecontainer;
@@ -84,16 +90,22 @@ public class DashBoardSessionService implements Serializable {
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
 
 	private OnmsDao m_onmsDao;
+	private JDBCConnectionPool m_pool; 
+	private DashBoardConfig m_config;
+
 	private String m_user;
 	private String m_url;
-	private DashBoardService m_service;
-
-	public void reloadDashBoardConfig() {
-		m_service.getConfig().reload();
+	
+	public void setPool(JDBCConnectionPool pool) {
+		m_pool=pool;
+	}
+	
+	public void setConfig(DashBoardConfig config) {
+		m_config = config;
 	}
 	
 	public DashBoardConfig getConfig() {
-		return m_service.getConfig();
+		return m_config;
 	}
 
 	public IpSnmpProfileDao getIpSnmpProfileContainer() {
@@ -135,68 +147,15 @@ public class DashBoardSessionService implements Serializable {
 	public JobLogDao getJobLogContainer() {
 		return m_joblogcontainer;
 	}
-
-	public void setIpSnmpprofilecontainer(IpSnmpProfileDao ipsnmpprofilecontainer) {
-		m_ipsnmpprofilecontainer = ipsnmpprofilecontainer;
-	}
-
-	public void setSnmpprofilecontainer(SnmpProfileDao snmpprofilecontainer) {
-		m_snmpprofilecontainer = snmpprofilecontainer;
-	}
-
-	public void setBackupprofilecontainer(BackupProfileDao backupprofilecontainer) {
-		m_backupprofilecontainer = backupprofilecontainer;
-	}
-
-	public void setCatcontainer(CategoriaDao catcontainer) {
-		m_catcontainer = catcontainer;
-	}
-
-	public void setDnsdomaincontainer(DnsDomainDao dnsdomaincontainer) {
-		m_dnsdomaincontainer = dnsdomaincontainer;
-	}
-
-	public void setDnssubdomaincontainer(DnsSubDomainDao dnssubdomaincontainer) {
-		m_dnssubdomaincontainer = dnssubdomaincontainer;
-	}
-
-	public void setFastservicedevicecontainer(
-			FastServiceDeviceDao fastservicedevicecontainer) {
-		m_fastservicedevicecontainer = fastservicedevicecontainer;
-	}
-
-	public void setFastservicelinkcontainer(
-			FastServiceLinkDao fastservicelinkcontainer) {
-		m_fastservicelinkcontainer = fastservicelinkcontainer;
-	}
-
-	public void setJobcontainer(JobDao jobcontainer) {
-		m_jobcontainer = jobcontainer;
-	}	
-
-	public void setJobLogcontainer(JobLogDao joblogcontainer) {
-		m_joblogcontainer = joblogcontainer;
-	}	
-
-	public DashBoardService getService() {
-		return m_service;
-	}
-
-	public void setService(DashBoardService service) {
-		m_service = service;
-	}
 	
     public OnmsDao getOnmsDao() {
 		return m_onmsDao;
 	}
-
-	public void setOnmsDao(OnmsDao onmsDao) {
-		m_onmsDao = onmsDao;
-	}
-
+    
 	public void logout() {
 		logger.info("logged out: user: " + m_user + " url: " + m_url);
 		m_onmsDao.destroy();
+		m_pool.destroy();
 	}
 	
 	public void login(String url, String username, String password) {
@@ -210,47 +169,46 @@ public class DashBoardSessionService implements Serializable {
 	}
 		
 	public void init() throws SQLException {
-		reloadDashBoardConfig();
-		
 		logger.info("init session:" + this);
-
-		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_service.getPool());
+		
+		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
         m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
 
-		TableQuery snmptq = new TableQuery("snmpprofiles", m_service.getPool());
+		TableQuery snmptq = new TableQuery("snmpprofiles", m_pool);
 		snmptq.setVersionColumn("versionid");
         m_snmpprofilecontainer = new SnmpProfileDao(snmptq);
         
-        TableQuery bcktq = new TableQuery("backupprofiles", m_service.getPool());
+        TableQuery bcktq = new TableQuery("backupprofiles", m_pool);
 		bcktq.setVersionColumn("versionid");
 		m_backupprofilecontainer = new BackupProfileDao(bcktq);
 
-		TableQuery cattq = new TableQuery("vrf", m_service.getPool());
+		TableQuery cattq = new TableQuery("vrf", m_pool);
 		cattq.setVersionColumn("versionid");
 	    m_catcontainer =  new CategoriaDao(cattq);	
 	    
-	    TableQuery dnstq = new TableQuery("dnsdomains", m_service.getPool());
+	    TableQuery dnstq = new TableQuery("dnsdomains", m_pool);
 	    dnstq.setVersionColumn("versionid");
 	    m_dnsdomaincontainer =  new DnsDomainDao(dnstq);	
 	    
-	    TableQuery sdnstq = new TableQuery("dnssubdomains", m_service.getPool());
+	    TableQuery sdnstq = new TableQuery("dnssubdomains", m_pool);
 	    sdnstq.setVersionColumn("versionid");
 	    m_dnssubdomaincontainer =  new DnsSubDomainDao(sdnstq);
 
 	    m_fastservicedevicecontainer = new FastServiceDeviceDao
-	    		(new FreeformQuery("select * from fastservicedevices", m_service.getPool()));
+	    		(new FreeformQuery("select * from fastservicedevices", m_pool));
 
 		m_fastservicelinkcontainer = new FastServiceLinkDao
-				(new FreeformQuery("select * from fastservicelink", m_service.getPool()));
+				(new FreeformQuery("select * from fastservicelink", m_pool));
 
-	    TableQuery jtq = new TableQuery("jobs", m_service.getPool());
+	    TableQuery jtq = new TableQuery("jobs", m_pool);
 	    jtq.setVersionColumn("versionid");
 		m_jobcontainer = new JobDao(jtq);
 		
-		TableQuery jltq = new TableQuery("joblogs", m_service.getPool());
+		TableQuery jltq = new TableQuery("joblogs", m_pool);
 	    jltq.setVersionColumn("versionid");
 		m_joblogcontainer = new JobLogDao(jltq);
+		
 		logger.info("end init session:" + this);
 
 	}
