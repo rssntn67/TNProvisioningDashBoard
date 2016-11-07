@@ -900,6 +900,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				if (node.getPrimary() != null) {
 					try {
 						snmpProfile = getService().getSnmpProfileName(node.getPrimary());
+						getService().syncSnmpProfile(node.getPrimary(), snmpProfile);
 					} catch (SQLException sqle) {
 						logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
 						Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
