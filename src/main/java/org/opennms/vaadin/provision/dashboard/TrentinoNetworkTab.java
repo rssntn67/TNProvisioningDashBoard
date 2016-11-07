@@ -110,6 +110,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private boolean loaded=false;
 
 	private Button m_syncRequisButton  = new Button("Sync");
+	private Button m_populateSnmpButton  = new Button("Sync Snmp Data");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
@@ -230,6 +231,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 		HorizontalLayout topRightLayout = new HorizontalLayout();
 		topRightLayout.addComponent(m_addNewNodeButton);
 		topRightLayout.addComponent(m_syncRequisButton);
+		topRightLayout.addComponent(m_populateSnmpButton);
 		rightLayout.addComponent(new Panel(topRightLayout));
 
 		rightLayout.addComponent(m_editRequisitionNodeLayout);
@@ -726,6 +728,23 @@ public class TrentinoNetworkTab extends DashboardTab {
 			public void buttonClick(ClickEvent event) {
 				try {
 					getService().sync(DashBoardUtils.TN_REQU_NAME);
+					logger.info("Sync succeed foreign source: " + DashBoardUtils.TN_REQU_NAME);
+					Notification.show("Sync " + DashBoardUtils.TN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+				} catch (Exception e) {
+					logger.warning("Sync Failed foreign source: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
+					Notification.show("Sync Failed foreign source" + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+				}
+				
+			}
+		});
+
+		m_populateSnmpButton.addClickListener(new ClickListener() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				try {
+					getService().syncSnmpProfile(DashBoardUtils.TN_REQU_NAME);
 					logger.info("Sync succeed foreing source: " + DashBoardUtils.TN_REQU_NAME);
 					Notification.show("Sync " + DashBoardUtils.TN_REQU_NAME, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
 				} catch (Exception e) {
@@ -735,6 +754,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 				
 			}
 		});
+
 
 		m_saveNodeButton.addClickListener(new ClickListener() {
 			/**

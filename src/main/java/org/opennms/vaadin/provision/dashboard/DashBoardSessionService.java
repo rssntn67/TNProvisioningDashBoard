@@ -39,6 +39,7 @@ import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
+import org.opennms.vaadin.provision.model.IpSnmpProfile;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
@@ -79,6 +80,7 @@ public class DashBoardSessionService implements Serializable {
 			
 	private Map<String,String> m_foreignIdNodeLabelMap = new HashMap<String, String>();
 	private Map<String,String> m_nodeLabelForeignIdMap = new HashMap<String, String>();
+	private Map<String,IpSnmpProfile> m_ipSnmpMap = new HashMap<String, IpSnmpProfile>();
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
 
 	private OnmsDao m_onmsDao;
@@ -251,6 +253,26 @@ public class DashBoardSessionService implements Serializable {
 		m_joblogcontainer = new JobLogDao(jltq);
 		logger.info("end init session:" + this);
 
+	}
+
+	public void syncSnmpProfile(String requisition) throws SQLException {
+		for (String primary: m_primaryipcollection) {
+			String snmpprofile = getSnmpProfileName(primary);
+			logger.info("syncSnmpProfile: found primary ip/snmpprofile: " + primary+"/"+snmpprofile );
+			if (snmpprofile == null) 
+				continue;			
+			IpSnmpProfile ipSnmpProfile= new IpSnmpProfile(primary,snmpprofile); 
+			if (m_ipSnmpMap.containsKey(primary)) {
+				if (m_ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
+					continue;
+				logger.info("syncSnmpProfile: update primary ip/snmpprofile: " + primary+"/"+snmpprofile );
+				m_ipsnmpprofilecontainer.update(ipSnmpProfile);
+			}  else {
+				logger.info("syncSnmpProfile: adding primary ip/snmpprofile: " + primary+"/"+snmpprofile );
+				m_ipsnmpprofilecontainer.add(ipSnmpProfile);				
+			}			
+			m_ipSnmpMap.put(primary, ipSnmpProfile);
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -437,7 +459,8 @@ public class DashBoardSessionService implements Serializable {
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
     	m_primaryipcollection.clear();
-		
+		m_ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
+
 		for (RequisitionNode node : req.getNodes()) {
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
