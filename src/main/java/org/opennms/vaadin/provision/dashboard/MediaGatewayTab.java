@@ -101,8 +101,8 @@ public class MediaGatewayTab extends DashboardTab {
 	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
 	private ComboBox m_domainComboBox = new ComboBox("Dominio");
 
-	public MediaGatewayTab(DashBoardSessionService service) {
-		super(service);
+	public MediaGatewayTab(LoginBox login,DashBoardSessionService service) {
+		super(login,service);
 	}
 
 	@Override

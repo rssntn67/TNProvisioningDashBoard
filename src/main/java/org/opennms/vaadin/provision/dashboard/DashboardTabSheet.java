@@ -28,31 +28,31 @@ public class DashboardTabSheet extends CustomComponent implements
 		m_tabsheet.addSelectedTabChangeListener(this);
         m_tabsheet.addTab(m_loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
     	
-        TrentinoNetworkTab tab=new TrentinoNetworkTab(service);
+        TrentinoNetworkTab tab=new TrentinoNetworkTab(m_loginbox,service);
     	m_tabsheet.addTab(tab, "Rete TN", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(tab).setEnabled(false);
 
-        MediaGatewayTab mtab=new MediaGatewayTab(service);
+        MediaGatewayTab mtab=new MediaGatewayTab(m_loginbox,service);
     	m_tabsheet.addTab(mtab, "Media Gw", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(mtab).setEnabled(false);
 
-    	SistemiInformativiTab stab=new SistemiInformativiTab(service);
+    	SistemiInformativiTab stab=new SistemiInformativiTab(m_loginbox,service);
     	m_tabsheet.addTab(stab, "SI", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(stab).setEnabled(false);
 
-        CategorieTab catTab=new CategorieTab(service);
+        CategorieTab catTab=new CategorieTab(m_loginbox,service);
     	m_tabsheet.addTab(catTab, "Categorie", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(catTab).setEnabled(false);
     	
-    	SnmpProfileTab snmpTab = new SnmpProfileTab(service);
+    	SnmpProfileTab snmpTab = new SnmpProfileTab(m_loginbox,service);
         m_tabsheet.addTab(snmpTab, "Profili Snmp",new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(snmpTab).setEnabled(false);
     	
-    	BackupProfileTab backupTab = new BackupProfileTab(service);
+    	BackupProfileTab backupTab = new BackupProfileTab(m_loginbox,service);
         m_tabsheet.addTab(backupTab, "Profili Backup",new ThemeResource("icons/16/users.png"));
         m_tabsheet.getTab(backupTab).setEnabled(false);
         
-        FastTab fastTab= new FastTab(service);
+        FastTab fastTab= new FastTab(m_loginbox,service);
         m_tabsheet.addTab(fastTab, "Fast",new ThemeResource("icons/16/users.png"));
         m_tabsheet.getTab(fastTab).setEnabled(false);
     	

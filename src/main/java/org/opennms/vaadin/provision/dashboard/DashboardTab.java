@@ -28,13 +28,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
     private Button m_logout = new Button("Logout");
-
+    private LoginBox m_loginBox;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	DashboardTab(DashBoardSessionService service) {
+	DashboardTab(LoginBox login, DashBoardSessionService service) {
+		m_loginBox = login;
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
 		m_service = service;
@@ -78,9 +79,7 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
 			return;
 		}
-		m_service.logout();
-	    getUI().getSession().close();
-	    getUI().getPage().setLocation(getUI().getPage().getLocation());
+		m_loginBox.logout();
 	    
 	}
 

@@ -77,8 +77,8 @@ public class CategorieTab extends DashboardTab {
 
 	private ComboBox m_dnsAddSubdomainsComboBox = new ComboBox();
 
-	public CategorieTab(DashBoardSessionService service) {
-		super(service);
+	public CategorieTab(LoginBox login,DashBoardSessionService service) {
+		super(login,service);
 	}
 
 	@Override

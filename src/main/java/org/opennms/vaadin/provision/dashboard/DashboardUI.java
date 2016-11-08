@@ -1,15 +1,11 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.opennms.vaadin.provision.config.DashBoardConfig;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.AbsoluteLayout;
@@ -39,37 +35,24 @@ public class DashboardUI extends UI {
 
 	protected void init(VaadinRequest request) {
 		
-		VaadinSession.getCurrent().getSession().setMaxInactiveInterval(300);
 		DashBoardSessionService sessionservice = (DashBoardSessionService) VaadinSession.getCurrent();
-
-        DashBoardConfig config = new DashBoardConfig();
-		try {
-               config.reload();
-		} catch (Exception e) {
-               logger.log(Level.SEVERE,"init: cannot init configuration file", e);
+		DashBoardService service = (DashBoardService)sessionservice.getService();
+		
+		if (!service.ready()) {
    			layoutInitError("file di configurazione in errore", 
 					"L'applicazione non e' disponibile",
 					"File configurazione non disponibile. Contattare l'amministratore di sistema");
    			return;
 		}
-		sessionservice.setConfig(config);
-		try {
-               sessionservice.setPool(new SimpleJDBCConnectionPool("org.postgresql.Driver", config.getDbUrl(), config.getDbUsername(), config.getDbPassword()));
-               logger.info("connected to database: " + config.getDbUrl());
-        } catch (SQLException e) {
-               logger.log(Level.SEVERE,"createServletService: cannot init postgres", e);
-               layoutInitError("Init Failed non riesco a creare il pool di connessione al database", 
-					"L'applicazione non e' disponibile",
-					"Accesso al database non dispobile, contattare l'amministratore di sistema");
-			return;
-		}
 		
 		try {
 			sessionservice.init();
-		} catch (SQLException e) {
+		} catch (Exception e) {
+			logger.log(Level.SEVERE,e.getLocalizedMessage(),e);
 			layoutInitError("Init Failed per accesso database", 
 				"L'applicazione non e' disponibile",
 				"Accesso al database non dispobile, contattare l'amministratore di sistema");
+			return;
 		}
 		setContent(new DashboardTabSheet(sessionservice));
 	}
@@ -85,5 +68,7 @@ public class DashboardUI extends UI {
 		setContent(layout);
 		logger.log(Level.WARNING, error);
 		Notification.show(error, label, Notification.Type.ERROR_MESSAGE);
+	    getUI().getSession().close();
+		
 	}
 }

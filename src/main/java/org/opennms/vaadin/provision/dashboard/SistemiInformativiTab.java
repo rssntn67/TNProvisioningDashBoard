@@ -132,8 +132,8 @@ public class SistemiInformativiTab extends DashboardTab {
 	private ComboBox m_serviceComboBox = new ComboBox("Servizi");
 	private ComboBox m_domainComboBox = new ComboBox("Dominio");
 
-	public SistemiInformativiTab(DashBoardSessionService service) {
-		super(service);
+	public SistemiInformativiTab(LoginBox login,DashBoardSessionService service) {
+		super(login,service);
 	}
 
 	@Override

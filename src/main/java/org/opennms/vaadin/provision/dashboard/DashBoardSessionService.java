@@ -89,7 +89,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private Map<String,IpSnmpProfile> m_ipSnmpMap = new HashMap<String, IpSnmpProfile>();
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
 
-	private OnmsDao m_onmsDao;
+	final private OnmsDao m_onmsDao;
 	private JDBCConnectionPool m_pool; 
 	private DashBoardConfig m_config;
 
@@ -152,10 +152,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return m_onmsDao;
 	}
     
+    public JDBCConnectionPool getPool() {
+    	return m_pool;
+    }
+    
 	public void logout() {
 		logger.info("logged out: user: " + m_user + " url: " + m_url);
 		m_onmsDao.destroy();
-		m_pool.destroy();
 	}
 	
 	public void login(String url, String username, String password) {
@@ -169,8 +172,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	}
 		
 	public void init() throws SQLException {
-		logger.info("init session:" + this);
-		
 		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
         m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
@@ -208,9 +209,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		TableQuery jltq = new TableQuery("joblogs", m_pool);
 	    jltq.setVersionColumn("versionid");
 		m_joblogcontainer = new JobLogDao(jltq);
-		
-		logger.info("end init session:" + this);
-
 	}
 
 	public void syncSnmpProfile(String primary, String snmpprofile) throws SQLException{

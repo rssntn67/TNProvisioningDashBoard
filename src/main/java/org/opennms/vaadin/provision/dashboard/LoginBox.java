@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.vaadin.data.Item;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
@@ -17,6 +18,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickListener;
@@ -82,7 +84,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    }
 	}
 
-	private void logout() {
+	public void logout() {
 		if (m_service.isFastRunning()) {
 			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
 			return;
@@ -96,14 +98,17 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		Iterator<Component> ite = m_tabs.iterator();
 	    while (ite.hasNext()) {
 	    	Component comp = ite.next();
-	    	if (comp != this)
-	    	m_tabs.getTab(comp).setEnabled(false);
+	    	if (comp != this) {
+	    		m_tabs.getTab(comp).setEnabled(false);
+	    	} else {
+	    		m_tabs.setSelectedTab(comp);
+	    	}
 	    }
 	    getUI().getSession().close();
-	    getUI().getPage().setLocation(getUI().getPage().getLocation());
 	    
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void login() {	
 		try {
 		    m_service.login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
@@ -134,8 +139,29 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			m_service.logout();
 			return;
 		}
-	    m_panel.setCaption("Logged in");
-	    m_panel.setContent(m_logout);
+	    m_panel.setCaption("User '"+ m_service.getUser()+"' Logged in");
+	    VerticalLayout loggedin= new VerticalLayout();
+	    if (m_service.getUser().equals("admin")) {
+		    Table conneTable = new Table("Sessioni attive");
+		    conneTable.addContainerProperty("User", String.class, null);
+		    conneTable.addContainerProperty("Url", String.class, null);
+		    conneTable.addContainerProperty("Conn", String.class, null);
+		    conneTable.addContainerProperty("Session", String.class, null);
+		    conneTable.addContainerProperty("Pool", String.class, null);
+		    for (DashBoardSessionService sessionService: ((DashBoardService)m_service.getService()).getActiveSessions()) {
+		    	Object newItemId = conneTable.addItem();
+		    	Item row1 = conneTable.getItem(newItemId);
+		    	row1.getItemProperty("User").setValue(sessionService.getUser());
+		    	row1.getItemProperty("Url").setValue(sessionService.getUrl());
+		    	row1.getItemProperty("Conn").setValue(sessionService.getConfig().getDbUrl());
+		    	row1.getItemProperty("Session").setValue(sessionService.toString());
+		    	row1.getItemProperty("Pool").setValue(sessionService.getPool().toString());
+		    }
+		    loggedin.addComponent(conneTable);
+	    }
+	    loggedin.addComponent(m_logout);
+	    m_panel.setContent(loggedin);
+	    
 	    
 	    Iterator<Component> ite = m_tabs.iterator();
 	    while (ite.hasNext()) {

@@ -126,8 +126,8 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private Table m_secondaryIpAddressTable = new Table();
 	private ComboBox m_domainComboBox = new ComboBox("Dominio");
 
-	public TrentinoNetworkTab(DashBoardSessionService service) {
-		super(service);
+	public TrentinoNetworkTab(LoginBox login,DashBoardSessionService service) {
+		super(login,service);
 	}
 
 	@Override
