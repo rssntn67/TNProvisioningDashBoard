@@ -108,6 +108,11 @@ public class DashBoardService extends VaadinServletService implements Serializab
 		m_sessions.remove(session);		
 	}
 
-	
+	@Override
+	public void destroy() {
+		for (JDBCConnectionPool pool: m_pools)
+			pool.destroy();
+		super.destroy();
+	}
 
 }
