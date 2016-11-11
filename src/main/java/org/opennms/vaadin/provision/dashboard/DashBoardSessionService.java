@@ -157,8 +157,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     }
     
 	public void logout() {
+		m_onmsDao.getJerseyClient().destroy();
 		logger.info("logged out: user: " + m_user + " url: " + m_url);
-		m_onmsDao.destroy();
 	}
 	
 	public void login(String url, String username, String password) {
