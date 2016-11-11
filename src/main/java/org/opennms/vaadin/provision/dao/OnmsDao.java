@@ -72,7 +72,7 @@ public class OnmsDao {
 	}
 	
 	public void destroy() {
-		setJerseyClient(null);
+		m_jerseyClient.destroy();
 	}
 	
 	public void addRequisitionAsset(String foreignSource, String foreignid, RequisitionAsset asset) {

@@ -40,6 +40,10 @@ public class JerseyClientImpl {
         m_webResource = m_client.resource(url);
     }
     
+    public void destroy() {
+    	m_client.destroy();
+    }
+
     public <T> T get(Class<T> clazz,String relativePath, MultivaluedMap<String, String> queryParams) {
     	try {
     		return m_webResource.path(relativePath).queryParams(queryParams).header("Accept", "application/xml").accept(MediaType.APPLICATION_XML_TYPE).get(new GenericType<T>(clazz));
