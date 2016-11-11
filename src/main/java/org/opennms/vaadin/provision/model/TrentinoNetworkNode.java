@@ -172,8 +172,26 @@ public class TrentinoNetworkNode implements Serializable {
 	}
 
 	public void setNetworkCategory(Categoria networkCategory) {
+		if (networkCategory == null && m_networkCategory == null)
+			return;
+			
+		if (networkCategory == null && m_networkCategory != null){
+			m_categoriesToDel.add(m_networkCategory.getName());
+			m_categoriesToDel.add(m_networkCategory.getNetworklevel());
+			m_networkCategory = networkCategory;
+			return;
+		}
+		
+		if (networkCategory != null && m_networkCategory == null){
+			m_categoriesToAdd.add(networkCategory.getName());
+			m_categoriesToAdd.add(networkCategory.getNetworklevel());
+			m_networkCategory = networkCategory;
+			return;
+		}
+
 		if (networkCategory.getName().equals(m_networkCategory.getName()))
 			return;
+		
 		m_categoriesToDel.add(m_networkCategory.getName());
 		m_categoriesToAdd.add(networkCategory.getName());
 		
