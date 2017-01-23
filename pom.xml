@@ -5,7 +5,7 @@
 	<groupId>org.opennms</groupId>
 	<artifactId>provisiondashboard</artifactId>
 	<packaging>war</packaging>
-	<version>3.0.1</version>
+	<version>3.0.2</version>
 	<name>Provisioning Dashboard Web Application</name>
 
 	<properties>
@@ -16,8 +16,8 @@
 		<jetty.plugin.version>9.2.3.v20140905</jetty.plugin.version>
 		<project.source.version>1.6</project.source.version>
 		<project.target.version>1.6</project.target.version>
-		<opennms.version>17.1.1</opennms.version>
-		<jersey.version>1.19.1</jersey.version>
+		<opennms.version>18.0.3</opennms.version>
+		<jersey.version>1.19.3</jersey.version>
 	</properties>
 	<repositories>
 		<repository>
