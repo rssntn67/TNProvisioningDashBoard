@@ -281,7 +281,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					descr = ip.getDescr();
 				} 
 				for (RequisitionMonitoredService service: ip.getMonitoredServices()) {
-					if (primary != null && ip.getIpAddr().equals(primary) && (service.getServiceName().equals("ICMP") || service.getServiceName().equals("SNMP")))
+					if (primary != null && ip.getIpAddr().equals(primary))
 						continue;
 					Set<String> services = serviceMap.get(ip.getIpAddr());
 					if (services == null)
@@ -866,7 +866,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getPrimary());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
 		iface.setDescr(node.getDescr());
 		
 		requisitionNode.putInterface(iface);
@@ -922,14 +921,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getPrimary());
 		iface.setDescr(node.getDescr());
-		Set<String> primaryservices = node.getServiceMap().get(node.getPrimary());
-		if (primaryservices == null ) {
-			primaryservices = new HashSet<String>();
-		} 
-		primaryservices.add("ICMP");
-		primaryservices.add("SNMP");
-		for (String service: primaryservices)
-			iface.putMonitoredService(new RequisitionMonitoredService(service));
+		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 		requisitionNode.putInterface(iface);
 
 		for (String ip : node.getServiceMap().keySet()) {
@@ -1141,7 +1133,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getPrimary());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
 		iface.setDescr(node.getDescr());
 		
 		requisitionNode.putInterface(iface);
@@ -1454,8 +1445,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			iface.setDescr(descr);
 			if ( primary!= null && primary.equals(ip)) {
 				m_primaryipcollection.add(ip);
-				iface.putMonitoredService(new RequisitionMonitoredService(
-						"SNMP"));
 				iface.setSnmpPrimary(PrimaryType.PRIMARY);
 			} else {
 				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
@@ -1641,7 +1630,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getIpaddr());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
 		iface.setDescr("provided by FAST");
 		requisitionNode.putInterface(iface);
 
