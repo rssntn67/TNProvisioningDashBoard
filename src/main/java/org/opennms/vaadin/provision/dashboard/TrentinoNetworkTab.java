@@ -110,7 +110,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 	private boolean loaded=false;
 
 	private Button m_syncRequisButton  = new Button("Sync");
-	private Button m_populateSnmpButton  = new Button("Sync Snmp Data");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
@@ -231,7 +230,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 		HorizontalLayout topRightLayout = new HorizontalLayout();
 		topRightLayout.addComponent(m_addNewNodeButton);
 		topRightLayout.addComponent(m_syncRequisButton);
-		topRightLayout.addComponent(m_populateSnmpButton);
 		rightLayout.addComponent(new Panel(topRightLayout));
 
 		rightLayout.addComponent(m_editRequisitionNodeLayout);
@@ -737,23 +735,6 @@ public class TrentinoNetworkTab extends DashboardTab {
 				
 			}
 		});
-
-		m_populateSnmpButton.addClickListener(new ClickListener() {
-			private static final long serialVersionUID = 1L;
-			@Override
-			public void buttonClick(ClickEvent event) {
-				try {
-					getService().syncSnmpProfile(DashBoardUtils.TN_REQU_NAME);
-					logger.info("Sync db with snmp profiles for Requisition: " + DashBoardUtils.TN_REQU_NAME);
-					Notification.show("Sync Snmp profile: " + DashBoardUtils.TN_REQU_NAME, " Done ", Type.HUMANIZED_MESSAGE);
-				} catch (Exception e) {
-					logger.warning("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
-					Notification.show("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-				}
-				
-			}
-		});
-
 
 		m_saveNodeButton.addClickListener(new ClickListener() {
 			/**

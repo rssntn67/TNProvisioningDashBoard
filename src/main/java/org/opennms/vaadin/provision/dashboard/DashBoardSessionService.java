@@ -228,7 +228,17 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_ipsnmpprofilecontainer.commit();
 	}
 	
-	public void syncSnmpProfile(String requisition) throws SQLException {
+	public void syncTnSnmpProfile() throws SQLException {
+		getTNContainer();
+		syncSnmpProfile();
+	}
+
+	public void syncSiSnmpProfile() throws SQLException {
+		getSIContainer();
+		syncSnmpProfile();		
+	}
+
+	private void syncSnmpProfile() throws SQLException {
 		for (String primary: m_primaryipcollection) {
 			String snmpprofile = getSnmpProfileName(primary);
 			logger.info("syncSnmpProfile: found primary ip/snmpprofile: " + primary+"/"+snmpprofile );
