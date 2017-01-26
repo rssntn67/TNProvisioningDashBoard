@@ -1,53 +1,25 @@
 package org.opennms.vaadin.provision.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 
-public class SistemiInformativiNode implements Serializable {
+public class SistemiInformativiNode extends RequisitionNode {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3824402168422477329L;
 	
-	private Set<String> m_updatemap = new HashSet<String>();
-
-	private List<String> m_categoriesToAdd = new ArrayList<String>();
-	private List<String> m_categoriesToDel = new ArrayList<String>();
-	private List<String> m_interfToAdd = new ArrayList<String>();
-	private List<String> m_interfToDel = new ArrayList<String>();
-
-	private Map<String,Set<String>> m_serviceToAdd = new HashMap<String, Set<String>>();
-	private Map<String,Set<String>> m_serviceToDel = new HashMap<String, Set<String>>();
-	// This contains all the ip->service in secondary table but does not contain primary->icmp and primary-snmp
-	private Map<String,Set<String>> m_serviceMap;  
-
-	private String m_label;
-	private String m_descr;
-	private String m_hostname;
-	private String m_vrf;
-	private String m_primary;
-
 	private String[] m_serverLevelCategory;
 	private String m_managedByCategory;
 	private String m_notifCategory;
 	private Set<String> m_optionalCategory;
 	private String m_prodCategory;
 	private String m_TrentinoNetworkCategory;
-
-	private String m_snmpProfile;
 	
-	private String m_city;
-	private String m_address1;
 	private String m_description;
-	private String m_building;
 	private String m_leaseExpires;
 	private String m_lease;
 	private String m_vendorPhone;
@@ -62,13 +34,10 @@ public class SistemiInformativiNode implements Serializable {
 	private String m_category;
 	private String m_modelNumber;
 	private String m_manufacturer;
-
-	private String m_foreignId;
-	
-	protected boolean m_valid = true;
 	
 	public SistemiInformativiNode(
 			Map<String, Set<String>> serviceMap, String descr, String hostname,
+			String parent, String snmpProfile,
 			String vrf, String primary, String[] serverLevelCategory,
 			String managedByCategory, String notifCategory,
 			Set<String> optionalCategory, String prodCategory, String tnCategory,
@@ -78,22 +47,14 @@ public class SistemiInformativiNode implements Serializable {
 			String operatingSystem, String dateInstalled, String assetNumber,
 			String serialNumber, String category, String modelNumber,
 			String manufacturer, String foreignId) {
-		super();
-		m_serviceMap = serviceMap;
-		m_descr = descr;
-		m_hostname = hostname;
-		m_vrf = vrf;
-		m_primary = primary;
+		super(serviceMap,descr,hostname,vrf,primary,parent,snmpProfile,city,address1,foreignId,building);
 		m_serverLevelCategory = serverLevelCategory;
 		m_managedByCategory = managedByCategory;
 		m_notifCategory = notifCategory;
 		m_optionalCategory = optionalCategory;
 		m_prodCategory = prodCategory;
 		m_TrentinoNetworkCategory = tnCategory;
-		m_city = city;
-		m_address1 = address1;
 		m_description = description;
-		m_building = building;
 		m_leaseExpires = leaseExpires;
 		m_lease = lease;
 		m_vendorPhone = vendorPhone;
@@ -108,189 +69,12 @@ public class SistemiInformativiNode implements Serializable {
 		m_category = category;
 		m_modelNumber = modelNumber;
 		m_manufacturer = manufacturer;
-		m_foreignId = foreignId;
 	}
 
 	public SistemiInformativiNode(String label) {
-		m_label = label;
-		m_primary="0.0.0.0";
-		m_hostname="";
-				
-		m_city="";
-		m_address1="";
-						
-		m_descr="Provided by Provision Dashboard";
-		
-		m_valid=false;
-		m_serviceMap = new HashMap<String, Set<String>>();
+		super(label);
 	}
-	
-	public void clear() {
-		m_updatemap.clear();
-		m_interfToAdd.clear();
-		m_interfToDel.clear();
-		m_categoriesToDel.clear();
-		m_categoriesToAdd.clear();
-		m_serviceToAdd.clear();
-		m_serviceToDel.clear();
-	}
-
-
-	public String getForeignId() {
-		return m_foreignId;
-	}
-
-	public String getNodeLabel() {
-		if (m_label == null)
-			return m_hostname.toLowerCase() + "." + m_vrf;
-		return m_label;
-	}
-
-	public List<String> getCategoriesToAdd() {
-		return m_categoriesToAdd;
-	}
-
-	public List<String> getCategoriesToDel() {
-		return m_categoriesToDel;
-	}
-
-	public List<String> getInterfToAdd() {
-		return m_interfToAdd;
-	}
-
-	public List<String> getInterfToDel() {
-		return m_interfToDel;
-	}
-	
-	public String getCity() {
-		return m_city;
-	}
-
-	public void setCity(String city) {
-		if (city == null)
-			city="";
-		if (city.equals(m_city))
-			return;
-		m_updatemap.add(DashBoardUtils.CITY);
-		m_city = city;		
-	}
-		
-	public String getVrf() {
-		return m_vrf;
-	}
-
-	public void setVrf(String vrf) {
-		if (m_vrf != null && m_vrf.equals(vrf))
-			return;
-		m_vrf = vrf;
-		m_updatemap.add(DashBoardUtils.CAT);
-	}
-
-    public String getDescr() {
-		return m_descr;
-	}
-
-	public void setDescr(String descr) {
-		m_descr = descr;
-	}
-	
-	public String getSnmpProfile() {
-		return m_snmpProfile;
-	}
-
-	public void setSnmpProfileWithOutUpdating(String snmpProfile) {
-		m_snmpProfile = snmpProfile;
-	}
-	
-	public void setSnmpProfile(String snmpProfile) {
-		if (m_snmpProfile != null && m_snmpProfile.equals(snmpProfile))
-			return;
-		m_updatemap.add(DashBoardUtils.SNMP_PROFILE);
-		m_snmpProfile = snmpProfile;
-	}
-	
-	public String getAddress1() {
-		return m_address1;
-	}
-	public void setAddress1(String address) {
-		if (address == null)
-			address = "";
-		if (address.equals(m_address1))
-			return;
-		m_updatemap.add(DashBoardUtils.ADDRESS1);
-		m_address1 = address;
-	}
-	
-	public String getHostname() {
-		return m_hostname;
-	}
-	
-	public void setHostname(String hostname) {
-		if (m_hostname != null && m_hostname.equals(hostname))
-			return;
-		m_label = null;
-		m_hostname = hostname;
-		m_updatemap.add(DashBoardUtils.HOST);
-	}
-
-	public String getPrimary() {
-		return m_primary;
-	}
-
-	public void setPrimary(String primary) {
-		if (m_primary != null && m_primary.equals(primary))
-			return;
-		if ( m_primary != null && !m_serviceMap.containsKey(m_primary)) 
-			m_interfToDel.add(new String(m_primary));
-		if (m_primary != null && m_serviceMap.containsKey(m_primary)) {
-			if (!m_serviceToDel.containsKey(m_primary))
-				m_serviceToDel.put(m_primary, new HashSet<String>());
-			m_serviceToDel.get(m_primary).add("ICMP");
-			m_serviceToDel.get(m_primary).add("SNMP");
-		}
-		if (!m_serviceMap.containsKey(primary))
-			m_interfToAdd.add(primary);
-		if (!m_serviceToAdd.containsKey(primary))
-			m_serviceToAdd.put(primary, new HashSet<String>());
-		m_serviceToAdd.get(primary).add("ICMP");
-		m_serviceToAdd.get(primary).add("SNMP");
-		m_updatemap.add(DashBoardUtils.PRIMARY);
-		
-		m_primary = primary;
-	}
-		
-	public boolean isValid() {
-		return m_valid;
-	}
-
-	public void setValid(boolean valid) {
-		m_valid = valid;
-	}	
-	
-	public Set<String> getUpdatemap() {
-		return m_updatemap;
-	}
-
-	public void setForeignId(String foreignId) {
-		m_foreignId = foreignId;
-	}
-
-	public Map<String, Set<String>> getServiceToAdd() {
-		return m_serviceToAdd;
-	}
-
-	public Map<String, Set<String>> getServiceToDel() {
-		return m_serviceToDel;
-	}
-
-	public Map<String, Set<String>> getServiceMap() {
-		return m_serviceMap;
-	}
-
-	public String getLabel() {
-		return m_label;
-	}
-
+					
 	public String[] getServerLevelCategory() {
 		return m_serverLevelCategory;
 	}
@@ -309,10 +93,6 @@ public class SistemiInformativiNode implements Serializable {
 
 	public String getDescription() {
 		return m_description;
-	}
-
-	public String getBuilding() {
-		return m_building;
 	}
 
 	public String getLeaseExpires() {
@@ -378,7 +158,6 @@ public class SistemiInformativiNode implements Serializable {
 	public String getTrentinoNetworkCategory() {
 		return m_TrentinoNetworkCategory;
 	}
-
 
 	public void setServerLevelCategory(String[] serverLevelCategory) {
 		
@@ -483,15 +262,6 @@ public class SistemiInformativiNode implements Serializable {
 			return;
 		m_updatemap.add(DashBoardUtils.DESCRIPTION);
 		m_description = description;
-	}
-
-	public void setBuilding(String building) {
-		if (building == null)
-			building="";
-		if (building.equals(m_building) )
-			return;
-		m_updatemap.add(DashBoardUtils.BUILDING);
-		m_building = building;
 	}
 
 	public void setLeaseExpires(String leaseExpires) {
@@ -619,44 +389,4 @@ public class SistemiInformativiNode implements Serializable {
 		m_updatemap.add(DashBoardUtils.MANUFACTURER);
 		m_manufacturer = manufacturer;
 	}
-	
-	public void addService(String ip, String service) {
-		if ("ICMP".equals(service) || "SNMP".equals(service))
-				return;
-		if (m_interfToDel.contains(ip))
-			m_interfToDel.remove(ip);
-		if (!m_serviceMap.containsKey(ip)) {
-			if (!ip.equals(m_primary))
-				m_interfToAdd.add(ip);
-			m_serviceMap.put(ip, new HashSet<String>());
-		}
-		m_serviceMap.get(ip).add(service);
-		
-		if (!m_serviceToAdd.containsKey(ip))
-			m_serviceToAdd.put(ip, new HashSet<String>());
-		m_serviceToAdd.get(ip).add(service);
-	}
-
-	public void delService(String ip, String service) {
-		if ("ICMP".equals(service) || "SNMP".equals(service))
-			return;
-		if (!m_serviceMap.containsKey(ip))
-			return;
-		m_serviceMap.get(ip).remove(service);
-		boolean removeip = false;
-		if (m_serviceMap.get(ip).isEmpty()) 
-			removeip = true;
-		if (removeip) {
-			m_serviceMap.remove(ip);
-			if (!ip.equals(m_primary)) {
-				m_serviceToDel.remove(ip);
-				m_interfToDel.add(ip);
-			}
-		} else {
-			if (!m_serviceToDel.containsKey(ip))
-				m_serviceToDel.put(ip, new HashSet<String>());
-			m_serviceToDel.get(ip).add(service);
-		}			
-	}
-
 }

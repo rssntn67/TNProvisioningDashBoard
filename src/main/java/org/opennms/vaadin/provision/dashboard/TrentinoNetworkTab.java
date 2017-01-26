@@ -509,7 +509,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 			        	secondary.add((String)source.getContainerProperty(id, "indirizzo ip").getValue());
 			        }
 			        m_secondaryIpComboBox.addItem(ip);
-			        m_editorFields.getItemDataSource().getBean().setSecondary(secondary.toArray(new String[secondary.size()]));
+			        m_editorFields.getItemDataSource().getBean().setSecondary(secondary);
 					logger.info("Deleted Secondary ip: " + itemId);
 					Notification.show("Delete Secondary ip", "Ip: " + itemId + " deleted.", Type.WARNING_MESSAGE);
 					} catch (Exception e) {
@@ -547,7 +547,7 @@ public class TrentinoNetworkTab extends DashboardTab {
 					        for (Object id: m_secondaryIpAddressTable.getContainerDataSource().getItemIds()) {
 					        	secondary.add((String)m_secondaryIpAddressTable.getContainerProperty(id, "indirizzo ip").getValue());
 					        }
-					        m_editorFields.getItemDataSource().getBean().setSecondary(secondary.toArray(new String[secondary.size()]));
+					        m_editorFields.getItemDataSource().getBean().setSecondary(secondary);
 							logger.info("Added Secondary ip address: " + ip);
 							Notification.show("Add Secondary ip", "Added ip: "+ip+ " to node in repository", Type.WARNING_MESSAGE);
 					        m_secondaryIpComboBox.removeItem(ip);
