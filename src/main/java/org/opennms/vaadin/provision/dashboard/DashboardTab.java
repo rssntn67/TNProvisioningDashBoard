@@ -27,6 +27,7 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private DashBoardSessionService m_service;
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
+	private HorizontalLayout m_head = new HorizontalLayout();
     private Button m_logout = new Button("Logout");
     private LoginBox m_loginBox;
 
@@ -41,12 +42,11 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		m_service = service;
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
-		HorizontalLayout head = new HorizontalLayout();
-		head.setSizeFull();
-		head.addComponent(m_logout);	
-		head.setMargin(true);
-		head.setSpacing(true);
-		m_headPanel = new Panel(head);
+		m_head.setSizeFull();
+		m_head.addComponent(m_logout);	
+		m_head.setMargin(true);
+		m_head.setSpacing(true);
+		m_headPanel = new Panel(m_head);
 		m_core.addComponent(m_headPanel);
 	}
 
@@ -61,6 +61,10 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public void updateTabHead() {
 		m_headPanel.setCaption("User: " + getService().getUser() 
 				+". connected to: " + getService().getUrl());  
+	}
+	
+	public HorizontalLayout getHead() {
+		return m_head;
 	}
 	
 	public ComponentContainer getCore() {
