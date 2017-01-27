@@ -37,6 +37,7 @@ import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
@@ -687,7 +688,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 		return requisitionContainer;	}
 
-	public void deleteNode(String foreignSource, RequisitionNode node) {
+	public void delete(String foreignSource, RequisitionNode node) {
 		if (node == null)
 			return;
 		for (RequisitionInterface riface: node.getInterfaces())
@@ -729,12 +730,12 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		addSecondaryInterface(foreignSource, foreignId, ipaddress,"Provided by Provision Dashboard");
 	}
 
-	public void deleteNode(SistemiInformativiNode sinode) {
+	public void delete(SistemiInformativiNode sinode) {
 		logger.info("Deleting SI node with foreignId: " + sinode.getForeignId() + " primary: " + sinode.getPrimary());
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.SI_REQU_NAME, sinode.getForeignId());
 	}
 	
-	public void deleteNode(TrentinoNetworkNode tnnode) {
+	public void delete(TrentinoNetworkNode tnnode) {
 		logger.info("Deleting TN node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
 		if (tnnode.getPrimary() != null)
 			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
@@ -748,7 +749,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_primaryipcollection.remove(tnnode.getPrimary());
 	}
 
-	public void deleteNode(MediaGatewayNode tnnode) {
+	public void delete(MediaGatewayNode tnnode) {
 		logger.info("Deleting media gateway node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
 		if (tnnode.getPrimary() != null)
 			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
@@ -762,7 +763,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(), tnnode.getPrimary());
 	}
 
-	public void deleteInterface(String foreignSource,String foreignId, String ipaddr) {
+	public void delete(String foreignSource,String foreignId, String ipaddr) {
 		logger.info("Deleting policy for interface: " + ipaddr);
 		m_onmsDao.deletePolicy(foreignSource, DashBoardUtils.getPolicyName(ipaddr));
 		logger.info("Deleting interface" + ipaddr+" with foreignId: " + foreignId );
@@ -871,7 +872,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_onmsDao.addRequisitionNode(DashBoardUtils.SIVN_REQU_NAME, requisitionNode);
 	}
 
-	public void addMediaGatewayNode(MediaGatewayNode node) throws SQLException {
+	public void add(MediaGatewayNode node) throws SQLException {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(node.getForeignId());
@@ -929,7 +930,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			
 	}
 
-	public void addSINode(SistemiInformativiNode node) {
+	public void add(SistemiInformativiNode node) {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(node.getForeignId());
@@ -1036,7 +1037,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		node.clear();
 
 	}
-	public void updateSINode(SistemiInformativiNode node) {
+	public void update(SistemiInformativiNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 		
 		if ((node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE) ||
@@ -1091,7 +1092,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 	}
 
-	public void updateMediaGatewayNode(MediaGatewayNode node) {
+	public void update(MediaGatewayNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 
 		if ((node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE) ||
@@ -1138,7 +1139,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}		
 	}
 
-	public void addTNNode(TrentinoNetworkNode node) throws SQLException {
+	public void add(TrentinoNetworkNode node) throws SQLException {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(node.getForeignId());
@@ -1206,7 +1207,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			
 	}
 
-	public void updateTNNode(TrentinoNetworkNode node) {
+	public void update(TrentinoNetworkNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 		
 		if ((node.getUpdatemap().contains(DashBoardUtils.SNMP_PROFILE) ||
@@ -1750,6 +1751,43 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 
 	public boolean isValid(MediaGatewayNode node) {
 		return valid(node,getDnsSubDomainContainer().getSubdomains());
+	}
+
+	public boolean isValid(BasicNode node) {
+		if (node instanceof TrentinoNetworkNode ) 
+			return isValid((TrentinoNetworkNode)node);
+		else if (node instanceof MediaGatewayNode)
+			return isValid((MediaGatewayNode)node);
+		else if (node instanceof SistemiInformativiNode)	
+			return isValid((SistemiInformativiNode)node);
+		return false;
+	}
+
+	public void update(BasicNode node) {
+		if (node instanceof TrentinoNetworkNode ) 
+			update((TrentinoNetworkNode)node);
+		else if (node instanceof MediaGatewayNode)
+			update((MediaGatewayNode)node);
+		else if (node instanceof SistemiInformativiNode)	
+			update((SistemiInformativiNode)node);
+	}
+	
+	public void add(BasicNode node) throws SQLException {
+		if (node instanceof TrentinoNetworkNode ) 
+			add((TrentinoNetworkNode)node);
+		else if (node instanceof MediaGatewayNode)
+			add((MediaGatewayNode)node);
+		else if (node instanceof SistemiInformativiNode)	
+			add((SistemiInformativiNode)node);
+	}
+
+	public void delete(BasicNode node) {
+		if (node instanceof TrentinoNetworkNode ) 
+			delete((TrentinoNetworkNode)node);
+		else if (node instanceof MediaGatewayNode)
+			delete((MediaGatewayNode)node);
+		else if (node instanceof SistemiInformativiNode)	
+			delete((SistemiInformativiNode)node);
 	}
 
 }

@@ -1,6 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,7 +11,7 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
-import org.opennms.vaadin.provision.model.RequisitionNode;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.Categoria;
@@ -26,7 +25,6 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.IndexedContainer;
@@ -119,17 +117,27 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
 	private Table m_secondaryIpAddressTable = new Table();
 
+	private ComboBox networkCatComboBox = new ComboBox("Network Category");
+	private ComboBox notifCatComboBox   = new ComboBox("Notification Category");
+	private ComboBox threshCatComboBox  = new ComboBox("Threshold Category");
+	private ComboBox slaCatComboBox  = new ComboBox("Service Level Report Category");
+	private ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
+	private ComboBox backupComboBox  = new ComboBox("Backup Profile");
+	private ComboBox parentComboBox = new ComboBox("Dipende da");
+	private OptionGroup optionalGroup  = new OptionGroup("Optional Category");
+
 	public TrentinoNetworkTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
 	}
 
 	@Override
 	public void load() {
-		super.load();
 		if (!loaded) {
+			updateTabHead();
 			try {
 				m_requisitionContainer = getService().getTNContainer();
 				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
+				getRequisitionTable().setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
 				layout();
 				loaded=true;
 			} catch (UniformInterfaceException e) {
@@ -148,15 +156,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	}
 	
 	protected void layout() { 
-		final ComboBox networkCatComboBox = new ComboBox("Network Category");
-		final ComboBox notifCatComboBox   = new ComboBox("Notification Category");
-		final ComboBox threshCatComboBox  = new ComboBox("Threshold Category");
-		final ComboBox slaCatComboBox  = new ComboBox("Service Level Report Category");
-		final ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
-		final ComboBox backupComboBox  = new ComboBox("Backup Profile");
-		ComboBox parentComboBox = new ComboBox("Dipende da");
-		final OptionGroup optionalGroup  = new OptionGroup("Optional Category");
-
 		Map<String,SnmpProfile> snmpprofilemap = 
 				getService().getSnmpProfileContainer().getSnmpProfileMap();
 		List<String> snmpprofiles = new ArrayList<String>(snmpprofilemap.keySet());
@@ -217,7 +216,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				getRight().setVisible(false);
 				getRequisitionContainer().removeAllContainerFilters();
 				getRequisitionContainer().addContainerFilter(
 						new NodeFilter(m_searchText, 
@@ -243,7 +241,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				getRight().setVisible(false);
 				getRequisitionContainer().removeAllContainerFilters();
 				getRequisitionContainer().addContainerFilter(
 						new NodeFilter(m_searchText, 
@@ -268,7 +265,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				getRight().setVisible(false);
 				getRequisitionContainer().removeAllContainerFilters();
 				getRequisitionContainer().addContainerFilter(
 						new NodeFilter(m_searchText, 
@@ -293,7 +289,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				getRight().setVisible(false);
 				getRequisitionContainer().removeAllContainerFilters();
 				getRequisitionContainer().addContainerFilter(
 						new NodeFilter(m_searchText, 
@@ -400,7 +395,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				@Override public void buttonClick(ClickEvent event) {
 					try {
 						String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
-						getService().deleteInterface(DashBoardUtils.TN_REQU_NAME, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
+						getService().delete(DashBoardUtils.TN_REQU_NAME, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
 								ip);
 			        source.getContainerDataSource().removeItem(itemId);
 			        Set<String> secondary = new HashSet<String>();
@@ -586,7 +581,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		getRight().addComponent(new Panel(generalInfo));
 		getRight().addComponent(new Panel(profileInfo));
 		getRight().addComponent(new Panel(optionCat));
-		
+		getRight().setVisible(false);
 		
 		Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
 		if (!duplicatednodeLabels.isEmpty()) {
@@ -608,66 +603,39 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void selectItem() {
-		Object contactId = getRequisitionTable().getValue();
-
-		if (contactId != null) {
-			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)getRequisitionTable()
-				.getItem(contactId)).getBean();
-			
-			m_descrComboBox.removeAllItems();
-			if (node.getDescr() != null)
-				m_descrComboBox.addItem(node.getDescr());
-			
-			m_secondaryIpComboBox.removeAllItems();
-			for (String ip: getService().getIpAddresses(DashBoardUtils.TN_REQU_NAME,node.getNodeLabel()) ) {
-				if (ip.equals(node.getPrimary()))
-					continue;
-				boolean add=true;
-				if (node.getSecondary() != null) {
-					for (String secip: node.getSecondary()) {
-						if (ip.equals(secip)) { 
-							add=false;
-							break;
-						}
-					}
-				}
-				if (add)
-					m_secondaryIpComboBox.addItem(ip);
-			}
-			
-			IndexedContainer secondaryIpContainer = new IndexedContainer();
-			secondaryIpContainer.addContainerProperty("indirizzo ip", String.class, null);
+	public void selectItem(BasicNode node) {
+		m_descrComboBox.removeAllItems();
+		if (node.getDescr() != null)
+			m_descrComboBox.addItem(node.getDescr());
+		
+		m_secondaryIpComboBox.removeAllItems();
+		for (String ip: getService().getIpAddresses(DashBoardUtils.TN_REQU_NAME,node.getNodeLabel()) ) {
+			if (ip.equals(node.getPrimary()))
+				continue;
+			boolean add=true;
 			if (node.getSecondary() != null) {
-				for (String ip: node.getSecondary()) {
-					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
-					ipItem.getItemProperty("indirizzo ip").setValue(ip); 
-				}
-			}
-			m_secondaryIpAddressTable.setContainerDataSource(secondaryIpContainer);
-
-			if (node.getForeignId() != null) {
-				String snmpProfile=null;
-				if (node.getPrimary() != null) {
-					try {
-						snmpProfile = getService().getSnmpProfileName(node.getPrimary());
-						getService().syncSnmpProfile(node.getPrimary(), snmpProfile);
-					} catch (SQLException sqle) {
-						logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
-						Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
-					} catch (UniformInterfaceException uie) {
-						
+				for (String secip: node.getSecondary()) {
+					if (ip.equals(secip)) { 
+						add=false;
+						break;
 					}
 				}
-				if (snmpProfile == null)
-					node.setValid(false);
-				node.setSnmpProfileWithOutUpdating(snmpProfile);
 			}
-			m_editorFields.setItemDataSource(node);
-			getRight().setVisible(true);
-			enableNodeButtons();
+			if (add)
+				m_secondaryIpComboBox.addItem(ip);
 		}
+		
+		IndexedContainer secondaryIpContainer = new IndexedContainer();
+		secondaryIpContainer.addContainerProperty("indirizzo ip", String.class, null);
+		if (node.getSecondary() != null) {
+			for (String ip: node.getSecondary()) {
+				Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
+				ipItem.getItemProperty("indirizzo ip").setValue(ip); 
+			}
+		}
+		m_secondaryIpAddressTable.setContainerDataSource(secondaryIpContainer);
 
+		m_editorFields.setItemDataSource((TrentinoNetworkNode)node);
 	}
 	
 	
@@ -694,68 +662,26 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	}
 
 	@Override
-	public TrentinoNetworkNode getBean() {
-		return m_editorFields.getItemDataSource().getBean();
-	}
-
-	@Override
 	public TrentinoNetworkNode addBean() {
-		BeanItem<TrentinoNetworkNode> bean = m_requisitionContainer.addBeanAt(0,
+		return m_requisitionContainer.addBeanAt(0,
 				new TrentinoNetworkNode("notSavedHost"+newHost++,
-                     getService().getCatContainer().getCatMap().values().iterator().next()));
-		return bean.getBean();
+                     getService().getCatContainer().getCatMap().values().iterator().next())).getBean();
 	}
 
 	@Override
-	public BeanContainer<String, ? extends RequisitionNode> getRequisitionContainer() {
+	public BeanContainer<String, ? extends BasicNode> getRequisitionContainer() {
 		return m_requisitionContainer;
 	}
 	
 	@Override
-	public void commit() throws CommitException, SQLException {
-		m_editorFields.commit();
-		TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-		if (node.getForeignId() == null) {
-			node.setForeignId(node.getHostname());
-			node.setValid(true);
-			getService().addTNNode(node);
-			logger.info("Added: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
-			Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
-		} else {
-			getService().updateTNNode(node);
-			node.setValid(getService().isValid(node));
-			logger.info("Updated: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
-			Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
-		}
+	public BeanFieldGroup<TrentinoNetworkNode> getBeanFieldGroup() {
+		return m_editorFields;
+	}
+	
+	@Override 
+	public void applyFilter(String hostname) {
 		m_requisitionContainer.addContainerFilter(
-				new NodeFilter(node.getHostname(), null, null, null,null));
-		m_requisitionContainer.removeAllContainerFilters();
-	}
-
-	@Override
-	public void discard() {
-		m_editorFields.discard();		
-	}
-
-	@Override
-	public void delete() {
-		BeanItem<TrentinoNetworkNode> node = m_editorFields.getItemDataSource();
-		logger.info("Deleting: " + node.getBean().getNodeLabel());
-		if (node.getBean().getForeignId() !=  null) {
-			try {
-				getService().deleteNode(node.getBean());
-				Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
-			} catch (UniformInterfaceException e) {
-				logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
-				Notification.show("Delete Node From Requisition", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
-				e.getResponse().getStatusInfo().getReasonPhrase(), Type.ERROR_MESSAGE);
-				return;
-			}
-		}
-		if ( ! m_requisitionContainer.removeItem(node.getBean().getNodeLabel()))
-			m_requisitionContainer.removeItem(m_requisitionContainer.getIdByIndex(0));
-		logger.info("Node Deleted");
-		Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
+				new NodeFilter(hostname, null, null, null,null));
 
 	}
 }

@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 
-public class TrentinoNetworkNode extends RequisitionNode {
+public class TrentinoNetworkNode extends BasicNode {
 
 	/**
 	 * 

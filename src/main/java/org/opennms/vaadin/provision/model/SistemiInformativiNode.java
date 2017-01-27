@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 
-public class SistemiInformativiNode extends RequisitionNode {
+public class SistemiInformativiNode extends BasicNode {
 
 	/**
 	 * 

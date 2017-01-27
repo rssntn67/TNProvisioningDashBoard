@@ -1239,7 +1239,7 @@ public class FastTab extends DashboardTab {
 		}
 		
 		private void deleteNode(String foreignId, RequisitionNode rnode) {
-			getService().deleteNode(DashBoardUtils.TN_REQU_NAME, rnode);
+			getService().delete(DashBoardUtils.TN_REQU_NAME, rnode);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(foreignId);
 			jloe.setIpaddr("NA");
@@ -1259,7 +1259,7 @@ public class FastTab extends DashboardTab {
 		}
 		
 		private void deleteInterface(String foreignId, RequisitionNode rnode, String ipaddr) {
-			getService().deleteInterface(DashBoardUtils.TN_REQU_NAME, foreignId, ipaddr);
+			getService().delete(DashBoardUtils.TN_REQU_NAME, foreignId, ipaddr);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(foreignId);
 			jloe.setIpaddr(ipaddr);

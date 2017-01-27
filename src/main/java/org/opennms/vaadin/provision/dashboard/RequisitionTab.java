@@ -8,13 +8,16 @@ import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.model.RequisitionNode;
+import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification.Type;
@@ -59,10 +62,6 @@ public abstract class RequisitionTab extends DashboardTab {
 	 */
 	RequisitionTab(LoginBox login, DashBoardSessionService service) {
 		super(login,service);
-	}
-	
-	public void load() {
-		updateTabHead();
     	m_syncRequisButton.addClickListener(this);
     	m_syncRequisButton.setImmediate(true);
     	
@@ -101,18 +100,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
 
 		getCore().addComponent(splitPanel);
-
-		m_requisitionTable.setSizeFull();
-		m_requisitionTable.setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
-		m_requisitionTable.setSelectable(true);
-		m_requisitionTable.setImmediate(true);
-
-		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
-			private static final long serialVersionUID = 1L;
-			public void valueChange(ValueChangeEvent event) {
-				selectItem();
-			}
-		});
 		
 		m_hostname.setSizeFull();
 		m_hostname.setWidth(4, Unit.CM);
@@ -158,18 +145,55 @@ public abstract class RequisitionTab extends DashboardTab {
 		for (final String domain: getService().getDnsDomainContainer().getDomains()) {
 			m_domainComboBox.addItem(domain);
 		}
+		m_requisitionTable.setSizeFull();
+		m_requisitionTable.setSelectable(true);
+		m_requisitionTable.setImmediate(true);
 
+		m_requisitionTable.addValueChangeListener(new Property.ValueChangeListener() {
+			private static final long serialVersionUID = 1L;
+			public void valueChange(ValueChangeEvent event) {
+				if (event.getProperty().getValue() == null) {
+					m_right.setVisible(false);
+					return;
+				}
+				Object contactId = getRequisitionTable().getValue();
+				if (contactId == null) 
+					return;
+				BasicNode node = ((BeanItem<? extends BasicNode>)m_requisitionTable
+					.getItem(contactId)).getBean();
+				if (node.getForeignId() != null) {
+					String snmpProfile=null;
+					if (node.getPrimary() != null) {
+						try {
+							snmpProfile = getService().getSnmpProfileName(node.getPrimary());
+							getService().syncSnmpProfile(node.getPrimary(), snmpProfile);
+						} catch (SQLException sqle) {
+							logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
+							Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
+						} catch (UniformInterfaceException uie) {
+							
+						}
+					}
+					if (snmpProfile == null)
+						node.setValid(false);
+					node.setSnmpProfileWithOutUpdating(snmpProfile);
+				}
+				selectItem(node);
+				getRight().setVisible(true);
+				enableNodeButtons();
+
+				
+			}
+		});
 	}
-	
-	public abstract void selectItem();
+		
+	public abstract void selectItem(BasicNode node);
 	public abstract String getRequisitionName();
+	public abstract void applyFilter(String filter);
 	public abstract void cleanSearchBox();
-	public abstract RequisitionNode getBean();
-	public abstract BeanContainer<String,? extends RequisitionNode> getRequisitionContainer();
-	public abstract RequisitionNode addBean();
-	public abstract void commit() throws CommitException, SQLException;
-	public abstract void discard();
-	public abstract void delete();
+	public abstract BeanContainer<String,? extends BasicNode> getRequisitionContainer();
+	public abstract BasicNode addBean();
+	public abstract BeanFieldGroup<? extends BasicNode> getBeanFieldGroup();
 	
 
 		
@@ -237,16 +261,32 @@ public abstract class RequisitionTab extends DashboardTab {
 	}
 
 	private void  newNode() {
-			RequisitionNode bean = addBean();
-			m_requisitionTable.select(bean.getNodeLabel());
-			selectItem();
-			getRequisitionContainer().removeAllContainerFilters();
-			m_hostname.focus();
+		cleanSearchBox();
+		BasicNode bean = addBean();
+		m_requisitionTable.select(bean.getNodeLabel());
+		selectItem(bean);
+		getRequisitionContainer().removeAllContainerFilters();
+		m_hostname.focus();
 	}
 
 	public void save() {
 		try {
-			commit();
+			getBeanFieldGroup().commit();
+			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
+			if (node.getForeignId() == null) {
+				node.setForeignId(node.getHostname());
+				node.setValid(true);
+				getService().add(node);
+				logger.info("Added: " + getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel());
+				Notification.show("Save", "Node " +getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
+			} else {
+				getService().update(node);
+				node.setValid(getService().isValid(node));
+				logger.info("Updated: " + getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel());
+				Notification.show("Save", "Node " +getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
+			}
+			applyFilter(node.getHostname());
+			getRequisitionContainer().removeAllContainerFilters();
 		} catch (Exception e) {
 			e.printStackTrace();
 			String localizedMessage = e.getLocalizedMessage();
@@ -267,11 +307,27 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
-		delete();
+		BeanItem<? extends BasicNode> node = getBeanFieldGroup().getItemDataSource();
+		logger.info("Deleting: " + node.getBean().getNodeLabel());
+		if (node.getBean().getForeignId() !=  null) {
+			try {
+				getService().delete(node.getBean());
+				Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
+			} catch (UniformInterfaceException e) {
+				logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
+				Notification.show("Delete Node From Requisition", "Failed: "+e.getLocalizedMessage()+ " Reason: " +
+				e.getResponse().getStatusInfo().getReasonPhrase(), Type.ERROR_MESSAGE);
+				return;
+			}
+		}
+		if ( ! getRequisitionContainer().removeItem(node.getBean().getNodeLabel()))
+			getRequisitionContainer().removeItem(getRequisitionContainer().getIdByIndex(0));
+		logger.info("Node Deleted");
+		Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
 	}
 	
 	public void reset() {
-			discard();
+			getBeanFieldGroup().discard();
 			m_right.setVisible(false);
 			m_requisitionTable.unselect(m_requisitionTable.getValue());
 			m_saveNodeButton.setEnabled(false);
@@ -305,7 +361,7 @@ public abstract class RequisitionTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
-			RequisitionNode node = getBean();
+			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
 			if (node.getForeignId() != null)
 				return;
 			String hostname = (String)value;
@@ -324,7 +380,7 @@ public abstract class RequisitionTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
-			RequisitionNode node = getBean();
+			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
 			if (node.getForeignId() != null)
 				return;
 			String ip = (String)value;
@@ -358,7 +414,7 @@ public abstract class RequisitionTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
-			RequisitionNode node = getBean();
+			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
 			if (node.getForeignId() != null)
 				return;
 			String hostname = ((String)value).toLowerCase();

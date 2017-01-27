@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 
-public class RequisitionNode implements Serializable {
+public class BasicNode implements Serializable {
 
 	/**
 	 * 
@@ -44,7 +44,7 @@ public class RequisitionNode implements Serializable {
 	private String m_foreignId;
 	protected boolean m_valid = true;
 		
-	public RequisitionNode(String label) {
+	public BasicNode(String label) {
 		m_label = label;
 		m_primary="0.0.0.0";
 		m_hostname="";
@@ -58,7 +58,7 @@ public class RequisitionNode implements Serializable {
 		m_serviceMap = new HashMap<String, Set<String>>();
 	}
 
-	public RequisitionNode(String label, String vrf, String snmpProfile) {
+	public BasicNode(String label, String vrf, String snmpProfile) {
 		m_label = label;
 		m_primary="0.0.0.0";
 		m_hostname="";
@@ -75,7 +75,7 @@ public class RequisitionNode implements Serializable {
 		m_serviceMap = new HashMap<String, Set<String>>();
 	}
 
-	public RequisitionNode(
+	public BasicNode(
 			Map<String,Set<String>> serviceMap,
 			String descr, 
 			String hostname,

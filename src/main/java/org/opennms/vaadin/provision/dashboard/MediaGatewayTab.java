@@ -445,11 +445,11 @@ public class MediaGatewayTab extends DashboardTab {
 					if (node.getForeignId() == null) {
 						node.setForeignId(node.getHostname());
 						node.setValid(true);
-						getService().addMediaGatewayNode(node);
+						getService().add(node);
 						logger.info("Added: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 					} else {
-						getService().updateMediaGatewayNode(node);
+						getService().update(node);
 						node.setValid(getService().isValid(node));
 						logger.info("Updated: " + m_editorFields.getItemDataSource().getBean().getNodeLabel());
 						Notification.show("Save", "Node " +m_editorFields.getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
@@ -484,7 +484,7 @@ public class MediaGatewayTab extends DashboardTab {
 				logger.info("Deleting: " + node.getBean().getNodeLabel());
 				if (node.getBean().getForeignId() !=  null) {
 					try {
-						getService().deleteNode(node.getBean());
+						getService().delete(node.getBean());
 						Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
 					} catch (UniformInterfaceException e) {
 						logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
