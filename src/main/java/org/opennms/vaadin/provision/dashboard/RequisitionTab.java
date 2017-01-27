@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
-import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Property;
@@ -159,6 +158,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				Object contactId = getRequisitionTable().getValue();
 				if (contactId == null) 
 					return;
+				@SuppressWarnings("unchecked")
 				BasicNode node = ((BeanItem<? extends BasicNode>)m_requisitionTable
 					.getItem(contactId)).getBean();
 				if (node.getForeignId() != null) {
