@@ -555,7 +555,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	public void applyFilter(String hostname) {
 		m_requisitionContainer.addContainerFilter(
 				new NodeFilter(hostname, null, null, null,null));
-
 	}
 	
 	private void addSearchValueChangeListener(ComboBox box) {

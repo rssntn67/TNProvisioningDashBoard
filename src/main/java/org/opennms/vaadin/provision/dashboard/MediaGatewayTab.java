@@ -258,6 +258,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	@Override
 	public void cleanSearchBox() {
 		m_searchText="";
+		m_searchField.setValue(m_searchText);
 	}
 
 	@Override
