@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicNode;
-import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.Categoria;
 
@@ -114,92 +113,33 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	private TextField m_searchField       = new TextField("Type Label Text");
 
 	private ComboBox m_secondaryIpComboBox = new ComboBox("Seleziona indirizzo ip");
-	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
 	private Table m_secondaryIpAddressTable = new Table();
 
-	private ComboBox networkCatComboBox = new ComboBox("Network Category");
-	private ComboBox notifCatComboBox   = new ComboBox("Notification Category");
-	private ComboBox threshCatComboBox  = new ComboBox("Threshold Category");
-	private ComboBox slaCatComboBox  = new ComboBox("Service Level Report Category");
-	private ComboBox snmpComboBox  = new ComboBox("SNMP Profile");
-	private ComboBox backupComboBox  = new ComboBox("Backup Profile");
-	private ComboBox parentComboBox = new ComboBox("Dipende da");
-	private OptionGroup optionalGroup  = new OptionGroup("Optional Category");
+	private ComboBox m_networkCatComboBox = new ComboBox("Network Category");
+	private ComboBox m_notifCatComboBox   = new ComboBox("Notification Category");
+	private ComboBox m_threshCatComboBox  = new ComboBox("Threshold Category");
+	private ComboBox m_slaCatComboBox  = new ComboBox("Service Level Report Category");
+	
+	private ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
+	private OptionGroup m_optionalGroup  = new OptionGroup("Optional Category");
+	TextField m_circuiId = new TextField("circuitId");
+	Button m_addSecondaryIpButton = new Button("Aggiungi indirizzo ip");
+
 
 	public TrentinoNetworkTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
-	}
-
-	@Override
-	public void load() {
-		if (!loaded) {
-			updateTabHead();
-			try {
-				m_requisitionContainer = getService().getTNContainer();
-				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
-				getRequisitionTable().setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
-				layout();
-				loaded=true;
-			} catch (UniformInterfaceException e) {
-				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
-				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
-					logger.info("No Requisition Found: "+e.getLocalizedMessage());
-					getService().createRequisition(DashBoardUtils.TN_REQU_NAME);
-					load();
-					return;
-				}
-				logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
-				Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
-				return;
-			}			
-		}
-	}
-	
-	protected void layout() { 
-		Map<String,SnmpProfile> snmpprofilemap = 
-				getService().getSnmpProfileContainer().getSnmpProfileMap();
-		List<String> snmpprofiles = new ArrayList<String>(snmpprofilemap.keySet());
-		Collections.sort(snmpprofiles);
-		for (String snmpprofile: snmpprofiles) {
-			snmpComboBox.addItem(snmpprofile);
-			snmpComboBox.setItemCaption(snmpprofile, 
-					snmpprofile + 
-					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
-					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
-		}
 
 		Map<String,BackupProfile> bckupprofilemap = 
 				getService().getBackupProfileContainer().getBackupProfileMap();
 		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
 		Collections.sort(backupprofiles);
-		for (String backupprofile: backupprofiles) {
-			backupComboBox.addItem(backupprofile);
-			backupComboBox.setItemCaption(backupprofile, 
-					backupprofile +
-					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
-		}
-
-		VerticalLayout searchlayout = new VerticalLayout();
-		searchlayout.addComponent(m_networkCatSearchComboBox);
-		searchlayout.addComponent(m_notifCatSearchComboBox);
-		searchlayout.addComponent(m_threshCatSearchComboBox);
-		searchlayout.addComponent(m_slaCatSearchComboBox);
-
-		m_searchField.setWidth("80%");
-		searchlayout.addComponent(m_searchField);
-		searchlayout.setWidth("100%");
-		searchlayout.setMargin(true);
-
-		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
-		bottomLeftLayout.addComponent(new Label("----Select to Edit----"));
-
-		getLeft().addComponent(new Panel("Search",searchlayout));
-		getLeft().addComponent(getRequisitionTable());
-		getLeft().addComponent(bottomLeftLayout);
-		getLeft().setSizeFull();
-
+		
 		List<Categoria> cats = new ArrayList<Categoria>(getService().getCatContainer().getCatMap().values()); 
 		Collections.sort(cats);
+
+		m_circuiId.setWidth(8, Unit.CM);
+		m_circuiId.setHeight(6, Unit.MM);
+
 		for (Categoria categories: cats) {
 			m_networkCatSearchComboBox.addItem(categories);
 			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
@@ -207,25 +147,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		m_networkCatSearchComboBox.setInvalidAllowed(false);
 		m_networkCatSearchComboBox.setNullSelectionAllowed(true);		
 		m_networkCatSearchComboBox.setImmediate(true);
-		m_networkCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
-		
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -3559078865783782719L;
-
-			@Override
-			public void valueChange(ValueChangeEvent event) {
-				getRequisitionContainer().removeAllContainerFilters();
-				getRequisitionContainer().addContainerFilter(
-						new NodeFilter(m_searchText, 
-								m_networkCatSearchComboBox.getValue(),
-								m_notifCatSearchComboBox.getValue(),
-								m_threshCatSearchComboBox.getValue(),
-								m_slaCatSearchComboBox.getValue()));
-			}
-		});
-
+		addSearchValueChangeListener(m_networkCatSearchComboBox);
 
 		for (String category: DashBoardUtils.m_notify_levels) {
 			m_notifCatSearchComboBox.addItem(category);
@@ -233,47 +155,15 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		m_notifCatSearchComboBox.setInvalidAllowed(false);
 		m_notifCatSearchComboBox.setNullSelectionAllowed(true);		
 		m_notifCatSearchComboBox.setImmediate(true);
-		m_notifCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -3559078865783782719L;
+		addSearchValueChangeListener(m_notifCatSearchComboBox);
 
-			@Override
-			public void valueChange(ValueChangeEvent event) {
-				getRequisitionContainer().removeAllContainerFilters();
-				getRequisitionContainer().addContainerFilter(
-						new NodeFilter(m_searchText, 
-								m_networkCatSearchComboBox.getValue(),
-								m_notifCatSearchComboBox.getValue(),
-								m_threshCatSearchComboBox.getValue(),
-								m_slaCatSearchComboBox.getValue()));
-			}
-		});
-		
 		for (String category: DashBoardUtils.m_threshold_levels) {
 			m_threshCatSearchComboBox.addItem(category);
 		}
 		m_threshCatSearchComboBox.setInvalidAllowed(false);
 		m_threshCatSearchComboBox.setNullSelectionAllowed(true);		
 		m_threshCatSearchComboBox.setImmediate(true);
-		m_threshCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -3559078865783782719L;
-
-			@Override
-			public void valueChange(ValueChangeEvent event) {
-				getRequisitionContainer().removeAllContainerFilters();
-				getRequisitionContainer().addContainerFilter(
-						new NodeFilter(m_searchText, 
-								m_networkCatSearchComboBox.getValue(),
-								m_notifCatSearchComboBox.getValue(),
-								m_threshCatSearchComboBox.getValue(),
-								m_slaCatSearchComboBox.getValue()));
-			}
-		});
+		addSearchValueChangeListener(m_threshCatSearchComboBox);
 
 		for (String sla: DashBoardUtils.m_sla_levels) {
 			m_slaCatSearchComboBox.addItem(sla);
@@ -281,71 +171,22 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		m_slaCatSearchComboBox.setInvalidAllowed(false);
 		m_slaCatSearchComboBox.setNullSelectionAllowed(true);		
 		m_slaCatSearchComboBox.setImmediate(true);
-		m_slaCatSearchComboBox.addValueChangeListener(new Property.ValueChangeListener() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -3559078865783782719L;
-
-			@Override
-			public void valueChange(ValueChangeEvent event) {
-				getRequisitionContainer().removeAllContainerFilters();
-				getRequisitionContainer().addContainerFilter(
-						new NodeFilter(m_searchText, 
-								m_networkCatSearchComboBox.getValue(),
-								m_notifCatSearchComboBox.getValue(),
-								m_threshCatSearchComboBox.getValue(),
-								m_slaCatSearchComboBox.getValue()));
-			}
-		});
+		addSearchValueChangeListener(m_slaCatSearchComboBox);
 
 		m_searchField.setInputPrompt("Search nodes");
 		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
-		m_searchField.addTextChangeListener(new TextChangeListener() {
-			private static final long serialVersionUID = 1L;
-			public void textChange(final TextChangeEvent event) {
-				m_searchText = event.getText();
-				getRequisitionContainer().removeAllContainerFilters();
-				getRequisitionContainer().addContainerFilter(
-						new NodeFilter(m_searchText, 
-								m_networkCatSearchComboBox.getValue(),
-								m_notifCatSearchComboBox.getValue(),
-								m_threshCatSearchComboBox.getValue(),
-								m_slaCatSearchComboBox.getValue()));
-			}
-		});
+		addSearchValueChangeListener(m_searchField);
 
 		for (Categoria categories: cats) {
-			networkCatComboBox.addItem(categories);
-			networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+			m_networkCatComboBox.addItem(categories);
+			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
 		}
-
-		for (String notif: DashBoardUtils.m_notify_levels) {
-			notifCatComboBox.addItem(notif);
-		}
-
-		for (String threshold: DashBoardUtils.m_threshold_levels) {
-			threshCatComboBox.addItem(threshold);
-		}
-
-		for (String sla: DashBoardUtils.m_sla_levels) {
-			slaCatComboBox.addItem(sla);
-		}
-		
-		for (String option: DashBoardUtils.m_server_optional) {
-			optionalGroup.addItem(option);
-		}
-
-		m_descrComboBox.setInvalidAllowed(false);
-		m_descrComboBox.setNullSelectionAllowed(false);
-		m_descrComboBox.setWidth(8, Unit.CM);
-
-		networkCatComboBox.setInvalidAllowed(false);
-		networkCatComboBox.setNullSelectionAllowed(false);
-		networkCatComboBox.setRequired(true);
-		networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
-		networkCatComboBox.setImmediate(true);
-		networkCatComboBox.addValueChangeListener(new Property.ValueChangeListener() {
+		m_networkCatComboBox.setInvalidAllowed(false);
+		m_networkCatComboBox.setNullSelectionAllowed(false);
+		m_networkCatComboBox.setRequired(true);
+		m_networkCatComboBox.setRequiredError("E' necessario scegliere una coppia di categorie di rete");
+		m_networkCatComboBox.setImmediate(true);
+		m_networkCatComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			
 			private static final long serialVersionUID = -3559078865783782719L;
 			
@@ -353,21 +194,14 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			public void valueChange(ValueChangeEvent event) {
 				TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
 				if (node.getForeignId() == null) {
-					getDomain().select(((Categoria)networkCatComboBox.getValue()).getDnsdomain());
-					notifCatComboBox.select(((Categoria)networkCatComboBox.getValue()).getNotifylevel());
-					threshCatComboBox.select(((Categoria)networkCatComboBox.getValue()).getThresholdlevel());
-					backupComboBox.select(((Categoria)networkCatComboBox.getValue()).getBackupprofile());
-					snmpComboBox.select(((Categoria)networkCatComboBox.getValue()).getSnmpprofile());
+					getDomainComboBox().select(((Categoria)m_networkCatComboBox.getValue()).getDnsdomain());
+					m_notifCatComboBox.select(((Categoria)m_networkCatComboBox.getValue()).getNotifylevel());
+					m_threshCatComboBox.select(((Categoria)m_networkCatComboBox.getValue()).getThresholdlevel());
+					m_backupComboBox.select(((Categoria)m_networkCatComboBox.getValue()).getBackupprofile());
+					getSnmpComboBox().select(((Categoria)m_networkCatComboBox.getValue()).getSnmpprofile());
 				}
 			}
 		});
-
-		parentComboBox.setInvalidAllowed(false);
-		parentComboBox.setNullSelectionAllowed(true);
-
-		for (String nodelabel :getService().getNodeLabels())
-			parentComboBox.addItem(nodelabel);
-		
 
 		m_secondaryIpAddressTable.setCaption("Altri ip da monitorare");
 		m_secondaryIpAddressTable.setHeight(180,Unit.PIXELS);
@@ -419,8 +253,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 		m_secondaryIpComboBox.setNullSelectionAllowed(false);
 		m_secondaryIpComboBox.setInvalidAllowed(false);
-		Button addSecondaryIpButton = new Button("Aggiungi");
-		addSecondaryIpButton.addClickListener(new ClickListener() {
+		m_addSecondaryIpButton.addClickListener(new ClickListener() {
 			
 			private static final long serialVersionUID = 1L;
 
@@ -455,90 +288,152 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				}
 			}
 		});
-		
-		notifCatComboBox.setInvalidAllowed(false);
-		notifCatComboBox.setNullSelectionAllowed(false);
-		notifCatComboBox.setRequired(true);
-		notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 
-		threshCatComboBox.setInvalidAllowed(false);
-		threshCatComboBox.setNullSelectionAllowed(false);
-		threshCatComboBox.setRequired(true);
-		threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
+		for (String notif: DashBoardUtils.m_notify_levels) {
+			m_notifCatComboBox.addItem(notif);
+		}
+		m_notifCatComboBox.setInvalidAllowed(false);
+		m_notifCatComboBox.setNullSelectionAllowed(false);
+		m_notifCatComboBox.setRequired(true);
+		m_notifCatComboBox.setRequiredError("E' necessario scegliere una categoria per le notifiche");
 
-		slaCatComboBox.setInvalidAllowed(false);
-		slaCatComboBox.setNullSelectionAllowed(true);
-		slaCatComboBox.setRequired(false);
+		for (String threshold: DashBoardUtils.m_threshold_levels) {
+			m_threshCatComboBox.addItem(threshold);
+		}
+		m_threshCatComboBox.setInvalidAllowed(false);
+		m_threshCatComboBox.setNullSelectionAllowed(false);
+		m_threshCatComboBox.setRequired(true);
+		m_threshCatComboBox.setRequiredError("E' necessario scegliere una categoria per le threshold");
 
-		snmpComboBox.setInvalidAllowed(false);
-		snmpComboBox.setNullSelectionAllowed(false);
-		snmpComboBox.setRequired(true);
-		snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
+		for (String sla: DashBoardUtils.m_sla_levels) {
+			m_slaCatComboBox.addItem(sla);
+		}		
+		m_slaCatComboBox.setInvalidAllowed(false);
+		m_slaCatComboBox.setNullSelectionAllowed(true);
+		m_slaCatComboBox.setRequired(false);
 
+        m_backupComboBox.setInvalidAllowed(false);
+        m_backupComboBox.setNullSelectionAllowed(false);
+        m_backupComboBox.setRequired(true);
+        m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
+		for (String backupprofile: backupprofiles) {
+			m_backupComboBox.addItem(backupprofile);
+			m_backupComboBox.setItemCaption(backupprofile, 
+					backupprofile +
+					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
+		}
 
-        backupComboBox.setInvalidAllowed(false);
-        backupComboBox.setNullSelectionAllowed(false);
-        backupComboBox.setRequired(true);
-        backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
-		
-        TextField city = new TextField("Citta'");
-		city.setWidth(8, Unit.CM);
-		city.setHeight(6, Unit.MM);
-		
-		TextField address = new TextField("Indirizzo");
-		address.setWidth(8, Unit.CM);
-		address.setHeight(6, Unit.MM);
+		for (String option: DashBoardUtils.m_server_optional) {
+			m_optionalGroup.addItem(option);
+		}
+		m_optionalGroup.setInvalidAllowed(false);
+		m_optionalGroup.setNullSelectionAllowed(false);
+		m_optionalGroup.setImmediate(true);
+		m_optionalGroup.setMultiSelect(true);
+	}
 
-		TextField building = new TextField("Edificio");
-		building.setWidth(8, Unit.CM);
-		building.setHeight(6, Unit.MM);
+	@Override
+	public void load() {
+		if (!loaded) {
+			updateTabHead();
+			try {
+				m_requisitionContainer = getService().getTNContainer();
+				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
+				getRequisitionTable().setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
+				layout();
+				loaded=true;
+			} catch (UniformInterfaceException e) {
+				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
+				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
+					logger.info("No Requisition Found: "+e.getLocalizedMessage());
+					getService().createRequisition(DashBoardUtils.TN_REQU_NAME);
+					load();
+					return;
+				}
+				logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
+				Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
+				return;
+			}
+			
+			m_editorFields.setBuffered(true);
+			m_editorFields.bind(getHostNameTextField(), DashBoardUtils.HOST);
+			m_editorFields.bind(getDomainComboBox(), DashBoardUtils.CAT);
+			m_editorFields.bind(getPrimaryTextField(),DashBoardUtils.PRIMARY);
+			m_editorFields.bind(getDescrComboBox(), DashBoardUtils.DESCR);
+			m_editorFields.bind(getParentComboBox(), DashBoardUtils.PARENT);
+			m_editorFields.bind(getSnmpComboBox(), DashBoardUtils.SNMP_PROFILE);
+			m_editorFields.bind(getCityTextField(),DashBoardUtils.CITY);
+			m_editorFields.bind(getAddressTextField(), DashBoardUtils.ADDRESS1);
+			m_editorFields.bind(getBuildingTextField(),DashBoardUtils.BUILDING);
+			m_editorFields.bind(m_backupComboBox, DashBoardUtils.BACKUP_PROFILE);
+			m_editorFields.bind(m_networkCatComboBox, DashBoardUtils.NETWORK_CATEGORY);
+			m_editorFields.bind(m_notifCatComboBox, DashBoardUtils.NOTIF_CATEGORY);
+			m_editorFields.bind(m_threshCatComboBox, DashBoardUtils.THRESH_CATEGORY);
+			m_editorFields.bind(m_slaCatComboBox, DashBoardUtils.SLA_CATEGORY);
+			m_editorFields.bind(m_optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
+		    m_editorFields.bind(m_circuiId, DashBoardUtils.CIRCUITID);
 
-		TextField circuiId = new TextField("circuitId");
-		circuiId.setWidth(8, Unit.CM);
-		circuiId.setHeight(6, Unit.MM);
+			Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
+			if (!duplicatednodeLabels.isEmpty()) {
+				logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
+				Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicatednodeLabels.toArray()), Type.ERROR_MESSAGE);
+			}
 
-		optionalGroup.setInvalidAllowed(false);
-		optionalGroup.setNullSelectionAllowed(false);
-		optionalGroup.setImmediate(true);
-		optionalGroup.setMultiSelect(true);
+			Set<String> duplicatedForeignIds= getService().checkUniqueForeignId();
+			if (!duplicatedForeignIds.isEmpty()) {
+				logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicatedForeignIds.toArray()));
+				Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.ERROR_MESSAGE);
+			}
 
-		m_editorFields.setBuffered(true);
-		m_editorFields.bind(m_descrComboBox, DashBoardUtils.DESCR);
-		m_editorFields.bind(getHostName(), DashBoardUtils.HOST);
-		m_editorFields.bind(networkCatComboBox, DashBoardUtils.NETWORK_CATEGORY);
-		m_editorFields.bind(getDomain(), DashBoardUtils.CAT);
-		m_editorFields.bind(getPrimary(),DashBoardUtils.PRIMARY);
-		m_editorFields.bind(parentComboBox, DashBoardUtils.PARENT);
-		m_editorFields.bind(snmpComboBox, DashBoardUtils.SNMP_PROFILE);
-		m_editorFields.bind(backupComboBox, DashBoardUtils.BACKUP_PROFILE);
-		m_editorFields.bind(notifCatComboBox, DashBoardUtils.NOTIF_CATEGORY);
-		m_editorFields.bind(threshCatComboBox, DashBoardUtils.THRESH_CATEGORY);
-		m_editorFields.bind(slaCatComboBox, DashBoardUtils.SLA_CATEGORY);
-		m_editorFields.bind(optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
-		m_editorFields.bind(city,DashBoardUtils.CITY);
-	    m_editorFields.bind(address, DashBoardUtils.ADDRESS1);
-		m_editorFields.bind(building,DashBoardUtils.BUILDING);
-	    m_editorFields.bind(circuiId, DashBoardUtils.CIRCUITID);
+			Set<String> duplicatedPrimaries= getService().checkUniquePrimary();
+			if (!duplicatedPrimaries.isEmpty()) {
+				logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
+				Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.ERROR_MESSAGE);
+			}
+
+		}
+	}
+	
+	protected void layout() { 
+
+		VerticalLayout searchlayout = new VerticalLayout();
+		searchlayout.addComponent(m_networkCatSearchComboBox);
+		searchlayout.addComponent(m_notifCatSearchComboBox);
+		searchlayout.addComponent(m_threshCatSearchComboBox);
+		searchlayout.addComponent(m_slaCatSearchComboBox);
+
+		m_searchField.setWidth("80%");
+		searchlayout.addComponent(m_searchField);
+		searchlayout.setWidth("100%");
+		searchlayout.setMargin(true);
+
+		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
+		bottomLeftLayout.addComponent(new Label("----Select to Edit----"));
+
+		getLeft().addComponent(new Panel("Search",searchlayout));
+		getLeft().addComponent(new Panel(getRequisitionTable()));
+		getLeft().addComponent(bottomLeftLayout);
+		getLeft().setSizeFull();
 
 		FormLayout leftGeneralInfo = new FormLayout(new Label("Informazioni Generali"));
 		leftGeneralInfo.setMargin(true);
-		leftGeneralInfo.addComponent(m_descrComboBox);
-		leftGeneralInfo.addComponent(getHostName());
-		leftGeneralInfo.addComponent(networkCatComboBox);
-		leftGeneralInfo.addComponent(getDomain());
-		leftGeneralInfo.addComponent(getPrimary());
-		leftGeneralInfo.addComponent(parentComboBox);
-		leftGeneralInfo.addComponent(city);
-		leftGeneralInfo.addComponent(address);
-		leftGeneralInfo.addComponent(building);
-		leftGeneralInfo.addComponent(circuiId);
+		leftGeneralInfo.addComponent(getDescrComboBox());
+		leftGeneralInfo.addComponent(getHostNameTextField());
+		leftGeneralInfo.addComponent(m_networkCatComboBox);
+		leftGeneralInfo.addComponent(getDomainComboBox());
+		leftGeneralInfo.addComponent(getPrimaryTextField());
+		leftGeneralInfo.addComponent(getParentComboBox());
+		leftGeneralInfo.addComponent(getCityTextField());
+		leftGeneralInfo.addComponent(getAddressTextField());
+		leftGeneralInfo.addComponent(getBuildingTextField());
+		leftGeneralInfo.addComponent(m_circuiId);
 		
 		VerticalLayout centerGeneralInfo = new VerticalLayout();
 		centerGeneralInfo.setMargin(true);
 
 		HorizontalLayout bottomRightGeneralInfo = new HorizontalLayout();
 		bottomRightGeneralInfo.addComponent(m_secondaryIpComboBox);
-		bottomRightGeneralInfo.addComponent(addSecondaryIpButton);
+		bottomRightGeneralInfo.addComponent(m_addSecondaryIpButton);
 		
 		FormLayout rightGeneralInfo = new FormLayout();
 		rightGeneralInfo.setMargin(true);
@@ -547,14 +442,14 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				
 		HorizontalLayout catLayout = new HorizontalLayout();
 		catLayout.setSizeFull();
-		catLayout.addComponent(notifCatComboBox);
-		catLayout.addComponent(threshCatComboBox);
-		catLayout.addComponent(slaCatComboBox);
+		catLayout.addComponent(m_notifCatComboBox);
+		catLayout.addComponent(m_threshCatComboBox);
+		catLayout.addComponent(m_slaCatComboBox);
 		
 		HorizontalLayout profLayout = new HorizontalLayout();
 		profLayout.setSizeFull();
-		profLayout.addComponent(snmpComboBox);
-		profLayout.addComponent(backupComboBox);
+		profLayout.addComponent(getSnmpComboBox());
+		profLayout.addComponent(m_backupComboBox);
 		
 		HorizontalLayout generalInfo = new HorizontalLayout();
 		generalInfo.addComponent(leftGeneralInfo);
@@ -572,7 +467,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 		HorizontalLayout catLayout4 = new HorizontalLayout();
 		catLayout4.setSizeFull();
-		catLayout4.addComponent(optionalGroup);
+		catLayout4.addComponent(m_optionalGroup);
 
 		FormLayout optionCat = new FormLayout();
 		optionCat.addComponent(new Label("Option Categories"));
@@ -581,33 +476,11 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		getRight().addComponent(new Panel(generalInfo));
 		getRight().addComponent(new Panel(profileInfo));
 		getRight().addComponent(new Panel(optionCat));
-		getRight().setVisible(false);
-		
-		Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
-		if (!duplicatednodeLabels.isEmpty()) {
-			logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
-			Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicatednodeLabels.toArray()), Type.ERROR_MESSAGE);
-		}
-
-		Set<String> duplicatedForeignIds= getService().checkUniqueForeignId();
-		if (!duplicatedForeignIds.isEmpty()) {
-			logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicatedForeignIds.toArray()));
-			Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.ERROR_MESSAGE);
-		}
-
-		Set<String> duplicatedPrimaries= getService().checkUniquePrimary();
-		if (!duplicatedPrimaries.isEmpty()) {
-			logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
-			Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.ERROR_MESSAGE);
-		}
+		getRight().setVisible(false);		
 	}
 
 	@SuppressWarnings("unchecked")
-	public void selectItem(BasicNode node) {
-		m_descrComboBox.removeAllItems();
-		if (node.getDescr() != null)
-			m_descrComboBox.addItem(node.getDescr());
-		
+	public void selectItem(BasicNode node) {		
 		m_secondaryIpComboBox.removeAllItems();
 		for (String ip: getService().getIpAddresses(DashBoardUtils.TN_REQU_NAME,node.getNodeLabel()) ) {
 			if (ip.equals(node.getPrimary()))
@@ -684,4 +557,42 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				new NodeFilter(hostname, null, null, null,null));
 
 	}
+	
+	private void addSearchValueChangeListener(ComboBox box) {
+		box.addValueChangeListener(new Property.ValueChangeListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -3559078865783782719L;
+
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				getRequisitionContainer().removeAllContainerFilters();
+				getRequisitionContainer().addContainerFilter(
+						new NodeFilter(m_searchText, 
+								m_networkCatSearchComboBox.getValue(),
+								m_notifCatSearchComboBox.getValue(),
+								m_threshCatSearchComboBox.getValue(),
+								m_slaCatSearchComboBox.getValue()));
+			}
+		});
+	}
+	
+	private void addSearchValueChangeListener(TextField box) {
+		m_searchField.addTextChangeListener(new TextChangeListener() {
+			private static final long serialVersionUID = 1L;
+			public void textChange(final TextChangeEvent event) {
+				m_searchText = event.getText();
+				getRequisitionContainer().removeAllContainerFilters();
+				getRequisitionContainer().addContainerFilter(
+						new NodeFilter(m_searchText, 
+								m_networkCatSearchComboBox.getValue(),
+								m_notifCatSearchComboBox.getValue(),
+								m_threshCatSearchComboBox.getValue(),
+								m_slaCatSearchComboBox.getValue()));
+			}
+		});
+	}
+
 }

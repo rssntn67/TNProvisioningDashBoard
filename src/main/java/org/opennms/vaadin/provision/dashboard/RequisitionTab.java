@@ -5,10 +5,15 @@ package org.opennms.vaadin.provision.dashboard;
 import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Property;
@@ -43,17 +48,32 @@ public abstract class RequisitionTab extends DashboardTab {
 	 */
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private static final long serialVersionUID = 4694567853140078034L;
+	
 	private VerticalLayout m_left = new VerticalLayout();;
 	private VerticalLayout m_right = new VerticalLayout();;
+	
 	private Button m_syncRequisButton  = new Button("Sync");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
+	
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
 	private Button m_removeNodeButton  = new Button("Elimina Nodo");
+	
 	private Table m_requisitionTable   	= new Table();
+	
+	private ComboBox m_descrComboBox = new ComboBox("Descrizione");
+	private ComboBox m_parentComboBox = new ComboBox("Dipende da");
 	private TextField m_hostname = new TextField("Hostname");
 	private TextField m_primary = new TextField(DashBoardUtils.PRIMARY);
 	private ComboBox m_domainComboBox = new ComboBox("Dominio");
+
+	private ComboBox m_snmpComboBox  = new ComboBox("SNMP Profile");
+
+	private TextField m_city = new TextField("Citta'");
+	private TextField m_address = new TextField("Indirizzo");
+	private TextField m_building = new TextField("Edificio");
+
+
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
@@ -117,6 +137,15 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_primary.addValidator(new IpValidator());
 		m_primary.addValidator(new DuplicatedPrimaryValidator());
 
+		m_descrComboBox.setInvalidAllowed(false);
+		m_descrComboBox.setNullSelectionAllowed(false);
+		m_descrComboBox.setWidth(8, Unit.CM);
+
+		m_parentComboBox.setInvalidAllowed(false);
+		m_parentComboBox.setNullSelectionAllowed(true);
+		for (String nodelabel :getService().getNodeLabels())
+			m_parentComboBox.addItem(nodelabel);
+		
 		m_domainComboBox.setInvalidAllowed(false);
 		m_domainComboBox.setNullSelectionAllowed(false);
 		m_domainComboBox.setRequired(true);
@@ -178,6 +207,10 @@ public abstract class RequisitionTab extends DashboardTab {
 						node.setValid(false);
 					node.setSnmpProfileWithOutUpdating(snmpProfile);
 				}
+				m_descrComboBox.removeAllItems();
+				if (node.getDescr() != null)
+					m_descrComboBox.addItem(node.getDescr());
+
 				selectItem(node);
 				getRight().setVisible(true);
 				enableNodeButtons();
@@ -185,6 +218,32 @@ public abstract class RequisitionTab extends DashboardTab {
 				
 			}
 		});
+		
+		m_city.setWidth(8, Unit.CM);
+		m_city.setHeight(6, Unit.MM);
+		
+		m_address.setWidth(8, Unit.CM);
+		m_address.setHeight(6, Unit.MM);
+
+		m_building.setWidth(8, Unit.CM);
+		m_building.setHeight(6, Unit.MM);
+		
+		m_snmpComboBox.setInvalidAllowed(false);
+		m_snmpComboBox.setNullSelectionAllowed(false);
+		m_snmpComboBox.setRequired(true);
+		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
+
+		Map<String,SnmpProfile> snmpprofilemap = 
+				getService().getSnmpProfileContainer().getSnmpProfileMap();
+		List<String> snmpprofiles = new ArrayList<String>(snmpprofilemap.keySet());
+		Collections.sort(snmpprofiles);
+		for (String snmpprofile: snmpprofiles) {
+			m_snmpComboBox.addItem(snmpprofile);
+			m_snmpComboBox.setItemCaption(snmpprofile, 
+					snmpprofile + 
+					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
+					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
+		}
 	}
 		
 	public abstract void selectItem(BasicNode node);
@@ -211,30 +270,6 @@ public abstract class RequisitionTab extends DashboardTab {
 	    } else if (event.getButton() == m_resetNodeButton) {
 	    	reset();
 	    }
-	}
-
-	public Table getRequisitionTable() {
-		return m_requisitionTable;
-	}
-	
-	public VerticalLayout getLeft() {
-		return m_left;
-	}
-	
-	public VerticalLayout getRight() {
-		return m_right;
-	}
-
-	public TextField getHostName() {
-		return m_hostname;
-	}
-	
-	public TextField getPrimary() {
-		return m_primary;
-	}
-	
-	public ComboBox getDomain() {
-		return m_domainComboBox;
 	}
 	
 	public void enableNodeButtons() {
@@ -264,6 +299,9 @@ public abstract class RequisitionTab extends DashboardTab {
 		cleanSearchBox();
 		BasicNode bean = addBean();
 		m_requisitionTable.select(bean.getNodeLabel());
+		m_descrComboBox.removeAllItems();
+		if (bean.getDescr() != null)
+			m_descrComboBox.addItem(bean.getDescr());
 		selectItem(bean);
 		getRequisitionContainer().removeAllContainerFilters();
 		m_hostname.focus();
@@ -446,5 +484,52 @@ public abstract class RequisitionTab extends DashboardTab {
 		}
 	}
 
+	public Table getRequisitionTable() {
+		return m_requisitionTable;
+	}
+	
+	public VerticalLayout getLeft() {
+		return m_left;
+	}
+	
+	public VerticalLayout getRight() {
+		return m_right;
+	}
+
+	public TextField getHostNameTextField() {
+		return m_hostname;
+	}
+	
+	public TextField getPrimaryTextField() {
+		return m_primary;
+	}
+	
+	public ComboBox getDomainComboBox() {
+		return m_domainComboBox;
+	}
+
+	public TextField getCityTextField() {
+		return m_city;
+	}
+
+	public TextField getAddressTextField() {
+		return m_address;
+	}
+
+	public TextField getBuildingTextField() {
+		return m_building;
+	}
+
+	public ComboBox getSnmpComboBox() {
+		return m_snmpComboBox;
+	}
+
+	public ComboBox getDescrComboBox() {
+		return m_descrComboBox;
+	}
+
+	public ComboBox getParentComboBox() {
+		return m_parentComboBox;
+	}
 
 }
