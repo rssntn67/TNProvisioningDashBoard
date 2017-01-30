@@ -84,10 +84,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 
 	private static final long serialVersionUID = 508580392774265535L;
 	private final static Logger logger = Logger.getLogger(DashBoardSessionService.class.getName());	
-			
+
+	private Map<String,IpSnmpProfile> m_ipSnmpMap = new HashMap<String, IpSnmpProfile>();
+
 	private Map<String,String> m_foreignIdNodeLabelMap = new HashMap<String, String>();
 	private Map<String,String> m_nodeLabelForeignIdMap = new HashMap<String, String>();
-	private Map<String,IpSnmpProfile> m_ipSnmpMap = new HashMap<String, IpSnmpProfile>();
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
 
 	final private OnmsDao m_onmsDao;
@@ -176,6 +177,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
         m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
+
+		m_ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
 
 		TableQuery snmptq = new TableQuery("snmpprofiles", m_pool);
 		snmptq.setVersionColumn("versionid");
@@ -413,8 +416,14 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			String manufacturer = null;
 			if (node.getAsset(DashBoardUtils.MANUFACTURER) != null)
 				manufacturer = node.getAsset(DashBoardUtils.MANUFACTURER).getValue();
+			
+			String snmpProfile = null;
+			if (primary != null && m_ipSnmpMap.containsKey(primary))
+				snmpProfile= m_ipSnmpMap.get(primary).getSnmprofile();
+
+			
 			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, 
-					null,null,
+					null,snmpProfile,
 					vrf, primary, 
 					serverLevelCategory, managedByCategory, notifCategory, optionalCategory, 
 					prodCategory, tnCategory, 
@@ -446,7 +455,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
     	m_primaryipcollection.clear();
-		m_ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
 
 		for (RequisitionNode node : req.getNodes()) {
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
