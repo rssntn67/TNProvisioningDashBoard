@@ -21,6 +21,7 @@ import com.vaadin.data.Item;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
@@ -250,7 +251,6 @@ public class MediaGatewayTab extends RequisitionTab {
 		return "MediaGatewayTab";
 	}
 
-	@Override
 	public String getRequisitionName() {
 		return DashBoardUtils.TN_REQU_NAME;
 	}
@@ -284,5 +284,13 @@ public class MediaGatewayTab extends RequisitionTab {
 
 	}
 
+	@Override
+	public BeanItemContainer<RequisitionUpdateNode> getUpdates() {
+		BeanItemContainer<RequisitionUpdateNode> updates 
+		= new BeanItemContainer<RequisitionTab.RequisitionUpdateNode>(RequisitionUpdateNode.class);
+		for (BasicNode node: getService().getUpdatesMGMap().values()) 
+			updates.addBean(new RequisitionUpdateNode(node));
+		return updates;
+	}
 
 }

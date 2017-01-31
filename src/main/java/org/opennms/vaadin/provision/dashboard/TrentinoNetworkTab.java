@@ -26,6 +26,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
@@ -517,7 +518,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		return "TNTab";
 	}
 
-	@Override
 	public String getRequisitionName() {
 		return DashBoardUtils.TN_REQU_NAME;
 	}
@@ -594,4 +594,12 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		});
 	}
 
+	@Override
+	public BeanItemContainer<RequisitionUpdateNode> getUpdates() {
+		BeanItemContainer<RequisitionUpdateNode> updates 
+		= new BeanItemContainer<RequisitionTab.RequisitionUpdateNode>(RequisitionUpdateNode.class);
+		for (BasicNode node: getService().getUpdatesTNMap().values()) 
+			updates.addBean(new RequisitionUpdateNode(node));
+		return updates;
+	}
 }

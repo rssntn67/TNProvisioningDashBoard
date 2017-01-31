@@ -22,6 +22,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification.Type;
@@ -33,6 +34,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 /* 
@@ -43,6 +45,86 @@ import com.vaadin.ui.VerticalLayout;
  */
 public abstract class RequisitionTab extends DashboardTab {
 
+	public class RequisitionUpdateNode {
+		final private boolean NEW;
+		final private boolean DELETE;
+		final private boolean UPDATE;
+		final private boolean SYNCTRUE;
+		final private boolean SYNCFALSE;
+		final private boolean SYNCDBONLY;
+		
+		public RequisitionUpdateNode(BasicNode node) {
+			switch (node.getOnmstate()) {
+				case NEW:
+					NEW=true;
+					DELETE=false;
+					UPDATE=false;
+					break;
+				case DELETE:
+					NEW=false;
+					DELETE=true;
+					UPDATE=false;
+					break;
+				case UPDATE:
+					NEW=false;
+					DELETE=false;
+					UPDATE=true;
+					break;
+				case NONE:
+					NEW=false;
+					DELETE=false;
+					UPDATE=false;
+					break;
+				default:
+					NEW=false;
+					DELETE=false;
+					UPDATE=false;					
+			}
+			
+			
+			if (node.getSyncOperations().contains(BasicNode.OnmsSync.DBONLY))
+				SYNCDBONLY=true;
+			else
+				SYNCDBONLY=false;
+
+			if (node.getSyncOperations().contains(BasicNode.OnmsSync.TRUE))
+				SYNCTRUE=true;
+			else
+				SYNCTRUE=false;
+			
+			if (node.getSyncOperations().contains(BasicNode.OnmsSync.FALSE))
+				SYNCFALSE=true;
+			else
+				SYNCFALSE=false;
+
+		}
+
+		public boolean isNEW() {
+			return NEW;
+		}
+
+		public boolean isDELETE() {
+			return DELETE;
+		}
+
+		public boolean isUPDATE() {
+			return UPDATE;
+		}
+
+		public boolean isSYNCTRUE() {
+			return SYNCTRUE;
+		}
+
+		public boolean isSYNCFALSE() {
+			return SYNCFALSE;
+		}
+
+		public boolean isSYNCDBONLY() {
+			return SYNCDBONLY;
+		}
+		
+		
+	}
 	/**
 	 * 
 	 */
@@ -247,14 +329,13 @@ public abstract class RequisitionTab extends DashboardTab {
 	}
 		
 	public abstract void selectItem(BasicNode node);
-	public abstract String getRequisitionName();
 	public abstract void applyFilter(String filter);
 	public abstract void cleanSearchBox();
 	public abstract BeanContainer<String,? extends BasicNode> getRequisitionContainer();
 	public abstract BasicNode addBean();
 	public abstract BeanFieldGroup<? extends BasicNode> getBeanFieldGroup();
-	
-
+	public abstract String getRequisitionName();
+	public abstract BeanItemContainer<RequisitionUpdateNode> getUpdates();
 		
 	@Override
 	public void buttonClick(ClickEvent event) {
@@ -285,14 +366,11 @@ public abstract class RequisitionTab extends DashboardTab {
 	}
 
 	private void sync() {
-		try {
-			getService().sync(getRequisitionName());
-			logger.info("Sync succeed foreign source: " +getRequisitionName());
-			Notification.show("Sync " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
-		} catch (Exception e) {
-			logger.warning("Sync Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
-			Notification.show("Sync Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-		}		
+		SyncWindow subWindow = new SyncWindow(this);
+        subWindow.center();
+
+        // Open it in the UI
+        UI.getCurrent().addWindow(subWindow);
 	}
 
 	private void  newNode() {
@@ -530,5 +608,39 @@ public abstract class RequisitionTab extends DashboardTab {
 	public ComboBox getParentComboBox() {
 		return m_parentComboBox;
 	}
+	
+	public void synctrue() {
+		try {
+			getService().synctrue(getRequisitionName());
+			logger.info("Sync succeed foreign source: " +getRequisitionName());
+			Notification.show("Sync " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
+			Notification.show("Sync Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}						
+	}
+
+	public void syncfalse() {
+		try {
+			getService().syncfalse(getRequisitionName());
+			logger.info("Sync rescanExisting=false succeed foreign source: " +getRequisitionName());
+			Notification.show("Sync rescanExisting=false " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync rescanExisting=false Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
+			Notification.show("Sync rescanExisting=false Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}				
+	}
+
+	public void syncdbonly() {
+		try {
+			getService().syncdbonly(getRequisitionName());
+			logger.info("Sync rescanExisting=dbonly succeed foreign source: " +getRequisitionName());
+			Notification.show("Sync rescanExisting=dbonly " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync rescanExisting=dbonly Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
+			Notification.show("Sync rescanExisting=dbonly Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}						
+	}
+
 
 }

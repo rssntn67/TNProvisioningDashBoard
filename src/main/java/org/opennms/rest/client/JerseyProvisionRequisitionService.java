@@ -213,14 +213,14 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 	}
 
 	@Override
-	public void syncWithOutScanning(String name) {
+	public void syncRescanExistingFalse(String name) {
 		MultivaluedMap<String, String> mvm = new MultivaluedMapImpl();
 		mvm.add("rescanExisting", "false");
 		getJerseyClient().put(mvm, buildImportPath(name));
 	}
 
 	@Override
-	public void syncDb(String name) {
+	public void syncDbOnly(String name) {
 		MultivaluedMap<String, String> mvm = new MultivaluedMapImpl();
 		mvm.add("rescanExisting", "dbonly");
 		getJerseyClient().put(mvm, buildImportPath(name));

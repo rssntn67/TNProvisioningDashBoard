@@ -4,6 +4,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.dashboard.RequisitionTab.RequisitionUpdateNode;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 
@@ -18,6 +19,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
@@ -574,7 +576,6 @@ public class SistemiInformativiTab extends RequisitionTab {
 
 	}
 
-	@Override
 	public String getRequisitionName() {
 		return DashBoardUtils.SI_REQU_NAME;
 	}
@@ -656,5 +657,15 @@ public class SistemiInformativiTab extends RequisitionTab {
 			}
 		});
 	}
+	
+	@Override
+	public BeanItemContainer<RequisitionUpdateNode> getUpdates() {
+		BeanItemContainer<RequisitionUpdateNode> updates 
+		= new BeanItemContainer<RequisitionTab.RequisitionUpdateNode>(RequisitionUpdateNode.class);
+		for (BasicNode node: getService().getUpdatesSIMap().values()) 
+			updates.addBean(new RequisitionUpdateNode(node));
+		return updates;
+	}
+
 
 }

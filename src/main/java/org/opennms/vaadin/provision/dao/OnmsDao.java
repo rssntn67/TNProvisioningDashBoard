@@ -124,6 +124,15 @@ public class OnmsDao {
 	}
 	
 	public void sync(String foreignSource) {
-		m_provisionService.syncWithOutScanning(foreignSource);
+		m_provisionService.sync(foreignSource);
 	}
+	
+	public void syncRescanExistingFalse(String foreignSource) {
+		m_provisionService.syncRescanExistingFalse(foreignSource);
+	}
+
+	public void syncDbOnly(String foreignSource) {
+		m_provisionService.syncDbOnly(foreignSource);
+	}
+
 }

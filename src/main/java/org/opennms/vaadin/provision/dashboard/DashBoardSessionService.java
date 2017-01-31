@@ -92,6 +92,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
 	private Map<String,BasicNode> m_updatesTNMap = new HashMap<String, BasicNode>();
 	private Map<String,BasicNode> m_updatesSIMap = new HashMap<String, BasicNode>();
+	private Map<String,BasicNode> m_updatesMGMap = new HashMap<String, BasicNode>();
 	
 	final private OnmsDao m_onmsDao;
 	private JDBCConnectionPool m_pool; 
@@ -1739,10 +1740,18 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     	return getJobContainer().isFastRunning();
     }
     
-    public void sync(String foregnSource) {
+    public void synctrue(String foregnSource) {
     	m_onmsDao.sync(foregnSource);
     }
 
+    public void syncdbonly(String foregnSource) {
+    	m_onmsDao.syncDbOnly(foregnSource);
+    }
+
+    public void syncfalse(String foregnSource) {
+    	m_onmsDao.syncRescanExistingFalse(foregnSource);
+    }
+    
 	public String getUrl() {
 		return m_url;
 	}
@@ -1779,7 +1788,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_updatesTNMap.put(node.getForeignId(), node);
 		} else if (node instanceof MediaGatewayNode) {
 			update((MediaGatewayNode)node);
-			m_updatesTNMap.put(node.getForeignId(), node);
+			m_updatesMGMap.put(node.getForeignId(), node);
 		} else if (node instanceof SistemiInformativiNode) {	
 			update((SistemiInformativiNode)node);
 			m_updatesSIMap.put(node.getForeignId(), node);
@@ -1792,7 +1801,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_updatesTNMap.put(node.getForeignId(), node);
 		} else if (node instanceof MediaGatewayNode) {
 			add((MediaGatewayNode)node);
-			m_updatesTNMap.put(node.getForeignId(), node);
+			m_updatesMGMap.put(node.getForeignId(), node);
 		} else if (node instanceof SistemiInformativiNode) {	
 			add((SistemiInformativiNode)node);
 			m_updatesSIMap.put(node.getForeignId(), node);
@@ -1806,7 +1815,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_updatesTNMap.put(node.getForeignId(), node);
 		} else if (node instanceof MediaGatewayNode) {
 			delete((MediaGatewayNode)node);
-			m_updatesTNMap.put(node.getForeignId(), node);
+			m_updatesMGMap.put(node.getForeignId(), node);
 		} else if (node instanceof SistemiInformativiNode) {
 			delete((SistemiInformativiNode)node);
 			m_updatesSIMap.put(node.getForeignId(), node);
@@ -1817,16 +1826,24 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return m_updatesTNMap;
 	}
 
-	public void setUpdatesTNMap(Map<String, BasicNode> updatesTNMap) {
-		m_updatesTNMap = updatesTNMap;
+	public void setUpdatesTNMap(Map<String, BasicNode> updatesMap) {
+		m_updatesTNMap = updatesMap;
+	}
+
+	public Map<String, BasicNode> getUpdatesMGMap() {
+		return m_updatesMGMap;
+	}
+
+	public void setUpdatesMGMap(Map<String, BasicNode> updatesMap) {
+		m_updatesMGMap = updatesMap;
 	}
 
 	public Map<String, BasicNode> getUpdatesSIMap() {
 		return m_updatesSIMap;
 	}
 
-	public void setUpdatesSIMap(Map<String, BasicNode> updatesSIMap) {
-		m_updatesSIMap = updatesSIMap;
+	public void setUpdatesSIMap(Map<String, BasicNode> updatesMap) {
+		m_updatesSIMap = updatesMap;
 	}
 
 }
