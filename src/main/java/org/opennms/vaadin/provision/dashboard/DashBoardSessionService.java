@@ -90,7 +90,9 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private Map<String,String> m_foreignIdNodeLabelMap = new HashMap<String, String>();
 	private Map<String,String> m_nodeLabelForeignIdMap = new HashMap<String, String>();
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
-
+	private Map<String,BasicNode> m_updatesTNMap = new HashMap<String, BasicNode>();
+	private Map<String,BasicNode> m_updatesSIMap = new HashMap<String, BasicNode>();
+	
 	final private OnmsDao m_onmsDao;
 	private JDBCConnectionPool m_pool; 
 	private DashBoardConfig m_config;
@@ -1772,30 +1774,59 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	}
 
 	public void update(BasicNode node) {
-		if (node instanceof TrentinoNetworkNode ) 
+		if (node instanceof TrentinoNetworkNode ) {
 			update((TrentinoNetworkNode)node);
-		else if (node instanceof MediaGatewayNode)
+			m_updatesTNMap.put(node.getForeignId(), node);
+		} else if (node instanceof MediaGatewayNode) {
 			update((MediaGatewayNode)node);
-		else if (node instanceof SistemiInformativiNode)	
+			m_updatesTNMap.put(node.getForeignId(), node);
+		} else if (node instanceof SistemiInformativiNode) {	
 			update((SistemiInformativiNode)node);
+			m_updatesSIMap.put(node.getForeignId(), node);
+		}
 	}
 	
 	public void add(BasicNode node) throws SQLException {
-		if (node instanceof TrentinoNetworkNode ) 
+		if (node instanceof TrentinoNetworkNode ) {
 			add((TrentinoNetworkNode)node);
-		else if (node instanceof MediaGatewayNode)
+			m_updatesTNMap.put(node.getForeignId(), node);
+		} else if (node instanceof MediaGatewayNode) {
 			add((MediaGatewayNode)node);
-		else if (node instanceof SistemiInformativiNode)	
+			m_updatesTNMap.put(node.getForeignId(), node);
+		} else if (node instanceof SistemiInformativiNode) {	
 			add((SistemiInformativiNode)node);
+			m_updatesSIMap.put(node.getForeignId(), node);
+		}
 	}
 
 	public void delete(BasicNode node) {
-		if (node instanceof TrentinoNetworkNode ) 
+		node.setDeleteState();
+		if (node instanceof TrentinoNetworkNode ) {
 			delete((TrentinoNetworkNode)node);
-		else if (node instanceof MediaGatewayNode)
+			m_updatesTNMap.put(node.getForeignId(), node);
+		} else if (node instanceof MediaGatewayNode) {
 			delete((MediaGatewayNode)node);
-		else if (node instanceof SistemiInformativiNode)	
+			m_updatesTNMap.put(node.getForeignId(), node);
+		} else if (node instanceof SistemiInformativiNode) {
 			delete((SistemiInformativiNode)node);
+			m_updatesSIMap.put(node.getForeignId(), node);
+		}
+	}
+
+	public Map<String, BasicNode> getUpdatesTNMap() {
+		return m_updatesTNMap;
+	}
+
+	public void setUpdatesTNMap(Map<String, BasicNode> updatesTNMap) {
+		m_updatesTNMap = updatesTNMap;
+	}
+
+	public Map<String, BasicNode> getUpdatesSIMap() {
+		return m_updatesSIMap;
+	}
+
+	public void setUpdatesSIMap(Map<String, BasicNode> updatesSIMap) {
+		m_updatesSIMap = updatesSIMap;
 	}
 
 }

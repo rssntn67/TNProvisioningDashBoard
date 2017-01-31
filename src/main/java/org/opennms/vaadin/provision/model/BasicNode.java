@@ -11,12 +11,27 @@ import java.util.Set;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 
 public class BasicNode implements Serializable {
+	public enum OnmsState {
+		NEW,
+		DELETE,
+		UPDATE,
+		NONE;
+	}
+	
+	public enum OnmsSync {
+		DBONLY,
+		FALSE,
+		TRUE;		
+	}
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3824402168422477329L;
 	
+	private Set<OnmsSync> m_syncoperations = new HashSet<BasicNode.OnmsSync>();
+	private OnmsState m_onmstate = OnmsState.NONE;
+
 	// This contains all the ip->service in secondary table but does not contain primary->icmp and primary-snmp
 	private Map<String,Set<String>> m_serviceMap;  
 
@@ -56,6 +71,7 @@ public class BasicNode implements Serializable {
 		
 		m_valid=false;
 		m_serviceMap = new HashMap<String, Set<String>>();
+		m_onmstate = OnmsState.NEW;
 	}
 
 	public BasicNode(String label, String vrf, String snmpProfile) {
@@ -73,6 +89,7 @@ public class BasicNode implements Serializable {
 		
 		m_valid=false;
 		m_serviceMap = new HashMap<String, Set<String>>();
+		m_onmstate = OnmsState.NEW;
 	}
 
 	public BasicNode(
@@ -157,6 +174,7 @@ public class BasicNode implements Serializable {
 			return;		
 		m_parent = parentNodeLabel;
 		m_updatemap.add(DashBoardUtils.PARENT);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 	
 	public String getCity() {
@@ -166,8 +184,10 @@ public class BasicNode implements Serializable {
 	public void setCity(String city) {
 		if (m_city != null && m_city.equals(city))
 			return;
-		if (city != null)
+		if (city != null) {
 			m_updatemap.add(DashBoardUtils.CITY);
+			setOnmsSyncOperations(OnmsSync.DBONLY);
+		}
 		m_city = city;		
 	}
 
@@ -180,6 +200,7 @@ public class BasicNode implements Serializable {
 			return;
 		m_vrf = vrf;
 		m_updatemap.add(DashBoardUtils.CAT);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 
     public String getDescr() {
@@ -215,6 +236,7 @@ public class BasicNode implements Serializable {
 			return;
 		if (address != null ) {
 			m_updatemap.add(DashBoardUtils.ADDRESS1);
+			setOnmsSyncOperations(OnmsSync.DBONLY);
 		}
 		m_address1 = address;
 	}
@@ -229,6 +251,7 @@ public class BasicNode implements Serializable {
 		m_label = null;
 		m_hostname = hostname;
 		m_updatemap.add(DashBoardUtils.HOST);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 
 	public String getPrimary() {
@@ -251,7 +274,7 @@ public class BasicNode implements Serializable {
 			m_serviceToAdd.put(primary, new HashSet<String>());
 		m_serviceToAdd.get(primary).add("ICMP");
 		m_updatemap.add(DashBoardUtils.PRIMARY);
-		
+		setOnmsSyncOperations(OnmsSync.TRUE);		
 		m_primary = primary;
 	}
 
@@ -282,6 +305,7 @@ public class BasicNode implements Serializable {
 			return;
 		if (building != null ) {
 			m_updatemap.add(DashBoardUtils.BUILDING);
+			setOnmsSyncOperations(OnmsSync.DBONLY);
 		}
 		m_building = building;
 	}
@@ -301,6 +325,7 @@ public class BasicNode implements Serializable {
 		if (!m_serviceToAdd.containsKey(ip))
 			m_serviceToAdd.put(ip, new HashSet<String>());
 		m_serviceToAdd.get(ip).add(service);
+		setOnmsSyncOperations(OnmsSync.FALSE);
 	}
 
 	public void delService(String ip, String service) {
@@ -322,7 +347,8 @@ public class BasicNode implements Serializable {
 			if (!m_serviceToDel.containsKey(ip))
 				m_serviceToDel.put(ip, new HashSet<String>());
 			m_serviceToDel.get(ip).add(service);
-		}			
+		}
+		setOnmsSyncOperations(OnmsSync.FALSE);
 	}
 	
 	public Map<String,Set<String>> getServiceMap() {
@@ -340,6 +366,37 @@ public class BasicNode implements Serializable {
 			service.add("ICMP");
 			m_serviceMap.put(ip, service);
 		}
+		setOnmsSyncOperations(OnmsSync.FALSE);
+
+	}	
+	
+	public Set<OnmsSync> getSyncOperations() {
+		return m_syncoperations;
 	}
+
+	public void setDeleteState() {
+		m_syncoperations.clear();
+		m_syncoperations.add(OnmsSync.FALSE);
+		m_onmstate = OnmsState.DELETE;
+	}
+
+	public void setUpdateState() {
+		m_onmstate = OnmsState.UPDATE;
+	}
+
+	public OnmsState getOnmstate() {
+		return m_onmstate;
+	}
+	
+	public void setOnmsSyncOperations(OnmsSync syncoperation) {
+		if (m_onmstate == OnmsState.DELETE || m_onmstate == OnmsState.NEW) {
+			m_syncoperations.clear();
+			m_syncoperations.add(OnmsSync.FALSE);
+		} else {
+			m_onmstate = OnmsState.UPDATE;
+			m_syncoperations.add(syncoperation);
+		}
+	}
+
 
 }

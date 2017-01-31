@@ -75,6 +75,7 @@ public class TrentinoNetworkNode extends BasicNode {
 		if (networkCategory == null && m_networkCategory != null){
 			m_categoriesToDel.add(m_networkCategory.getName());
 			m_categoriesToDel.add(m_networkCategory.getNetworklevel());
+			setOnmsSyncOperations(OnmsSync.TRUE);
 			m_networkCategory = networkCategory;
 			return;
 		}
@@ -82,6 +83,7 @@ public class TrentinoNetworkNode extends BasicNode {
 		if (networkCategory != null && m_networkCategory == null){
 			m_categoriesToAdd.add(networkCategory.getName());
 			m_categoriesToAdd.add(networkCategory.getNetworklevel());
+			setOnmsSyncOperations(OnmsSync.TRUE);
 			m_networkCategory = networkCategory;
 			return;
 		}
@@ -89,6 +91,8 @@ public class TrentinoNetworkNode extends BasicNode {
 		if (networkCategory.getName().equals(m_networkCategory.getName()))
 			return;
 		
+
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_categoriesToDel.add(m_networkCategory.getName());
 		m_categoriesToAdd.add(networkCategory.getName());
 		
@@ -106,6 +110,7 @@ public class TrentinoNetworkNode extends BasicNode {
 	public void setNotifCategory(String notifCategory) {
 		if (notifCategory != null && notifCategory.equals(m_notifCategory))
 			return;
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		if (m_notifCategory != null) {
 			m_categoriesToDel.add(m_notifCategory);
 		}
@@ -122,6 +127,7 @@ public class TrentinoNetworkNode extends BasicNode {
 	public void setThreshCategory(String threshCategory) {
 		if (threshCategory != null && threshCategory.equals(m_threshCategory))
 			return;
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		if (m_threshCategory != null) {
 			m_categoriesToDel.add(m_threshCategory);
 		}
@@ -138,6 +144,7 @@ public class TrentinoNetworkNode extends BasicNode {
 	public void setBackupProfile(String backupProfile) {
 		if (m_backupProfile != null && m_backupProfile.equals(backupProfile))
 			return;
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_updatemap.add(DashBoardUtils.BACKUP_PROFILE);
 		m_backupProfile = backupProfile;
 	}
@@ -152,6 +159,7 @@ public class TrentinoNetworkNode extends BasicNode {
 		if (m_circuitId ==  null && circuitId == null)
 			return;
 		if (circuitId != null ) {
+			setOnmsSyncOperations(OnmsSync.DBONLY);
 			m_updatemap.add(DashBoardUtils.CIRCUITID);
 		}
 		m_circuitId = circuitId;
@@ -164,6 +172,7 @@ public class TrentinoNetworkNode extends BasicNode {
 	public void setSlaCategory(String slaCategory) {
 		if (slaCategory != null && slaCategory.equals(m_slaCategory))
 			return;
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		if (m_slaCategory != null) {
 			m_categoriesToDel.add(m_slaCategory);
 		}
@@ -176,6 +185,7 @@ public class TrentinoNetworkNode extends BasicNode {
 	public void setOptionalCategory(Set<String> optionalCategory) {
 		if (m_optionalCategory != null && m_optionalCategory.equals(optionalCategory) )
 			return;
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		if (m_optionalCategory != null)
 			m_categoriesToDel.addAll(m_optionalCategory);
 		if (optionalCategory != null)

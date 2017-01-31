@@ -46,6 +46,7 @@ public class MediaGatewayNode extends BasicNode {
 	public void setNetworkCategory(String networkCategory) {
 		if (networkCategory.equals(m_networkCategory))
 			return;
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_categoriesToDel.add(new String(m_networkCategory));
 		m_categoriesToAdd.add(networkCategory);
 		m_networkCategory = networkCategory;
@@ -58,6 +59,7 @@ public class MediaGatewayNode extends BasicNode {
 	public void setBackupProfile(String backupProfile) {
 		if (m_backupProfile != null && m_backupProfile.equals(backupProfile))
 			return;
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_updatemap.add(DashBoardUtils.BACKUP_PROFILE);
 		m_backupProfile = backupProfile;
 	}
