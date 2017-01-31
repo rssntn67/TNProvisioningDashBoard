@@ -42,7 +42,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	 */
 	private static final long serialVersionUID = -363579873686942087L;
 
-	private static final String s_panellogincaption="- Log In - Trentino Network Provisioning Dashboard 3.0.2 RC 01 Build January 29rd 2017 12:40 CET";
+	private static final String s_panellogincaption="- Log In - Trentino Network Provisioning Dashboard 3.1.0 Build January 31st 2017 12:40 CET";
 	private Panel m_panel  = new Panel(s_panellogincaption);
     private ComboBox m_select = new ComboBox("Select Domain");
     private TextField m_username = new TextField("Username:");
