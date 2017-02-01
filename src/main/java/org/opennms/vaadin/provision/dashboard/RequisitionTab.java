@@ -46,71 +46,41 @@ import com.vaadin.ui.VerticalLayout;
 public abstract class RequisitionTab extends DashboardTab {
 
 	public class RequisitionUpdateNode {
-		final private boolean NEW;
-		final private boolean DELETE;
-		final private boolean UPDATE;
-		final private boolean SYNCTRUE;
-		final private boolean SYNCFALSE;
-		final private boolean SYNCDBONLY;
+		private String NODE;
+		private BasicNode.OnmsState STATUS;
+		private boolean SYNCTRUE=false;
+		private boolean SYNCFALSE=false;
+		private boolean SYNCDBONLY=false;
+		
+		public RequisitionUpdateNode(String nodelabel, BasicNode.OnmsState status, BasicNode.OnmsSync sync) {
+			NODE=nodelabel;
+			STATUS=status;
+			if ( sync == BasicNode.OnmsSync.DBONLY)
+				SYNCDBONLY=true;
+			else if ( sync == BasicNode.OnmsSync.TRUE)
+				SYNCTRUE=true;
+			else if (sync == BasicNode.OnmsSync.FALSE)
+				SYNCFALSE=true;
+		}
 		
 		public RequisitionUpdateNode(BasicNode node) {
-			switch (node.getOnmstate()) {
-				case NEW:
-					NEW=true;
-					DELETE=false;
-					UPDATE=false;
-					break;
-				case DELETE:
-					NEW=false;
-					DELETE=true;
-					UPDATE=false;
-					break;
-				case UPDATE:
-					NEW=false;
-					DELETE=false;
-					UPDATE=true;
-					break;
-				case NONE:
-					NEW=false;
-					DELETE=false;
-					UPDATE=false;
-					break;
-				default:
-					NEW=false;
-					DELETE=false;
-					UPDATE=false;					
-			}
-			
+			NODE=node.getNodeLabel();
+			STATUS=node.getOnmstate();
 			
 			if (node.getSyncOperations().contains(BasicNode.OnmsSync.DBONLY))
 				SYNCDBONLY=true;
-			else
-				SYNCDBONLY=false;
 
 			if (node.getSyncOperations().contains(BasicNode.OnmsSync.TRUE))
 				SYNCTRUE=true;
-			else
-				SYNCTRUE=false;
 			
 			if (node.getSyncOperations().contains(BasicNode.OnmsSync.FALSE))
 				SYNCFALSE=true;
-			else
-				SYNCFALSE=false;
-
 		}
 
-		public boolean isNEW() {
-			return NEW;
+		public String getNODE() {
+			return NODE;
 		}
-
-		public boolean isDELETE() {
-			return DELETE;
-		}
-
-		public boolean isUPDATE() {
-			return UPDATE;
-		}
-
+		
 		public boolean isSYNCTRUE() {
 			return SYNCTRUE;
 		}
@@ -122,8 +92,11 @@ public abstract class RequisitionTab extends DashboardTab {
 		public boolean isSYNCDBONLY() {
 			return SYNCDBONLY;
 		}
-		
-		
+
+		public BasicNode.OnmsState getSTATUS() {
+			return STATUS;
+		}
+				
 	}
 	/**
 	 * 
@@ -335,7 +308,6 @@ public abstract class RequisitionTab extends DashboardTab {
 	public abstract BasicNode addBean();
 	public abstract BeanFieldGroup<? extends BasicNode> getBeanFieldGroup();
 	public abstract String getRequisitionName();
-	public abstract BeanItemContainer<RequisitionUpdateNode> getUpdates();
 		
 	@Override
 	public void buttonClick(ClickEvent event) {
@@ -368,8 +340,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	private void sync() {
 		SyncWindow subWindow = new SyncWindow(this);
         subWindow.center();
-
-        // Open it in the UI
+        subWindow.setCaption("Sync Window " + getRequisitionName());
         UI.getCurrent().addWindow(subWindow);
 	}
 
@@ -617,7 +588,7 @@ public abstract class RequisitionTab extends DashboardTab {
 		} catch (Exception e) {
 			logger.warning("Sync Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
 			Notification.show("Sync Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-		}						
+		}
 	}
 
 	public void syncfalse() {
@@ -642,5 +613,15 @@ public abstract class RequisitionTab extends DashboardTab {
 		}						
 	}
 
+	public BeanItemContainer<RequisitionUpdateNode> getUpdates() {
+		BeanItemContainer<RequisitionUpdateNode> updates 
+		= new BeanItemContainer<RequisitionTab.RequisitionUpdateNode>(RequisitionUpdateNode.class);
+		for (BasicNode node: getService().getUpdatesMap(getRequisitionName()).values()) {
+			logger.warning("getUpdates: " +getRequisitionName() + "/" + node.getNodeLabel());
+			updates.addBean(new RequisitionUpdateNode(node));
+		}
+		System.out.println(updates);
+		return updates;
+	}
 
 }

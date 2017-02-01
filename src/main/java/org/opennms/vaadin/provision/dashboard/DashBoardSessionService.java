@@ -38,6 +38,7 @@ import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
@@ -90,9 +91,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private Map<String,String> m_foreignIdNodeLabelMap = new HashMap<String, String>();
 	private Map<String,String> m_nodeLabelForeignIdMap = new HashMap<String, String>();
 	private Collection<String> m_primaryipcollection = new ArrayList<String>();
-	private Map<String,BasicNode> m_updatesTNMap = new HashMap<String, BasicNode>();
-	private Map<String,BasicNode> m_updatesSIMap = new HashMap<String, BasicNode>();
-	private Map<String,BasicNode> m_updatesMGMap = new HashMap<String, BasicNode>();
+	private Map<String,Map<String,BasicNode>> m_updates = new HashMap<String, Map<String,BasicNode>>();
 	
 	final private OnmsDao m_onmsDao;
 	private JDBCConnectionPool m_pool; 
@@ -744,6 +743,15 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public void delete(SistemiInformativiNode sinode) {
 		logger.info("Deleting SI node with foreignId: " + sinode.getForeignId() + " primary: " + sinode.getPrimary());
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.SI_REQU_NAME, sinode.getForeignId());
+		if (!m_updates.containsKey(DashBoardUtils.SI_REQU_NAME))
+			m_updates.put(DashBoardUtils.SI_REQU_NAME, new HashMap<String, BasicNode>());
+		if (sinode.getOnmstate() == BasicNode.OnmsState.NEW)
+			m_updates.get(DashBoardUtils.SI_REQU_NAME).remove(sinode.getNodeLabel());
+		else {
+			sinode.setDeleteState();
+			m_updates.get(DashBoardUtils.SI_REQU_NAME).put(sinode.getNodeLabel(),sinode);			
+		}
+
 	}
 	
 	public void delete(TrentinoNetworkNode tnnode) {
@@ -758,6 +766,16 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
 		m_primaryipcollection.remove(tnnode.getPrimary());
+		
+		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
+			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
+		if (tnnode.getOnmstate() == BasicNode.OnmsState.NEW)
+			m_updates.get(DashBoardUtils.TN_REQU_NAME).remove(tnnode.getNodeLabel());
+		else {
+			tnnode.setDeleteState();
+			m_updates.get(DashBoardUtils.TN_REQU_NAME).put(tnnode.getNodeLabel(),tnnode);			
+		}
+
 	}
 
 	public void delete(MediaGatewayNode tnnode) {
@@ -768,10 +786,25 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
 		m_primaryipcollection.remove(tnnode.getPrimary());
+		
+		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
+			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
+		if (tnnode.getOnmstate() == BasicNode.OnmsState.NEW)
+			m_updates.get(DashBoardUtils.TN_REQU_NAME).remove(tnnode.getNodeLabel());
+		else {
+			tnnode.setDeleteState();
+			m_updates.get(DashBoardUtils.TN_REQU_NAME).put(tnnode.getNodeLabel(),tnnode);			
+		}
+
 		RequisitionNode mediagateway = getMediaGateway();
 		if (mediagateway == null)
 			return;
 		m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(), tnnode.getPrimary());
+		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
+		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
+		mg.setUpdateState();
+		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
+
 	}
 
 	public void delete(String foreignSource,String foreignId, String ipaddr) {
@@ -880,7 +913,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		requisitionNode.setForeignId("mediagateway");
 		requisitionNode.setNodeLabel("mediagateway");
 		requisitionNode.putCategory(new RequisitionCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY));
-		m_onmsDao.addRequisitionNode(DashBoardUtils.SIVN_REQU_NAME, requisitionNode);
+		m_onmsDao.addRequisitionNode(DashBoardUtils.SIVN_REQU_NAME, requisitionNode);		
+		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put("mediagateway", 
+				new BasicNode("mediagateway"));
+
 	}
 
 	public void add(MediaGatewayNode node) throws SQLException {
@@ -928,6 +965,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		m_primaryipcollection.add(node.getPrimary());
 		node.clear();
+		
+		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
+			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.TN_REQU_NAME).put(node.getNodeLabel(), node );
+
 		RequisitionNode mediagateway = getMediaGateway();
 		if (mediagateway == null )
 			return;
@@ -938,6 +980,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		mgiface.setDescr(node.getDescr());
 		
 		m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
+		
+		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
+		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
+		mg.setUpdateState();
+		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
 			
 	}
 
@@ -1047,7 +1094,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		node.clear();
 
+		if (!m_updates.containsKey(DashBoardUtils.SI_REQU_NAME))
+			m_updates.put(DashBoardUtils.SI_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.SI_REQU_NAME).put(node.getNodeLabel(), node );		
 	}
+	
 	public void update(SistemiInformativiNode node) {
 		Map<String, String> update = new HashMap<String, String>();
 		
@@ -1101,6 +1152,10 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				node.getCategoriesToAdd(),node.getServiceToDel(),node.getServiceToAdd());
 		node.clear();
 		
+		if (!m_updates.containsKey(DashBoardUtils.SI_REQU_NAME))
+			m_updates.put(DashBoardUtils.SI_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.SI_REQU_NAME).put(node.getNodeLabel(), node );
+		
 	}
 
 	public void update(MediaGatewayNode node) {
@@ -1134,6 +1189,10 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				node.getCategoriesToAdd(),bck);
 		node.clear();
 		
+		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
+			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.TN_REQU_NAME).put(node.getNodeLabel(), node );
+
 		RequisitionNode mediagateway = getMediaGateway();
 		if (mediagateway == null) {
 			return;
@@ -1147,7 +1206,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			mgiface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
 			mgiface.setDescr(node.getDescr());
 			m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
-		}		
+		}
+		if (node.getInterfToDel().isEmpty() && node.getInterfToAdd().isEmpty())
+			return;
+		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
+		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
+		mg.setUpdateState();
+		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
 	}
 
 	public void add(TrentinoNetworkNode node) throws SQLException {
@@ -1215,6 +1280,10 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
 		m_primaryipcollection.add(node.getPrimary());
 		node.clear();
+		
+		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
+			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.TN_REQU_NAME).put(node.getNodeLabel(), node );
 			
 	}
 
@@ -1257,6 +1326,9 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				node.getInterfToAdd(), node.getCategoriesToDel(),
 				node.getCategoriesToAdd(),bck);
 		node.clear();
+		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
+			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
+		m_updates.get(DashBoardUtils.TN_REQU_NAME).put(node.getNodeLabel(), node );
 	}
 
 	public boolean updateNonFastNode(RequisitionNode rnode,Set<String> ipaddresses) {
@@ -1742,14 +1814,17 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     
     public void synctrue(String foregnSource) {
     	m_onmsDao.sync(foregnSource);
+    	clearUpdateMap(foregnSource, OnmsSync.TRUE);
     }
 
     public void syncdbonly(String foregnSource) {
     	m_onmsDao.syncDbOnly(foregnSource);
+    	clearUpdateMap(foregnSource, OnmsSync.DBONLY);
     }
 
     public void syncfalse(String foregnSource) {
     	m_onmsDao.syncRescanExistingFalse(foregnSource);
+    	clearUpdateMap(foregnSource, OnmsSync.FALSE);
     }
     
 	public String getUrl() {
@@ -1785,65 +1860,71 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public void update(BasicNode node) {
 		if (node instanceof TrentinoNetworkNode ) {
 			update((TrentinoNetworkNode)node);
-			m_updatesTNMap.put(node.getForeignId(), node);
 		} else if (node instanceof MediaGatewayNode) {
 			update((MediaGatewayNode)node);
-			m_updatesMGMap.put(node.getForeignId(), node);
 		} else if (node instanceof SistemiInformativiNode) {	
 			update((SistemiInformativiNode)node);
-			m_updatesSIMap.put(node.getForeignId(), node);
 		}
 	}
 	
 	public void add(BasicNode node) throws SQLException {
 		if (node instanceof TrentinoNetworkNode ) {
 			add((TrentinoNetworkNode)node);
-			m_updatesTNMap.put(node.getForeignId(), node);
 		} else if (node instanceof MediaGatewayNode) {
 			add((MediaGatewayNode)node);
-			m_updatesMGMap.put(node.getForeignId(), node);
 		} else if (node instanceof SistemiInformativiNode) {	
 			add((SistemiInformativiNode)node);
-			m_updatesSIMap.put(node.getForeignId(), node);
 		}
 	}
 
 	public void delete(BasicNode node) {
-		node.setDeleteState();
 		if (node instanceof TrentinoNetworkNode ) {
 			delete((TrentinoNetworkNode)node);
-			m_updatesTNMap.put(node.getForeignId(), node);
 		} else if (node instanceof MediaGatewayNode) {
 			delete((MediaGatewayNode)node);
-			m_updatesMGMap.put(node.getForeignId(), node);
 		} else if (node instanceof SistemiInformativiNode) {
 			delete((SistemiInformativiNode)node);
-			m_updatesSIMap.put(node.getForeignId(), node);
 		}
 	}
 
-	public Map<String, BasicNode> getUpdatesTNMap() {
-		return m_updatesTNMap;
+	public Map<String, BasicNode> getUpdatesMap(String requisitionName) {
+		if (m_updates.containsKey(requisitionName))
+			return m_updates.get(requisitionName);
+		return new HashMap<String, BasicNode>();
 	}
 
-	public void setUpdatesTNMap(Map<String, BasicNode> updatesMap) {
-		m_updatesTNMap = updatesMap;
-	}
+	public void clearUpdateMap(String requisitionName, BasicNode.OnmsSync sync) {
+		Map<String, BasicNode> update = m_updates.get(requisitionName);
+		if (update == null || update.isEmpty())
+			return;
+		Map<String, BasicNode> after = new HashMap<String, BasicNode>();		
+		switch (sync) {
+			case TRUE:
+				for (BasicNode node: update.values())
+					node.setNoneState();
+				break;
+			case FALSE:
+				for (BasicNode node: update.values()) {
+					node.deleteOnmsSyncOperation(OnmsSync.FALSE);
+					if (node.getSyncOperations().isEmpty())
+						node.setNoneState();
+					else
+						after.put(node.getNodeLabel(), node);
+				}
+				m_updates.put(requisitionName, after);
+				break;
+			case DBONLY:
+				for (BasicNode node: update.values()) {
+					node.deleteOnmsSyncOperation(OnmsSync.DBONLY);
+					if (node.getSyncOperations().isEmpty())
+						node.setNoneState();
+					else
+						after.put(node.getNodeLabel(), node);
+				}
+				break;
+		}
+		update=after;
+		m_updates.put(requisitionName, update);
 
-	public Map<String, BasicNode> getUpdatesMGMap() {
-		return m_updatesMGMap;
 	}
-
-	public void setUpdatesMGMap(Map<String, BasicNode> updatesMap) {
-		m_updatesMGMap = updatesMap;
-	}
-
-	public Map<String, BasicNode> getUpdatesSIMap() {
-		return m_updatesSIMap;
-	}
-
-	public void setUpdatesSIMap(Map<String, BasicNode> updatesMap) {
-		m_updatesSIMap = updatesMap;
-	}
-
 }

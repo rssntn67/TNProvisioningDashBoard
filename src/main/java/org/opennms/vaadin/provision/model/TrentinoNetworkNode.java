@@ -172,6 +172,8 @@ public class TrentinoNetworkNode extends BasicNode {
 	public void setSlaCategory(String slaCategory) {
 		if (slaCategory != null && slaCategory.equals(m_slaCategory))
 			return;
+		if (slaCategory == null && m_slaCategory == null)
+			return;
 		setOnmsSyncOperations(OnmsSync.TRUE);
 		if (m_slaCategory != null) {
 			m_categoriesToDel.add(m_slaCategory);
@@ -184,6 +186,8 @@ public class TrentinoNetworkNode extends BasicNode {
 	
 	public void setOptionalCategory(Set<String> optionalCategory) {
 		if (m_optionalCategory != null && m_optionalCategory.equals(optionalCategory) )
+			return;
+		if (m_optionalCategory == null && optionalCategory == null )
 			return;
 		setOnmsSyncOperations(OnmsSync.TRUE);
 		if (m_optionalCategory != null)

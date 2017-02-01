@@ -384,8 +384,17 @@ public class BasicNode implements Serializable {
 		m_onmstate = OnmsState.UPDATE;
 	}
 
+	public void setNoneState() {
+		m_onmstate = OnmsState.NONE;
+		m_syncoperations.clear();
+	}
+
 	public OnmsState getOnmstate() {
 		return m_onmstate;
+	}
+
+	public void deleteOnmsSyncOperation(OnmsSync syncoperation) {
+		m_syncoperations.remove(syncoperation);
 	}
 	
 	public void setOnmsSyncOperations(OnmsSync syncoperation) {
