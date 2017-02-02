@@ -1,7 +1,10 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import org.opennms.vaadin.provision.dashboard.RequisitionTab.RequisitionUpdateNode;
+
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -32,6 +35,9 @@ public class SyncWindow extends Window implements ClickListener{
 		m_synctrue.setImmediate(true);
 		m_syncfalse.setImmediate(true);
 		m_syncfalse.setImmediate(true);
+		m_synctrue.setEnabled(false);
+		m_syncfalse.setEnabled(false);
+		m_syncdbonly.setEnabled(false);			
 		
 		VerticalLayout subContent = new VerticalLayout();
         subContent.setMargin(true);
@@ -44,19 +50,26 @@ public class SyncWindow extends Window implements ClickListener{
         subContent.addComponent(buttons);        
         //subContent.addComponent(new Panel(buttons));
         subContent.addComponent(new HorizontalLayout());
-		Table updatetable = new Table();
-		updatetable.setSelectable(false);
-		updatetable.setContainerDataSource(m_tab.getUpdates());
-		if (updatetable.getContainerDataSource().size() == 0) {
+        BeanItemContainer<RequisitionUpdateNode> container = m_tab.getUpdates();
+        if (container.size() == 0) {
 			subContent.addComponent
 			(new Label("No pending operation on Requisition"));
 			buttons.setVisible(false);
-			m_synctrue.setEnabled(false);
-			m_syncfalse.setEnabled(false);
-			m_syncdbonly.setEnabled(false);			
 		}
-		else
+		else {
+			Table updatetable = new Table();
+			updatetable.setSelectable(false);
+			updatetable.setContainerDataSource(container);
 			subContent.addComponent(new Panel(updatetable));
+			for (RequisitionUpdateNode upn: container.getItemIds()) {
+				if (upn.isSYNCDBONLY())
+					m_syncdbonly.setEnabled(true);
+				if (upn.isSYNCTRUE())
+					m_synctrue.setEnabled(true);
+				if (upn.isSYNCFALSE())
+					m_syncfalse.setEnabled(true);
+			}
+		}
 	}
 
 	@Override
