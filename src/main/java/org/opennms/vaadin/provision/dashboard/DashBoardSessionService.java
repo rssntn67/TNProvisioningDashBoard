@@ -1927,4 +1927,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_updates.put(requisitionName, update);
 
 	}
+
+	public Map<String, Map<String, BasicNode>> getUpdates() {
+		return m_updates;
+	}
 }

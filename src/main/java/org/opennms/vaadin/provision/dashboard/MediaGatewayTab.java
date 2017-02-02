@@ -120,7 +120,7 @@ public class MediaGatewayTab extends RequisitionTab {
 					backupprofile +
 					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
 		}
-
+		
 	}
 
 	@Override
@@ -173,6 +173,13 @@ public class MediaGatewayTab extends RequisitionTab {
 			m_editorFields.bind(getBuildingTextField(),DashBoardUtils.BUILDING);
 
 		}
+				
+	}
+		
+	@Override
+	public void save() {
+		Notification.show("TrentinoNetwork Sync Required", "To sync changes go to Trentino Network tab - Sync", Notification.Type.TRAY_NOTIFICATION);
+		super.save();
 	}
 	
 	private void layout() { 

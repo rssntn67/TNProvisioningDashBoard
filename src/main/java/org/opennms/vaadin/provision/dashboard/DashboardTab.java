@@ -2,15 +2,22 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 
+import java.util.Map;
+
+import org.opennms.vaadin.provision.model.BasicNode;
+
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -83,8 +90,57 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
 			return;
 		}
+		for (Map<String, BasicNode> map: m_service.getUpdates().values()) {
+			if (!map.isEmpty()) {
+				createdialogwindown();
+				return;
+			}
+		}
 		m_loginBox.logout();
 	    
+	}
+	
+	private void createdialogwindown() {
+		final Window confirm = new Window("Avviso Importante");
+		Button si = new Button("si");
+		si.addClickListener(new ClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				m_loginBox.logout();
+				confirm.close();
+			}
+		});
+		
+		Button no = new Button("no");
+		no.addClickListener(new ClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				confirm.close();
+			}
+		});
+		HorizontalLayout buttonbar = new HorizontalLayout();
+		buttonbar.addComponent(si);
+		buttonbar.addComponent(no);
+		VerticalLayout windowcontent = new VerticalLayout();
+		windowcontent.addComponent(new Label("Alcune Modifiche non sono state syncronizzate"));
+		windowcontent.addComponent(new Label("Confermi il logout?"));
+		windowcontent.addComponent(buttonbar);
+        confirm.setContent(windowcontent);
+        confirm.setModal(true);
+        UI.getCurrent().addWindow(confirm);
+		
 	}
 
 
