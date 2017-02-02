@@ -110,8 +110,6 @@ public class DashBoardService extends VaadinServletService implements Serializab
 
 	@Override
 	public void destroy() {
-		for (JDBCConnectionPool pool: m_pools)
-			pool.destroy();
 		super.destroy();
 	}
 
