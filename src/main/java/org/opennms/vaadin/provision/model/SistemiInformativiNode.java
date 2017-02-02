@@ -170,6 +170,7 @@ public class SistemiInformativiNode extends BasicNode {
 			if (m_serverLevelCategory[1] != null)
 				m_categoriesToDel.add(new String(m_serverLevelCategory[1]));
 			m_serverLevelCategory = serverLevelCategory;
+			setOnmsSyncOperations(OnmsSync.TRUE);
 			return;
 		}
 		
@@ -179,6 +180,7 @@ public class SistemiInformativiNode extends BasicNode {
 			if (serverLevelCategory[1] != null)
 				m_categoriesToAdd.add(new String(serverLevelCategory[1]));
 			m_serverLevelCategory = serverLevelCategory;
+			setOnmsSyncOperations(OnmsSync.TRUE);
 			return;
 		}
 
@@ -199,14 +201,17 @@ public class SistemiInformativiNode extends BasicNode {
 			if (serverLevelCategory[0] != null)
 				m_categoriesToAdd.add(serverLevelCategory[0]);
 		}
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_serverLevelCategory = serverLevelCategory;
 	}
 
 	public void setTrentinoNetworkCategory(String tnCategory) {
 		if (m_TrentinoNetworkCategory != null && m_TrentinoNetworkCategory.equals(tnCategory) )
 			return;
+		if (m_TrentinoNetworkCategory != null)
+			m_categoriesToDel.add(m_TrentinoNetworkCategory);
 		m_categoriesToAdd.add(tnCategory);
-		
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_TrentinoNetworkCategory = tnCategory;
 	}
 
@@ -217,7 +222,7 @@ public class SistemiInformativiNode extends BasicNode {
 			m_categoriesToDel.add(new String(m_prodCategory));
 		if (prodCategory != null)
 			m_categoriesToAdd.add(prodCategory);
-		
+		setOnmsSyncOperations(OnmsSync.TRUE);		
 		m_prodCategory = prodCategory;
 	}
 
@@ -230,6 +235,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (managedByCategory != null)
 			m_categoriesToAdd.add(managedByCategory);
 		
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_managedByCategory = managedByCategory;
 	}
 
@@ -241,6 +247,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (notifCategory != null)
 			m_categoriesToAdd.add(notifCategory);
 		
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_notifCategory = notifCategory;
 	}
 
@@ -252,6 +259,7 @@ public class SistemiInformativiNode extends BasicNode {
 			m_categoriesToDel.addAll(m_optionalCategory);
 		if (optionalCategory != null)
 			m_categoriesToAdd.addAll(optionalCategory);
+		setOnmsSyncOperations(OnmsSync.TRUE);
 		m_optionalCategory = optionalCategory;
 	}
 
@@ -261,6 +269,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (description.equals(m_description) )
 			return;
 		m_updatemap.add(DashBoardUtils.DESCRIPTION);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_description = description;
 	}
 
@@ -270,6 +279,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (leaseExpires.equals(m_leaseExpires) )
 			return;
 		m_updatemap.add(DashBoardUtils.LEASEEXPIRES);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_leaseExpires = leaseExpires;
 	}
 
@@ -279,6 +289,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (lease.equals(m_lease) )
 			return;
 		m_updatemap.add(DashBoardUtils.LEASE);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_lease = lease;
 	}
 
@@ -288,6 +299,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (vendorPhone.equals(m_vendorPhone) )
 			return;
 		m_updatemap.add(DashBoardUtils.VENDORPHONE);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_vendorPhone = vendorPhone;
 	}
 
@@ -297,6 +309,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (vendor.equals(m_vendor) )
 			return;
 		m_updatemap.add(DashBoardUtils.VENDOR);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_vendor = vendor;
 	}
 
@@ -306,6 +319,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (slot.equals(m_slot) )
 			return;
 		m_updatemap.add(DashBoardUtils.SLOT);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_slot = slot;
 	}
 
@@ -315,6 +329,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (rack.equals(m_rack) )
 			return;
 		m_updatemap.add(DashBoardUtils.RACK);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_rack = rack;
 	}
 
@@ -324,6 +339,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (room.equals(m_room) )
 			return;
 		m_updatemap.add(DashBoardUtils.ROOM);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_room = room;
 	}
 
@@ -333,6 +349,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (operatingSystem.equals(m_operatingSystem) )
 			return;
 		m_updatemap.add(DashBoardUtils.OPERATINGSYSTEM);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_operatingSystem = operatingSystem;
 	}
 
@@ -342,6 +359,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (dateInstalled.equals(m_dateInstalled) )
 			return;
 		m_updatemap.add(DashBoardUtils.DATEINSTALLED);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_dateInstalled = dateInstalled;
 	}
 
@@ -351,6 +369,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (assetNumber.equals(m_assetNumber) )
 			return;
 		m_updatemap.add(DashBoardUtils.ASSETNUMBER);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_assetNumber = assetNumber;
 	}
 
@@ -360,6 +379,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (serialNumber.equals(m_serialNumber) )
 			return;
 		m_updatemap.add(DashBoardUtils.SERIALNUMBER);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_serialNumber = serialNumber;
 	}
 
@@ -369,6 +389,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (category.equals(m_category) )
 			return;
 		m_updatemap.add(DashBoardUtils.CATEGORY);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_category = category;
 	}
 
@@ -378,6 +399,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (modelNumber.equals(m_modelNumber) )
 			return;
 		m_updatemap.add(DashBoardUtils.MODELNUMBER);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_modelNumber = modelNumber;
 	}
 
@@ -387,6 +409,7 @@ public class SistemiInformativiNode extends BasicNode {
 		if (manufacturer.equals(m_manufacturer) )
 			return;
 		m_updatemap.add(DashBoardUtils.MANUFACTURER);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_manufacturer = manufacturer;
 	}
 }
