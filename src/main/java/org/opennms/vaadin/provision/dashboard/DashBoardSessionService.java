@@ -803,6 +803,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
 		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
 		mg.setUpdateState();
+		mg.setOnmsSyncOperations(OnmsSync.FALSE);
 		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
 
 	}
@@ -984,6 +985,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
 		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
 		mg.setUpdateState();
+		mg.setOnmsSyncOperations(OnmsSync.FALSE);
 		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
 			
 	}
@@ -1212,6 +1214,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
 		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
 		mg.setUpdateState();
+		mg.setOnmsSyncOperations(OnmsSync.FALSE);
 		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
 	}
 

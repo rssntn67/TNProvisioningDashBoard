@@ -242,6 +242,8 @@ public class SistemiInformativiNode extends BasicNode {
 	public void setNotifCategory(String notifCategory) {
 		if (m_notifCategory != null && m_notifCategory.equals(notifCategory) )
 			return;
+		if (m_notifCategory == null && notifCategory == null )
+			return;
 		if (m_notifCategory != null)
 			m_categoriesToDel.add(new String(m_notifCategory));
 		if (notifCategory != null)

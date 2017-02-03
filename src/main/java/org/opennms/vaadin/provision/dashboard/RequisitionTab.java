@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SnmpProfile;
+import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Property;
@@ -45,59 +46,6 @@ import com.vaadin.ui.VerticalLayout;
  */
 public abstract class RequisitionTab extends DashboardTab {
 
-	public class RequisitionUpdateNode {
-		private String NODE;
-		private BasicNode.OnmsState STATUS;
-		private boolean SYNCTRUE=false;
-		private boolean SYNCFALSE=false;
-		private boolean SYNCDBONLY=false;
-		
-		public RequisitionUpdateNode(String nodelabel, BasicNode.OnmsState status, BasicNode.OnmsSync sync) {
-			NODE=nodelabel;
-			STATUS=status;
-			if ( sync == BasicNode.OnmsSync.DBONLY)
-				SYNCDBONLY=true;
-			else if ( sync == BasicNode.OnmsSync.TRUE)
-				SYNCTRUE=true;
-			else if (sync == BasicNode.OnmsSync.FALSE)
-				SYNCFALSE=true;
-		}
-		
-		public RequisitionUpdateNode(BasicNode node) {
-			NODE=node.getNodeLabel();
-			STATUS=node.getOnmstate();
-			
-			if (node.getSyncOperations().contains(BasicNode.OnmsSync.DBONLY))
-				SYNCDBONLY=true;
-
-			if (node.getSyncOperations().contains(BasicNode.OnmsSync.TRUE))
-				SYNCTRUE=true;
-			
-			if (node.getSyncOperations().contains(BasicNode.OnmsSync.FALSE))
-				SYNCFALSE=true;
-		}
-
-		public String getNODE() {
-			return NODE;
-		}
-		
-		public boolean isSYNCTRUE() {
-			return SYNCTRUE;
-		}
-
-		public boolean isSYNCFALSE() {
-			return SYNCFALSE;
-		}
-
-		public boolean isSYNCDBONLY() {
-			return SYNCDBONLY;
-		}
-
-		public BasicNode.OnmsState getSTATUS() {
-			return STATUS;
-		}
-				
-	}
 	/**
 	 * 
 	 */
@@ -340,7 +288,8 @@ public abstract class RequisitionTab extends DashboardTab {
 	private void sync() {
 		SyncWindow subWindow = new SyncWindow(this);
         subWindow.center();
-        subWindow.setCaption("Sync Window " + getRequisitionName());
+        subWindow.setWidth("600px");
+        subWindow.setCaption("Sincronizzazione dei nodi " + getRequisitionName());
         UI.getCurrent().addWindow(subWindow);
 	}
 
@@ -580,6 +529,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		return m_parentComboBox;
 	}
 	
+	public BeanItemContainer<SyncOperationNode> getUpdates() {
+		return getUpdates(getService().getUpdatesMap(getRequisitionName()).values());
+	}
+
 	public void synctrue() {
 		try {
 			getService().synctrue(getRequisitionName());
@@ -611,17 +564,6 @@ public abstract class RequisitionTab extends DashboardTab {
 			logger.warning("Sync rescanExisting=dbonly Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
 			Notification.show("Sync rescanExisting=dbonly Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 		}						
-	}
-
-	public BeanItemContainer<RequisitionUpdateNode> getUpdates() {
-		BeanItemContainer<RequisitionUpdateNode> updates 
-		= new BeanItemContainer<RequisitionTab.RequisitionUpdateNode>(RequisitionUpdateNode.class);
-		for (BasicNode node: getService().getUpdatesMap(getRequisitionName()).values()) {
-			logger.warning("getUpdates: " +getRequisitionName() + "/" + node.getNodeLabel());
-			updates.addBean(new RequisitionUpdateNode(node));
-		}
-		System.out.println(updates);
-		return updates;
 	}
 
 }

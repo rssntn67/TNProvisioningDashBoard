@@ -1,6 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
-import org.opennms.vaadin.provision.dashboard.RequisitionTab.RequisitionUpdateNode;
+import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -8,7 +8,6 @@ import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
@@ -41,27 +40,31 @@ public class SyncWindow extends Window implements ClickListener{
 		
 		VerticalLayout subContent = new VerticalLayout();
         subContent.setMargin(true);
+        subContent.setSpacing(true);
         setContent(subContent);
         setModal(true);
         HorizontalLayout buttons = new HorizontalLayout();
+        buttons.setMargin(true);
+        buttons.setSpacing(true);
         buttons.addComponent(m_synctrue);
         buttons.addComponent(m_syncfalse);
         buttons.addComponent(m_syncdbonly);
         subContent.addComponent(buttons);        
-        //subContent.addComponent(new Panel(buttons));
         subContent.addComponent(new HorizontalLayout());
-        BeanItemContainer<RequisitionUpdateNode> container = m_tab.getUpdates();
+        BeanItemContainer<SyncOperationNode> container = m_tab.getUpdates();
         if (container.size() == 0) {
 			subContent.addComponent
 			(new Label("No pending operation on Requisition"));
 			buttons.setVisible(false);
 		}
 		else {
-			Table updatetable = new Table();
+			Table updatetable = new Table("Nodi da Sincronizzare");
 			updatetable.setSelectable(false);
 			updatetable.setContainerDataSource(container);
-			subContent.addComponent(new Panel(updatetable));
-			for (RequisitionUpdateNode upn: container.getItemIds()) {
+			updatetable.setSizeFull();
+			updatetable.setPageLength(3);
+			subContent.addComponent(updatetable);
+			for (SyncOperationNode upn: container.getItemIds()) {
 				if (upn.isSYNCDBONLY())
 					m_syncdbonly.setEnabled(true);
 				if (upn.isSYNCTRUE())

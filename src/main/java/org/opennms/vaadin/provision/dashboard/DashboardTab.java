@@ -2,10 +2,13 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.SyncOperationNode;
 
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -15,6 +18,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -90,9 +94,10 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
 			return;
 		}
-		for (Map<String, BasicNode> map: m_service.getUpdates().values()) {
+		Map <String, Map<String, BasicNode>> updates = m_service.getUpdates();
+		for (Map<String, BasicNode> map: updates.values()) {
 			if (!map.isEmpty()) {
-				createdialogwindown();
+				createdialogwindown(updates);
 				return;
 			}
 		}
@@ -100,8 +105,8 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	    
 	}
 	
-	private void createdialogwindown() {
-		final Window confirm = new Window("Avviso Importante");
+	private void createdialogwindown(Map <String, Map<String, BasicNode>> updates) {
+		final Window confirm = new Window("Modifiche effettuate e non sincronizzate");
 		Button si = new Button("si");
 		si.addClickListener(new ClickListener() {
 			
@@ -130,17 +135,46 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 				confirm.close();
 			}
 		});
-		HorizontalLayout buttonbar = new HorizontalLayout();
-		buttonbar.addComponent(si);
-		buttonbar.addComponent(no);
+				
 		VerticalLayout windowcontent = new VerticalLayout();
-		windowcontent.addComponent(new Label("Alcune Modifiche non sono state syncronizzate"));
-		windowcontent.addComponent(new Label("Confermi il logout?"));
+		windowcontent.setMargin(true);
+		windowcontent.setSpacing(true);
+    
+		for (String requisition: updates.keySet()) {
+			Map<String, BasicNode> requpdates = updates.get(requisition);
+			if (requpdates == null || requpdates.size() == 0)
+				continue;
+			Table updatetable = new Table("Operazioni di Sync sospese per Requisition: " + requisition);
+			updatetable.setSelectable(false);
+			updatetable.setContainerDataSource(getUpdates(requpdates.values()));
+			updatetable.setSizeFull();
+			updatetable.setPageLength(3);
+			windowcontent.addComponent(updatetable);
+		}
+
+		windowcontent.addComponent(new Label("Alcune Modifiche che sono state effettuate "
+				+ "alle Requisition richiedono le "
+				+ "operazioni di sync sopra elencate. Confermi il logout?"));
+		HorizontalLayout buttonbar = new HorizontalLayout();
+		buttonbar.setMargin(true);
+		buttonbar.setSpacing(true);
+    	buttonbar.addComponent(si);
+		buttonbar.addComponent(no);
 		windowcontent.addComponent(buttonbar);
-        confirm.setContent(windowcontent);
+	    confirm.setContent(windowcontent);
         confirm.setModal(true);
+        confirm.setWidth("600px");
         UI.getCurrent().addWindow(confirm);
 		
+	}
+
+	public BeanItemContainer<SyncOperationNode> getUpdates(Collection<BasicNode> nodes) {
+		BeanItemContainer<SyncOperationNode> updates 
+		= new BeanItemContainer<SyncOperationNode>(SyncOperationNode.class);
+		for (BasicNode node: nodes) {
+			updates.addBean(new SyncOperationNode(node));
+		}
+		return updates;
 	}
 
 
