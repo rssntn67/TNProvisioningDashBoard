@@ -5,6 +5,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.util.Collection;
 import java.util.Map;
 
+import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
@@ -40,6 +41,7 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private Panel m_headPanel;
 	private HorizontalLayout m_head = new HorizontalLayout();
     private Button m_logout = new Button("Logout");
+    private Button m_info = new Button("Info");
     private LoginBox m_loginBox;
 
 	/*
@@ -50,11 +52,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		m_loginBox = login;
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
+     	m_info.addClickListener(this);
+    	m_info.setImmediate(true);
 		m_service = service;
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
 		m_head.setSizeFull();
 		m_head.addComponent(m_logout);	
+		m_head.addComponent(m_info);	
 		m_head.setMargin(true);
 		m_head.setSpacing(true);
 		m_headPanel = new Panel(m_head);
@@ -86,8 +91,26 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_logout) {
 	    	logout();
+	    } else if (event.getButton() == m_info) {
+	    	info();
 	    }
 	}
+
+	private void info() {
+		final Window infowindow = new Window("Informazioni TNPD");
+		VerticalLayout windowcontent = new VerticalLayout();
+		windowcontent.setMargin(true);
+		windowcontent.setSpacing(true);
+		windowcontent.addComponent(new Label(DashBoardUtils.APP_TITLE));
+		windowcontent.addComponent(new Label("Versione: " + DashBoardUtils.APP_VERSION));
+		windowcontent.addComponent(new Label("Build: " + DashBoardUtils.APP_BUILD_DATE));
+		infowindow.setContent(windowcontent);
+		infowindow.setModal(true);
+		infowindow.setWidth("400px");
+        UI.getCurrent().addWindow(infowindow);
+
+	}
+
 	
 	private void logout() {
 		if (m_service.isFastRunning()) {

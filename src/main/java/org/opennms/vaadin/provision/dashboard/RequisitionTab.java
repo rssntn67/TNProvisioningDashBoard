@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
@@ -21,6 +22,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
@@ -57,6 +59,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	
 	private Button m_syncRequisButton  = new Button("Sync");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
+	private Button m_replaceNodeButton  = new Button("Sostituisci Nodo");
 	
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
@@ -90,8 +93,10 @@ public abstract class RequisitionTab extends DashboardTab {
        	m_addNewNodeButton.addClickListener(this);
     	m_addNewNodeButton.setImmediate(true);
     	
+    	
 		getHead().addComponent(m_syncRequisButton);
 		getHead().addComponent(m_addNewNodeButton);
+		getHead().addComponent(m_replaceNodeButton);
 
 		m_saveNodeButton.addClickListener(this);
 		m_saveNodeButton.setImmediate(true);		
@@ -104,13 +109,19 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_resetNodeButton.addClickListener(this);
 		m_resetNodeButton.setImmediate(true);				
 		m_resetNodeButton.setEnabled(false);
-		
+
+    	m_replaceNodeButton.addClickListener(this);
+    	m_replaceNodeButton.setImmediate(true);
+    	m_replaceNodeButton.setEnabled(false);
+
 		HorizontalLayout editNodeButtons = new HorizontalLayout();
 		editNodeButtons.addComponent(m_removeNodeButton);
 		editNodeButtons.addComponent(m_saveNodeButton);
+		editNodeButtons.addComponent(m_replaceNodeButton);
 		editNodeButtons.addComponent(m_resetNodeButton);
 		editNodeButtons.setComponentAlignment(m_removeNodeButton, Alignment.MIDDLE_LEFT);
 		editNodeButtons.setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_CENTER);
+		editNodeButtons.setComponentAlignment(m_replaceNodeButton, Alignment.MIDDLE_LEFT);
 		editNodeButtons.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 
 
@@ -217,8 +228,8 @@ public abstract class RequisitionTab extends DashboardTab {
 				selectItem(node);
 				getRight().setVisible(true);
 				enableNodeButtons();
-
-				
+				if (node.getOnmstate() ==  OnmsState.NEW)
+					m_replaceNodeButton.setEnabled(false);
 			}
 		});
 		
@@ -268,6 +279,8 @@ public abstract class RequisitionTab extends DashboardTab {
 	    	save();
 	    } else if (event.getButton() == m_removeNodeButton) {
 	    	remove();
+	    } else if (event.getButton() == m_removeNodeButton) {
+	    	replace();
 	    } else if (event.getButton() == m_resetNodeButton) {
 	    	reset();
 	    }
@@ -276,15 +289,78 @@ public abstract class RequisitionTab extends DashboardTab {
 	public void enableNodeButtons() {
 		m_saveNodeButton.setEnabled(true);
 		m_removeNodeButton.setEnabled(true);
+		m_replaceNodeButton.setEnabled(true);
 		m_resetNodeButton.setEnabled(true);
 	}
 
 	public void disableNodeButtons() {
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);
+		m_replaceNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
 	}
 
+	private void replace() {
+		BasicNode node = null;
+		try {
+			getBeanFieldGroup().commit();
+			node = getBeanFieldGroup().getItemDataSource().getBean();
+		} catch (CommitException e) {
+			logger.warning("Replaced Failed: " + e.getMessage());
+			Notification.show("Replaced Failed", e.getMessage(), Type.ERROR_MESSAGE);
+			return;
+		}
+		if (node == null ) {
+			logger.warning("Replace failed. Cannot replace null node");
+			Notification.show("Replace", " Failed, cannot replace null node", Type.ERROR_MESSAGE);
+			return;
+		} 
+
+		if (node.getForeignId() == null) {
+			logger.warning("Replace failed: " + node.getNodeLabel() + ". Cannot replace new node");
+			Notification.show("Replace", "Node " +node.getNodeLabel() + " Failed, cannot replace new node", Type.ERROR_MESSAGE);
+			return;
+		} 
+
+		try {
+			getService().delete(node);
+			logger.info("Replace:delete done: " + node.getNodeLabel());
+			Notification.show("Replace:delete", "Node " +node.getNodeLabel() + " deleted", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			String localizedMessage = e.getLocalizedMessage();
+			Throwable t = e.getCause();
+			while ( t != null) {
+				if (t.getLocalizedMessage() != null)
+					localizedMessage+= ": " + t.getLocalizedMessage();
+				t = t.getCause();
+			}
+			logger.warning("Replace: delete Failed: " + localizedMessage);
+			Notification.show("Replace: delete Failed", localizedMessage, Type.ERROR_MESSAGE);
+		}
+
+		try {
+			node.setForeignId(node.getForeignId()+"rR");
+			getService().add(node);
+			node.setValid(getService().isValid(node));
+			logger.info("Replace:new done: " + node.getNodeLabel());
+			Notification.show("Replace", "Node " +node.getNodeLabel() + " Added new", Type.HUMANIZED_MESSAGE);
+			applyFilter(node.getHostname());
+			getRequisitionContainer().removeAllContainerFilters();
+		} catch (Exception e) {
+			String localizedMessage = e.getLocalizedMessage();
+			Throwable t = e.getCause();
+			while ( t != null) {
+				if (t.getLocalizedMessage() != null)
+					localizedMessage+= ": " + t.getLocalizedMessage();
+				t = t.getCause();
+			}
+			logger.warning("Replaced:new Failed: " + localizedMessage);
+			Notification.show("Replaced:new Failed", localizedMessage, Type.ERROR_MESSAGE);
+		}
+		m_requisitionTable.unselect(m_requisitionTable.getValue());
+
+	}
+	
 	private void sync() {
 		SyncWindow subWindow = new SyncWindow(this);
         subWindow.center();
@@ -295,6 +371,7 @@ public abstract class RequisitionTab extends DashboardTab {
 
 	private void  newNode() {
 		cleanSearchBox();
+		m_replaceNodeButton.setEnabled(false);
 		BasicNode bean = addBean();
 		m_requisitionTable.select(bean.getNodeLabel());
 		m_descrComboBox.removeAllItems();
@@ -313,13 +390,13 @@ public abstract class RequisitionTab extends DashboardTab {
 				node.setForeignId(node.getHostname());
 				node.setValid(true);
 				getService().add(node);
-				logger.info("Added: " + getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel());
-				Notification.show("Save", "Node " +getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
+				logger.info("Added: " + node.getNodeLabel());
+				Notification.show("Save", "Node " +node.getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 			} else {
 				getService().update(node);
 				node.setValid(getService().isValid(node));
-				logger.info("Updated: " + getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel());
-				Notification.show("Save", "Node " +getBeanFieldGroup().getItemDataSource().getBean().getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
+				logger.info("Updated: " + node.getNodeLabel());
+				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
 			applyFilter(node.getHostname());
 			getRequisitionContainer().removeAllContainerFilters();
@@ -341,6 +418,7 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_right.setVisible(false);
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);
+		m_replaceNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
 		BeanItem<? extends BasicNode> node = getBeanFieldGroup().getItemDataSource();
 		logger.info("Deleting: " + node.getBean().getNodeLabel());
@@ -367,6 +445,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			m_requisitionTable.unselect(m_requisitionTable.getValue());
 			m_saveNodeButton.setEnabled(false);
 			m_removeNodeButton.setEnabled(false);
+			m_replaceNodeButton.setEnabled(false);
 			m_resetNodeButton.setEnabled(false);
 		}
 
