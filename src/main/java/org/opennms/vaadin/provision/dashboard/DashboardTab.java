@@ -15,6 +15,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
@@ -39,6 +40,8 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
 	private HorizontalLayout m_head = new HorizontalLayout();
+	private VerticalLayout m_left = new VerticalLayout();;
+	private VerticalLayout m_right = new VerticalLayout();;
     private Button m_logout = new Button("Logout");
     private Button m_info = new Button("Info");
     private LoginBox m_loginBox;
@@ -63,6 +66,13 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		m_head.setSpacing(true);
 		m_headPanel = new Panel(m_head);
 		m_core.addComponent(m_headPanel);
+		
+		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		splitPanel.addComponent(m_left);
+		splitPanel.addComponent(m_right);
+		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
+
+		m_core.addComponent(splitPanel);
 	}
 
 	public abstract void load();
@@ -199,5 +209,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		return updates;
 	}
 
+	public VerticalLayout getLeft() {
+		return m_left;
+	}
+	
+	public VerticalLayout getRight() {
+		return m_right;
+	}
 
+
+	
 }

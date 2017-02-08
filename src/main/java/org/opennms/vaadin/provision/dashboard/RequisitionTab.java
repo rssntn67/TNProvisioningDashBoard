@@ -32,13 +32,11 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -53,10 +51,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	 */
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private static final long serialVersionUID = 4694567853140078034L;
-	
-	private VerticalLayout m_left = new VerticalLayout();;
-	private VerticalLayout m_right = new VerticalLayout();;
-	
+		
 	private Button m_syncRequisButton  = new Button("Sync");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
 	private Button m_replaceNodeButton  = new Button("Sostituisci Nodo");
@@ -125,15 +120,8 @@ public abstract class RequisitionTab extends DashboardTab {
 		editNodeButtons.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 
 
-		m_right.addComponent(new Panel(editNodeButtons));
-		
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		splitPanel.addComponent(m_left);
-		splitPanel.addComponent(m_right);
-		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
-
-		getCore().addComponent(splitPanel);
-		
+		getRight().addComponent(new Panel(editNodeButtons));
+				
 		m_hostname.setSizeFull();
 		m_hostname.setWidth(4, Unit.CM);
 		m_hostname.setHeight(6, Unit.MM);
@@ -195,7 +183,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			private static final long serialVersionUID = 1L;
 			public void valueChange(ValueChangeEvent event) {
 				if (event.getProperty().getValue() == null) {
-					m_right.setVisible(false);
+					getRight().setVisible(false);
 					return;
 				}
 				Object contactId = getRequisitionTable().getValue();
@@ -415,7 +403,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	}
 
 	public void remove() {
-		m_right.setVisible(false);
+		getRight().setVisible(false);
 		m_saveNodeButton.setEnabled(false);
 		m_removeNodeButton.setEnabled(false);
 		m_replaceNodeButton.setEnabled(false);
@@ -441,7 +429,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	
 	public void reset() {
 			getBeanFieldGroup().discard();
-			m_right.setVisible(false);
+			getRight().setVisible(false);
 			m_requisitionTable.unselect(m_requisitionTable.getValue());
 			m_saveNodeButton.setEnabled(false);
 			m_removeNodeButton.setEnabled(false);
@@ -564,14 +552,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		return m_requisitionTable;
 	}
 	
-	public VerticalLayout getLeft() {
-		return m_left;
-	}
-	
-	public VerticalLayout getRight() {
-		return m_right;
-	}
-
 	public TextField getHostNameTextField() {
 		return m_hostname;
 	}

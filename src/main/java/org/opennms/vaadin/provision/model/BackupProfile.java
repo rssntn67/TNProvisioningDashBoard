@@ -5,52 +5,48 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 
 import com.vaadin.data.Property;
 
-public class BackupProfile {
-	String name;
-	String username;
-	String password;
-	String enable;
-	String connection;
-	String autoenable;
-
-	public String getName() {
-		return name;
-	}
-
+public class BackupProfile extends AbstractProfile{
+	private String m_username;
+	private String m_password;
+	private String m_enable;
+	private String m_connection;
+	private String m_autoenable;
+ 
 	public String getUsername() {
-		return username;
+		return m_username;
 	}
 
 	public String getPassword() {
-		return password;
+		return m_password;
 	}
 
 	public String getEnable() {
-		return enable;
+		return m_enable;
 	}
 
 	public String getConnection() {
-		return connection;
+		return m_connection;
 	}
 
 	public String getAutoenable() {
-		return autoenable;
+		return m_autoenable;
 	}
 	
 	public BackupProfile() {
+		super();
 		
 	}
 
 	public BackupProfile(Property<String> name,Property<String> username,Property<String> password,Property<String> enable,Property<String> connection,Property<String> autoenable) {
-		this.name=name.getValue();
-		this.username = username.getValue();
-		this.password = password.getValue();
-		this.enable   = enable.getValue();
-		this.connection = connection.getValue();
+		super(name);
+		this.m_username = username.getValue();
+		this.m_password = password.getValue();
+		this.m_enable   = enable.getValue();
+		this.m_connection = connection.getValue();
 		if (autoenable != null && autoenable.getValue() != null)
-			this.autoenable = autoenable.getValue();
+			this.m_autoenable = autoenable.getValue();
 		else
-			this.autoenable = "";
+			this.m_autoenable = "";
 		
 	}
 	
@@ -64,27 +60,23 @@ public class BackupProfile {
 		return template;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public void setUsername(String username) {
-		this.username = username;
+		m_username = username;
 	}
 
 	public void setPassword(String password) {
-		this.password = password;
+		m_password = password;
 	}
 
 	public void setEnable(String enable) {
-		this.enable = enable;
+		m_enable = enable;
 	}
 
 	public void setConnection(String connection) {
-		this.connection = connection;
+		m_connection = connection;
 	}
 
 	public void setAutoenable(String autoenable) {
-		this.autoenable = autoenable;
+		m_autoenable = autoenable;
 	}
 }

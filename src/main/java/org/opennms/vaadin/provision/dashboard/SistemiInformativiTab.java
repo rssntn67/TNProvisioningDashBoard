@@ -519,7 +519,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 
 				
 		FormLayout profileInfo = new FormLayout();
-		profileInfo.addComponent(new Label("Profiles"));
+		profileInfo.addComponent(new Label("Profili"));
 		profileInfo.addComponent(catLayout1);
 		profileInfo.addComponent(catLayout2);
 		profileInfo.addComponent(catLayout3);

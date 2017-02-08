@@ -394,7 +394,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		}
 	}
 	
-	protected void layout() { 
+	private void layout() { 
 
 		VerticalLayout searchlayout = new VerticalLayout();
 		searchlayout.addComponent(m_networkCatSearchComboBox);

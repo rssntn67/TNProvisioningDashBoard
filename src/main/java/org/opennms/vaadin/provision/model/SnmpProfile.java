@@ -4,8 +4,7 @@ import org.opennms.web.svclayer.model.SnmpInfo;
 
 import com.vaadin.data.Property;
 
-public class SnmpProfile {
-	String m_name;
+public class SnmpProfile extends AbstractProfile {
 	String m_community;
 	String m_version;
 	String m_timeout;
@@ -13,7 +12,7 @@ public class SnmpProfile {
 	String m_maxvarsperpdu;
 	
 	public SnmpProfile() {
-		
+		super();
 	}
 
 	public SnmpProfile(Property<String> name,
@@ -22,8 +21,7 @@ public class SnmpProfile {
 			Property<String> timeout, 
 			Property<String> maxvarsperpdu, 
 			Property<String> retries) {
-		super();
-		m_name=name.getValue();
+		super(name);
 		m_community = community.getValue();
 		m_version = version.getValue();
 		m_timeout = timeout.getValue();
@@ -31,9 +29,6 @@ public class SnmpProfile {
 		m_retries = retries.getValue();
 	}
 
-	public String getName() {
-		return m_name;
-	}
 	public String getCommunity() {
 		return m_community;
 	}
@@ -55,11 +50,6 @@ public class SnmpProfile {
 		info.setRetries(Integer.parseInt(m_retries));
 		info.setMaxVarsPerPdu(Integer.parseInt(m_maxvarsperpdu));
 		return info;
-	}
-
-
-	public void setName(String name) {
-		m_name = name;
 	}
 
 	public void setCommunity(String community) {
