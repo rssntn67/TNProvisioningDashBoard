@@ -42,9 +42,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	 */
 	private static final long serialVersionUID = -363579873686942087L;
 
-	private static final String s_panellogincaption="- Log In - "
-			+ DashBoardUtils.APP_TITLE;
-	private Panel m_panel  = new Panel(s_panellogincaption);
+	private static final String s_panellogincaption="- Log In - ";
+	private Panel m_panel  = new Panel();
     private ComboBox m_select = new ComboBox("Select Domain");
     private TextField m_username = new TextField("Username:");
     private PasswordField m_password = new PasswordField("Password:");
@@ -55,11 +54,12 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private TabSheet m_tabs;
     
     public LoginBox (TabSheet tabs,DashBoardSessionService service) {
+        m_tabs=tabs;
+    	m_service = service;
+        m_panel.setCaption(s_panellogincaption + m_service.getConfig().getAppName());
         m_panel.setContent(getLoginBox());
         setCompositionRoot(m_panel);
 
-        m_tabs=tabs;
-    	m_service = service;
     	m_login.setImmediate(true);
     	m_login.addClickListener(this);
     	m_logout.addClickListener(this);
@@ -132,7 +132,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		m_username.setValue("");
 		m_password.setValue("");
 		m_service.logout();
-		m_panel.setCaption(s_panellogincaption);
+		m_panel.setCaption(s_panellogincaption + m_service.getConfig().getAppName());
 		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
 		m_panel.setContent(getLoginBox());
 		Iterator<Component> ite = m_tabs.iterator();

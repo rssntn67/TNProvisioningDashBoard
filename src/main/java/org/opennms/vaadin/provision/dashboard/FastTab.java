@@ -395,7 +395,7 @@ public class FastTab extends DashboardTab {
 				checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN_REQU_NAME));
 				logger.info("run: loaded requisition: " + DashBoardUtils.TN_REQU_NAME);
 
-			} catch (final ProvisionDashboardException e) {
+			} catch (final UniformInterfaceException e) {
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
@@ -413,7 +413,7 @@ public class FastTab extends DashboardTab {
 				}
 				m_job.setJobstatus(JobStatus.SUCCESS);
 				m_job.setJobdescr("FAST sync: Done");
-			} catch (final ProvisionDashboardException e) {
+			} catch (final UniformInterfaceException e) {
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
@@ -436,7 +436,7 @@ public class FastTab extends DashboardTab {
 
 		}
 
-		private void sync() throws ProvisionDashboardException {
+		private void sync() {
 			UI.getCurrent().access(new Runnable() {
 				@Override
 				public void run() {
@@ -532,7 +532,7 @@ public class FastTab extends DashboardTab {
 				}
 
 			} catch (final UniformInterfaceException e) {
-				throw new ProvisionDashboardException(e.getResponse());
+				throw e;
 			} 
 			
 		}

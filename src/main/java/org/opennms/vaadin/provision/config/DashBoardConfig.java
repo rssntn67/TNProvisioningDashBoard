@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -24,6 +25,11 @@ public class DashBoardConfig {
 	protected static final String PROPERTIES_DB_USER_KEY = "db_username";
 	protected static final String PROPERTIES_DB_PASS_KEY = "db_password";
 
+	protected static final String VERSION_FILE_PATH = "provision-version.properties";
+	protected static final String PROPERTIES_APP_NAME = "projectName";
+	protected static final String PROPERTIES_APP_VERSION = "versionName";
+	protected static final String PROPERTIES_APP_BUILD = "buildTimestamp";
+
 	protected String[] URL_LIST = new String[] {
 			"http://demo.arsinfo.it/opennms/rest",
 			"http://localhost:8980/opennms/rest"
@@ -34,6 +40,14 @@ public class DashBoardConfig {
 	private final static Logger logger = Logger.getLogger(DashBoardConfig.class.getName());	
 
 	public void reload() {
+		
+		try {
+            m_configuration.load(this.getClass().getClassLoader().getResourceAsStream(VERSION_FILE_PATH));
+			logger.info("Loaded Classpath Version file: " + VERSION_FILE_PATH);
+		} catch (IOException ex) {
+			logger.log(Level.INFO, "Cannot load version file: ", ex );
+		}
+
 		for (String name: PROPERTIES_FILE_PATHS) {
 			File file = new File(name);
     		if (file.exists() && file.isFile()) {
@@ -54,11 +68,28 @@ public class DashBoardConfig {
 			logger.log(Level.INFO, "Cannot load configuration file: ", ex );
 		}
 
+
+
+		
 	}
 
 	public DashBoardConfig() {
 		super();
 	}
+
+    public String getAppName() {
+    	return m_configuration.getProperty(PROPERTIES_APP_NAME);
+    }
+
+    public String getAppVersion() {
+    	return m_configuration.getProperty(PROPERTIES_APP_VERSION);
+    }
+
+    public String getAppBuild() {
+    	return m_configuration.getProperty(PROPERTIES_APP_BUILD);
+    }
+
+    
 
 	public String[] getUrls() {
 		List<String> urls = new ArrayList<String>();

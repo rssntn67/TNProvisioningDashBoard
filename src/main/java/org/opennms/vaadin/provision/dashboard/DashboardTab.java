@@ -5,7 +5,6 @@ package org.opennms.vaadin.provision.dashboard;
 import java.util.Collection;
 import java.util.Map;
 
-import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
@@ -101,9 +100,9 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		VerticalLayout windowcontent = new VerticalLayout();
 		windowcontent.setMargin(true);
 		windowcontent.setSpacing(true);
-		windowcontent.addComponent(new Label(DashBoardUtils.APP_TITLE));
-		windowcontent.addComponent(new Label("Versione: " + DashBoardUtils.APP_VERSION));
-		windowcontent.addComponent(new Label("Build: " + DashBoardUtils.APP_BUILD_DATE));
+		windowcontent.addComponent(new Label(getService().getConfig().getAppName()));
+		windowcontent.addComponent(new Label("Versione: " + getService().getConfig().getAppVersion()));
+		windowcontent.addComponent(new Label("Build: " + getService().getConfig().getAppBuild()));
 		infowindow.setContent(windowcontent);
 		infowindow.setModal(true);
 		infowindow.setWidth("400px");

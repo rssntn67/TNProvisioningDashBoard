@@ -122,8 +122,10 @@ public class JerseyClientImpl {
     		logger.info("POST: + "+ relativePath + " response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
     		logger.warning("POST: + "+ relativePath + " error: " + uie.getLocalizedMessage());
+    		throw uie;
     	} catch (ClientHandlerException che) {
     		logger.warning("POST: + "+ relativePath + " error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
     
@@ -133,8 +135,10 @@ public class JerseyClientImpl {
     		logger.info("PUT: + "+ relativePath + " response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
     		logger.warning("PUT: + "+ relativePath + " error: " + uie.getLocalizedMessage());
+    		throw uie;
     	} catch (ClientHandlerException che) {
     		logger.warning("PUT: + "+ relativePath + " error: " + che.getLocalizedMessage());
+    		throw che;
     	}
     }
     
@@ -144,8 +148,10 @@ public class JerseyClientImpl {
     		logger.info("DELETE: + "+ relativePath + " response: " + cr.getStatusInfo());
     	} catch (UniformInterfaceException uie) {
     		logger.warning("DELETE: + "+ relativePath + " error: " + uie.getLocalizedMessage());
+    		throw uie;
      	} catch (ClientHandlerException che) {
     		logger.warning("DELETE: + "+ relativePath + " error: " + che.getLocalizedMessage());
+    		throw che;
     	}
 
     }

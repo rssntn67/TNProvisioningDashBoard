@@ -11,7 +11,7 @@ import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 
 public class DashBoardUtils {
-
+	
 	public static final String[] service_list = {
 		"StrafePing",
 		"HTTP",
@@ -484,7 +484,4 @@ public class DashBoardUtils {
 		return true;
 	}
 
-	public static String APP_TITLE = "Trentino Network Provisioning Dashboard";
-	public static String APP_VERSION = "3.1.1";
-	public static String APP_BUILD_DATE = "February 6th 2017 12:40 CET";
 }
