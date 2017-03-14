@@ -296,18 +296,12 @@ public class DashBoardUtils {
 		return false;
 	}
 	
-	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel, List<String> sub_domains) {
-		if (hostname == null)
+	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel, List<String> domains) {
+		if (hostname == null || nodelabel == null)
 			return true;
-		if (hostname.contains(".")) {
-			String hostlabel = hostname.substring(0,hostname.indexOf("."));
-			for (String subdomain: sub_domains ) {
-				if (nodelabel.equals(hostlabel+"."+subdomain)) {
-					return false;
-				}
-			}
-		} else {
-			return false;
+		for (String domain: domains ) {
+			if (nodelabel.endsWith(domain))
+				return false;
 		}
 		return true;
 	}

@@ -449,7 +449,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			String hostname = ((String)value).toLowerCase();
 			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("SubdomainValidator: validating hostname: " + hostname);
-			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getDnsSubDomainContainer().getSubdomains()))
+			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getDnsDomainContainer().getDomains()))
 	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
 	       }
 	}

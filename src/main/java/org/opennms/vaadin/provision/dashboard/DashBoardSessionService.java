@@ -28,7 +28,6 @@ import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
-import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
 import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
 import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
@@ -77,7 +76,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private BackupProfileDao     m_backupprofilecontainer;
 	private CategoriaDao         m_catcontainer;
 	private DnsDomainDao         m_dnsdomaincontainer;
-	private DnsSubDomainDao      m_dnssubdomaincontainer;
 	private FastServiceDeviceDao m_fastservicedevicecontainer;
 	private FastServiceLinkDao   m_fastservicelinkcontainer;
 	private JobDao               m_jobcontainer;
@@ -140,10 +138,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return m_dnsdomaincontainer;
 	}
 
-	public DnsSubDomainDao getDnsSubDomainContainer() {
-		return m_dnssubdomaincontainer;
-	}
-
 	public JobDao getJobContainer() {
 		return m_jobcontainer;
 	}
@@ -198,10 +192,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	    dnstq.setVersionColumn("versionid");
 	    m_dnsdomaincontainer =  new DnsDomainDao(dnstq);	
 	    
-	    TableQuery sdnstq = new TableQuery("dnssubdomains", m_pool);
-	    sdnstq.setVersionColumn("versionid");
-	    m_dnssubdomaincontainer =  new DnsSubDomainDao(sdnstq);
-
 	    m_fastservicedevicecontainer = new FastServiceDeviceDao
 	    		(new FreeformQuery("select * from fastservicedevices", m_pool));
 
@@ -1839,15 +1829,15 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	}
 	
 	public boolean isValid(TrentinoNetworkNode node) {
-		return valid(node,getDnsSubDomainContainer().getSubdomains());
+		return valid(node,getDnsDomainContainer().getDomains());
 	}
 
 	public boolean isValid(SistemiInformativiNode node) {
-		return valid(node,getDnsSubDomainContainer().getSubdomains());
+		return valid(node,getDnsDomainContainer().getDomains());
 	}
 
 	public boolean isValid(MediaGatewayNode node) {
-		return valid(node,getDnsSubDomainContainer().getSubdomains());
+		return valid(node,getDnsDomainContainer().getDomains());
 	}
 
 	public boolean isValid(BasicNode node) {

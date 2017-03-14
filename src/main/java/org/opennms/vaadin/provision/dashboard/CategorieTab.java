@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
-import org.opennms.vaadin.provision.dao.DnsSubDomainDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.Categoria;
 
@@ -61,7 +60,6 @@ public class CategorieTab extends DashboardTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private CategoriaDao m_catContainer;
 	private DnsDomainDao m_domainContainer;
-	private DnsSubDomainDao m_subdomainContainer;
 	private boolean loaded=false;
 	private boolean add=false;
 
@@ -75,8 +73,6 @@ public class CategorieTab extends DashboardTab {
 	
 	private BeanFieldGroup<Categoria> m_editorFields;
 
-	private ComboBox m_dnsAddSubdomainsComboBox = new ComboBox();
-
 	public CategorieTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
 	}
@@ -86,7 +82,6 @@ public class CategorieTab extends DashboardTab {
 		updateTabHead();
 		if (!loaded) {
 			m_domainContainer = getService().getDnsDomainContainer();
-			m_subdomainContainer = getService().getDnsSubDomainContainer();
 			m_catContainer = getService().getCatContainer();
 			m_catTable.setContainerDataSource(m_catContainer);
 			layout();
@@ -175,24 +170,6 @@ public class CategorieTab extends DashboardTab {
 			dnsDomainsDeleteComboBox.addItem(domain);
 		dnsDomainsDeleteComboBox.setImmediate(true);
 
-		// Add subdomain
-		final TextField dnsAddSubdomainTextBox = new TextField();
-		dnsAddSubdomainTextBox.setImmediate(true);
-		dnsAddSubdomainTextBox.addValidator(new ValidDnsValidator());
-		dnsAddSubdomainTextBox.addValidator(new DuplicatedSubDomainDnsValidator());
-		
-		m_dnsAddSubdomainsComboBox.setNullSelectionAllowed(false);
-		m_dnsAddSubdomainsComboBox.removeAllItems();
-		for (Object domain: m_domainContainer.getItemIds())
-			m_dnsAddSubdomainsComboBox.addItem(domain);
-		m_dnsAddSubdomainsComboBox.setImmediate(true);
-
-		// Del sub domains
-		final ComboBox delDnsSubdomainComboBox = new ComboBox();
-		delDnsSubdomainComboBox.setNullSelectionAllowed(false);
-		for (Object sdomain: m_subdomainContainer.getItemIds())
-			delDnsSubdomainComboBox.addItem(sdomain);
-
 		Button addDomainButton = new Button("Add dns domain");
 		addDomainButton.addClickListener(new ClickListener() {
 
@@ -210,11 +187,9 @@ public class CategorieTab extends DashboardTab {
 						logger.info("Added Dns Domain: " + dnsDomainTextBox.getValue());
 						Notification.show("Adding", "Dns Domain" + dnsDomainTextBox.getValue()+ " Saved", Type.HUMANIZED_MESSAGE);
 						dnsDomainsDeleteComboBox.removeAllItems();
-						m_dnsAddSubdomainsComboBox.removeAllItems();
 						domainComboBox.removeAllItems();					
 						for (Object domain: m_domainContainer.getItemIds()) {
 							dnsDomainsDeleteComboBox.addItem(domain);
-							m_dnsAddSubdomainsComboBox.addItem(domain);
 							domainComboBox.addItem(((RowId) domain).toString());
 						}
 					} catch (UnsupportedOperationException e) {
@@ -262,11 +237,9 @@ public class CategorieTab extends DashboardTab {
 						logger.info("Deleted Dns Domain: " + dnsDomainsDeleteComboBox.getValue());
 						Notification.show("Delete", "Dns Domain" + dnsDomainsDeleteComboBox.getValue()+ " Deleted", Type.HUMANIZED_MESSAGE);
 						dnsDomainsDeleteComboBox.removeAllItems();
-						m_dnsAddSubdomainsComboBox.removeAllItems();
 						domainComboBox.removeAllItems();
 						for (Object domain: m_domainContainer.getItemIds()) {
 							dnsDomainsDeleteComboBox.addItem(domain);
-							m_dnsAddSubdomainsComboBox.addItem(domain);
 							domainComboBox.addItem(((RowId) domain).toString());
 						}
 					} catch (UnsupportedOperationException e) {
@@ -295,99 +268,9 @@ public class CategorieTab extends DashboardTab {
 
 		rightLayout.addComponent(delDomainLayout);
 		
-		Button addSubDomainButton = new Button("Add dns sub domain");
-		addSubDomainButton.addClickListener(new ClickListener() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 439126521516044933L;
-
-			@Override
-			public void buttonClick(ClickEvent event) {
-				if (dnsAddSubdomainTextBox.getValue() != null &&
-						m_dnsAddSubdomainsComboBox.getValue() != null) {
-					m_subdomainContainer.add(dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
-					try {
-						m_subdomainContainer.commit();
-						logger.info("Added Dns Sub Domain: " + dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue());
-						Notification.show("Adding", "Dns Sub Domain" + dnsAddSubdomainTextBox.getValue()+"."+m_dnsAddSubdomainsComboBox.getValue()+ " Saved", Type.HUMANIZED_MESSAGE);
-						delDnsSubdomainComboBox.removeAllItems();
-						for (Object sdomain: m_subdomainContainer.getItemIds())
-							delDnsSubdomainComboBox.addItem(sdomain);
-					} catch (UnsupportedOperationException e) {
-						e.printStackTrace();
-						logger.warning("Add Dns Sub Domain Failed: " + e.getLocalizedMessage());
-						Notification.show("Add Dns Sub Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					} catch (SQLException e) {
-						logger.warning("Add Dns Sub Domain Failed: " + e.getLocalizedMessage());
-						Notification.show("Add Dns Sub Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					}
-				}
-			}
-		});
 
 
-		HorizontalLayout addSubDomainInfo  = new HorizontalLayout();
-		addSubDomainInfo.addComponent(m_dnsAddSubdomainsComboBox);
-		addSubDomainInfo.addComponent(dnsAddSubdomainTextBox);
-		addSubDomainInfo.addComponent(addSubDomainButton);
 
-		FormLayout addSubDomainForm = new FormLayout(new Label("Aggiungi sotto dominio Dns"));
-		addSubDomainForm.addComponent(addSubDomainInfo);
-
-		VerticalLayout addSubDomainLayout = new VerticalLayout();
-		addSubDomainLayout.setMargin(true);
-		addSubDomainLayout.setMargin(true);
-		addSubDomainLayout.setVisible(true);
-		addSubDomainLayout.addComponent(new Panel(addSubDomainForm));
-
-		rightLayout.addComponent(addSubDomainLayout);
-
-		Button delSubDomainButton = new Button("Delete dns sub domain");
-		delSubDomainButton.addClickListener(new ClickListener() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 439126521516044933L;
-
-			@Override
-			public void buttonClick(ClickEvent event) {
-				if (delDnsSubdomainComboBox.getValue() != null &&
-					m_subdomainContainer.removeItem(delDnsSubdomainComboBox.getValue())) {
-					try {
-						m_subdomainContainer.commit();
-						logger.info("Deleted Dns Sub Domain: " + delDnsSubdomainComboBox.getValue());
-						Notification.show("Delete", "Dns Sub Domain" + delDnsSubdomainComboBox.getValue()+ " Deleted", Type.HUMANIZED_MESSAGE);
-						delDnsSubdomainComboBox.removeAllItems();
-						for (Object sdomain: m_subdomainContainer.getItemIds())
-							delDnsSubdomainComboBox.addItem(sdomain);
-					} catch (UnsupportedOperationException e) {
-						e.printStackTrace();
-						logger.warning("Delete Sub Dns Domain Failed: " + e.getLocalizedMessage());
-						Notification.show("Delete Sub Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					} catch (SQLException e) {
-						logger.warning("Delete Sub Dns Domain Failed: " + e.getLocalizedMessage());
-						Notification.show("Delete Sub Dns Domain Failed", e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					}
-				}
-			}
-		});
-
-		HorizontalLayout delSubDomainInfo = new HorizontalLayout();
-		delSubDomainInfo.addComponent(delDnsSubdomainComboBox);
-		delSubDomainInfo.addComponent(delSubDomainButton);
-
-		FormLayout delSubDomainForm = new FormLayout(new Label("Cancella un sotto dominio dns"));
-		delSubDomainForm.addComponent(delSubDomainInfo);
-
-		VerticalLayout delSubDomainLayout  = new VerticalLayout();
-		delSubDomainLayout.setMargin(true);
-		delSubDomainLayout.setVisible(true);
-		delSubDomainLayout.addComponent(new Panel(delSubDomainForm));
-
-		rightLayout.addComponent(delSubDomainLayout);
 
 		m_catTable.setVisibleColumns(new Object[] { "name" });
 		m_catTable.setSelectable(true);
@@ -766,25 +649,6 @@ public class CategorieTab extends DashboardTab {
 			logger.info("DuplicatedDnsValidator: validating dns: " + dns);
 	         if (m_domainContainer.getDomains().contains(dns))
 	             throw new InvalidValueException("DuplicatedDnsValidator: trovato un duplicato del domainio: " + dns);
-	       }
-	}
-
-	class DuplicatedSubDomainDnsValidator implements Validator {
-				
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 5690578176254609879L;
-
-		@Override
-		public void validate( Object value) throws InvalidValueException {
-			if (m_dnsAddSubdomainsComboBox.getValue() == null)
-				return;
-			String subdomain = m_dnsAddSubdomainsComboBox.getValue().toString();
-			String dns = (String)value + "." + subdomain;
-			logger.info("DuplicatedSubDomainDnsValidator: validating dns: " + dns);
-	         if (m_subdomainContainer.getSubdomains().contains(dns))
-	             throw new InvalidValueException("DuplicatedSubDomainDnsValidator: trovato un duplicato del dominio: " + dns);
 	       }
 	}
 
