@@ -64,10 +64,13 @@ public class LoginBox extends CustomComponent implements ClickListener {
     	m_login.addClickListener(this);
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
+    	
     	m_populateSiSnmpButton.addClickListener(this);
     	m_populateSiSnmpButton.setImmediate(true);
+    	
     	m_populateTnSnmpButton.addClickListener(this);
     	m_populateTnSnmpButton.setImmediate(true);
+    	
     	for (String url: m_service.getConfig().getUrls())
     		m_select.addItem(url);
     	m_select.select(m_service.getConfig().getUrls()[0]);
@@ -182,6 +185,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    m_panel.setCaption("User '"+ m_service.getUser()+"' Logged in");
 	    VerticalLayout loggedin= new VerticalLayout();
 	    HorizontalLayout buttonPanel = new HorizontalLayout();
+	    buttonPanel.addComponent(m_logout);
+	    loggedin.addComponent(buttonPanel);
 	    if (m_service.getUser().equals("admin")) {
 		    
 		    Table conneTable = new Table("Sessioni attive");
@@ -204,8 +209,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		    buttonPanel.addComponent(m_populateSiSnmpButton);
 
 	    }
-	    buttonPanel.addComponent(m_logout);
-	    loggedin.addComponent(buttonPanel);
 	    m_panel.setContent(loggedin);
 	    
 	    
