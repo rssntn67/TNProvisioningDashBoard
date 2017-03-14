@@ -34,19 +34,24 @@ import org.opennms.vaadin.provision.model.Categoria;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
+import com.vaadin.data.Container.Filter;
+import com.vaadin.data.Item;
+import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.FieldEvents.TextChangeEvent;
+import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -54,7 +59,47 @@ import com.vaadin.ui.VerticalLayout;
 @Theme("runo")
 public class FastTab extends DashboardTab {
 
+	private class JobLogFilter implements Filter {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1156479792519150329L;
+		private String noodle;
+		
+		public JobLogFilter(Object obj) {
+			if (obj != null)
+				noodle = (String) obj;
+		}
+		
+		@Override
+		public boolean passesFilter(Object itemId, Item item)
+				throws UnsupportedOperationException {
+			@SuppressWarnings("unchecked")
+			JobLogEntry logentry=((BeanItem<JobLogEntry>)item).getBean();
+			if (logentry.getDescription() != null && logentry.getDescription().contains(noodle))
+				return true;
+			if (logentry.getHostname() != null && logentry.getHostname().contains(noodle))
+				return true;
+			if (logentry.getIpaddr()!= null && logentry.getIpaddr().contains(noodle))
+				return true;
+			if (logentry.getOrderCode() != null && logentry.getOrderCode().contains(noodle))
+				return true;
+			if (logentry.getNote() != null && logentry.getNote().contains(noodle))
+				return true;
+			return false;
+		}
+
+		@Override
+		public boolean appliesToProperty(Object propertyId) {
+			return true;
+		}
+		
+	}
+
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
+
+	private String m_searchText = null;
 
 	private Panel m_panel  = new Panel("Fast Integration - Status: Ready");
     private Button m_fast = new Button("Start Fast Integration");
@@ -64,6 +109,7 @@ public class FastTab extends DashboardTab {
     private JobLogDao m_joblogdao;
     private IpSnmpProfileDao m_ipSnmpProfileDao;
     private boolean m_loaded = false;
+	private TextField m_searchField       = new TextField("Search Job Logs Text");
     
     private Table m_jobTable =  new Table();
     private Table m_logTable =  new Table();
@@ -75,37 +121,30 @@ public class FastTab extends DashboardTab {
 
 	public FastTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
-	}
+		
+		VerticalLayout searchlayout = new VerticalLayout();
+		
+		m_searchField.setWidth("80%");
+		
+		searchlayout.addComponent(m_searchField);
+		searchlayout.setWidth("100%");
+		searchlayout.setMargin(true);
 
-	@Override
-	public String getName() {
-		return "FastTab";
-	}
+		m_searchField.setInputPrompt("Search nodes");
+		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
+		m_searchField.addTextChangeListener(new TextChangeListener() {
+			private static final long serialVersionUID = 1L;
+			@SuppressWarnings("unchecked")
+			public void textChange(final TextChangeEvent event) {
+				m_searchText = event.getText();
+				if (m_logTable.getContainerDataSource() == null)
+					return;
+				((BeanItemContainer<JobLogEntry>)m_logTable.getContainerDataSource()).removeAllContainerFilters();
+				((BeanItemContainer<JobLogEntry>)m_logTable.getContainerDataSource()).addContainerFilter(
+						new JobLogFilter(m_searchText));
+			}
+		});
 
-	@Override
-	public void load() {
-		updateTabHead();
-		if (m_loaded) 
-			return;
-		m_jobdao = getService().getJobContainer();
-		m_joblogdao = getService().getJobLogContainer();
-		m_ipSnmpProfileDao = getService().getIpSnmpProfileContainer();
-		m_jobTable.setContainerDataSource(m_jobdao);
-		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstatus","jobstart","jobend"});
-		m_panel.setContent(getFastBox());
-		getCore().addComponent(m_panel);
-		getHead().addComponent(m_fast);
-		m_fast.addClickListener(this);
-    	m_loaded = true;
-	}
-
-	private Component getFastBox() {
-	   	VerticalLayout layout = new VerticalLayout();
-    	layout.setMargin(true);
-        layout.addComponent(m_progress);
-	    m_progress.setEnabled(false);
-	    m_progress.setVisible(false);
-        
 	    m_jobTable.setSelectable(true);
 	    m_jobTable.setImmediate(true);
 	    m_jobTable.addItemClickListener(new ItemClickListener() {
@@ -123,24 +162,56 @@ public class FastTab extends DashboardTab {
 				for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
 					joblogcontainer.addBean(jlog);
 				m_logTable.setContainerDataSource(joblogcontainer);
+				m_logTable.setSizeFull();
+				m_logTable.setVisibleColumns(new Object[] {"hostname","ipaddr","orderCode","description","note"});
 				m_logTable.setVisible(true);
 			}
 		});
-	    HorizontalLayout tablelayout = new HorizontalLayout();
-        layout.addComponent(m_jobTable);
-        layout.addComponent(m_logTable);
-        layout.addComponent(tablelayout);
+
+        m_progress.setEnabled(false);
+	    m_progress.setVisible(false);
         m_logTable.setVisible(false);
-        return layout;
+
+		getHead().addComponent(m_fast);
+
+		getLeft().addComponent(new Panel("Log Search",searchlayout));
+		getLeft().addComponent(new Panel("Jobs",m_jobTable));
+
+		getRight().addComponent(m_progress);
+		getRight().addComponent(m_panel);
+		getRight().addComponent(new Panel("Logs",m_logTable));
+		m_fast.addClickListener(this);
 	}
+	
+
+	@Override
+	public String getName() {
+		return "FastTab";
+	}
+
+	@Override
+	public void load() {
+		updateTabHead();
+		if (m_loaded) 
+			return;
+		m_jobdao = getService().getJobContainer();
+		m_joblogdao = getService().getJobLogContainer();
+		m_ipSnmpProfileDao = getService().getIpSnmpProfileContainer();
+		m_jobTable.setContainerDataSource(m_jobdao);
+		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstart","jobend"});
+		m_jobTable.setSortAscending(false);
+    	m_loaded = true;
+	}
+
 
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_fast) {
 	        
-			int jobid = m_jobdao.getLastJobId().getValue();
-			logger.info ("found last job with id: " + jobid);
-			
+			if (m_jobdao.getLastJobId() !=  null) {
+				int jobid = m_jobdao.getLastJobId().getValue();
+				logger.info ("found last job with id: " + jobid);
+			}
 	        Job job = new Job();
 			job.setUsername(getService().getUser());
 			job.setJobdescr("Fast sync: ");
