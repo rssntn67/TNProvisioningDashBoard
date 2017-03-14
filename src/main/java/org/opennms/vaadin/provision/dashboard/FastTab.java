@@ -94,6 +94,7 @@ public class FastTab extends DashboardTab {
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstatus","jobstart","jobend"});
 		m_panel.setContent(getFastBox());
 		getCore().addComponent(m_panel);
+		getHead().addComponent(m_fast);
 		m_fast.addClickListener(this);
     	m_loaded = true;
 	}
@@ -101,7 +102,6 @@ public class FastTab extends DashboardTab {
 	private Component getFastBox() {
 	   	VerticalLayout layout = new VerticalLayout();
     	layout.setMargin(true);
-        layout.addComponent(m_fast);
         layout.addComponent(m_progress);
 	    m_progress.setEnabled(false);
 	    m_progress.setVisible(false);
