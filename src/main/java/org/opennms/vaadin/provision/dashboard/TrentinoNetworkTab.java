@@ -83,7 +83,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		@SuppressWarnings("unchecked")
 		public boolean passesFilter(Object itemId, Item item) {
 			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();			
-			return (    node.getNodeLabel().contains(needle) 
+			return (    (node.getPrimary().contains(needle) || node.getNodeLabel().contains(needle)) 
 					&& ( needle1 == null || needle1.equals(node.getNetworkCategory()) ) 
 					&& ( needle2 == null || needle2.equals(node.getNotifCategory()) )
 		            && ( needle3 == null || needle3.equals(node.getThreshCategory()) ) 
@@ -110,7 +110,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	private ComboBox m_notifCatSearchComboBox   = new ComboBox("Select Notification Category");
 	private ComboBox m_threshCatSearchComboBox  = new ComboBox("Select Threshold Category");
 	private ComboBox m_slaCatSearchComboBox  = new ComboBox("Select Service Report Category");
-	private TextField m_searchField       = new TextField("Type Label Text");
+	private TextField m_searchField       = new TextField("Type Label Text or Ip");
 
 	private ComboBox m_secondaryIpComboBox = new ComboBox("Seleziona indirizzo ip");
 	private Table m_secondaryIpAddressTable = new Table();
