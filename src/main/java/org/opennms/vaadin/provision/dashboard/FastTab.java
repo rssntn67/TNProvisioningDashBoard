@@ -101,7 +101,7 @@ public class FastTab extends DashboardTab {
 
 	private String m_searchText = null;
 
-	private Panel m_panel  = new Panel("Fast Integration - Status: Ready");
+	private Panel m_panel  = new Panel();
     private Button m_fast = new Button("Start Fast Integration");
     final ProgressBar m_progress = new ProgressBar();
 
@@ -192,14 +192,21 @@ public class FastTab extends DashboardTab {
 	@Override
 	public void load() {
 		updateTabHead();
+		logger.info(getService().getJobContainer().getLastJobId().toString());
+		if (getService().isFastRunning()) {
+			m_fast.setEnabled(false);
+			m_panel.setCaption("Fast Integration - Status: Running");
+			
+		} else {
+			m_panel.setCaption("Fast Integration - Status: Ready");			
+		}
 		if (m_loaded) 
 			return;
 		m_jobdao = getService().getJobContainer();
 		m_joblogdao = getService().getJobLogContainer();
 		m_ipSnmpProfileDao = getService().getIpSnmpProfileContainer();
 		m_jobTable.setContainerDataSource(m_jobdao);
-		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobdescr","jobstart","jobend"});
-		m_jobTable.setSortAscending(false);
+		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
     	m_loaded = true;
 	}
 
@@ -230,6 +237,7 @@ public class FastTab extends DashboardTab {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			m_jobTable.setSelectable(false);
 			int curjobid = m_jobdao.getLastJobId().getValue();
 			logger.info ("created job with id: " + curjobid);
 			m_logTable.setVisible(false);
@@ -309,6 +317,7 @@ public class FastTab extends DashboardTab {
 					m_progress.setVisible(false);
 
 					m_fast.setEnabled(true);
+					m_jobTable.setSelectable(true);
 					m_panel.setCaption("Fast Integration - Status: Ready");
 
 					// Stop polling
