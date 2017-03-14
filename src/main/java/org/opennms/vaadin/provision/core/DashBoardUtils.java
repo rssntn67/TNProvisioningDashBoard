@@ -421,10 +421,6 @@ public class DashBoardUtils {
 			return false;
 		if (node.getThreshCategory() == null)
 			return false;
-		if (node.getCity() == null)
-			return false;
-		if (node.getAddress1() == null)
-			return false;
 		if (node.getBackupProfile() == null)
 			return false;
 		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
