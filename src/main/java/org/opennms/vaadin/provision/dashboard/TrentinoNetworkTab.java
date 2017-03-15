@@ -567,7 +567,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		m_searchText="";
 		m_searchField.setValue(m_searchText);
 	}
-
+	
 	@Override
 	public TrentinoNetworkNode addBean() {
 		return m_requisitionContainer.addBeanAt(0,

@@ -395,6 +395,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
 			applyFilter(node.getHostname());
+			cleanSearchBox();
 			getRequisitionContainer().removeAllContainerFilters();
 		} catch (Exception e) {
 			String localizedMessage = e.getLocalizedMessage();
