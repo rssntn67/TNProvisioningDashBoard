@@ -378,7 +378,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			m_editorFields.bind(m_optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
 		    m_editorFields.bind(m_circuiId, DashBoardUtils.CIRCUITID);
 
-			Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
+			Set<String> duplicatednodeLabels = getService().getDuplicatedNodeLabels();
 			if (!duplicatednodeLabels.isEmpty()) {
 				final Window duplicatednodelabelwindow = new Window("Duplicated Foreign Id");
 				VerticalLayout windowcontent = new VerticalLayout();
@@ -394,7 +394,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
 			}
 
-			Set<String> duplicatedForeignIds= getService().checkUniqueForeignId();
+			Set<String> duplicatedForeignIds= getService().getDuplicatedForeignIds();
 			if (!duplicatedForeignIds.isEmpty()) {
 				final Window duplicatedIdwindow = new Window("Duplicated Foreign Id");
 				VerticalLayout windowcontent = new VerticalLayout();

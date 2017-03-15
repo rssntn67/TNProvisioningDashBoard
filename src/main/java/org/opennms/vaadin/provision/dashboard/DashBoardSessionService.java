@@ -837,7 +837,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
         return ipaddresses;
 	}
 
-	public Set<String> checkUniqueNodeLabel() {
+	public Set<String> getDuplicatedNodeLabels() {
 		Set<String> labels = new HashSet<String>();
 		Set<String> duplicated = new HashSet<String>();
 		for (String label: m_foreignIdNodeLabelMap.values()) {
@@ -850,7 +850,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return duplicated;
 	}
 	
-	public Set<String> checkUniqueForeignId() {
+	public Set<String> getDuplicatedForeignIds() {
 		Set<String> labels = new HashSet<String>();
 		Set<String> duplicated = new HashSet<String>();
 		for (String label: getForeignIds()) {
