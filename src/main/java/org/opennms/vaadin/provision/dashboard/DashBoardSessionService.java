@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -880,19 +879,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	}
 	
 	public boolean hasDuplicatedForeignId(String hostname) {
-		for (String label: getForeignIds()) {
-			if (label.equals(hostname)) 
-				return true;
-		}
-		return false;
+		return getDuplicatedForeignIds().contains(hostname);
 	}
 
 	public boolean hasDuplicatedNodelabel(String nodelabel) {
-		for (String label: getNodeLabels()) {
-			if (label.toLowerCase(Locale.ENGLISH).equals(nodelabel.toLowerCase(Locale.ENGLISH))) 
-				return true;
-		}
-		return false;
+		return getDuplicatedNodeLabels().contains(nodelabel);
 	}
 
 	public RequisitionNode getMediaGateway() {
