@@ -129,21 +129,9 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	public TrentinoNetworkTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
 
-		Map<String,BackupProfile> bckupprofilemap = 
-				getService().getBackupProfileContainer().getBackupProfileMap();
-		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
-		Collections.sort(backupprofiles);
-		
-		List<Categoria> cats = new ArrayList<Categoria>(getService().getCatContainer().getCatMap().values()); 
-		Collections.sort(cats);
-
 		m_circuiId.setWidth(8, Unit.CM);
 		m_circuiId.setHeight(6, Unit.MM);
 
-		for (Categoria categories: cats) {
-			m_networkCatSearchComboBox.addItem(categories);
-			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
-		}
 		m_networkCatSearchComboBox.setInvalidAllowed(false);
 		m_networkCatSearchComboBox.setNullSelectionAllowed(true);		
 		m_networkCatSearchComboBox.setImmediate(true);
@@ -177,10 +165,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
 		addSearchValueChangeListener(m_searchField);
 
-		for (Categoria categories: cats) {
-			m_networkCatComboBox.addItem(categories);
-			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
-		}
 		m_networkCatComboBox.setInvalidAllowed(false);
 		m_networkCatComboBox.setNullSelectionAllowed(false);
 		m_networkCatComboBox.setRequired(true);
@@ -316,12 +300,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
-		for (String backupprofile: backupprofiles) {
-			m_backupComboBox.addItem(backupprofile);
-			m_backupComboBox.setItemCaption(backupprofile, 
-					backupprofile +
-					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
-		}
 
 		for (String option: DashBoardUtils.m_server_optional) {
 			m_optionalGroup.addItem(option);
@@ -334,8 +312,33 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 	@Override
 	public void load() {
+		super.load();
+		Map<String,BackupProfile> bckupprofilemap = 
+				getService().getBackupProfileContainer().getBackupProfileMap();
+		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
+		Collections.sort(backupprofiles);
+		
+		List<Categoria> cats = new ArrayList<Categoria>(getService().getCatContainer().getCatMap().values()); 
+		Collections.sort(cats);
+		for (Categoria categories: cats) {
+			m_networkCatSearchComboBox.addItem(categories);
+			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+		}
+
+		for (Categoria categories: cats) {
+			m_networkCatComboBox.addItem(categories);
+			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+		}
+
+		for (String backupprofile: backupprofiles) {
+			m_backupComboBox.addItem(backupprofile);
+			m_backupComboBox.setItemCaption(backupprofile, 
+					backupprofile +
+					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
+		}
+
+
 		if (!loaded) {
-			updateTabHead();
 			try {
 				m_requisitionContainer = getService().getTNContainer();
 				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
@@ -385,7 +388,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.ERROR_MESSAGE);
 			}
 
-			Set<String> duplicatedPrimaries= getService().checkUniquePrimary();
+			Set<String> duplicatedPrimaries= getService().getDuplicatedPrimary();
 			if (!duplicatedPrimaries.isEmpty()) {
 				logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
 				Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.ERROR_MESSAGE);

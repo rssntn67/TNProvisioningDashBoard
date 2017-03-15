@@ -58,7 +58,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	
 	private Button m_saveNodeButton  = new Button("Salva Modifiche");
 	private Button m_resetNodeButton   = new Button("Annulla Modifiche");
-	private Button m_removeNodeButton  = new Button("Elimina Nodo");
+	private Button m_deleteNodeButton  = new Button("Elimina Nodo");
 	
 	private Table m_requisitionTable   	= new Table();
 	
@@ -91,15 +91,14 @@ public abstract class RequisitionTab extends DashboardTab {
     	
 		getHead().addComponent(m_syncRequisButton);
 		getHead().addComponent(m_addNewNodeButton);
-		getHead().addComponent(m_replaceNodeButton);
 
 		m_saveNodeButton.addClickListener(this);
 		m_saveNodeButton.setImmediate(true);		
 		m_saveNodeButton.setEnabled(false);
 
-		m_removeNodeButton.addClickListener(this);
-		m_removeNodeButton.setImmediate(true);		
-		m_removeNodeButton.setEnabled(false);				
+		m_deleteNodeButton.addClickListener(this);
+		m_deleteNodeButton.setImmediate(true);		
+		m_deleteNodeButton.setEnabled(false);				
 		
 		m_resetNodeButton.addClickListener(this);
 		m_resetNodeButton.setImmediate(true);				
@@ -110,11 +109,11 @@ public abstract class RequisitionTab extends DashboardTab {
     	m_replaceNodeButton.setEnabled(false);
 
 		HorizontalLayout editNodeButtons = new HorizontalLayout();
-		editNodeButtons.addComponent(m_removeNodeButton);
+		editNodeButtons.addComponent(m_deleteNodeButton);
 		editNodeButtons.addComponent(m_saveNodeButton);
 		editNodeButtons.addComponent(m_replaceNodeButton);
 		editNodeButtons.addComponent(m_resetNodeButton);
-		editNodeButtons.setComponentAlignment(m_removeNodeButton, Alignment.MIDDLE_LEFT);
+		editNodeButtons.setComponentAlignment(m_deleteNodeButton, Alignment.MIDDLE_LEFT);
 		editNodeButtons.setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_CENTER);
 		editNodeButtons.setComponentAlignment(m_replaceNodeButton, Alignment.MIDDLE_LEFT);
 		editNodeButtons.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
@@ -145,8 +144,6 @@ public abstract class RequisitionTab extends DashboardTab {
 
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(true);
-		for (String nodelabel :getService().getNodeLabels())
-			m_parentComboBox.addItem(nodelabel);
 		
 		m_domainComboBox.setInvalidAllowed(false);
 		m_domainComboBox.setNullSelectionAllowed(false);
@@ -171,10 +168,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		});
 		m_domainComboBox.setImmediate(true);
 		
-		m_domainComboBox.removeAllItems();
-		for (final String domain: getService().getDnsDomainContainer().getDomains()) {
-			m_domainComboBox.addItem(domain);
-		}
 		m_requisitionTable.setSizeFull();
 		m_requisitionTable.setSelectable(true);
 		m_requisitionTable.setImmediate(true);
@@ -235,6 +228,21 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 
+	}
+		
+	public void load() {
+		updateTabHead();
+
+		m_parentComboBox.removeAllItems();
+		for (String nodelabel :getService().getNodeLabels())
+			m_parentComboBox.addItem(nodelabel);
+
+		m_domainComboBox.removeAllItems();
+		for (final String domain: getService().getDnsDomainContainer().getDomains()) {
+			m_domainComboBox.addItem(domain);
+		}
+
+		m_snmpComboBox.removeAllItems();
 		Map<String,SnmpProfile> snmpprofilemap = 
 				getService().getSnmpProfileContainer().getSnmpProfileMap();
 		List<String> snmpprofiles = new ArrayList<String>(snmpprofilemap.keySet());
@@ -245,9 +253,9 @@ public abstract class RequisitionTab extends DashboardTab {
 					snmpprofile + 
 					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
 					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
-		}
+		}		
 	}
-		
+	
 	public abstract void selectItem(BasicNode node);
 	public abstract void applyFilter(String filter);
 	public abstract void cleanSearchBox();
@@ -265,9 +273,9 @@ public abstract class RequisitionTab extends DashboardTab {
 	    	newNode();
 	    } else if (event.getButton() == m_saveNodeButton) {
 	    	save();
-	    } else if (event.getButton() == m_removeNodeButton) {
+	    } else if (event.getButton() == m_deleteNodeButton) {
 	    	remove();
-	    } else if (event.getButton() == m_removeNodeButton) {
+	    } else if (event.getButton() == m_deleteNodeButton) {
 	    	replace();
 	    } else if (event.getButton() == m_resetNodeButton) {
 	    	reset();
@@ -276,14 +284,14 @@ public abstract class RequisitionTab extends DashboardTab {
 	
 	public void enableNodeButtons() {
 		m_saveNodeButton.setEnabled(true);
-		m_removeNodeButton.setEnabled(true);
+		m_deleteNodeButton.setEnabled(true);
 		m_replaceNodeButton.setEnabled(true);
 		m_resetNodeButton.setEnabled(true);
 	}
 
 	public void disableNodeButtons() {
 		m_saveNodeButton.setEnabled(false);
-		m_removeNodeButton.setEnabled(false);
+		m_deleteNodeButton.setEnabled(false);
 		m_replaceNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
 	}
@@ -378,12 +386,12 @@ public abstract class RequisitionTab extends DashboardTab {
 				node.setForeignId(node.getHostname());
 				node.setValid(true);
 				getService().add(node);
-				logger.info("Added: " + node.getNodeLabel());
+				logger.info("Added: " + node.getNodeLabel()+ " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 			} else {
 				getService().update(node);
 				node.setValid(getService().isValid(node));
-				logger.info("Updated: " + node.getNodeLabel());
+				logger.info("Updated: " + node.getNodeLabel() + " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
 			applyFilter(node.getHostname());
@@ -405,7 +413,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	public void remove() {
 		getRight().setVisible(false);
 		m_saveNodeButton.setEnabled(false);
-		m_removeNodeButton.setEnabled(false);
+		m_deleteNodeButton.setEnabled(false);
 		m_replaceNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
 		BeanItem<? extends BasicNode> node = getBeanFieldGroup().getItemDataSource();
@@ -432,7 +440,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			getRight().setVisible(false);
 			m_requisitionTable.unselect(m_requisitionTable.getValue());
 			m_saveNodeButton.setEnabled(false);
-			m_removeNodeButton.setEnabled(false);
+			m_deleteNodeButton.setEnabled(false);
 			m_replaceNodeButton.setEnabled(false);
 			m_resetNodeButton.setEnabled(false);
 		}
@@ -463,9 +471,6 @@ public abstract class RequisitionTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
-			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
-			if (node.getForeignId() != null)
-				return;
 			String hostname = (String)value;
 			logger.info("DuplicatedForeignIdValidator: validating foreignId: " + hostname);
 	         if (getService().hasDuplicatedForeignId((hostname)))
@@ -483,11 +488,9 @@ public abstract class RequisitionTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
-			if (node.getForeignId() != null)
-				return;
 			String ip = (String)value;
 			logger.info("DuplicatedPrimaryValidator: validating ip: " + ip);
-	         if (getService().hasDuplicatedPrimary((ip)))
+	         if (getService().hasDuplicatedPrimary(node.getForeignId(),ip))
 	             throw new InvalidValueException("DuplicatedPrimaryValidator: trovato un duplicato del primary ip: " + ip);
 	       }
 	}

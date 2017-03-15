@@ -85,11 +85,6 @@ public class MediaGatewayTab extends RequisitionTab {
 	public MediaGatewayTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
 
-		Map<String,BackupProfile> bckupprofilemap = 
-				getService().getBackupProfileContainer().getBackupProfileMap();
-		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
-		Collections.sort(backupprofiles);
-		
 		m_searchField.setInputPrompt("Search nodes");
 		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
 		m_searchField.addTextChangeListener(new TextChangeListener() {
@@ -113,6 +108,16 @@ public class MediaGatewayTab extends RequisitionTab {
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
+		
+	}
+
+	@Override
+	public void load() {
+		super.load();
+		Map<String,BackupProfile> bckupprofilemap = 
+				getService().getBackupProfileContainer().getBackupProfileMap();
+		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
+		Collections.sort(backupprofiles);
 
 		for (String backupprofile: backupprofiles) {
 			m_backupComboBox.addItem(backupprofile);
@@ -120,12 +125,7 @@ public class MediaGatewayTab extends RequisitionTab {
 					backupprofile +
 					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
 		}
-		
-	}
 
-	@Override
-	public void load() {
-		updateTabHead();
 		if (!loaded) {
 			try {
 				if (getService().getMediaGateway() == null ) {

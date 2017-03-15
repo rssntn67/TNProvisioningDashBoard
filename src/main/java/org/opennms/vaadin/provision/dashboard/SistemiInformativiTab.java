@@ -352,7 +352,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		updateTabHead();
+		super.load();
 		if (!loaded) {
 			try {
 				m_requisitionContainer = getService().getSIContainer();

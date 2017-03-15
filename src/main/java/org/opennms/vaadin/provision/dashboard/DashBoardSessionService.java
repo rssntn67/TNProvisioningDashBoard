@@ -84,11 +84,9 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private static final long serialVersionUID = 508580392774265535L;
 	private final static Logger logger = Logger.getLogger(DashBoardSessionService.class.getName());	
 
-	private Map<String,IpSnmpProfile> m_ipSnmpMap = new HashMap<String, IpSnmpProfile>();
-
 	private Map<String,String> m_foreignIdNodeLabelMap = new HashMap<String, String>();
 	private Map<String,String> m_nodeLabelForeignIdMap = new HashMap<String, String>();
-	private Collection<String> m_primaryipcollection = new ArrayList<String>();
+	private Map<String,Set<String>> m_primaryipforeignidmap = new HashMap<String,Set<String>>();
 	private Map<String,Map<String,BasicNode>> m_updates = new HashMap<String, Map<String,BasicNode>>();
 	
 	final private OnmsDao m_onmsDao;
@@ -174,8 +172,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		ipsnmptq.setVersionColumn("versionid");
         m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
 
-		m_ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
-
 		TableQuery snmptq = new TableQuery("snmpprofiles", m_pool);
 		snmptq.setVersionColumn("versionid");
         m_snmpprofilecontainer = new SnmpProfileDao(snmptq);
@@ -210,9 +206,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public void syncSnmpProfile(String primary, String snmpprofile) throws SQLException{
 		if (primary == null || snmpprofile == null)
 			return;
+		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
+
 		IpSnmpProfile ipSnmpProfile= new IpSnmpProfile(primary,snmpprofile); 
-		if (m_ipSnmpMap.containsKey(primary)) {
-			if (m_ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
+		if (ipSnmpMap.containsKey(primary)) {
+			if (ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
 				return;
 			logger.info("syncSnmpProfile: update primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 			m_ipsnmpprofilecontainer.update(ipSnmpProfile);
@@ -220,7 +218,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			logger.info("syncSnmpProfile: adding primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 			m_ipsnmpprofilecontainer.add(ipSnmpProfile);				
 		}
-		m_ipSnmpMap.put(primary, ipSnmpProfile);
 		m_ipsnmpprofilecontainer.commit();
 	}
 	
@@ -235,14 +232,16 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	}
 
 	private void syncSnmpProfile() throws SQLException {
-		for (String primary: m_primaryipcollection) {
+		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
+
+		for (String primary: m_primaryipforeignidmap.keySet()) {
 			String snmpprofile = getSnmpProfileName(primary);
 			logger.info("syncSnmpProfile: found primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 			if (snmpprofile == null) 
 				continue;			
 			IpSnmpProfile ipSnmpProfile= new IpSnmpProfile(primary,snmpprofile); 
-			if (m_ipSnmpMap.containsKey(primary)) {
-				if (m_ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
+			if (ipSnmpMap.containsKey(primary)) {
+				if (ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
 					continue;
 				logger.info("syncSnmpProfile: update primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 				m_ipsnmpprofilecontainer.update(ipSnmpProfile);
@@ -250,7 +249,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				logger.info("syncSnmpProfile: adding primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 				m_ipsnmpprofilecontainer.add(ipSnmpProfile);				
 			}
-			m_ipSnmpMap.put(primary, ipSnmpProfile);
+			ipSnmpMap.put(primary, ipSnmpProfile);
 		}
 		m_ipsnmpprofilecontainer.commit();
 	}
@@ -260,6 +259,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		BeanContainer<String, SistemiInformativiNode> requisitionContainer = new BeanContainer<String, SistemiInformativiNode>(SistemiInformativiNode.class);
 		requisitionContainer.setBeanIdProperty(DashBoardUtils.LABEL);
 		List<String> domains = getDnsDomainContainer().getDomains();
+		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
+
 		for (RequisitionNode node : m_onmsDao.getRequisition(DashBoardUtils.SI_REQU_NAME).getNodes()) {
 			String foreignId = node.getForeignId();
 			String nodelabel = node.getNodeLabel();
@@ -410,8 +411,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				manufacturer = node.getAsset(DashBoardUtils.MANUFACTURER).getValue();
 			
 			String snmpProfile = null;
-			if (primary != null && m_ipSnmpMap.containsKey(primary))
-				snmpProfile= m_ipSnmpMap.get(primary).getSnmprofile();
+			if (primary != null && ipSnmpMap.containsKey(primary))
+				snmpProfile= ipSnmpMap.get(primary).getSnmprofile();
 
 			
 			SistemiInformativiNode sinode = new SistemiInformativiNode(serviceMap, descr, hostname, 
@@ -442,18 +443,21 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		Collection<Categoria> cats = getCatContainer().getCatMap().values();
 		List<String> domains = getDnsDomainContainer().getDomains();
-		
+		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
+
 		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
-    	m_primaryipcollection.clear();
+    	m_primaryipforeignidmap.clear();
 
 		for (RequisitionNode node : req.getNodes()) {
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
-					m_primaryipcollection.add(ip.getIpAddr());
+					if (!m_primaryipforeignidmap.containsKey(ip.getIpAddr()))
+						m_primaryipforeignidmap.put(ip.getIpAddr(),new HashSet<String>());
+					m_primaryipforeignidmap.get(ip.getIpAddr()).add(node.getForeignId());
 				}
 			}
 		}
@@ -563,8 +567,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				circuitId = node.getBuilding();
 
 			String snmpProfile = null;
-			if (primary != null && m_ipSnmpMap.containsKey(primary))
-				snmpProfile= m_ipSnmpMap.get(primary).getSnmprofile();
+			if (primary != null && ipSnmpMap.containsKey(primary))
+				snmpProfile= ipSnmpMap.get(primary).getSnmprofile();
 			
 			TrentinoNetworkNode tnnode = new TrentinoNetworkNode(
 					secondary,
@@ -603,14 +607,16 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
     	m_foreignIdNodeLabelMap.clear();
     	m_nodeLabelForeignIdMap.clear();
-    	m_primaryipcollection.clear();
+    	m_primaryipforeignidmap.clear();
 		
 		for (RequisitionNode node : req.getNodes()) {
 			m_foreignIdNodeLabelMap.put(node.getForeignId(),node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(),node.getForeignId());
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
-					m_primaryipcollection.add(ip.getIpAddr());
+					if (!m_primaryipforeignidmap.containsKey(ip.getIpAddr()))
+						m_primaryipforeignidmap.put(ip.getIpAddr(),new HashSet<String>());
+					m_primaryipforeignidmap.get(ip.getIpAddr()).add(node.getForeignId());
 				}
 			}
 		}
@@ -755,7 +761,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
-		m_primaryipcollection.remove(tnnode.getPrimary());
+		m_primaryipforeignidmap.remove(tnnode.getPrimary());
 		
 		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
 			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
@@ -775,7 +781,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());
 		String nodelabel = m_foreignIdNodeLabelMap.remove(tnnode.getForeignId());
 		m_nodeLabelForeignIdMap.remove(nodelabel);
-		m_primaryipcollection.remove(tnnode.getPrimary());
+		m_primaryipforeignidmap.remove(tnnode.getPrimary());
 		
 		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
 			m_updates.put(DashBoardUtils.TN_REQU_NAME, new HashMap<String, BasicNode>());
@@ -813,8 +819,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return m_foreignIdNodeLabelMap.keySet();
 	}
 		
-	public Collection<String> getPrimaryIpCollection() {
-		return m_primaryipcollection;
+	public Map<String,Set<String>> getPrimaryIpCollection() {
+		return m_primaryipforeignidmap;
 	}
 
 	public List<String> getIpAddresses(String foreignSource,String nodelabel) {
@@ -857,21 +863,20 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return duplicated;
 	}
 
-	public Set<String> checkUniquePrimary() {
-		Set<String> primaries = new HashSet<String>();
+	public Set<String> getDuplicatedPrimary() {
 		Set<String> duplicated = new HashSet<String>();
-		for (String ip: getPrimaryIpCollection()) {
-			if (primaries.contains(ip)) {
+		for (String ip: m_primaryipforeignidmap.keySet()) {
+			if (m_primaryipforeignidmap.get(ip).size() > 1) {
 				duplicated.add(ip);
-			} else {
-				primaries.add(ip);
 			}
 		}
 		return duplicated;
 	}
 
-	public boolean hasDuplicatedPrimary(String primary) {
-		return m_primaryipcollection.contains(primary);
+	public boolean hasDuplicatedPrimary(String foreignId, String primary) {
+		if (!m_primaryipforeignidmap.containsKey(primary))
+			return true;
+		return !m_primaryipforeignidmap.get(primary).contains(foreignId);
 	}
 	
 	public boolean hasDuplicatedForeignId(String hostname) {
@@ -954,7 +959,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
-		m_primaryipcollection.add(node.getPrimary());
+		m_primaryipforeignidmap.put(node.getPrimary(), new HashSet<String>());
+		m_primaryipforeignidmap.get(node.getPrimary()).add(node.getForeignId());
 		node.clear();
 		
 		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
@@ -1271,7 +1277,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		m_foreignIdNodeLabelMap.put(node.getForeignId(), node.getNodeLabel());
 		m_nodeLabelForeignIdMap.put(node.getNodeLabel(), node.getForeignId());
-		m_primaryipcollection.add(node.getPrimary());
+		m_primaryipforeignidmap.put(node.getPrimary(), new HashSet<String>());
+		m_primaryipforeignidmap.get(node.getPrimary()).add(node.getForeignId());
 		node.clear();
 		
 		if (!m_updates.containsKey(DashBoardUtils.TN_REQU_NAME))
@@ -1534,7 +1541,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_onmsDao.deletePolicy(foreignSource,
 					DashBoardUtils.getPolicyName(ip));
 			m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ip);
-			m_primaryipcollection.remove(ip);
+			m_primaryipforeignidmap.remove(ip);
 		}
 
 		for (String ip : interfaceToAdd) {
@@ -1543,7 +1550,9 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 			iface.setDescr(descr);
 			if ( primary!= null && primary.equals(ip)) {
-				m_primaryipcollection.add(ip);
+				if (!m_primaryipforeignidmap.containsKey(ip))
+					m_primaryipforeignidmap.put(ip, new HashSet<String>());
+				m_primaryipforeignidmap.get(ip).add(foreignId);
 				iface.setSnmpPrimary(PrimaryType.PRIMARY);
 			} else {
 				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
