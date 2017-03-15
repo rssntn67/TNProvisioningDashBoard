@@ -156,6 +156,8 @@ public class FastTab extends DashboardTab {
 
 			@Override
 			public void itemClick(ItemClickEvent event) {
+				if (getService().isFastRunning())
+					return;
 				BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
 				Integer jobid = (Integer)event.getItem().getItemProperty("jobid").getValue();
 				logger.info ("selected job with id: " + jobid);
@@ -221,7 +223,7 @@ public class FastTab extends DashboardTab {
 			}
 	        Job job = new Job();
 			job.setUsername(getService().getUser());
-			job.setJobdescr("Fast sync: ");
+			job.setJobdescr("FAST sync: started");
 			job.setJobstatus(JobStatus.RUNNING);
 			job.setJobstart(new Date());
 			
@@ -243,6 +245,7 @@ public class FastTab extends DashboardTab {
 			m_logTable.setVisible(false);
 			BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
 			m_logTable.setContainerDataSource(joblogcontainer);
+			m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 			job.setJobid(curjobid);
 	        FastIntegrationRunnable runnable = new FastIntegrationRunnable();
 			runnable.setJob(job);
@@ -423,18 +426,15 @@ public class FastTab extends DashboardTab {
 
 	class FastIntegrationRunnable  extends FastTabAbstractRunnable implements Runnable {
 
-		Map<String, FastServiceLink>           m_fastServiceLinkMap = new HashMap<String, FastServiceLink>();
+		Map<String, FastServiceLink>           m_fastOrderCodeServiceLinkMap = new HashMap<String, FastServiceLink>();
 		
-		Map<String, List<FastServiceDevice>> m_fastServiceDeviceMap = new HashMap<String, List<FastServiceDevice>>();
-		Map<String,String>                      m_fastIpHostnameMap = new HashMap<String,String>();
-		Map<String, Set<String>>     m_fastDuplicatedIpHostnamesMap = new HashMap<String, Set<String>>();
+		Map<String, List<FastServiceDevice>>    m_fastHostnameServiceDeviceMap = new HashMap<String, List<FastServiceDevice>>();
+		Map<String,Set<String>>                 m_fastIpHostnameMap            = new HashMap<String,Set<String>>();
 
-		Map<String,RequisitionNode>        m_onmsRequisitionNodeMap = new HashMap<String, RequisitionNode>();
-		Map<String,String>                     m_onmsIpForeignIdMap = new HashMap<String, String>();
-		Map<String, Set<String>>     m_onmsDuplicatedIpForeignIdMap = new HashMap<String, Set<String>>();
+		Map<String,RequisitionNode>        m_onmsForeignIdRequisitionNodeMap = new HashMap<String, RequisitionNode>();
+		Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
+		Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
 
-		Set<String> m_onmsDuplicatedForeignId  = new HashSet<String>();
-		
 		Map<String,Categoria> m_vrf;
 		Map<String, BackupProfile> m_backup;
 		Map<String, SnmpProfile> m_snmp;
@@ -526,14 +526,14 @@ public class FastTab extends DashboardTab {
 			});				
 
 			int i = 0;
-			int step = (m_fastServiceDeviceMap.size() + m_onmsRequisitionNodeMap.size()) / 100;
+			int step = (m_fastHostnameServiceDeviceMap.size() + m_onmsForeignIdRequisitionNodeMap.size()) / 100;
 			logger.info("run: step: " + step);
-			logger.info("run: size: " + m_fastServiceDeviceMap.size());
+			logger.info("run: size: " + m_fastHostnameServiceDeviceMap.size());
 			int barrier = step;
 
 			try {
 
-				for (String hostname: m_fastServiceDeviceMap.keySet()) {
+				for (String hostname: m_fastHostnameServiceDeviceMap.keySet()) {
 					try {
 						Thread.sleep(20);
 					} catch (InterruptedException e) {
@@ -556,10 +556,10 @@ public class FastTab extends DashboardTab {
 					
 					if (!checkduplicatedhostname(hostname) && !checkduplicatedipaddress(hostname)) {
 						Set<String> foreignIds = new HashSet<String>();
-						if (m_onmsRequisitionNodeMap.containsKey(hostname)) {
+						if (m_onmsForeignIdRequisitionNodeMap.containsKey(hostname)) {
 							foreignIds.add(hostname);
 						} 
-						for (RequisitionNode rnode : m_onmsRequisitionNodeMap
+						for (RequisitionNode rnode : m_onmsForeignIdRequisitionNodeMap
 								.values()) {
 							if (rnode.getNodeLabel().startsWith(hostname)) 
 								foreignIds.add(rnode.getForeignId());
@@ -567,7 +567,7 @@ public class FastTab extends DashboardTab {
 						if (foreignIds.size() == 0) {
 							add(hostname);
 						} else if (foreignIds.size() == 1) {
-							update(hostname, m_onmsRequisitionNodeMap.get(foreignIds.iterator().next()));
+							update(hostname, m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next()));
 						} else {
 							mismatch(hostname, foreignIds);
 						}
@@ -576,7 +576,7 @@ public class FastTab extends DashboardTab {
 	
 				}
 
-				for (String foreignId: m_onmsRequisitionNodeMap.keySet()) {
+				for (String foreignId: m_onmsForeignIdRequisitionNodeMap.keySet()) {
 					try {
 						Thread.sleep(20);
 					} catch (InterruptedException e) {
@@ -599,13 +599,13 @@ public class FastTab extends DashboardTab {
 					
 					if (isDeviceInFast(foreignId))
 						continue;
-					RequisitionNode rnode = m_onmsRequisitionNodeMap.get(foreignId);
+					RequisitionNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
 					if (isManagedByFast(rnode)) {
 						deleteNode(foreignId, rnode);
 						continue;
 					}
 					for (RequisitionInterface riface: rnode.getInterfaces()) {
-						if (riface.getDescr().contains("FAST") && !m_fastIpHostnameMap.containsKey(riface.getIpAddr()) && !m_fastDuplicatedIpHostnamesMap.containsKey(riface.getIpAddr())) {
+						if (riface.getDescr().contains("FAST") && !m_fastIpHostnameMap.containsKey(riface.getIpAddr())) {
 							deleteInterface(foreignId, rnode, riface.getIpAddr());
 						}
 					}
@@ -621,7 +621,7 @@ public class FastTab extends DashboardTab {
 		private void checkRequisition(Requisition requisition) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			for (RequisitionNode rnode: requisition.getNodes()) {
-				if (m_onmsRequisitionNodeMap.containsKey(rnode.getForeignId())) {
+				if (m_onmsForeignIdRequisitionNodeMap.containsKey(rnode.getForeignId())) {
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(rnode.getForeignId());
 					jloe.setIpaddr("NA");
@@ -632,12 +632,12 @@ public class FastTab extends DashboardTab {
 					m_onmsDuplicatedForeignId.add(rnode.getForeignId());
 					logger.info("Duplicated Foreign Id: " + getNote(rnode));
 				} else {
-					m_onmsRequisitionNodeMap.put(rnode.getForeignId(), rnode);
+					m_onmsForeignIdRequisitionNodeMap.put(rnode.getForeignId(), rnode);
 				}
 			}
 			
 			for (String dupforeignid: m_onmsDuplicatedForeignId) {
-				RequisitionNode rnode = m_onmsRequisitionNodeMap.remove(dupforeignid);
+				RequisitionNode rnode = m_onmsForeignIdRequisitionNodeMap.remove(dupforeignid);
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(rnode.getForeignId());
 				jloe.setIpaddr("NA");
@@ -647,6 +647,7 @@ public class FastTab extends DashboardTab {
 				logs.add(jloe);
 			}
 
+			Map<String, Set<String>> onmsIpForeignIdMap = new HashMap<String, Set<String>>();
 			for (RequisitionNode rnode: requisition.getNodes()) {
 				for (RequisitionInterface riface: rnode.getInterfaces()) {
 					if (riface.getIpAddr() == null) {
@@ -670,33 +671,33 @@ public class FastTab extends DashboardTab {
 						logger.info("Invalid ip: " + getNote(rnode) + getNote(riface));
 						continue;
 					}
-					if (m_onmsIpForeignIdMap.containsKey(riface.getIpAddr())) {
-						final JobLogEntry jloe = new JobLogEntry();
-						jloe.setHostname(rnode.getForeignId());
-						jloe.setIpaddr(riface.getIpAddr());
-						jloe.setJobid(m_job.getJobid());
-						jloe.setDescription("FAST sync: Duplicated Ip Address in Requisition");
-						jloe.setNote("ForeignIds found: " + m_onmsIpForeignIdMap.get(riface.getIpAddr()) + getNote(rnode) + getNote(riface));
-						logs.add(jloe);
-						if (!m_onmsDuplicatedIpForeignIdMap.containsKey(riface.getIpAddr()))
-							m_onmsDuplicatedIpForeignIdMap.put(riface.getIpAddr(), new HashSet<String>());
-						m_onmsDuplicatedIpForeignIdMap.get(riface.getIpAddr()).add(rnode.getForeignId());
-						logger.info("duplicated Address found: " + m_onmsIpForeignIdMap.get(riface.getIpAddr()) + getNote(rnode) + getNote(riface));						
-					} else {
-						m_onmsIpForeignIdMap.put(riface.getIpAddr(), rnode.getForeignId());
+					if (!onmsIpForeignIdMap.containsKey(riface.getIpAddr())) {
+						onmsIpForeignIdMap.put(riface.getIpAddr(), new HashSet<String>());
+					onmsIpForeignIdMap.get(riface.getIpAddr()).add(rnode.getForeignId());
 					}
 				}
 			}
-			for (String dupipaddr: m_onmsDuplicatedIpForeignIdMap.keySet()) {
-				String foreignId = m_onmsIpForeignIdMap.remove(dupipaddr);
-				final JobLogEntry jloe = new JobLogEntry();
-				jloe.setHostname(foreignId);
-				jloe.setIpaddr(dupipaddr);
-				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: Duplicated Ip Address in Requisition");
-				jloe.setNote("ForeignIds found: " + foreignId);
-				logs.add(jloe);
-				m_onmsDuplicatedIpForeignIdMap.get(dupipaddr).add(foreignId);
+
+			for (String ipaddr: onmsIpForeignIdMap.keySet()) {
+				if (onmsIpForeignIdMap.get(ipaddr).size() == 1)
+					continue;
+				m_onmsDuplicatedIpAddress.add(ipaddr);
+				for (String foreignid: onmsIpForeignIdMap.get(ipaddr) ) {
+					RequisitionNode duplicatedipnode = m_onmsForeignIdRequisitionNodeMap.remove(foreignid);
+					if (duplicatedipnode == null)
+						continue;
+					RequisitionInterface duplicatedinterface = duplicatedipnode.getInterface(ipaddr);
+					if (duplicatedinterface ==  null)
+						continue;
+					final JobLogEntry jloe = new JobLogEntry();
+					jloe.setHostname(foreignid);
+					jloe.setIpaddr(ipaddr);
+					jloe.setJobid(m_job.getJobid());
+					jloe.setDescription("FAST sync: Duplicated Ip Address in Requisition");
+					jloe.setNote(getNote(duplicatedipnode) + getNote(duplicatedinterface));
+					logs.add(jloe);
+				}
+
 			}
 			UI.getCurrent().access(new Runnable() {
 				
@@ -800,20 +801,17 @@ public class FastTab extends DashboardTab {
 						logger.info("Skipping service device. Cause: Invalid Backup Profile. ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
 					} else {
 						logger.info("Adding service device. hostname:  " + device.getHostname() + " ipaddr: " + device.getIpaddr() + " order_code: " +  device.getOrderCode() + " " +getNote(device));
-						if (!m_fastServiceDeviceMap.containsKey(device.getHostname().toLowerCase())) {
-							m_fastServiceDeviceMap.put(device.getHostname().toLowerCase(), new ArrayList<FastServiceDevice>());
+
+						if (!m_fastHostnameServiceDeviceMap.containsKey(device.getHostname().toLowerCase())) {
+							m_fastHostnameServiceDeviceMap.put(device.getHostname().toLowerCase(), new ArrayList<FastServiceDevice>());
 						}
-						m_fastServiceDeviceMap.get(device.getHostname().toLowerCase()).add(device);
+						m_fastHostnameServiceDeviceMap.get(device.getHostname().toLowerCase()).add(device);
 						
-						if (m_fastIpHostnameMap.containsKey(device.getIpaddr()) && !m_fastIpHostnameMap.get(device.getIpaddr()).equals(device.getHostname().toLowerCase())) {
-								logger.info("not adding to ip map. duplicated ip: " + device.getIpaddr() + " hostname:" + device.getHostname().toLowerCase());
-								if (!m_fastDuplicatedIpHostnamesMap.containsKey(device.getIpaddr()))
-									m_fastDuplicatedIpHostnamesMap.put(device.getIpaddr(), new HashSet<String>());
-								m_fastDuplicatedIpHostnamesMap.get(device.getIpaddr()).add(device.getHostname().toLowerCase());
-						} else {
-							m_fastIpHostnameMap.put(device.getIpaddr(), device.getHostname().toLowerCase());
-							logger.info("Adding to ip map. hostname:  " + device.getHostname() + " ipaddr: " + device.getIpaddr());
+						if (!m_fastIpHostnameMap.containsKey(device.getIpaddr())) {
+								m_fastIpHostnameMap.put(device.getIpaddr(), new HashSet<String>());
 						}						
+						m_fastIpHostnameMap.get(device.getIpaddr()).add(device.getHostname().toLowerCase());
+						logger.info("Adding to ip map. hostname:  " + device.getHostname() + " ipaddr: " + device.getIpaddr());
 					}
 				} else if (device.getHostname() == null && device.getIpaddr() == null ) {
 					final JobLogEntry jloe = new JobLogEntry();
@@ -848,17 +846,12 @@ public class FastTab extends DashboardTab {
 				} 	
 			}
 			
-			for (String ipaddr: m_fastDuplicatedIpHostnamesMap.keySet()) {
-				String hostname = m_fastIpHostnameMap.remove(ipaddr);
-				logger.info("cleaning ip map: duplicated ip: " + ipaddr + " hostname:" + hostname);
-				m_fastDuplicatedIpHostnamesMap.get(ipaddr).add(hostname);
-			}
-
-			for (String ipaddr: m_fastDuplicatedIpHostnamesMap.keySet()) {
-				Set<String> hostnames =m_fastDuplicatedIpHostnamesMap.get(ipaddr); 
-				logger.info("ipaddr: " + ipaddr + " duplicated hostnames: " + hostnames);
-				for (String hostname: hostnames) {
-					for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
+			for (String ipaddr: m_fastIpHostnameMap.keySet()) {
+				if (m_fastIpHostnameMap.get(ipaddr).size() == 1)
+					continue;
+				for (String hostname: m_fastIpHostnameMap.get(ipaddr)) {
+					List<FastServiceDevice> survived = new ArrayList<FastServiceDevice>();
+					for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.remove(hostname)) {
 						if (device.getIpaddr().equals(ipaddr)) {
 							final JobLogEntry jloe = new JobLogEntry();
 							jloe.setHostname(hostname);
@@ -866,11 +859,16 @@ public class FastTab extends DashboardTab {
 							jloe.setOrderCode(device.getOrderCode());
 							jloe.setJobid(m_job.getJobid());
 							jloe.setDescription("FAST sync: Same ip found on different hostnames");
-							jloe.setNote("hostnames:" + hostnames + getNote(device));
+							jloe.setNote(getNote(device));
 							logs.add(jloe);
-							logger.info("ip address found on different hostnames: " + hostnames +  getNote(device));
+							logger.info("ip address found on different hostnames: " +  getNote(device));
+						} else {
+							survived.add(device);
 						}
 					}
+					if (!survived.isEmpty())
+						m_fastHostnameServiceDeviceMap.put(hostname, survived);
+					
 				}
 			}
 			
@@ -926,7 +924,7 @@ public class FastTab extends DashboardTab {
 					continue;
 				}
 
-				if (m_fastServiceLinkMap.containsKey(link.getOrderCode())) {
+				if (m_fastOrderCodeServiceLinkMap.containsKey(link.getOrderCode())) {
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(link.getDeliveryDeviceClientSide());
 					jloe.setIpaddr("NA");
@@ -940,10 +938,10 @@ public class FastTab extends DashboardTab {
 					continue;
 					
 				}
-				m_fastServiceLinkMap.put(link.getOrderCode(), link);
+				m_fastOrderCodeServiceLinkMap.put(link.getOrderCode(), link);
 			}
 			for (String duplioc : duplicatedEntry ) {
-				FastServiceLink link = m_fastServiceLinkMap.remove(duplioc);
+				FastServiceLink link = m_fastOrderCodeServiceLinkMap.remove(duplioc);
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(link.getDeliveryDeviceClientSide());
 				jloe.setIpaddr("NA");
@@ -970,7 +968,7 @@ public class FastTab extends DashboardTab {
 		private boolean checkduplicatedhostname(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			if (m_onmsDuplicatedForeignId.contains(hostname)) {
-				for (FastServiceDevice device : m_fastServiceDeviceMap
+				for (FastServiceDevice device : m_fastHostnameServiceDeviceMap
 						.get(hostname)) {
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(hostname);
@@ -1000,10 +998,9 @@ public class FastTab extends DashboardTab {
 		private boolean checkduplicatedipaddress(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			boolean duplicated = false;
-			for (FastServiceDevice device : m_fastServiceDeviceMap
+			for (FastServiceDevice device : m_fastHostnameServiceDeviceMap
 					.get(hostname)) {
-				String ipaddr = device.getIpaddr();
-				if (m_onmsDuplicatedIpForeignIdMap.containsKey(ipaddr)) {
+				if (m_onmsDuplicatedIpAddress.contains(device.getIpaddr())) {
 					duplicated = true;
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(device.getHostname());
@@ -1011,8 +1008,8 @@ public class FastTab extends DashboardTab {
 					jloe.setOrderCode(device.getOrderCode());
 					jloe.setJobid(m_job.getJobid());
 					jloe.setDescription("FAST sync: skipping service device. Cause: duplicated ipaddr in requisition");
-					jloe.setNote(getNote(device) + " Duplicated ips: " + ipaddr);
-					logger.info("skipping service device. Cause: duplicated ipaddr in requisition " + getNote(device) + " Duplicated ips: " + ipaddr);
+					jloe.setNote(getNote(device) + " Duplicated ips: " + device.getIpaddr());
+					logger.info("skipping service device. Cause: duplicated ipaddr in requisition " + getNote(device) + " Duplicated ips: " + device.getIpaddr());
 					logs.add(jloe);
 				}
 			}
@@ -1033,7 +1030,7 @@ public class FastTab extends DashboardTab {
 		private void mismatch(String hostname, Set<String> foreignIds) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 
-			for (FastServiceDevice device : m_fastServiceDeviceMap
+			for (FastServiceDevice device : m_fastHostnameServiceDeviceMap
 					.get(hostname)) {
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(device.getHostname());
@@ -1062,7 +1059,7 @@ public class FastTab extends DashboardTab {
 		private void norefdevice(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 
-			for (FastServiceDevice device : m_fastServiceDeviceMap
+			for (FastServiceDevice device : m_fastHostnameServiceDeviceMap
 					.get(hostname)) {
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(device.getHostname());
@@ -1092,22 +1089,22 @@ public class FastTab extends DashboardTab {
 			Set<String> secondary = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
 			FastServiceLink reflink = null;
-			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
+			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(hostname)) {
 				secondary.add(device.getIpaddr());
-				if (!m_fastServiceLinkMap.containsKey(device.getOrderCode()))
+				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
 					continue;
 				if (refdevice == null ) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else 	if (device.isMaster() && !refdevice.isMaster()) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());						
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				} else if (device.getIpAddrLan() != null && device.getIpAddrLan() == null) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());						
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				}
 
 				final JobLogEntry jloe = new JobLogEntry();
@@ -1151,7 +1148,7 @@ public class FastTab extends DashboardTab {
 
 		private void updateNonFast(String hostname, RequisitionNode rnode) {
 			Set<String> ipaddresses = new HashSet<String>(); 
-			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
+			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(hostname)) {
 				ipaddresses.add(device.getIpaddr());
 			}
 
@@ -1181,25 +1178,25 @@ public class FastTab extends DashboardTab {
 			Set<String> ipaddresses = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
 			FastServiceLink reflink = null;
-			for (FastServiceDevice device: m_fastServiceDeviceMap.get(hostname)) {
+			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(hostname)) {
 				ipaddresses.add(device.getIpaddr());
-				if (!m_fastServiceLinkMap.containsKey(device.getOrderCode()))
+				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
 					continue;
 				if (refdevice == null ) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else if (rnode.getInterface(device.getIpaddr()) != null && rnode.getInterface(device.getIpaddr()).getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else 	if (device.isMaster() && !refdevice.isMaster()) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());						
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				} else if (device.getIpAddrLan() != null && device.getIpAddrLan() == null) {
 					refdevice= device;
-					reflink= m_fastServiceLinkMap.get(device.getOrderCode());						
+					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				}
 			}
 
@@ -1296,10 +1293,10 @@ public class FastTab extends DashboardTab {
 		}
 
 		private boolean isDeviceInFast(String foreignId) {
-			if (m_fastServiceDeviceMap.containsKey(foreignId))
+			if (m_fastHostnameServiceDeviceMap.containsKey(foreignId))
 				return true;
-			for (String hostname: m_fastServiceDeviceMap.keySet()) {
-				if (m_onmsRequisitionNodeMap.get(foreignId).getNodeLabel().
+			for (String hostname: m_fastHostnameServiceDeviceMap.keySet()) {
+				if (m_onmsForeignIdRequisitionNodeMap.get(foreignId).getNodeLabel().
 						startsWith(hostname)) {
 					return true;
 				}
