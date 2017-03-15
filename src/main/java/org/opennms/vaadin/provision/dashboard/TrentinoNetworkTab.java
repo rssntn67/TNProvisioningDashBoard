@@ -39,6 +39,8 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.OptionGroup;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
@@ -378,20 +380,50 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 			Set<String> duplicatednodeLabels = getService().checkUniqueNodeLabel();
 			if (!duplicatednodeLabels.isEmpty()) {
+				final Window duplicatednodelabelwindow = new Window("Duplicated Foreign Id");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String duplicatedlabel: duplicatednodeLabels) {
+					windowcontent.addComponent(new Label(duplicatedlabel));
+				}
+				duplicatednodelabelwindow.setContent(windowcontent);
+				duplicatednodelabelwindow.setModal(false);
+				duplicatednodelabelwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(duplicatednodelabelwindow);
 				logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
-				Notification.show("Found Duplicated NodeLabel",  Arrays.toString(duplicatednodeLabels.toArray()), Type.ERROR_MESSAGE);
 			}
 
 			Set<String> duplicatedForeignIds= getService().checkUniqueForeignId();
 			if (!duplicatedForeignIds.isEmpty()) {
-				logger.warning(" Found Duplicated ForeignId: " + Arrays.toString(duplicatedForeignIds.toArray()));
-				Notification.show("Found Duplicated ForeignId",  Arrays.toString(duplicatedForeignIds.toArray()), Type.ERROR_MESSAGE);
+				final Window duplicatedIdwindow = new Window("Duplicated Foreign Id");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String duplicatedIdp: duplicatedForeignIds) {
+					windowcontent.addComponent(new Label(duplicatedIdp));
+				}
+				duplicatedIdwindow.setContent(windowcontent);
+				duplicatedIdwindow.setModal(false);
+				duplicatedIdwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(duplicatedIdwindow);
+				logger.warning("Found Duplicated ForeignId" +  Arrays.toString(duplicatedForeignIds.toArray()));
 			}
 
 			Set<String> duplicatedPrimaries= getService().getDuplicatedPrimary();
 			if (!duplicatedPrimaries.isEmpty()) {
+				final Window duplicatedipwindow = new Window("Duplicated Ip");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String duplicatedip: duplicatedPrimaries) {
+					windowcontent.addComponent(new Label(duplicatedip));
+				}
+				duplicatedipwindow.setContent(windowcontent);
+				duplicatedipwindow.setModal(false);
+				duplicatedipwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(duplicatedipwindow);
 				logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
-				Notification.show("Found Duplicated Primary IP",  Arrays.toString(duplicatedPrimaries.toArray()), Type.ERROR_MESSAGE);
 			}
 
 		}
