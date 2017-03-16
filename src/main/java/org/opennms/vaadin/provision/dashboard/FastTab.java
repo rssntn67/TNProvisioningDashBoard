@@ -194,7 +194,7 @@ public class FastTab extends DashboardTab {
 	@Override
 	public void load() {
 		updateTabHead();
-		logger.info(getService().getJobContainer().getLastJobId().toString());
+		logger.info("Last job Id found is:" + getService().getJobContainer().getLastJobId().getValue());
 		if (getService().isFastRunning()) {
 			m_fast.setEnabled(false);
 			m_panel.setCaption("Fast Integration - Status: Running");
