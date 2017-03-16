@@ -257,7 +257,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			
 			Set<String> duplicatednodeLabels = new HashSet<String>();
 			for (String nodelabel: m_nodeLabelForeignIdMap.keySet()) {
-				if (m_primaryipforeignidmap.get(nodelabel).size() > 1)
+				if (m_nodeLabelForeignIdMap.get(nodelabel).size() > 1)
 					duplicatednodeLabels.add(nodelabel);
 			}
 			if (!duplicatednodeLabels.isEmpty()) {
