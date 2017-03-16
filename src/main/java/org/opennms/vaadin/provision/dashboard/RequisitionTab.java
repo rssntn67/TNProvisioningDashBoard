@@ -440,6 +440,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		if(!primaries.isEmpty())
 			m_primaryipforeignidmap.put(node.getPrimary(), primaries);
 
+		m_parentComboBox.removeAllItems();
+		for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
+			m_parentComboBox.addItem(nodelabel);
+
 		if (node.getParent() != null)
 			node.setParentId(m_nodeLabelForeignIdMap.get(node.getParent()).iterator().next());
 		try {
@@ -468,6 +472,10 @@ public abstract class RequisitionTab extends DashboardTab {
 			logger.warning("Replaced:new Failed: " + localizedMessage);
 			Notification.show("Replaced:new Failed", localizedMessage, Type.ERROR_MESSAGE);
 		}
+		m_parentComboBox.removeAllItems();
+		for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
+			m_parentComboBox.addItem(nodelabel);
+
 		enableNodeButtons();
 
 		m_requisitionTable.unselect(m_requisitionTable.getValue());
@@ -530,6 +538,10 @@ public abstract class RequisitionTab extends DashboardTab {
 					localizedMessage+= ": " + t.getLocalizedMessage();
 				t = t.getCause();
 			}
+			m_parentComboBox.removeAllItems();
+			for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
+				m_parentComboBox.addItem(nodelabel);
+
 			logger.warning("Save Failed: " + localizedMessage);
 			Notification.show("Save Failed", localizedMessage, Type.ERROR_MESSAGE);
 		}
@@ -570,6 +582,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		primaries.remove(node.getForeignId());
 		if(!primaries.isEmpty())
 			m_primaryipforeignidmap.put(node.getPrimary(), primaries);
+
+		m_parentComboBox.removeAllItems();
+		for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
+			m_parentComboBox.addItem(nodelabel);
 
 		logger.info("Node Deleted");
 		Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
