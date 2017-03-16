@@ -296,9 +296,7 @@ public class DashBoardUtils {
 		return false;
 	}
 	
-	public static boolean hasUnSupportedDnsDomain(String hostname, String nodelabel, List<String> domains) {
-		if (hostname == null || nodelabel == null)
-			return true;
+	public static boolean hasUnSupportedDnsDomain(String nodelabel, List<String> domains) {
 		for (String domain: domains ) {
 			if (nodelabel.endsWith(domain))
 				return false;
@@ -390,8 +388,7 @@ public class DashBoardUtils {
 			return false;
 		if (node.getTrentinoNetworkCategory() == null)
 			return false;
-		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
-				node.getNodeLabel(),subdomains))
+		if (hasUnSupportedDnsDomain(node.getNodeLabel(),subdomains))
 			return false;		
 		return true;
 	}
@@ -417,37 +414,10 @@ public class DashBoardUtils {
 			return false;
 		if (node.getBackupProfile() == null)
 			return false;
-		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
-				node.getNodeLabel(),subdomains))
+		if (hasUnSupportedDnsDomain(node.getNodeLabel(),subdomains))
 			return false;		
 		return true;
 	}
-
-	/*
-	 * 			boolean valid = true;
-			if (foreignId == null)
-				valid = false;
-			if (nodelabel == null)
-				valid=false;
-			if (vrf == null) 
-				valid = false;
-			if (primary == null)
-				valid = false;
-			else if (hasInvalidIp(primary))
-				valid = false;				
-			if (networkCategory == null)
-				valid = false;
-			if (node.getCity() == null)
-				valid = false;
-			if (address1 == null)
-				valid = false;
-			if (hasInvalidDnsBind9Label(nodelabel))
-				valid = false;
-			if (hostname != null && hasUnSupportedDnsDomain(hostname,nodelabel,subdomains))
-				valid = false;		
-			
-
-	 */
 	
 	public static boolean valid(MediaGatewayNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
@@ -464,12 +434,7 @@ public class DashBoardUtils {
 			return false;
 		if (node.getNetworkCategory() == null)
 			return false;
-		if (node.getCity() == null)
-			return false;
-		if (node.getAddress1() == null)
-			return false;
-		if (node.getHostname() != null && hasUnSupportedDnsDomain(node.getHostname(),
-				node.getNodeLabel(),subdomains))
+		if (hasUnSupportedDnsDomain(node.getNodeLabel(),subdomains))
 			return false;		
 		return true;
 	}

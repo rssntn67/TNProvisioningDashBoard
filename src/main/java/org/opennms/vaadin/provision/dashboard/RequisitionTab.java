@@ -1,9 +1,5 @@
 package org.opennms.vaadin.provision.dashboard;
 
-
-
-import static org.opennms.vaadin.provision.core.DashBoardUtils.hasUnSupportedDnsDomain;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,7 +123,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_hostname.setRequired(true);
 		m_hostname.setRequiredError("hostname must be defined");
 		m_hostname.addValidator(new DnsNodeLabelValidator());
-		m_hostname.addValidator(new SubdomainValidator());
 		m_hostname.addValidator(new DuplicatedForeignIdValidator());
 		m_hostname.addValidator(new DuplicatedNodelabelValidator());
 		m_hostname.setImmediate(true);
@@ -445,23 +440,6 @@ public abstract class RequisitionTab extends DashboardTab {
 			m_replaceNodeButton.setEnabled(false);
 			m_resetNodeButton.setEnabled(false);
 		}
-
-	class SubdomainValidator implements Validator {
-		
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 4896238666294939805L;
-		
-		@Override
-		public void validate(Object value) throws InvalidValueException {
-			String hostname = ((String)value).toLowerCase();
-			String nodelabel = hostname+"."+m_domainComboBox.getValue();
-			logger.info("SubdomainValidator: validating hostname: " + hostname);
-			 if (hasUnSupportedDnsDomain(hostname, nodelabel, getService().getDnsDomainContainer().getDomains()))
-	             throw new InvalidValueException("There is no dns domain defined for: " + hostname);
-	       }
-	}
 
 	class DuplicatedForeignIdValidator implements Validator {
 		

@@ -874,8 +874,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 
 	public boolean hasDuplicatedPrimary(String foreignId, String primary) {
 		if (!m_primaryipforeignidmap.containsKey(primary))
-			return true;
-		return !m_primaryipforeignidmap.get(primary).contains(foreignId);
+			return false;
+		return m_primaryipforeignidmap.get(primary).size() > 1;
 	}
 	
 	public boolean hasDuplicatedForeignId(String hostname) {
