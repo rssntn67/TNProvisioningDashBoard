@@ -261,7 +261,7 @@ public abstract class RequisitionTab extends DashboardTab {
 					duplicatednodeLabels.add(nodelabel);
 			}
 			if (!duplicatednodeLabels.isEmpty()) {
-				final Window duplicatednodelabelwindow = new Window("Duplicated Node Label");
+				final Window duplicatednodelabelwindow = new Window(getRequisitionName() + ":Duplicated Node Label");
 				VerticalLayout windowcontent = new VerticalLayout();
 				windowcontent.setMargin(true);
 				windowcontent.setSpacing(true);
@@ -272,7 +272,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				duplicatednodelabelwindow.setModal(false);
 				duplicatednodelabelwindow.setWidth("400px");
 		        UI.getCurrent().addWindow(duplicatednodelabelwindow);
-				logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
+				logger.warning(getRequisitionName() + ": Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
 			}
 
 			Set<String> duplicatedForeignIds= new HashSet<String>();
@@ -282,7 +282,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			}
 				
 			if (!duplicatedForeignIds.isEmpty()) {
-				final Window duplicatedIdwindow = new Window("Duplicated Foreign Id");
+				final Window duplicatedIdwindow = new Window(getRequisitionName() + ":Duplicated Foreign Id");
 				VerticalLayout windowcontent = new VerticalLayout();
 				windowcontent.setMargin(true);
 				windowcontent.setSpacing(true);
@@ -293,7 +293,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				duplicatedIdwindow.setModal(false);
 				duplicatedIdwindow.setWidth("400px");
 		        UI.getCurrent().addWindow(duplicatedIdwindow);
-				logger.warning("Found Duplicated ForeignId" +  Arrays.toString(duplicatedForeignIds.toArray()));
+				logger.warning(getRequisitionName() + ": Found Duplicated ForeignId" +  Arrays.toString(duplicatedForeignIds.toArray()));
 			}
 
 			Set<String> duplicatedPrimaries = new HashSet<String>();
@@ -302,7 +302,7 @@ public abstract class RequisitionTab extends DashboardTab {
 					duplicatedPrimaries.add(primary);
 			}
 			if (!duplicatedPrimaries.isEmpty()) {
-				final Window duplicatedipwindow = new Window("Duplicated Primary Ip");
+				final Window duplicatedipwindow = new Window(getRequisitionName() + ":Duplicated Primary Ip");
 				VerticalLayout windowcontent = new VerticalLayout();
 				windowcontent.setMargin(true);
 				windowcontent.setSpacing(true);
@@ -313,7 +313,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				duplicatedipwindow.setModal(false);
 				duplicatedipwindow.setWidth("400px");
 		        UI.getCurrent().addWindow(duplicatedipwindow);
-				logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
+				logger.warning(getRequisitionName() + ": Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
 			}
 
 		}
