@@ -217,6 +217,8 @@ public abstract class RequisitionTab extends DashboardTab {
 				enableNodeButtons();
 				if (node.getOnmstate() ==  OnmsState.NEW)
 					m_replaceNodeButton.setEnabled(false);
+				else
+					m_replaceNodeButton.setEnabled(true);
 			}
 		});
 		
