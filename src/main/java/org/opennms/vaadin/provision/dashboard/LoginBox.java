@@ -1,16 +1,20 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BasicNode;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Item;
+import com.vaadin.data.util.BeanContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
@@ -102,7 +106,12 @@ public class LoginBox extends CustomComponent implements ClickListener {
 				public void run() {
 			logger.info("Sync db with snmp profiles for Requisition: " + DashBoardUtils.TN_REQU_NAME);
 			try {
-				m_service.syncTnSnmpProfile();
+				BeanContainer<String, ? extends BasicNode> container = m_service.getTNContainer();
+				Set<String> primaries = new HashSet<String>();
+				for (String itemid: container.getItemIds()) 
+					primaries.add(container.getItem(itemid).getBean().getPrimary());
+				
+				m_service.syncSnmpProfile(primaries);
 				Notification.show("Sync Snmp profile: " + DashBoardUtils.TN_REQU_NAME, " Done ", Type.HUMANIZED_MESSAGE);
 			} catch (Exception e) {
 				logger.warning("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
@@ -116,7 +125,12 @@ public class LoginBox extends CustomComponent implements ClickListener {
 				public void run() {
 			logger.info("Sync db with snmp profiles for Requisition: " + DashBoardUtils.SI_REQU_NAME);
 			try {
-				m_service.syncSiSnmpProfile();
+				BeanContainer<String, ? extends BasicNode> container = m_service.getSIContainer();
+				Set<String> primaries = new HashSet<String>();
+				for (String itemid: container.getItemIds()) 
+					primaries.add(container.getItem(itemid).getBean().getPrimary());
+				
+				m_service.syncSnmpProfile(primaries);
 				Notification.show("Sync Snmp profile: " + DashBoardUtils.SI_REQU_NAME, " Done ", Type.HUMANIZED_MESSAGE);
 			} catch (Exception e) {
 				logger.warning("Sync Snmp profile Failed: " + DashBoardUtils.SI_REQU_NAME + " " + e.getLocalizedMessage());

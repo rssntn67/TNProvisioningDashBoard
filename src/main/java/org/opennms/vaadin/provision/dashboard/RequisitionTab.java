@@ -2,9 +2,13 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
@@ -28,11 +32,14 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -70,7 +77,11 @@ public abstract class RequisitionTab extends DashboardTab {
 	private TextField m_address = new TextField("Indirizzo");
 	private TextField m_building = new TextField("Edificio");
 
+	private Map<String,Set<String>> m_foreignIdNodeLabelMap = new HashMap<String, Set<String>>();
+	private Map<String,Set<String>> m_nodeLabelForeignIdMap = new HashMap<String, Set<String>>();
+	private Map<String,Set<String>> m_primaryipforeignidmap = new HashMap<String, Set<String>>();
 
+	private boolean m_loaded = false;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
@@ -227,9 +238,88 @@ public abstract class RequisitionTab extends DashboardTab {
 		
 	public void load() {
 		updateTabHead();
+							
+		if (!m_loaded) {
+			for (String itemId: getRequisitionContainer().getItemIds()) {
+				BasicNode node = getRequisitionContainer().getItem(itemId).getBean();
+				if (!m_foreignIdNodeLabelMap.containsKey(node.getForeignId()))
+					m_foreignIdNodeLabelMap.put(node.getForeignId(), new HashSet<String>());
+				m_foreignIdNodeLabelMap.get(node.getForeignId()).add(node.getNodeLabel());
+				
+				if (!m_nodeLabelForeignIdMap.containsKey(node.getNodeLabel()))
+					m_nodeLabelForeignIdMap.put(node.getNodeLabel(), new HashSet<String>());
+				m_nodeLabelForeignIdMap.get(node.getNodeLabel()).add(node.getForeignId());
+				
+				if (!m_primaryipforeignidmap.containsKey(node.getPrimary()))
+					m_primaryipforeignidmap.put(node.getPrimary(), new HashSet<String>());
+				m_primaryipforeignidmap.get(node.getPrimary()).add(node.getForeignId());
+			}
+			
+			Set<String> duplicatednodeLabels = new HashSet<String>();
+			for (String nodelabel: m_nodeLabelForeignIdMap.keySet()) {
+				if (m_primaryipforeignidmap.get(nodelabel).size() > 1)
+					duplicatednodeLabels.add(nodelabel);
+			}
+			if (!duplicatednodeLabels.isEmpty()) {
+				final Window duplicatednodelabelwindow = new Window("Duplicated Node Label");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String duplicatedlabel: duplicatednodeLabels) {
+					windowcontent.addComponent(new Label(duplicatedlabel));
+				}
+				duplicatednodelabelwindow.setContent(windowcontent);
+				duplicatednodelabelwindow.setModal(false);
+				duplicatednodelabelwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(duplicatednodelabelwindow);
+				logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
+			}
 
+			Set<String> duplicatedForeignIds= new HashSet<String>();
+			for (String foreinId: m_foreignIdNodeLabelMap.keySet()) {
+				if (m_foreignIdNodeLabelMap.get(foreinId).size() > 1)
+					duplicatedForeignIds.add(foreinId);
+			}
+				
+			if (!duplicatedForeignIds.isEmpty()) {
+				final Window duplicatedIdwindow = new Window("Duplicated Foreign Id");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String duplicatedIdp: duplicatedForeignIds) {
+					windowcontent.addComponent(new Label(duplicatedIdp));
+				}
+				duplicatedIdwindow.setContent(windowcontent);
+				duplicatedIdwindow.setModal(false);
+				duplicatedIdwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(duplicatedIdwindow);
+				logger.warning("Found Duplicated ForeignId" +  Arrays.toString(duplicatedForeignIds.toArray()));
+			}
+
+			Set<String> duplicatedPrimaries = new HashSet<String>();
+			for (String primary: m_primaryipforeignidmap.keySet()) {
+				if (m_primaryipforeignidmap.get(primary).size() > 1)
+					duplicatedPrimaries.add(primary);
+			}
+			if (!duplicatedPrimaries.isEmpty()) {
+				final Window duplicatedipwindow = new Window("Duplicated Primary Ip");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String duplicatedip: duplicatedPrimaries) {
+					windowcontent.addComponent(new Label(duplicatedip));
+				}
+				duplicatedipwindow.setContent(windowcontent);
+				duplicatedipwindow.setModal(false);
+				duplicatedipwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(duplicatedipwindow);
+				logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
+			}
+
+		}
+		
 		m_parentComboBox.removeAllItems();
-		for (String nodelabel :getService().getNodeLabels())
+		for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
 			m_parentComboBox.addItem(nodelabel);
 
 		m_domainComboBox.removeAllItems();
@@ -248,7 +338,11 @@ public abstract class RequisitionTab extends DashboardTab {
 					snmpprofile + 
 					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
 					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
-		}		
+		}
+
+
+		m_loaded=true;
+		
 	}
 	
 	public abstract void selectItem(BasicNode node);
@@ -269,7 +363,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	    } else if (event.getButton() == m_saveNodeButton) {
 	    	save();
 	    } else if (event.getButton() == m_deleteNodeButton) {
-	    	remove();
+	    	delete();
 	    } else if (event.getButton() == m_deleteNodeButton) {
 	    	replace();
 	    } else if (event.getButton() == m_resetNodeButton) {
@@ -291,7 +385,8 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_resetNodeButton.setEnabled(false);
 	}
 
-	private void replace() {
+	public void replace() {
+		disableNodeButtons();
 		BasicNode node = null;
 		try {
 			getBeanFieldGroup().commit();
@@ -316,7 +411,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		try {
 			getService().delete(node);
 			logger.info("Replace:delete done: " + node.getNodeLabel());
-			Notification.show("Replace:delete", "Node " +node.getNodeLabel() + " deleted", Type.HUMANIZED_MESSAGE);
 		} catch (Exception e) {
 			String localizedMessage = e.getLocalizedMessage();
 			Throwable t = e.getCause();
@@ -327,14 +421,38 @@ public abstract class RequisitionTab extends DashboardTab {
 			}
 			logger.warning("Replace: delete Failed: " + localizedMessage);
 			Notification.show("Replace: delete Failed", localizedMessage, Type.ERROR_MESSAGE);
+			return;
 		}
 
+		Set<String> nodelabels = m_foreignIdNodeLabelMap.remove(node.getForeignId());
+		nodelabels.remove(node.getNodeLabel());
+		if (!nodelabels.isEmpty())
+			m_foreignIdNodeLabelMap.put(node.getForeignId(), nodelabels);
+		
+		Set<String> foreignids = m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
+		foreignids.remove(node.getForeignId());
+		if (!foreignids.isEmpty())
+			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), foreignids);
+		Set<String> primaries = m_primaryipforeignidmap.remove(node.getPrimary());
+		primaries.remove(node.getForeignId());
+		if(!primaries.isEmpty())
+			m_primaryipforeignidmap.put(node.getPrimary(), primaries);
+
+		if (node.getParent() != null)
+			node.setParentId(m_nodeLabelForeignIdMap.get(node.getParent()).iterator().next());
 		try {
 			node.setForeignId(node.getForeignId()+"rR");
 			getService().add(node);
 			node.setValid(getService().isValid(node));
+			m_foreignIdNodeLabelMap.put(node.getForeignId(), new HashSet<String>());
+			m_foreignIdNodeLabelMap.get(node.getForeignId()).add(node.getNodeLabel());
+			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), new HashSet<String>());
+			m_nodeLabelForeignIdMap.get(node.getNodeLabel()).add(node.getForeignId());
+			m_primaryipforeignidmap.put(node.getPrimary(), new HashSet<String>());
+			m_primaryipforeignidmap.get(node.getPrimary()).add(node.getForeignId());
+
 			logger.info("Replace:new done: " + node.getNodeLabel());
-			Notification.show("Replace", "Node " +node.getNodeLabel() + " Added new", Type.HUMANIZED_MESSAGE);
+			Notification.show("Replace", "Node " +node.getNodeLabel() + " Done", Type.HUMANIZED_MESSAGE);
 			applyFilter(node.getHostname());
 			getRequisitionContainer().removeAllContainerFilters();
 		} catch (Exception e) {
@@ -348,6 +466,8 @@ public abstract class RequisitionTab extends DashboardTab {
 			logger.warning("Replaced:new Failed: " + localizedMessage);
 			Notification.show("Replaced:new Failed", localizedMessage, Type.ERROR_MESSAGE);
 		}
+		enableNodeButtons();
+
 		m_requisitionTable.unselect(m_requisitionTable.getValue());
 
 	}
@@ -360,7 +480,7 @@ public abstract class RequisitionTab extends DashboardTab {
         UI.getCurrent().addWindow(subWindow);
 	}
 
-	private void  newNode() {
+	public void  newNode() {
 		cleanSearchBox();
 		m_replaceNodeButton.setEnabled(false);
 		BasicNode bean = addBean();
@@ -377,6 +497,8 @@ public abstract class RequisitionTab extends DashboardTab {
 		try {
 			getBeanFieldGroup().commit();
 			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
+			if (node.getParent() != null)
+				node.setParentId(m_nodeLabelForeignIdMap.get(node.getParent()).iterator().next());
 			if (node.getForeignId() == null) {
 				node.setForeignId(node.getHostname());
 				node.setValid(true);
@@ -384,11 +506,17 @@ public abstract class RequisitionTab extends DashboardTab {
 				logger.info("Added: " + node.getNodeLabel()+ " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 			} else {
-				getService().update(node);
 				node.setValid(getService().isValid(node));
+				getService().update(node);
 				logger.info("Updated: " + node.getNodeLabel() + " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
+			m_foreignIdNodeLabelMap.put(node.getForeignId(), new HashSet<String>());
+			m_foreignIdNodeLabelMap.get(node.getForeignId()).add(node.getNodeLabel());
+			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), new HashSet<String>());
+			m_nodeLabelForeignIdMap.get(node.getNodeLabel()).add(node.getForeignId());
+			m_primaryipforeignidmap.put(node.getPrimary(), new HashSet<String>());
+			m_primaryipforeignidmap.get(node.getPrimary()).add(node.getForeignId());
 			applyFilter(node.getHostname());
 			cleanSearchBox();
 			getRequisitionContainer().removeAllContainerFilters();
@@ -406,17 +534,17 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_requisitionTable.unselect(m_requisitionTable.getValue());
 	}
 
-	public void remove() {
+	public void delete() {
 		getRight().setVisible(false);
 		m_saveNodeButton.setEnabled(false);
 		m_deleteNodeButton.setEnabled(false);
 		m_replaceNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
-		BeanItem<? extends BasicNode> node = getBeanFieldGroup().getItemDataSource();
-		logger.info("Deleting: " + node.getBean().getNodeLabel());
-		if (node.getBean().getForeignId() !=  null) {
+		BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
+		logger.info("Deleting: " + node.getNodeLabel());
+		if (node.getForeignId() !=  null) {
 			try {
-				getService().delete(node.getBean());
+				getService().delete(node);
 				Notification.show("Delete Node From Requisition", "Done", Type.HUMANIZED_MESSAGE);
 			} catch (UniformInterfaceException e) {
 				logger.warning(e.getLocalizedMessage()+" Reason: " + e.getResponse().getStatusInfo().getReasonPhrase());
@@ -425,8 +553,22 @@ public abstract class RequisitionTab extends DashboardTab {
 				return;
 			}
 		}
-		if ( ! getRequisitionContainer().removeItem(node.getBean().getNodeLabel()))
+		if ( ! getRequisitionContainer().removeItem(node.getNodeLabel()))
 			getRequisitionContainer().removeItem(getRequisitionContainer().getIdByIndex(0));
+		Set<String> nodelabels = m_foreignIdNodeLabelMap.remove(node.getForeignId());
+		nodelabels.remove(node.getNodeLabel());
+		if (!nodelabels.isEmpty())
+			m_foreignIdNodeLabelMap.put(node.getForeignId(), nodelabels);
+		
+		Set<String> foreignids = m_nodeLabelForeignIdMap.remove(node.getNodeLabel());
+		foreignids.remove(node.getForeignId());
+		if (!foreignids.isEmpty())
+			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), foreignids);
+		Set<String> primaries = m_primaryipforeignidmap.remove(node.getPrimary());
+		primaries.remove(node.getForeignId());
+		if(!primaries.isEmpty())
+			m_primaryipforeignidmap.put(node.getPrimary(), primaries);
+
 		logger.info("Node Deleted");
 		Notification.show("Delete", "Done", Type.HUMANIZED_MESSAGE);
 	}
@@ -450,9 +592,13 @@ public abstract class RequisitionTab extends DashboardTab {
 
 		@Override
 		public void validate( Object value) throws InvalidValueException {
+			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
+			if (node.getForeignId() != null)
+				return;
 			String hostname = (String)value;
+			
 			logger.info("DuplicatedForeignIdValidator: validating foreignId: " + hostname);
-	         if (getService().hasDuplicatedForeignId((hostname)))
+	         if (m_foreignIdNodeLabelMap.containsKey(hostname))
 	             throw new InvalidValueException("The hostname exists: cannot duplicate hostname: " + hostname);
 	       }
 	}
@@ -467,9 +613,11 @@ public abstract class RequisitionTab extends DashboardTab {
 		@Override
 		public void validate( Object value) throws InvalidValueException {
 			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
+			if (node.getForeignId() != null)
+				return;
 			String ip = (String)value;
 			logger.info("DuplicatedPrimaryValidator: validating ip: " + ip);
-	         if (getService().hasDuplicatedPrimary(node.getForeignId(),ip))
+	         if (m_primaryipforeignidmap.containsKey(ip))
 	             throw new InvalidValueException("DuplicatedPrimaryValidator: trovato un duplicato del primary ip: " + ip);
 	       }
 	}
@@ -504,7 +652,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			String hostname = ((String)value).toLowerCase();
 			String nodelabel = hostname+"."+m_domainComboBox.getValue();
 			logger.info("DuplicatedNodelabelValidator: validating label: " + nodelabel);
-	        if (getService().hasDuplicatedNodelabel(nodelabel))
+	        if (m_nodeLabelForeignIdMap.containsKey(nodelabel))
 	             throw new InvalidValueException("DuplicatedNodelabelValidator: trovato un duplicato della node label: " + nodelabel);
 	       }
 	}
@@ -529,7 +677,7 @@ public abstract class RequisitionTab extends DashboardTab {
                                " Labels may not start or end with a hyphen.");
 		}
 	}
-
+	
 	public Table getRequisitionTable() {
 		return m_requisitionTable;
 	}

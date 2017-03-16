@@ -52,6 +52,7 @@ public class BasicNode implements Serializable {
 	private String m_vrf;
 	private String m_primary;
 	private String m_parent;
+	private String m_parentId;
 	private String m_snmpProfile;
 	private String m_city;
 	private String m_address1;
@@ -99,6 +100,7 @@ public class BasicNode implements Serializable {
 			String vrf, 
 			String primary, 
 			String parent,
+			String parentId,
 			String snmpProfile, 
 			String city, 
 			String address1, 
@@ -112,6 +114,7 @@ public class BasicNode implements Serializable {
 		m_vrf = vrf;
 		m_primary = primary;
 		m_parent = parent;
+		m_parentId = parentId;
 		m_snmpProfile = snmpProfile;
 		m_city = city;
 		m_address1 = address1;
@@ -162,7 +165,15 @@ public class BasicNode implements Serializable {
 	public Map<String, Set<String>> getServiceToDel() {
 		return m_serviceToDel;
 	}
+	public String getParentId() {
+		return m_parentId;
+	}
 
+	public void setParentId(String parentId) {
+		m_parentId=parentId;
+	}
+
+	
 	public String getParent() {
 		return m_parent;
 	}

@@ -352,7 +352,6 @@ public class SistemiInformativiTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		super.load();
 		if (!loaded) {
 			try {
 				m_requisitionContainer = getService().getSIContainer();
@@ -402,8 +401,8 @@ public class SistemiInformativiTab extends RequisitionTab {
 			m_editorFields.bind(m_modelNumber,DashBoardUtils.MODELNUMBER);
 			m_editorFields.bind(m_manufacturer,DashBoardUtils.MANUFACTURER);
 			m_editorFields.bind(m_description,DashBoardUtils.DESCRIPTION);
-
 		}
+		super.load();
 	}
 	
 	private void layout() {

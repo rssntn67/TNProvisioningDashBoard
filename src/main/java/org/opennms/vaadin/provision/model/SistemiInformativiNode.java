@@ -37,7 +37,7 @@ public class SistemiInformativiNode extends BasicNode {
 	
 	public SistemiInformativiNode(
 			Map<String, Set<String>> serviceMap, String descr, String hostname,
-			String parent, String snmpProfile,
+			String parent, String parentId, String snmpProfile,
 			String vrf, String primary, String[] serverLevelCategory,
 			String managedByCategory, String notifCategory,
 			Set<String> optionalCategory, String prodCategory, String tnCategory,
@@ -47,7 +47,7 @@ public class SistemiInformativiNode extends BasicNode {
 			String operatingSystem, String dateInstalled, String assetNumber,
 			String serialNumber, String category, String modelNumber,
 			String manufacturer, String foreignId) {
-		super(serviceMap,descr,hostname,vrf,primary,parent,snmpProfile,city,address1,foreignId,building);
+		super(serviceMap,descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,address1,foreignId,building);
 		m_serverLevelCategory = serverLevelCategory;
 		m_managedByCategory = managedByCategory;
 		m_notifCategory = notifCategory;

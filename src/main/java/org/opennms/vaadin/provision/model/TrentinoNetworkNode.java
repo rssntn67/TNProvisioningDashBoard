@@ -38,6 +38,7 @@ public class TrentinoNetworkNode extends BasicNode {
 			String vrf, 
 			String primary, 
 			String parent,
+			String parentId,
 			Categoria networkCategory, 
 			String notifCategory,
 			String threshCategory, 
@@ -50,7 +51,7 @@ public class TrentinoNetworkNode extends BasicNode {
 			String building,
 			String circuitId,
 			Set<String> optionCategory) {
-		super(serviceMap,descr,hostname,vrf,primary,parent,snmpProfile,city,address1,foreignId,building);
+		super(serviceMap,descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,address1,foreignId,building);
 		m_networkCategory = networkCategory;
 		m_notifCategory = notifCategory;
 		m_threshCategory = threshCategory;

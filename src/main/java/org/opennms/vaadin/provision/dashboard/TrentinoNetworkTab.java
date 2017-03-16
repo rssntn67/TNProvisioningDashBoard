@@ -1,7 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -39,8 +38,6 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.OptionGroup;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.Window;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
@@ -314,32 +311,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		super.load();
-		Map<String,BackupProfile> bckupprofilemap = 
-				getService().getBackupProfileContainer().getBackupProfileMap();
-		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
-		Collections.sort(backupprofiles);
-		
-		List<Categoria> cats = new ArrayList<Categoria>(getService().getCatContainer().getCatMap().values()); 
-		Collections.sort(cats);
-		for (Categoria categories: cats) {
-			m_networkCatSearchComboBox.addItem(categories);
-			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
-		}
-
-		for (Categoria categories: cats) {
-			m_networkCatComboBox.addItem(categories);
-			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
-		}
-
-		for (String backupprofile: backupprofiles) {
-			m_backupComboBox.addItem(backupprofile);
-			m_backupComboBox.setItemCaption(backupprofile, 
-					backupprofile +
-					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
-		}
-
-
 		if (!loaded) {
 			try {
 				m_requisitionContainer = getService().getTNContainer();
@@ -378,55 +349,32 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			m_editorFields.bind(m_optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
 		    m_editorFields.bind(m_circuiId, DashBoardUtils.CIRCUITID);
 
-			Set<String> duplicatednodeLabels = getService().getDuplicatedNodeLabels();
-			if (!duplicatednodeLabels.isEmpty()) {
-				final Window duplicatednodelabelwindow = new Window("Duplicated Foreign Id");
-				VerticalLayout windowcontent = new VerticalLayout();
-				windowcontent.setMargin(true);
-				windowcontent.setSpacing(true);
-				for (String duplicatedlabel: duplicatednodeLabels) {
-					windowcontent.addComponent(new Label(duplicatedlabel));
-				}
-				duplicatednodelabelwindow.setContent(windowcontent);
-				duplicatednodelabelwindow.setModal(false);
-				duplicatednodelabelwindow.setWidth("400px");
-		        UI.getCurrent().addWindow(duplicatednodelabelwindow);
-				logger.warning(" Found Duplicated NodeLabel: " + Arrays.toString(duplicatednodeLabels.toArray()));
-			}
-
-			Set<String> duplicatedForeignIds= getService().getDuplicatedForeignIds();
-			if (!duplicatedForeignIds.isEmpty()) {
-				final Window duplicatedIdwindow = new Window("Duplicated Foreign Id");
-				VerticalLayout windowcontent = new VerticalLayout();
-				windowcontent.setMargin(true);
-				windowcontent.setSpacing(true);
-				for (String duplicatedIdp: duplicatedForeignIds) {
-					windowcontent.addComponent(new Label(duplicatedIdp));
-				}
-				duplicatedIdwindow.setContent(windowcontent);
-				duplicatedIdwindow.setModal(false);
-				duplicatedIdwindow.setWidth("400px");
-		        UI.getCurrent().addWindow(duplicatedIdwindow);
-				logger.warning("Found Duplicated ForeignId" +  Arrays.toString(duplicatedForeignIds.toArray()));
-			}
-
-			Set<String> duplicatedPrimaries= getService().getDuplicatedPrimary();
-			if (!duplicatedPrimaries.isEmpty()) {
-				final Window duplicatedipwindow = new Window("Duplicated Ip");
-				VerticalLayout windowcontent = new VerticalLayout();
-				windowcontent.setMargin(true);
-				windowcontent.setSpacing(true);
-				for (String duplicatedip: duplicatedPrimaries) {
-					windowcontent.addComponent(new Label(duplicatedip));
-				}
-				duplicatedipwindow.setContent(windowcontent);
-				duplicatedipwindow.setModal(false);
-				duplicatedipwindow.setWidth("400px");
-		        UI.getCurrent().addWindow(duplicatedipwindow);
-				logger.warning(" Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
-			}
-
 		}
+		
+		super.load();
+		Map<String,BackupProfile> bckupprofilemap = 
+				getService().getBackupProfileContainer().getBackupProfileMap();
+		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
+		Collections.sort(backupprofiles);
+		for (String backupprofile: backupprofiles) {
+			m_backupComboBox.addItem(backupprofile);
+			m_backupComboBox.setItemCaption(backupprofile, 
+					backupprofile +
+					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
+		}
+
+		List<Categoria> cats = new ArrayList<Categoria>(getService().getCatContainer().getCatMap().values()); 
+		Collections.sort(cats);
+		for (Categoria categories: cats) {
+			m_networkCatSearchComboBox.addItem(categories);
+			m_networkCatSearchComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+		}
+
+		for (Categoria categories: cats) {
+			m_networkCatComboBox.addItem(categories);
+			m_networkCatComboBox.setItemCaption(categories, categories.getNetworklevel()+" - " + categories.getName());
+		}
+
 	}
 	
 	private void layout() { 

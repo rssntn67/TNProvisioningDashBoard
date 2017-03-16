@@ -113,19 +113,6 @@ public class MediaGatewayTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		super.load();
-		Map<String,BackupProfile> bckupprofilemap = 
-				getService().getBackupProfileContainer().getBackupProfileMap();
-		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
-		Collections.sort(backupprofiles);
-
-		for (String backupprofile: backupprofiles) {
-			m_backupComboBox.addItem(backupprofile);
-			m_backupComboBox.setItemCaption(backupprofile, 
-					backupprofile +
-					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
-		}
-
 		if (!loaded) {
 			try {
 				if (getService().getMediaGateway() == null ) {
@@ -173,6 +160,19 @@ public class MediaGatewayTab extends RequisitionTab {
 			m_editorFields.bind(getBuildingTextField(),DashBoardUtils.BUILDING);
 
 		}
+		super.load();
+		Map<String,BackupProfile> bckupprofilemap = 
+				getService().getBackupProfileContainer().getBackupProfileMap();
+		List<String> backupprofiles = new ArrayList<String>(bckupprofilemap.keySet());
+		Collections.sort(backupprofiles);
+
+		for (String backupprofile: backupprofiles) {
+			m_backupComboBox.addItem(backupprofile);
+			m_backupComboBox.setItemCaption(backupprofile, 
+					backupprofile +
+					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
+		}
+
 				
 	}
 		
