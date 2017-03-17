@@ -291,6 +291,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				m_primaryipforeignidmap.get(node.getPrimary()).add(node.getForeignId());
 			}
 			
+			
 			Set<String> duplicatednodeLabels = new HashSet<String>();
 			for (String nodelabel: m_nodeLabelForeignIdMap.keySet()) {
 				if (m_nodeLabelForeignIdMap.get(nodelabel).size() > 1)
@@ -337,6 +338,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				if (m_primaryipforeignidmap.get(primary).size() > 1)
 					duplicatedPrimaries.add(primary);
 			}
+
 			if (!duplicatedPrimaries.isEmpty()) {
 				final Window duplicatedipwindow = new Window(getRequisitionName() + ":Duplicated Primary Ip");
 				VerticalLayout windowcontent = new VerticalLayout();
@@ -350,6 +352,54 @@ public abstract class RequisitionTab extends DashboardTab {
 				duplicatedipwindow.setWidth("400px");
 		        UI.getCurrent().addWindow(duplicatedipwindow);
 				logger.warning(getRequisitionName() + ": Found Duplicated Primary IP: " + Arrays.toString(duplicatedPrimaries.toArray()));
+			}
+			Set<String> nulllbls = m_nodeLabelForeignIdMap.get(null);
+			if (nulllbls != null && !nulllbls.isEmpty()) {
+				final Window nulllblswindow = new Window(getRequisitionName() + ":Null Node Labels");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String nullprimid: nulllbls) {
+					windowcontent.addComponent(new Label(nullprimid));
+				}
+				nulllblswindow.setContent(windowcontent);
+				nulllblswindow.setModal(false);
+				nulllblswindow.setWidth("400px");
+		        UI.getCurrent().addWindow(nulllblswindow);
+				logger.warning(getRequisitionName() + ": Found Null nodeLabels: " + Arrays.toString(nulllbls.toArray()));
+			}
+
+			
+			Set<String> nullfids = m_foreignIdNodeLabelMap.get(null);
+			if (nullfids != null && !nullfids.isEmpty()) {
+				final Window nullidswindow = new Window(getRequisitionName() + ":Null Foreign Id");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String nullprimid: nullfids) {
+					windowcontent.addComponent(new Label(nullprimid));
+				}
+				nullidswindow.setContent(windowcontent);
+				nullidswindow.setModal(false);
+				nullidswindow.setWidth("400px");
+		        UI.getCurrent().addWindow(nullidswindow);
+				logger.warning(getRequisitionName() + ": Found Null foreign Id: " + Arrays.toString(nullfids.toArray()));
+			}
+
+			Set<String> nullprims = m_primaryipforeignidmap.get(null);
+			if (nullprims != null && !nullprims.isEmpty()) {
+				final Window nullipwindow = new Window(getRequisitionName() + ":Null Primary");
+				VerticalLayout windowcontent = new VerticalLayout();
+				windowcontent.setMargin(true);
+				windowcontent.setSpacing(true);
+				for (String nullprimid: nullprims) {
+					windowcontent.addComponent(new Label(nullprimid));
+				}
+				nullipwindow.setContent(windowcontent);
+				nullipwindow.setModal(false);
+				nullipwindow.setWidth("400px");
+		        UI.getCurrent().addWindow(nullipwindow);
+				logger.warning(getRequisitionName() + ": Found Null Primary IP: " + Arrays.toString(nullprims.toArray()));
 			}
 
 		}

@@ -11,7 +11,6 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -48,12 +47,11 @@ import com.vaadin.ui.VerticalLayout;
 @Theme("runo")
 public class SistemiInformativiTab extends RequisitionTab {
 
-	private class NodeFilter implements Filter {
+	private class NodeFilter extends RequisitionNodeFilter {
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		private String   needle="";
 		private String   needle1=null;
 		private String   needle2=null;
 		private String   needle3=null;
@@ -62,8 +60,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 		private String   needle6=null;
 		
 		public NodeFilter(Object o, Object c1, Object c3,Object c4, Object c5, Object c6) {
-			if ( o != null)
-				needle = (String) o;
+			super(o);
 			if ( c1 != null) {
 				String[] c12 = (String[]) c1;
 				needle1 = (String) c12[0];
@@ -82,7 +79,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 		@SuppressWarnings("unchecked")
 		public boolean passesFilter(Object itemId, Item item) {
 			SistemiInformativiNode node = ((BeanItem<SistemiInformativiNode>)item).getBean();			
-			return (    node.getNodeLabel().contains(needle) 
+			return ( super.passesFilter(itemId, item) 
 					&& ( needle1 == null || node.getServerLevelCategory()[0].equals(needle1) )
 					&& ( needle2 == null || node.getServerLevelCategory()[1].equals(needle2) ) 
 		            && ( needle3 == null || node.getManagedByCategory().equals(needle3) ) 
