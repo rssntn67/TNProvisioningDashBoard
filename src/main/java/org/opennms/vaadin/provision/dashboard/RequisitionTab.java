@@ -160,7 +160,7 @@ public abstract class RequisitionTab extends DashboardTab {
 		editNodeButtons.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 
 
-		getRight().addComponent(new Panel(editNodeButtons));
+		getHead().addComponent(new Panel(editNodeButtons));
 				
 		m_hostname.setSizeFull();
 		m_hostname.setWidth(4, Unit.CM);
@@ -449,7 +449,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	    	save();
 	    } else if (event.getButton() == m_deleteNodeButton) {
 	    	delete();
-	    } else if (event.getButton() == m_deleteNodeButton) {
+	    } else if (event.getButton() == m_replaceNodeButton) {
 	    	replace();
 	    } else if (event.getButton() == m_resetNodeButton) {
 	    	reset();
