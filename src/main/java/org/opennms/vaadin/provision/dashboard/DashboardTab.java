@@ -24,6 +24,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.themes.Reindeer;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -60,6 +61,7 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		m_service = service;
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
+
 		HorizontalLayout head = new HorizontalLayout();
 		head.setSizeFull();
 		head.addComponent(m_info);	
@@ -68,16 +70,24 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		head.setComponentAlignment(m_logout, Alignment.MIDDLE_LEFT);
 		head.setMargin(true);
 		head.setSpacing(true);
-		m_headPanel = new Panel(head);
-		m_core.addComponent(m_headPanel);
+		
 		m_head.setMargin(true);
 		m_head.setSpacing(true);
-		m_core.addComponent(m_head);
+		
+		HorizontalSplitPanel headsplitPanel = new HorizontalSplitPanel();
+		headsplitPanel.addComponent(head);
+		headsplitPanel.addComponent(m_head);
+		headsplitPanel.setStyleName(Reindeer.SPLITPANEL_SMALL);
+		headsplitPanel.setSplitPosition(30,Unit.PERCENTAGE);
+
+		m_headPanel = new Panel(headsplitPanel);
+		m_core.addComponent(m_headPanel);
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(m_left);
 		splitPanel.addComponent(m_right);
-		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
+		splitPanel.setStyleName(Reindeer.SPLITPANEL_SMALL);
+		splitPanel.setSplitPosition(30,Unit.PERCENTAGE);
 
 		m_core.addComponent(splitPanel);
 	}
