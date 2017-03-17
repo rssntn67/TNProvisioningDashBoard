@@ -25,7 +25,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
@@ -96,17 +95,6 @@ public class BackupProfileTab extends DashboardTab {
 		ComboBox  backup_conn = new ComboBox("Select Connection");
 		final ComboBox  backup_auto = new ComboBox("Select Autoenable");
 
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		getCore().addComponent(splitPanel);
-		
-		VerticalLayout leftLayout = new VerticalLayout();
-		splitPanel.addComponent(leftLayout);
-
-		VerticalLayout rightLayout = new VerticalLayout();
-		splitPanel.addComponent(rightLayout);
-		
-		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
-
 		VerticalLayout searchlayout = new VerticalLayout();
 
 		backupSearchComboBox.setWidth("80%");
@@ -114,28 +102,24 @@ public class BackupProfileTab extends DashboardTab {
 		searchlayout.setWidth("100%");
 		searchlayout.setMargin(true);
 		
-		leftLayout.addComponent(new Panel("Search",searchlayout));
+		getLeft().addComponent(new Panel("Search",searchlayout));
 
 		m_backupTable.setSizeFull();
-		leftLayout.addComponent(m_backupTable);
+		getLeft().addComponent(m_backupTable);
 
 		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
 		bottomLeftLayout.addComponent(new Label("----Select to Edit----"));
-		leftLayout.addComponent(bottomLeftLayout);
-		leftLayout.setSizeFull();
+		getLeft().addComponent(bottomLeftLayout);
+		getLeft().setSizeFull();
 
-		rightLayout.addComponent(m_editBackupLayout);
+		getLeft().addComponent(m_editBackupLayout);
 
-		HorizontalLayout bottomRightLayout = new HorizontalLayout();
-		bottomRightLayout.addComponent(m_removeBackupButton);
-		bottomRightLayout.addComponent(m_saveBackupButton);
-		bottomRightLayout.addComponent(m_addBackupButton);
-		bottomRightLayout.setComponentAlignment(m_removeBackupButton, Alignment.MIDDLE_LEFT);
-		bottomRightLayout.setComponentAlignment(m_saveBackupButton, Alignment.MIDDLE_CENTER);
-		bottomRightLayout.setComponentAlignment(m_addBackupButton, Alignment.MIDDLE_RIGHT);
-		Panel buttonPanel = new Panel(bottomRightLayout);
-		rightLayout.addComponent(buttonPanel);
-		rightLayout.setExpandRatio(buttonPanel, 3);
+		getHead().addComponent(m_removeBackupButton);
+		getHead().addComponent(m_saveBackupButton);
+		getHead().addComponent(m_addBackupButton);
+		getHead().setComponentAlignment(m_removeBackupButton, Alignment.MIDDLE_LEFT);
+		getHead().setComponentAlignment(m_saveBackupButton, Alignment.MIDDLE_CENTER);
+		getHead().setComponentAlignment(m_addBackupButton, Alignment.MIDDLE_RIGHT);
 		m_backupTable.setVisibleColumns(new Object[] { "name" });
 		m_backupTable.setSelectable(true);
 		m_backupTable.setImmediate(true);

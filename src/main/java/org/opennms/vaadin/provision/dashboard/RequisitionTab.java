@@ -33,10 +33,8 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -129,10 +127,6 @@ public abstract class RequisitionTab extends DashboardTab {
        	m_addNewNodeButton.addClickListener(this);
     	m_addNewNodeButton.setImmediate(true);
     	
-    	
-		getHead().addComponent(m_syncRequisButton);
-		getHead().addComponent(m_addNewNodeButton);
-
 		m_saveNodeButton.addClickListener(this);
 		m_saveNodeButton.setImmediate(true);		
 		m_saveNodeButton.setEnabled(false);
@@ -148,20 +142,7 @@ public abstract class RequisitionTab extends DashboardTab {
     	m_replaceNodeButton.addClickListener(this);
     	m_replaceNodeButton.setImmediate(true);
     	m_replaceNodeButton.setEnabled(false);
-
-		HorizontalLayout editNodeButtons = new HorizontalLayout();
-		editNodeButtons.addComponent(m_deleteNodeButton);
-		editNodeButtons.addComponent(m_saveNodeButton);
-		editNodeButtons.addComponent(m_replaceNodeButton);
-		editNodeButtons.addComponent(m_resetNodeButton);
-		editNodeButtons.setComponentAlignment(m_deleteNodeButton, Alignment.MIDDLE_LEFT);
-		editNodeButtons.setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_CENTER);
-		editNodeButtons.setComponentAlignment(m_replaceNodeButton, Alignment.MIDDLE_LEFT);
-		editNodeButtons.setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
-
-
-		getHead().addComponent(new Panel(editNodeButtons));
-				
+    	
 		m_hostname.setSizeFull();
 		m_hostname.setWidth(4, Unit.CM);
 		m_hostname.setHeight(6, Unit.MM);
@@ -269,12 +250,28 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_snmpComboBox.setNullSelectionAllowed(false);
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
+		
+		getHead().addComponent(m_syncRequisButton);
+    	getHead().addComponent(m_addNewNodeButton);
+		getHead().addComponent(m_deleteNodeButton);
+		getHead().addComponent(m_saveNodeButton);
+		getHead().addComponent(m_replaceNodeButton);
+		getHead().addComponent(m_resetNodeButton);
+		
+		getHead().setComponentAlignment(m_syncRequisButton, Alignment.MIDDLE_CENTER);
+		getHead().setComponentAlignment(m_addNewNodeButton,  Alignment.MIDDLE_CENTER);
+		getHead().setComponentAlignment(m_deleteNodeButton, Alignment.MIDDLE_RIGHT);
+		getHead().setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_RIGHT);
+		getHead().setComponentAlignment(m_replaceNodeButton, Alignment.MIDDLE_RIGHT);
+		getHead().setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
+
+							
+
 
 	}
 		
 	public void load() {
 		updateTabHead();
-							
 		if (!m_loaded) {
 			for (String itemId: getRequisitionContainer().getItemIds()) {
 				BasicNode node = getRequisitionContainer().getItem(itemId).getBean();

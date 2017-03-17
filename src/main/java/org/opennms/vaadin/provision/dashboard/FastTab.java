@@ -48,6 +48,7 @@ import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Table;
@@ -173,8 +174,10 @@ public class FastTab extends DashboardTab {
         m_progress.setEnabled(false);
 	    m_progress.setVisible(false);
         m_logTable.setVisible(false);
+		m_fast.addClickListener(this);
 
 		getHead().addComponent(m_fast);
+		getHead().setComponentAlignment(m_fast, Alignment.MIDDLE_RIGHT);
 
 		getLeft().addComponent(new Panel("Log Search",searchlayout));
 		getLeft().addComponent(new Panel("Jobs",m_jobTable));
@@ -182,7 +185,6 @@ public class FastTab extends DashboardTab {
 		getRight().addComponent(m_progress);
 		getRight().addComponent(m_panel);
 		getRight().addComponent(new Panel("Logs",m_logTable));
-		m_fast.addClickListener(this);
 	}
 	
 
@@ -194,6 +196,7 @@ public class FastTab extends DashboardTab {
 	@Override
 	public void load() {
 		updateTabHead();
+
 		logger.info("Last job Id found is:" + getService().getJobContainer().getLastJobId().getValue());
 		if (getService().isFastRunning()) {
 			m_fast.setEnabled(false);

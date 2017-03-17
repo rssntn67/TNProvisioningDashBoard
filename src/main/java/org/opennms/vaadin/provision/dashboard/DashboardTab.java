@@ -9,6 +9,7 @@ import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -59,13 +60,19 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		m_service = service;
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
-		m_head.setSizeFull();
-		m_head.addComponent(m_logout);	
-		m_head.addComponent(m_info);	
+		HorizontalLayout head = new HorizontalLayout();
+		head.setSizeFull();
+		head.addComponent(m_info);	
+		head.addComponent(m_logout);	
+		head.setComponentAlignment(m_info, Alignment.MIDDLE_LEFT);
+		head.setComponentAlignment(m_logout, Alignment.MIDDLE_LEFT);
+		head.setMargin(true);
+		head.setSpacing(true);
+		m_headPanel = new Panel(head);
+		m_core.addComponent(m_headPanel);
 		m_head.setMargin(true);
 		m_head.setSpacing(true);
-		m_headPanel = new Panel(m_head);
-		m_core.addComponent(m_headPanel);
+		m_core.addComponent(m_head);
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(m_left);

@@ -24,7 +24,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
@@ -93,17 +92,6 @@ public class SnmpProfileTab extends DashboardTab {
 		ComboBox snmp_retries = new ComboBox("Retries");
 		ComboBox snmp_max = new ComboBox("MaxVarsPerPdu");
 
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		getCore().addComponent(splitPanel);
-		
-		VerticalLayout leftLayout = new VerticalLayout();
-		splitPanel.addComponent(leftLayout);
-
-		VerticalLayout rightLayout = new VerticalLayout();
-		splitPanel.addComponent(rightLayout);
-		
-		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
-
 		VerticalLayout searchlayout = new VerticalLayout();
 
 		snmpSearchComboBox.setWidth("80%");
@@ -111,28 +99,25 @@ public class SnmpProfileTab extends DashboardTab {
 		searchlayout.setWidth("100%");
 		searchlayout.setMargin(true);
 		
-		leftLayout.addComponent(new Panel("Search",searchlayout));
+		getLeft().addComponent(new Panel("Search",searchlayout));
 
 		m_snmpTable.setSizeFull();
-		leftLayout.addComponent(m_snmpTable);
+		getLeft().addComponent(m_snmpTable);
 
 		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
 		bottomLeftLayout.addComponent(new Label("----Select to Edit----"));
-		leftLayout.addComponent(bottomLeftLayout);
-		leftLayout.setSizeFull();
+		getLeft().addComponent(bottomLeftLayout);
+		getLeft().setSizeFull();
 
-		rightLayout.addComponent(m_editSnmpLayout);
+		getRight().addComponent(m_editSnmpLayout);
 
-		HorizontalLayout bottomRightLayout = new HorizontalLayout();
-		bottomRightLayout.addComponent(m_removeSnmpButton);
-		bottomRightLayout.addComponent(m_saveSnmpButton);
-		bottomRightLayout.addComponent(m_addSnmpButton);
-		bottomRightLayout.setComponentAlignment(m_removeSnmpButton, Alignment.MIDDLE_LEFT);
-		bottomRightLayout.setComponentAlignment(m_saveSnmpButton, Alignment.MIDDLE_CENTER);
-		bottomRightLayout.setComponentAlignment(m_addSnmpButton, Alignment.MIDDLE_RIGHT);
-		Panel buttonPanel = new Panel(bottomRightLayout);
-		rightLayout.addComponent(buttonPanel);
-		rightLayout.setExpandRatio(buttonPanel, 3);
+		getHead().addComponent(m_removeSnmpButton);
+		getHead().addComponent(m_saveSnmpButton);
+		getHead().addComponent(m_addSnmpButton);
+		getHead().setComponentAlignment(m_removeSnmpButton, Alignment.MIDDLE_LEFT);
+		getHead().setComponentAlignment(m_saveSnmpButton, Alignment.MIDDLE_CENTER);
+		getHead().setComponentAlignment(m_addSnmpButton, Alignment.MIDDLE_RIGHT);
+		
 		m_snmpTable.setVisibleColumns(new Object[] { "name" });
 		m_snmpTable.setSelectable(true);
 		m_snmpTable.setImmediate(true);

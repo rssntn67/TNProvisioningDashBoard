@@ -27,7 +27,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -114,17 +113,6 @@ public class CategorieTab extends DashboardTab {
 			backupComboBox.addItem(backupprofile);
 		}
 
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		getCore().addComponent(splitPanel);
-		
-		VerticalLayout leftLayout = new VerticalLayout();
-		splitPanel.addComponent(leftLayout);
-
-		VerticalLayout rightLayout = new VerticalLayout();
-		splitPanel.addComponent(rightLayout);
-		
-		splitPanel.setSplitPosition(29,Unit.PERCENTAGE);
-
 		VerticalLayout searchlayout = new VerticalLayout();
 		searchlayout.addComponent(networkCatSearchComboBox);
 		searchlayout.addComponent(notifCatSearchComboBox);
@@ -135,26 +123,24 @@ public class CategorieTab extends DashboardTab {
 		searchlayout.setWidth("100%");
 		searchlayout.setMargin(true);
 		
-		leftLayout.addComponent(new Panel("Search",searchlayout));
+		getLeft().addComponent(new Panel("Search",searchlayout));
 
 		m_catTable.setSizeFull();
-		leftLayout.addComponent(m_catTable);
+		getLeft().addComponent(m_catTable);
 
 		HorizontalLayout bottomLeftLayout = new HorizontalLayout();
 		bottomLeftLayout.addComponent(new Label("----Select to Edit----"));
-		leftLayout.addComponent(bottomLeftLayout);
-		leftLayout.setSizeFull();
+		getLeft().addComponent(bottomLeftLayout);
+		getLeft().setSizeFull();
 
-		rightLayout.addComponent(m_editCatLayout);
+		getRight().addComponent(m_editCatLayout);
 
-		HorizontalLayout bottomRightLayout = new HorizontalLayout();
-		bottomRightLayout.addComponent(m_removeCatButton);
-		bottomRightLayout.addComponent(m_saveCatButton);
-		bottomRightLayout.addComponent(m_addCatButton);
-		bottomRightLayout.setComponentAlignment(m_removeCatButton, Alignment.MIDDLE_LEFT);
-		bottomRightLayout.setComponentAlignment(m_saveCatButton, Alignment.MIDDLE_CENTER);
-		bottomRightLayout.setComponentAlignment(m_addCatButton, Alignment.MIDDLE_RIGHT);
-		rightLayout.addComponent(new Panel(bottomRightLayout));
+		getHead().addComponent(m_removeCatButton);
+		getHead().addComponent(m_saveCatButton);
+		getHead().addComponent(m_addCatButton);
+		getHead().setComponentAlignment(m_removeCatButton, Alignment.MIDDLE_LEFT);
+		getHead().setComponentAlignment(m_saveCatButton, Alignment.MIDDLE_CENTER);
+		getHead().setComponentAlignment(m_addCatButton, Alignment.MIDDLE_RIGHT);
 		
 
 		//Add Domain
@@ -218,7 +204,7 @@ public class CategorieTab extends DashboardTab {
 		addDomainLayout.setVisible(true);
 		addDomainLayout.addComponent(new Panel(addDomainForm));
 
-		rightLayout.addComponent(addDomainLayout);
+		getRight().addComponent(addDomainLayout);
 
 		Button delDomainButton = new Button("Delete dns domain");
 		delDomainButton.addClickListener(new ClickListener() {
@@ -266,12 +252,8 @@ public class CategorieTab extends DashboardTab {
 		delDomainLayout.setVisible(true);
 		delDomainLayout.addComponent(new Panel(delDomainForm));
 
-		rightLayout.addComponent(delDomainLayout);
+		getRight().addComponent(delDomainLayout);
 		
-
-
-
-
 		m_catTable.setVisibleColumns(new Object[] { "name" });
 		m_catTable.setSelectable(true);
 		m_catTable.setImmediate(true);
