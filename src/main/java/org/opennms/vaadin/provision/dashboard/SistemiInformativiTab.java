@@ -80,12 +80,12 @@ public class SistemiInformativiTab extends RequisitionTab {
 		public boolean passesFilter(Object itemId, Item item) {
 			SistemiInformativiNode node = ((BeanItem<SistemiInformativiNode>)item).getBean();			
 			return ( super.passesFilter(itemId, item) 
-					&& ( needle1 == null || node.getServerLevelCategory()[0].equals(needle1) )
-					&& ( needle2 == null || node.getServerLevelCategory()[1].equals(needle2) ) 
-		            && ( needle3 == null || node.getManagedByCategory().equals(needle3) ) 
-		            && ( needle4 == null || node.getNotifCategory().equals(needle4) ) 
-		            && ( needle5 == null || node.getOptionalCategory().equals(needle5) ) 
-		            && ( needle6 == null || node.getProdCategory().equals(needle6) ) 
+					&& ( needle1 == null || needle1.equals(node.getServerLevelCategory()[0]) )
+					&& ( needle2 == null || needle2.equals(node.getServerLevelCategory()[1]) ) 
+		            && ( needle3 == null || needle3.equals(node.getManagedByCategory()) ) 
+		            && ( needle4 == null || needle4.equals(node.getNotifCategory()) ) 
+		            && ( needle5 == null || needle5.equals(node.getOptionalCategory()) ) 
+		            && ( needle6 == null || needle6.equals(node.getProdCategory()) ) 
 		        	);
 		}
 
