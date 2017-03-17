@@ -11,6 +11,7 @@ import java.util.Set;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 
 public class BasicNode implements Serializable {
+		
 	public enum OnmsState {
 		NEW,
 		DELETE,

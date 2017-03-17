@@ -578,12 +578,6 @@ public class SistemiInformativiTab extends RequisitionTab {
 	}
 
 	@Override
-	public void applyFilter(String filter) {
-		m_requisitionContainer.addContainerFilter(
-				new NodeFilter(filter, null, null, null,null,null));
-	}
-
-	@Override
 	public void cleanSearchBox() {
 		m_serverLevelSearchComboBox.select(null);
 		m_serverLevelSearchComboBox.setValue(null);

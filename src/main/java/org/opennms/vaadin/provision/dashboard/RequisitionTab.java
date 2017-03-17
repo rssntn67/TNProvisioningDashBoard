@@ -18,8 +18,10 @@ import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
+import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
@@ -48,6 +50,38 @@ import com.vaadin.ui.Window;
  * embed your UI to an existing web page. 
  */
 public abstract class RequisitionTab extends DashboardTab {
+
+	public class RequisitionNodeFilter implements Filter {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 7648836269899715294L;
+		private String   needle="";
+
+		public RequisitionNodeFilter(Object o) {
+			if ( o != null)
+				needle = (String) o;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public boolean passesFilter(Object itemId, Item item) {
+			BasicNode node = ((BeanItem<BasicNode>)item).getBean();
+			if (node.getPrimary() == null && node.getNodeLabel() == null)
+				return false;
+			if (node.getNodeLabel() == null && node.getPrimary() != null)
+				return node.getPrimary().contains(needle);			
+			if (node.getPrimary() == null && node.getNodeLabel() != null)
+				return node.getNodeLabel().contains(needle);			
+			return ((node.getPrimary().contains(needle) 
+					|| node.getNodeLabel().contains(needle)));
+		}
+
+		public boolean appliesToProperty(Object id) {
+			return true;
+		}
+
+
+	}
 
 	/**
 	 * 
@@ -348,7 +382,6 @@ public abstract class RequisitionTab extends DashboardTab {
 	}
 	
 	public abstract void selectItem(BasicNode node);
-	public abstract void applyFilter(String filter);
 	public abstract void cleanSearchBox();
 	public abstract BeanContainer<String,? extends BasicNode> getRequisitionContainer();
 	public abstract BasicNode addBean();
@@ -521,6 +554,7 @@ public abstract class RequisitionTab extends DashboardTab {
 				logger.info("Updated: " + node.getNodeLabel() + " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
+			node.setNoneState();
 			m_foreignIdNodeLabelMap.put(node.getForeignId(), new HashSet<String>());
 			m_foreignIdNodeLabelMap.get(node.getForeignId()).add(node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), new HashSet<String>());
@@ -772,5 +806,12 @@ public abstract class RequisitionTab extends DashboardTab {
 			Notification.show("Sync rescanExisting=dbonly Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
 		}						
 	}
+	
+	public void applyFilter(String hostname) {
+		getRequisitionContainer().addContainerFilter(
+				new RequisitionNodeFilter(hostname));
+
+	}
+
 
 }

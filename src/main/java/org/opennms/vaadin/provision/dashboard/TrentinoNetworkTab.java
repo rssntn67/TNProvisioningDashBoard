@@ -18,7 +18,6 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -55,20 +54,18 @@ import com.vaadin.ui.VerticalLayout;
 @Theme("runo")
 public class TrentinoNetworkTab extends RequisitionTab {
 
-	private class NodeFilter implements Filter {
+	private class NodeFilter extends RequisitionNodeFilter {
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		private String   needle="";
 		private Categoria needle1=null;
 		private String   needle2=null;
 		private String   needle3=null;
 		private String   needle4=null;
 		
 		public NodeFilter(Object o, Object c1, Object c2,Object c3, Object c4) {
-			if ( o != null)
-				needle = (String) o;
+			super(o);
 			if ( c1 != null) 
 				needle1 = (Categoria) c1;
 			if ( c2 != null)
@@ -81,8 +78,8 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 		@SuppressWarnings("unchecked")
 		public boolean passesFilter(Object itemId, Item item) {
-			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();			
-			return (    (node.getPrimary().contains(needle) || node.getNodeLabel().contains(needle)) 
+			TrentinoNetworkNode node = ((BeanItem<TrentinoNetworkNode>)item).getBean();
+			return ( 	super.passesFilter(itemId, item) 
 					&& ( needle1 == null || needle1.equals(node.getNetworkCategory()) ) 
 					&& ( needle2 == null || needle2.equals(node.getNotifCategory()) )
 		            && ( needle3 == null || needle3.equals(node.getThreshCategory()) ) 
@@ -532,13 +529,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	public BeanFieldGroup<TrentinoNetworkNode> getBeanFieldGroup() {
 		return m_editorFields;
 	}
-	
-	@Override 
-	public void applyFilter(String hostname) {
-		m_requisitionContainer.addContainerFilter(
-				new NodeFilter(hostname, null, null, null,null));
-	}
-	
+		
 	private void addSearchValueChangeListener(ComboBox box) {
 		box.addValueChangeListener(new Property.ValueChangeListener() {
 			

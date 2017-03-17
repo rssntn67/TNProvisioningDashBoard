@@ -16,11 +16,8 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
-import com.vaadin.data.Container.Filter;
-import com.vaadin.data.Item;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
-import com.vaadin.data.util.BeanItem;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
@@ -43,29 +40,6 @@ import com.vaadin.ui.VerticalLayout;
 @Title("TNPD - Trentino Network Requisition: Media Gateway")
 @Theme("runo")
 public class MediaGatewayTab extends RequisitionTab {
-
-	private class NodeFilter implements Filter {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-		private String   needle="";
-		
-		public NodeFilter(Object o) {
-			if ( o != null)
-				needle = (String) o;
-		}
-
-		@SuppressWarnings("unchecked")
-		public boolean passesFilter(Object itemId, Item item) {
-			MediaGatewayNode node = ((BeanItem<MediaGatewayNode>)item).getBean();			
-			return (node.getNodeLabel().contains(needle));
-		}
-
-		public boolean appliesToProperty(Object id) {
-			return true;
-		}
-	}
 
 	private static final long serialVersionUID = -5948892618258879832L;
 
@@ -92,7 +66,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			public void textChange(final TextChangeEvent event) {
 				m_searchText = event.getText();
 				m_requisitionContainer.removeAllContainerFilters();
-				m_requisitionContainer.addContainerFilter(new NodeFilter(m_searchText));
+				m_requisitionContainer.addContainerFilter(new RequisitionNodeFilter(m_searchText));
 			}
 		});
 
@@ -282,12 +256,4 @@ public class MediaGatewayTab extends RequisitionTab {
 	public BeanFieldGroup<MediaGatewayNode> getBeanFieldGroup() {
 		return m_editorFields;
 	}
-	
-	@Override 
-	public void applyFilter(String hostname) {
-		m_requisitionContainer.addContainerFilter(
-				new NodeFilter(hostname));
-
-	}
-
 }
