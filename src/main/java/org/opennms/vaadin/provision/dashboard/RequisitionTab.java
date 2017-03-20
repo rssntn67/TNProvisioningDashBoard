@@ -267,8 +267,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 		
-		if (service.getUser().equals("admin"))
-			getHead().addComponent(m_populateSnmpButton);
 	    getHead().addComponent(m_syncRequisButton);
     	getHead().addComponent(m_addNewNodeButton);
 		getHead().addComponent(m_deleteNodeButton);
@@ -291,6 +289,9 @@ public abstract class RequisitionTab extends DashboardTab {
 	public void load() {
 		updateTabHead();
 		if (!m_loaded) {
+			if (getService().getUser().equals("admin"))
+				getHead().addComponent(m_populateSnmpButton);
+
 			for (String itemId: getRequisitionContainer().getItemIds()) {
 				BasicNode node = getRequisitionContainer().getItem(itemId).getBean();
 				if (!m_foreignIdNodeLabelMap.containsKey(node.getForeignId()))
