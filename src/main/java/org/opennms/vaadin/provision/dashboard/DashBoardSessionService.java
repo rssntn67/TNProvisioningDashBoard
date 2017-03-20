@@ -199,7 +199,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_joblogcontainer = new JobLogDao(jltq);
 	}
 
-	public void syncSnmpProfile(String primary, String snmpprofile) throws SQLException{
+	public void saveSnmpProfile(String primary, String snmpprofile) throws SQLException{
 		if (primary == null || snmpprofile == null)
 			return;
 		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();

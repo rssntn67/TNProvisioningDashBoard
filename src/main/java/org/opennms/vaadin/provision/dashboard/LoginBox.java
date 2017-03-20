@@ -53,8 +53,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private PasswordField m_password = new PasswordField("Password:");
     private Button m_login = new Button("Login");
     private Button m_logout = new Button("Logout");
-	private Button m_populateTnSnmpButton  = new Button("Sync TN Snmp Data");
-	private Button m_populateSiSnmpButton  = new Button("Sync SI Snmp Data");
     private TabSheet m_tabs;
     
     public LoginBox (TabSheet tabs,DashBoardSessionService service) {
@@ -68,12 +66,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
     	m_login.addClickListener(this);
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
-    	
-    	m_populateSiSnmpButton.addClickListener(this);
-    	m_populateSiSnmpButton.setImmediate(true);
-    	
-    	m_populateTnSnmpButton.addClickListener(this);
-    	m_populateTnSnmpButton.setImmediate(true);
     	
     	for (String url: m_service.getConfig().getUrls())
     		m_select.addItem(url);
@@ -100,44 +92,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			login();
 		} else if (event.getButton() == m_logout) {
 	    	logout();
-	    } else if (event.getButton() == m_populateTnSnmpButton) {
-			UI.getCurrent().access(new Runnable() {
-				@Override
-				public void run() {
-			logger.info("Sync db with snmp profiles for Requisition: " + DashBoardUtils.TN_REQU_NAME);
-			try {
-				BeanContainer<String, ? extends BasicNode> container = m_service.getTNContainer();
-				Set<String> primaries = new HashSet<String>();
-				for (String itemid: container.getItemIds()) 
-					primaries.add(container.getItem(itemid).getBean().getPrimary());
-				
-				m_service.syncSnmpProfile(primaries);
-				Notification.show("Sync Snmp profile: " + DashBoardUtils.TN_REQU_NAME, " Done ", Type.HUMANIZED_MESSAGE);
-			} catch (Exception e) {
-				logger.warning("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME + " " + e.getLocalizedMessage());
-				Notification.show("Sync Snmp profile Failed: " + DashBoardUtils.TN_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-			}
-				}
-			});
-		} else if (event.getButton() == m_populateSiSnmpButton) {
-			UI.getCurrent().access(new Runnable() {
-				@Override
-				public void run() {
-			logger.info("Sync db with snmp profiles for Requisition: " + DashBoardUtils.SI_REQU_NAME);
-			try {
-				BeanContainer<String, ? extends BasicNode> container = m_service.getSIContainer();
-				Set<String> primaries = new HashSet<String>();
-				for (String itemid: container.getItemIds()) 
-					primaries.add(container.getItem(itemid).getBean().getPrimary());
-				
-				m_service.syncSnmpProfile(primaries);
-				Notification.show("Sync Snmp profile: " + DashBoardUtils.SI_REQU_NAME, " Done ", Type.HUMANIZED_MESSAGE);
-			} catch (Exception e) {
-				logger.warning("Sync Snmp profile Failed: " + DashBoardUtils.SI_REQU_NAME + " " + e.getLocalizedMessage());
-				Notification.show("Sync Snmp profile Failed: " + DashBoardUtils.SI_REQU_NAME, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-			}
-				}
-			});
 		}
 	}
 
@@ -198,6 +152,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		}
 	    m_panel.setCaption("User '"+ m_service.getUser()+"' Logged in");
 	    VerticalLayout loggedin= new VerticalLayout();
+	    loggedin.setMargin(true);
+	    loggedin.setSpacing(true);
 	    HorizontalLayout buttonPanel = new HorizontalLayout();
 	    buttonPanel.addComponent(m_logout);
 	    loggedin.addComponent(buttonPanel);
@@ -218,9 +174,11 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		    	row1.getItemProperty("Session").setValue(sessionService.toString());
 		    	row1.getItemProperty("Pool").setValue(sessionService.getPool().toString());
 		    }
-		    loggedin.addComponent(conneTable);
-		    buttonPanel.addComponent(m_populateTnSnmpButton);
-		    buttonPanel.addComponent(m_populateSiSnmpButton);
+		    VerticalLayout tablelayout = new VerticalLayout();
+		    tablelayout.setMargin(true);
+		    tablelayout.setSpacing(true);
+		    tablelayout.addComponent(conneTable);
+		    loggedin.addComponent(tablelayout);
 
 	    }
 	    m_panel.setContent(loggedin);

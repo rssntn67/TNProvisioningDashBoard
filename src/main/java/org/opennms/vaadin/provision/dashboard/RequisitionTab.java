@@ -87,6 +87,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private static final long serialVersionUID = 4694567853140078034L;
 		
+	private Button m_populateSnmpButton  = new Button("Sync Snmp Data");
 	private Button m_syncRequisButton  = new Button("Sync");
 	private Button m_addNewNodeButton  = new Button("Nuovo Nodo");
 	private Button m_replaceNodeButton  = new Button("Sostituisci Nodo");
@@ -121,6 +122,10 @@ public abstract class RequisitionTab extends DashboardTab {
 	 */
 	RequisitionTab(LoginBox login, DashBoardSessionService service) {
 		super(login,service);
+		
+    	m_populateSnmpButton.addClickListener(this);
+    	m_populateSnmpButton.setImmediate(true);
+
     	m_syncRequisButton.addClickListener(this);
     	m_syncRequisButton.setImmediate(true);
     	
@@ -211,17 +216,26 @@ public abstract class RequisitionTab extends DashboardTab {
 					if (node.getPrimary() != null) {
 						try {
 							snmpProfile = getService().getSnmpProfileName(node.getPrimary());
-							getService().syncSnmpProfile(node.getPrimary(), snmpProfile);
-						} catch (SQLException sqle) {
-							logger.warning("Errore nel richiesta del profilo snmp al database: " + sqle.getLocalizedMessage());
-							Notification.show("Errore nel richiesta del profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
+							if (snmpProfile == null) {
+								node.setValid(false);
+							}
+							node.setSnmpProfileWithOutUpdating(snmpProfile);
 						} catch (UniformInterfaceException uie) {
-							
+							logger.warning("Errore nel richiesta del profilo snmp alla interfaccia rest: " + uie.getLocalizedMessage());
+							Notification.show("Errore nel richiesta del profilo snmp alla interfaccia rest", uie.getMessage(), Type.WARNING_MESSAGE);							
+						} catch (SQLException uie) {
+							logger.warning("Errore nel richiesta del profilo snmp al database: " + uie.getLocalizedMessage());
+							Notification.show("Errore nel richiesta del profilo snmp aldatabase", uie.getMessage(), Type.WARNING_MESSAGE);							
 						}
+						
+						try {
+							getService().saveSnmpProfile(node.getPrimary(), snmpProfile);
+						} catch (SQLException sqle) {
+							logger.warning("Errore nel salvare il profilo snmp al database: " + sqle.getLocalizedMessage());
+							Notification.show("Errore nel nel salvare il profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
+						}
+
 					}
-					if (snmpProfile == null)
-						node.setValid(false);
-					node.setSnmpProfileWithOutUpdating(snmpProfile);
 				}
 				m_descrComboBox.removeAllItems();
 				if (node.getDescr() != null)
@@ -251,7 +265,9 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 		
-		getHead().addComponent(m_syncRequisButton);
+		if (service.getUser().equals("admin"))
+			getHead().addComponent(m_populateSnmpButton);
+	    getHead().addComponent(m_syncRequisButton);
     	getHead().addComponent(m_addNewNodeButton);
 		getHead().addComponent(m_deleteNodeButton);
 		getHead().addComponent(m_saveNodeButton);
@@ -450,7 +466,9 @@ public abstract class RequisitionTab extends DashboardTab {
 	    	replace();
 	    } else if (event.getButton() == m_resetNodeButton) {
 	    	reset();
-	    }
+	    } else if (event.getButton() == m_populateSnmpButton) {
+	    	populateSnmp();
+		}
 	}
 	
 	public void enableNodeButtons() {
@@ -466,7 +484,29 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_replaceNodeButton.setEnabled(false);
 		m_resetNodeButton.setEnabled(false);
 	}
+	
+	public void populateSnmp() {
+		UI.getCurrent().access(new Runnable() {
+			@Override
+			public void run() {
+		logger.info("Sync db with snmp profiles for Requisition: " + getRequisitionName());
+		try {
+			BeanContainer<String, ? extends BasicNode> container = getRequisitionContainer();
+			Set<String> primaries = new HashSet<String>();
+			for (String itemid: container.getItemIds()) 
+				primaries.add(container.getItem(itemid).getBean().getPrimary());
+			
+			getService().syncSnmpProfile(primaries);
+			Notification.show("Sync Snmp profile: " + getRequisitionName(), " Done ", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync Snmp profile Failed: " + getRequisitionName() + " " + e.getLocalizedMessage());
+			Notification.show("Sync Snmp profile Failed: " + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}
+			}
+		});
 
+	}
+	
 	public void replace() {
 		disableNodeButtons();
 		BasicNode node = null;
