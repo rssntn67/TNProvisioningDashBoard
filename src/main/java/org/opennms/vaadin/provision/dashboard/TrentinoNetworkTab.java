@@ -2,10 +2,8 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
@@ -207,23 +205,11 @@ public class TrentinoNetworkTab extends RequisitionTab {
 					private static final long serialVersionUID = 1L;
 
 				@Override public void buttonClick(ClickEvent event) {
-					try {
-						String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
-						getService().delete(DashBoardUtils.TN_REQU_NAME, m_editorFields.getItemDataSource().getBean().getForeignId(), 							
-								ip);
+					String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
 			        source.getContainerDataSource().removeItem(itemId);
-			        Set<String> secondary = new HashSet<String>();
-			        for (Object id: source.getContainerDataSource().getItemIds()) {
-			        	secondary.add((String)source.getContainerProperty(id, "indirizzo ip").getValue());
-			        }
+			        m_editorFields.getItemDataSource().getBean().delService(ip,"ICMP");
 			        m_secondaryIpComboBox.addItem(ip);
-			        m_editorFields.getItemDataSource().getBean().setSecondary(secondary);
 					logger.info("Deleted Secondary ip: " + itemId);
-					Notification.show("Delete Secondary ip", "Ip: " + itemId + " deleted.", Type.WARNING_MESSAGE);
-					} catch (Exception e) {
-						logger.warning("Delete ip failed: " + itemId +" " + e.getLocalizedMessage());
-						Notification.show("Delete ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					}
 			      }
 			    });
 			 
@@ -242,29 +228,12 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			public void buttonClick(ClickEvent event) {
 				if (m_secondaryIpComboBox.getValue() != null) {
 					String ip = m_secondaryIpComboBox.getValue().toString();
-					try {
-						TrentinoNetworkNode node = m_editorFields.getItemDataSource().getBean();
-						if (node.getForeignId() != null) {
-							getService().addSecondaryInterface(DashBoardUtils.TN_REQU_NAME,m_editorFields.getItemDataSource().getBean().getForeignId(),
-									ip);
-							IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-							Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
-							ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
-							Set<String> secondary = new HashSet<String>();
-					        for (Object id: m_secondaryIpAddressTable.getContainerDataSource().getItemIds()) {
-					        	secondary.add((String)m_secondaryIpAddressTable.getContainerProperty(id, "indirizzo ip").getValue());
-					        }
-					        m_editorFields.getItemDataSource().getBean().setSecondary(secondary);
-							logger.info("Added Secondary ip address: " + ip);
-							Notification.show("Add Secondary ip", "Added ip: "+ip+ " to node in repository", Type.WARNING_MESSAGE);
-					        m_secondaryIpComboBox.removeItem(ip);
-						} else {
-							Notification.show("Add ip", "Cannot add secondary to new node: save it and then add secondary", Type.WARNING_MESSAGE);
-						}
-					} catch (Exception e) {
-						logger.warning("Add ip failed: " + m_secondaryIpComboBox.getValue().toString() + " :" +e.getLocalizedMessage());
-						Notification.show("Add ip", "Failed: "+e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-					}
+					IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
+					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
+					ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
+			        m_editorFields.getItemDataSource().getBean().addService(ip, "ICMP");;
+					logger.info("Added Secondary ip address: " + ip);
+			        m_secondaryIpComboBox.removeItem(ip);
 				}
 			}
 		});

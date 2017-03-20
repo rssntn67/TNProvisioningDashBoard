@@ -1,6 +1,6 @@
 package org.opennms.vaadin.provision.model;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
@@ -22,6 +22,7 @@ public class MediaGatewayNode extends BasicNode {
 	}
 	
 	public MediaGatewayNode(
+			Map<String,Set<String>> serviceMap,
 			String descr, 
 			String hostname,
 			String vrf, 
@@ -36,7 +37,7 @@ public class MediaGatewayNode extends BasicNode {
 			String building, 
 			String foreignId,
 			String foreignSource) {
-		super(new HashMap<String, Set<String>>(),descr,hostname,vrf,primary,parent,
+		super(serviceMap,descr,hostname,vrf,primary,parent,
 				parentId,snmpProfile,city,address1,
 				foreignId,building,foreignSource);
 		m_networkCategory = networkCategory;

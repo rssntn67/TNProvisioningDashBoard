@@ -332,14 +332,14 @@ public class SistemiInformativiTab extends RequisitionTab {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				if (m_secondaryIpTextBox.getValue() != null && m_serviceComboBox.getValue() != null) {
-					String ip = m_secondaryIpTextBox.getValue().toString();
+					String ip = m_secondaryIpTextBox.getValue();
 					String service = m_serviceComboBox.getValue().toString();
-						IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-						Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
-						ipItem.getItemProperty("ip").setValue(ip); 
-						ipItem.getItemProperty("service").setValue(service); 
-				        m_editorFields.getItemDataSource().getBean().addService(ip,service);
-						logger.info("Added Secondary ip/service: " + ip + "/" + service);
+					IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
+					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
+					ipItem.getItemProperty("ip").setValue(ip); 
+					ipItem.getItemProperty("service").setValue(service); 
+			        m_editorFields.getItemDataSource().getBean().addService(ip,service);
+					logger.info("Added Secondary ip/service: " + ip + "/" + service);
 				}
 			}
 		});

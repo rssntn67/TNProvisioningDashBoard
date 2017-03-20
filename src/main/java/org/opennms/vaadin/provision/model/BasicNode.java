@@ -333,8 +333,6 @@ public class BasicNode implements Serializable {
 	}
 	
 	public void addService(String ip, String service) {
-		if ("ICMP".equals(service) || "SNMP".equals(service))
-				return;
 		if (m_interfToDel.contains(ip))
 			m_interfToDel.remove(ip);
 		if (!m_serviceMap.containsKey(ip)) {
@@ -378,20 +376,16 @@ public class BasicNode implements Serializable {
 	}
 	
 	public Set<String> getSecondary() {
-		return m_serviceMap.keySet();
-	}
-	
-	public void setSecondary(Set<String> secondary) {
-		m_serviceMap.clear();
-		for (String ip: secondary) {
-			Set<String> service = new HashSet<String>();
-			service.add("ICMP");
-			m_serviceMap.put(ip, service);
+		Set<String> secondary = new HashSet<String>();
+		for (String ip: m_serviceMap.keySet()) {
+			if (ip == null || ip.equals(m_primary))
+				continue;
+			secondary.add(ip);
 		}
-		setOnmsSyncOperations(OnmsSync.FALSE);
-
-	}	
-	
+			
+		return secondary;
+	}
+		
 	public Set<OnmsSync> getSyncOperations() {
 		return m_syncoperations;
 	}
