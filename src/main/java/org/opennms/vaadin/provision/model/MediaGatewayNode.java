@@ -16,8 +16,8 @@ public class MediaGatewayNode extends BasicNode {
 	private String m_networkCategory;
 	
 	
-	public MediaGatewayNode(String label, String nc) {
-		super(label);
+	public MediaGatewayNode(String label, String nc,String foreignSource) {
+		super(label,foreignSource);
 		m_networkCategory = nc; 						
 	}
 	
@@ -34,8 +34,11 @@ public class MediaGatewayNode extends BasicNode {
 			String city, 
 			String address1, 
 			String building, 
-			String foreignId) {
-		super(new HashMap<String, Set<String>>(),descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,address1,foreignId,building);
+			String foreignId,
+			String foreignSource) {
+		super(new HashMap<String, Set<String>>(),descr,hostname,vrf,primary,parent,
+				parentId,snmpProfile,city,address1,
+				foreignId,building,foreignSource);
 		m_networkCategory = networkCategory;
 		m_backupProfile = backupProfile;
 	}

@@ -59,9 +59,12 @@ public class BasicNode implements Serializable {
 	private String m_address1;
 	private String m_building;
 	private String m_foreignId;
+	private String m_foreignSource;
+	
 	protected boolean m_valid = true;
 		
-	public BasicNode(String label) {
+	public BasicNode(String label,
+			String foreignSource) {
 		m_label = label;
 		m_primary="0.0.0.0";
 		m_hostname="";
@@ -76,7 +79,10 @@ public class BasicNode implements Serializable {
 		m_onmstate = OnmsState.NEW;
 	}
 
-	public BasicNode(String label, String vrf, String snmpProfile) {
+	public BasicNode(String label, 
+			String vrf, 
+			String snmpProfile,
+			String foreignSource) {
 		m_label = label;
 		m_primary="0.0.0.0";
 		m_hostname="";
@@ -106,7 +112,8 @@ public class BasicNode implements Serializable {
 			String city, 
 			String address1, 
 			String foreignId, 
-			String building) {
+			String building,
+			String foreignSource) {
 
 		m_label = null;
 		m_serviceMap = serviceMap;
@@ -417,6 +424,14 @@ public class BasicNode implements Serializable {
 			m_onmstate = OnmsState.UPDATE;
 			m_syncoperations.add(syncoperation);
 		}
+	}
+
+	public String getForeignSource() {
+		return m_foreignSource;
+	}
+
+	public void setForeignSource(String foreignSource) {
+		m_foreignSource = foreignSource;
 	}
 
 

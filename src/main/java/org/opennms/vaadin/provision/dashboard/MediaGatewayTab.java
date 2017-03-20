@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -21,6 +22,8 @@ import com.vaadin.data.util.BeanContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -53,11 +56,16 @@ public class MediaGatewayTab extends RequisitionTab {
 	
 	final TextField m_searchField       = new TextField("Type Label Text");
 
+	private Button m_syncSIVNRequisButton  = new Button("Sync Virtual Node");
 	final ComboBox m_networkCatComboBox = new ComboBox("Network Category");
 	final ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
 
 	public MediaGatewayTab(LoginBox login,DashBoardSessionService service) {
 		super(login,service);
+		
+    	m_syncSIVNRequisButton.addClickListener(this);
+    	m_syncSIVNRequisButton.setImmediate(true);
+
 
 		m_searchField.setInputPrompt("Search nodes");
 		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
@@ -82,6 +90,9 @@ public class MediaGatewayTab extends RequisitionTab {
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
+        
+		getHead().addComponent(m_syncSIVNRequisButton);
+
 		
 	}
 
@@ -90,7 +101,11 @@ public class MediaGatewayTab extends RequisitionTab {
 		if (!loaded) {
 			try {
 				if (getService().getMediaGateway() == null ) {
-					getService().createMediaGateway();
+					String mediagateway = getService().createMediaGateway();
+					BasicNode mg = new BasicNode(mediagateway,DashBoardUtils.SIVN_REQU_NAME);
+					mg.setUpdateState();
+					mg.setOnmsSyncOperations(OnmsSync.FALSE);
+					m_updates.put(mediagateway, mg);
 				}
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
@@ -101,7 +116,7 @@ public class MediaGatewayTab extends RequisitionTab {
 					return;
 				}
 			}
-			
+
 			try {
 				m_requisitionContainer = getService().getMediaGatewayContainer();
 				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
@@ -146,13 +161,37 @@ public class MediaGatewayTab extends RequisitionTab {
 					backupprofile +
 					("(username:"+ bckupprofilemap.get(backupprofile).getUsername() +")"));
 		}
-
 				
 	}
-		
+	
+	@Override
+	public void buttonClick(ClickEvent event) {
+		super.buttonClick(event);
+		if (event.getButton() == m_syncSIVNRequisButton) {
+	    	sync(DashBoardUtils.SIVN_REQU_NAME);
+		}
+	}
+
+	@Override
+	public void replace() {
+		Notification.show(DashBoardUtils.TN_REQU_NAME  + 
+				"Sync Required", "Push Sync Button", Notification.Type.TRAY_NOTIFICATION);
+		super.replace();		
+	}
+
+	@Override
+	public void delete() {
+		Notification.show(DashBoardUtils.TN_REQU_NAME + " and " +  
+				DashBoardUtils.SIVN_REQU_NAME + 
+				"Sync Required", "Push Either Sync and Sync Virtual node Buttons", Notification.Type.TRAY_NOTIFICATION);
+		super.delete();		
+	}
+
 	@Override
 	public void save() {
-		Notification.show("TrentinoNetwork Sync Required", "To sync changes go to Trentino Network tab - Sync", Notification.Type.TRAY_NOTIFICATION);
+		Notification.show(DashBoardUtils.TN_REQU_NAME + " and " +  
+				DashBoardUtils.SIVN_REQU_NAME + 
+				"Sync Required", "Push Either Sync and Sync Virtual node Buttons", Notification.Type.TRAY_NOTIFICATION);
 		super.save();
 	}
 	
@@ -232,7 +271,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	}
 
 	public String getRequisitionName() {
-		return DashBoardUtils.SIVN_REQU_NAME;
+		return DashBoardUtils.TN_REQU_NAME;
 	}
 	
 	@Override
@@ -244,7 +283,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	@Override
 	public MediaGatewayNode addBean() {
 		return m_requisitionContainer.addBeanAt(0,new MediaGatewayNode("notSavedHost"+newHost++,
-				DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY)).getBean();
+				DashBoardUtils.MEDIAGATEWAY_NETWORK_CATEGORY,DashBoardUtils.TN_REQU_NAME)).getBean();
 	}
 
 	@Override

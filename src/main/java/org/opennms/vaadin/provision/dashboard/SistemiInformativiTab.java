@@ -597,7 +597,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 	public SistemiInformativiNode addBean() {
 		return 
 				m_requisitionContainer.addBeanAt(0,
-						new SistemiInformativiNode("notSavedHost"+newHost++)).getBean();
+						new SistemiInformativiNode("notSavedHost"+newHost++,DashBoardUtils.SI_REQU_NAME)).getBean();
 	}
 
 	@Override

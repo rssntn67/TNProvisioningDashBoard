@@ -46,8 +46,9 @@ public class SistemiInformativiNode extends BasicNode {
 			String vendor, String slot, String rack, String room,
 			String operatingSystem, String dateInstalled, String assetNumber,
 			String serialNumber, String category, String modelNumber,
-			String manufacturer, String foreignId) {
-		super(serviceMap,descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,address1,foreignId,building);
+			String manufacturer, String foreignId,String foreignSource) {
+		super(serviceMap,descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,
+				address1,foreignId,building,foreignSource);
 		m_serverLevelCategory = serverLevelCategory;
 		m_managedByCategory = managedByCategory;
 		m_notifCategory = notifCategory;
@@ -71,8 +72,8 @@ public class SistemiInformativiNode extends BasicNode {
 		m_manufacturer = manufacturer;
 	}
 
-	public SistemiInformativiNode(String label) {
-		super(label);
+	public SistemiInformativiNode(String label,String foreignSource) {
+		super(label,foreignSource);
 	}
 					
 	public String[] getServerLevelCategory() {

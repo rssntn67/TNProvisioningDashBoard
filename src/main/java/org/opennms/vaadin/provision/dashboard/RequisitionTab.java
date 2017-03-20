@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +15,7 @@ import java.util.logging.Logger;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -111,6 +113,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	private Map<String,Set<String>> m_foreignIdNodeLabelMap = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> m_nodeLabelForeignIdMap = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> m_primaryipforeignidmap = new HashMap<String, Set<String>>();
+	protected Map<String,BasicNode> m_updates = new HashMap<String,BasicNode>();
 
 	private boolean m_loaded = false;
 
@@ -442,8 +445,8 @@ public abstract class RequisitionTab extends DashboardTab {
 		
 	}
 	
-	public List<BasicNode> getUpdates() {
-		return null;
+	public Collection<BasicNode> getUpdates() {
+		return m_updates.values();
 	}
 
 	public abstract void selectItem(BasicNode node);
@@ -457,7 +460,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	public void buttonClick(ClickEvent event) {
 		super.buttonClick(event);
 		if (event.getButton() == m_syncRequisButton) {
-	    	sync();
+	    	sync(getRequisitionName());
 	    } else if (event.getButton() == m_addNewNodeButton) {
 	    	newNode();
 	    } else if (event.getButton() == m_saveNodeButton) {
@@ -547,6 +550,11 @@ public abstract class RequisitionTab extends DashboardTab {
 			Notification.show("Replace: delete Failed", localizedMessage, Type.ERROR_MESSAGE);
 			return;
 		}
+		
+		node.setDeleteState();
+		m_updates.put(node.getNodeLabel(), node);
+
+
 
 		Set<String> nodelabels = m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		nodelabels.remove(node.getNodeLabel());
@@ -604,11 +612,11 @@ public abstract class RequisitionTab extends DashboardTab {
 
 	}
 	
-	private void sync() {
-		SyncWindow subWindow = new SyncWindow(this);
+	public void sync(String requisitionName) {
+		SyncWindow subWindow = new SyncWindow(this,requisitionName);
         subWindow.center();
         subWindow.setWidth("600px");
-        subWindow.setCaption("Sincronizzazione dei nodi " + getRequisitionName());
+        subWindow.setCaption("Sincronizzazione dei nodi " + requisitionName);
         UI.getCurrent().addWindow(subWindow);
 	}
 
@@ -643,7 +651,10 @@ public abstract class RequisitionTab extends DashboardTab {
 				logger.info("Updated: " + node.getNodeLabel() + " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
+			//FIXME
 			node.setNoneState();
+
+			m_updates.put(node.getNodeLabel(), node );		
 			m_foreignIdNodeLabelMap.put(node.getForeignId(), new HashSet<String>());
 			m_foreignIdNodeLabelMap.get(node.getForeignId()).add(node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), new HashSet<String>());
@@ -690,10 +701,27 @@ public abstract class RequisitionTab extends DashboardTab {
 				return;
 			}
 		}
+
+		if (node.getOnmstate() == BasicNode.OnmsState.NEW) {
+			m_updates.remove(node.getNodeLabel());
+		} else {
+			node.setDeleteState();
+			m_updates.put(node.getNodeLabel(),node);			
+		}
+		/* FIXME MediaGateway
+		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
+		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
+		mg.setUpdateState();
+		mg.setOnmsSyncOperations(OnmsSync.FALSE);
+		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
+		 */
+
 		if ( ! getRequisitionContainer().removeItem(node.getNodeLabel()))
 			getRequisitionContainer().removeItem(getRequisitionContainer().getIdByIndex(0));
+		
 		Set<String> nodelabels = m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		nodelabels.remove(node.getNodeLabel());
+		
 		if (!nodelabels.isEmpty())
 			m_foreignIdNodeLabelMap.put(node.getForeignId(), nodelabels);
 		
@@ -859,9 +887,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		return m_parentComboBox;
 	}
 	
-	public void synctrue() {
+	public void synctrue(String requisition) {
 		try {
-			getService().synctrue(getRequisitionName());
+			getService().synctrue(requisition);
+	    	clearUpdateMap(requisition,OnmsSync.TRUE);
 			logger.info("Sync succeed foreign source: " +getRequisitionName());
 			Notification.show("Sync " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
 		} catch (Exception e) {
@@ -870,9 +899,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		}
 	}
 
-	public void syncfalse() {
+	public void syncfalse(String requisition) {
 		try {
-			getService().syncfalse(getRequisitionName());
+			getService().syncfalse(requisition);
+	    	clearUpdateMap(requisition,OnmsSync.FALSE);
 			logger.info("Sync rescanExisting=false succeed foreign source: " +getRequisitionName());
 			Notification.show("Sync rescanExisting=false " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
 		} catch (Exception e) {
@@ -881,9 +911,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		}				
 	}
 
-	public void syncdbonly() {
+	public void syncdbonly(String requisition) {
 		try {
-			getService().syncdbonly(getRequisitionName());
+			getService().syncdbonly(requisition);
+	    	clearUpdateMap(requisition,OnmsSync.DBONLY);
 			logger.info("Sync rescanExisting=dbonly succeed foreign source: " +getRequisitionName());
 			Notification.show("Sync rescanExisting=dbonly " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
 		} catch (Exception e) {
@@ -897,6 +928,44 @@ public abstract class RequisitionTab extends DashboardTab {
 				new RequisitionNodeFilter(hostname));
 
 	}
+	
+	public void clearUpdateMap(String requisition,BasicNode.OnmsSync sync) {
+		Map<String, BasicNode> after = new HashMap<String, BasicNode>();		
+		switch (sync) {
+			case TRUE:
+				for (BasicNode node: m_updates.values()) {
+					if (!requisition.equals(node.getForeignSource()))
+						continue;
+					node.setNoneState();
+				}
+				break;
+			case FALSE:
+				for (BasicNode node: m_updates.values()) {
+					if (!requisition.equals(node.getForeignSource()))
+						continue;
+					node.deleteOnmsSyncOperation(OnmsSync.FALSE);
+					if (node.getSyncOperations().isEmpty())
+						node.setNoneState();
+					else
+						after.put(node.getNodeLabel(), node);
+				}
+				break;
+			case DBONLY:
+				for (BasicNode node: m_updates.values()) {
+					if (!requisition.equals(node.getForeignSource()))
+						continue;
+					node.deleteOnmsSyncOperation(OnmsSync.DBONLY);
+					if (node.getSyncOperations().isEmpty())
+						node.setNoneState();
+					else
+						after.put(node.getNodeLabel(), node);
+				}
+				break;
+		}
+		m_updates = after;
+
+	}
+
 
 
 }

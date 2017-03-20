@@ -22,8 +22,9 @@ public class TrentinoNetworkNode extends BasicNode {
 	
 	private String m_circuitId;
 		
-	public TrentinoNetworkNode(String label, Categoria vrf) {
-		super(label,vrf.getDnsdomain(),vrf.getSnmpprofile());
+	public TrentinoNetworkNode(String label, Categoria vrf,String foreignSource) {
+		super(label,vrf.getDnsdomain(),vrf.getSnmpprofile(),
+				foreignSource);
 
 		m_networkCategory = vrf; 
 		m_notifCategory = vrf.getNotifylevel();
@@ -50,8 +51,10 @@ public class TrentinoNetworkNode extends BasicNode {
 			String slaCategory,
 			String building,
 			String circuitId,
-			Set<String> optionCategory) {
-		super(serviceMap,descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,address1,foreignId,building);
+			Set<String> optionCategory,
+			String foreignSource) {
+		super(serviceMap,descr,hostname,vrf,primary,parent,parentId,snmpProfile,city,address1,
+				foreignId,building,foreignSource);
 		m_networkCategory = networkCategory;
 		m_notifCategory = notifCategory;
 		m_threshCategory = threshCategory;

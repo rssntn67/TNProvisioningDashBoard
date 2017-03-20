@@ -1,9 +1,9 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -108,7 +108,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
 			return;
 		}
-		Map<String,List<BasicNode>> updatemap = new HashMap<String,List<BasicNode>>();
+		Map<String,Collection<BasicNode>> updatemap = new HashMap<String,Collection<BasicNode>>();
 		Iterator<Component> ite = m_tabs.iterator();
 	    while (ite.hasNext()) {
 	    	Component comp = ite.next();
@@ -225,7 +225,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    }
 	}
 	
-	private void createdialogwindown(Map<String,List<BasicNode>> updatemap) {
+	private void createdialogwindown(Map<String,Collection<BasicNode>> updatemap) {
 		final Window confirm = new Window("Modifiche effettuate e non sincronizzate");
 		Button si = new Button("si");
 		si.addClickListener(new ClickListener() {

@@ -517,7 +517,8 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	public TrentinoNetworkNode addBean() {
 		return m_requisitionContainer.addBeanAt(0,
 				new TrentinoNetworkNode("notSavedHost"+newHost++,
-                     getService().getCatContainer().getCatMap().values().iterator().next())).getBean();
+                     getService().getCatContainer().getCatMap().values().iterator().next(),
+                     DashBoardUtils.TN_REQU_NAME)).getBean();
 	}
 
 	@Override

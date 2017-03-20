@@ -25,9 +25,11 @@ public class SyncWindow extends Window implements ClickListener{
 	private Button m_syncfalse = new Button("Sync False");
 	private Button m_syncdbonly = new Button("Sync DbOnly");
 	private RequisitionTab m_tab;
+	private String m_requisition;
 
-	public SyncWindow(RequisitionTab tab) {
+	public SyncWindow(RequisitionTab tab, String requisition) {
 		m_tab=tab;
+		m_requisition=requisition;
 		m_synctrue.addClickListener(this);
 		m_syncfalse.addClickListener(this);
 		m_syncdbonly.addClickListener(this);
@@ -83,11 +85,11 @@ public class SyncWindow extends Window implements ClickListener{
 	public void buttonClick(ClickEvent event) {
 		
 		if (event.getButton() == m_synctrue)
-			m_tab.synctrue();
+			m_tab.synctrue(m_requisition);
 		else if (event.getButton() == m_syncfalse) 
-			m_tab.syncfalse();
+			m_tab.syncfalse(m_requisition);
 		else if (event.getButton() == m_syncdbonly) 
-			m_tab.syncdbonly();
+			m_tab.syncdbonly(m_requisition);
 		close();
 	}
 
