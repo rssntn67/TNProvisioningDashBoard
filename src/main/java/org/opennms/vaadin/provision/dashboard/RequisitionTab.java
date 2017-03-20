@@ -15,7 +15,6 @@ import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.SnmpProfile;
-import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Item;
@@ -27,7 +26,6 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification.Type;
@@ -444,6 +442,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		
 	}
 	
+	public List<BasicNode> getUpdates() {
+		return null;
+	}
+
 	public abstract void selectItem(BasicNode node);
 	public abstract void cleanSearchBox();
 	public abstract BeanContainer<String,? extends BasicNode> getRequisitionContainer();
@@ -857,10 +859,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		return m_parentComboBox;
 	}
 	
-	public BeanItemContainer<SyncOperationNode> getUpdates() {
-		return getUpdates(getService().getUpdatesMap(getRequisitionName()).values());
-	}
-
 	public void synctrue() {
 		try {
 			getService().synctrue(getRequisitionName());

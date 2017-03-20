@@ -1,9 +1,10 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,13 +15,13 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.Item;
-import com.vaadin.data.util.BeanContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.PasswordField;
@@ -29,8 +30,8 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification.Type;
 
 import elemental.events.KeyboardEvent.KeyCode;
 
@@ -53,6 +54,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private PasswordField m_password = new PasswordField("Password:");
     private Button m_login = new Button("Login");
     private Button m_logout = new Button("Logout");
+    private Button m_info = new Button("Info");
     private TabSheet m_tabs;
     
     public LoginBox (TabSheet tabs,DashBoardSessionService service) {
@@ -62,8 +64,12 @@ public class LoginBox extends CustomComponent implements ClickListener {
         m_panel.setContent(getLoginBox());
         setCompositionRoot(m_panel);
 
-    	m_login.setImmediate(true);
     	m_login.addClickListener(this);
+    	m_login.setImmediate(true);
+    	
+    	m_info.addClickListener(this);
+    	m_info.setImmediate(true);
+    	
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
     	
@@ -92,6 +98,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			login();
 		} else if (event.getButton() == m_logout) {
 	    	logout();
+		} else if (event.getButton() == m_info) {
+	    	info();
 		}
 	}
 
@@ -100,6 +108,25 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
 			return;
 		}
+		Map<String,List<BasicNode>> updatemap = new HashMap<String,List<BasicNode>>();
+		Iterator<Component> ite = m_tabs.iterator();
+	    while (ite.hasNext()) {
+	    	Component comp = ite.next();
+	    	if (comp instanceof RequisitionTab) {
+	    		RequisitionTab tab = (RequisitionTab) comp;
+	    		if (!tab.getUpdates().isEmpty())
+	    			updatemap.put(tab.getRequisitionName(),tab.getUpdates());
+	    	}
+    	}
+
+		if (!updatemap.isEmpty()) {
+			createdialogwindown(updatemap);
+			return;
+		}
+		reallylogout();
+	}
+	
+	public void reallylogout() {
 		m_username.setValue("");
 		m_password.setValue("");
 		m_service.logout();
@@ -116,7 +143,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    	}
 	    }
 	    getUI().getSession().close();
-	    
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -155,6 +181,8 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    loggedin.setMargin(true);
 	    loggedin.setSpacing(true);
 	    HorizontalLayout buttonPanel = new HorizontalLayout();
+	    buttonPanel.setSizeFull();
+	    buttonPanel.addComponent(m_info);
 	    buttonPanel.addComponent(m_logout);
 	    loggedin.addComponent(buttonPanel);
 	    if (m_service.getUser().equals("admin")) {
@@ -196,6 +224,82 @@ public class LoginBox extends CustomComponent implements ClickListener {
 	    	}
 	    }
 	}
-		
 	
+	private void createdialogwindown(Map<String,List<BasicNode>> updatemap) {
+		final Window confirm = new Window("Modifiche effettuate e non sincronizzate");
+		Button si = new Button("si");
+		si.addClickListener(new ClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				logout();
+				confirm.close();
+			}
+		});
+		
+		Button no = new Button("no");
+		no.addClickListener(new ClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				reallylogout();
+				confirm.close();
+			}
+		});
+				
+		VerticalLayout windowcontent = new VerticalLayout();
+		windowcontent.setMargin(true);
+		windowcontent.setSpacing(true);
+    
+		for (String requisition: updatemap.keySet()) {
+			Table updatetable = new Table("Operazioni di Sync sospese per Requisition: " + requisition);
+			updatetable.setSelectable(false);
+			updatetable.setContainerDataSource(DashBoardUtils.getUpdateContainer(updatemap.get(requisition)));
+			updatetable.setSizeFull();
+			updatetable.setPageLength(3);
+			windowcontent.addComponent(updatetable);
+		}
+
+		windowcontent.addComponent(new Label("Alcune Modifiche che sono state effettuate "
+				+ "alle Requisition richiedono le "
+				+ "operazioni di sync sopra elencate. Confermi il logout?"));
+		HorizontalLayout buttonbar = new HorizontalLayout();
+		buttonbar.setMargin(true);
+		buttonbar.setSpacing(true);
+    	buttonbar.addComponent(si);
+		buttonbar.addComponent(no);
+		windowcontent.addComponent(buttonbar);
+	    confirm.setContent(windowcontent);
+        confirm.setModal(true);
+        confirm.setWidth("600px");
+        UI.getCurrent().addWindow(confirm);
+		
+	}
+	
+	public void info() {
+		final Window infowindow = new Window("Informazioni TNPD");
+		VerticalLayout windowcontent = new VerticalLayout();
+		windowcontent.setMargin(true);
+		windowcontent.setSpacing(true);
+		windowcontent.addComponent(new Label(m_service.getConfig().getAppName()));
+		windowcontent.addComponent(new Label("Versione: " + m_service.getConfig().getAppVersion()));
+		windowcontent.addComponent(new Label("Build: " + m_service.getConfig().getAppBuild()));
+		infowindow.setContent(windowcontent);
+		infowindow.setModal(true);
+		infowindow.setWidth("400px");
+        UI.getCurrent().addWindow(infowindow);
+
+	}
+
+
 }

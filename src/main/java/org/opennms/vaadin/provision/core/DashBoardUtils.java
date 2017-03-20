@@ -1,14 +1,19 @@
 package org.opennms.vaadin.provision.core;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
+import org.opennms.vaadin.provision.model.SyncOperationNode;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
+
+import com.vaadin.data.util.BeanItemContainer;
 
 public class DashBoardUtils {
 	
@@ -437,6 +442,15 @@ public class DashBoardUtils {
 		if (hasUnSupportedDnsDomain(node.getNodeLabel(),subdomains))
 			return false;		
 		return true;
+	}
+
+	public static BeanItemContainer<SyncOperationNode> getUpdateContainer(Collection<BasicNode> nodes) {
+		BeanItemContainer<SyncOperationNode> updates 
+		= new BeanItemContainer<SyncOperationNode>(SyncOperationNode.class);
+		for (BasicNode node: nodes) {
+			updates.addBean(new SyncOperationNode(node));
+		}
+		return updates;
 	}
 
 }
