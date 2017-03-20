@@ -196,6 +196,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_joblogcontainer = new JobLogDao(jltq);
 	}
 
+	public void deleteSnmpProfile(String primary) throws SQLException{
+		if (primary == null)
+			return;
+		m_ipsnmpprofilecontainer.remove(primary);
+		m_ipsnmpprofilecontainer.commit();
+	}
+
 	public void saveSnmpProfile(String primary, String snmpprofile) throws SQLException{
 		if (primary == null || snmpprofile == null)
 			return;

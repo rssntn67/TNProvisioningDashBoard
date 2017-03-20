@@ -217,9 +217,7 @@ public abstract class RequisitionTab extends DashboardTab {
 					if (node.getPrimary() != null) {
 						try {
 							snmpProfile = getService().getSnmpProfileName(node.getPrimary());
-							if (snmpProfile == null) {
-								node.setValid(false);
-							}
+							logger.info("Sezionato nodo: " + node.getNodeLabel() + " . Trovato profilo Snmp: " + snmpProfile);
 							node.setSnmpProfileWithOutUpdating(snmpProfile);
 						} catch (UniformInterfaceException uie) {
 							logger.warning("Errore nel richiesta del profilo snmp alla interfaccia rest: " + uie.getLocalizedMessage());
@@ -230,7 +228,10 @@ public abstract class RequisitionTab extends DashboardTab {
 						}
 						
 						try {
-							getService().saveSnmpProfile(node.getPrimary(), snmpProfile);
+							if (snmpProfile != null)
+								getService().saveSnmpProfile(node.getPrimary(), snmpProfile);
+							else 
+								getService().deleteSnmpProfile(node.getPrimary());
 						} catch (SQLException sqle) {
 							logger.warning("Errore nel salvare il profilo snmp al database: " + sqle.getLocalizedMessage());
 							Notification.show("Errore nel nel salvare il profilo snmp al database", sqle.getMessage(), Type.WARNING_MESSAGE);
@@ -551,11 +552,6 @@ public abstract class RequisitionTab extends DashboardTab {
 			return;
 		}
 		
-		node.setDeleteState();
-		m_updates.put(node.getNodeLabel(), node);
-
-
-
 		Set<String> nodelabels = m_foreignIdNodeLabelMap.remove(node.getForeignId());
 		nodelabels.remove(node.getNodeLabel());
 		if (!nodelabels.isEmpty())
@@ -606,6 +602,9 @@ public abstract class RequisitionTab extends DashboardTab {
 		for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
 			m_parentComboBox.addItem(nodelabel);
 
+		node.setReplaceState();
+		m_updates.put(node.getNodeLabel(), node);
+
 		enableNodeButtons();
 
 		m_requisitionTable.unselect(m_requisitionTable.getValue());
@@ -637,16 +636,16 @@ public abstract class RequisitionTab extends DashboardTab {
 		try {
 			getBeanFieldGroup().commit();
 			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
+			node.setValid(true);
 			if (node.getParent() != null)
 				node.setParentId(m_nodeLabelForeignIdMap.get(node.getParent()).iterator().next());
+			
 			if (node.getForeignId() == null) {
 				node.setForeignId(node.getHostname());
-				node.setValid(true);
 				getService().add(node);
 				logger.info("Added: " + node.getNodeLabel()+ " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Added", Type.HUMANIZED_MESSAGE);
 			} else {
-				node.setValid(getService().isValid(node));
 				getService().update(node);
 				logger.info("Updated: " + node.getNodeLabel() + " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);

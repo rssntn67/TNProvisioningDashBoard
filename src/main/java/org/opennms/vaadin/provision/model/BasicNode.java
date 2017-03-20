@@ -16,6 +16,7 @@ public class BasicNode implements Serializable {
 		NEW,
 		DELETE,
 		UPDATE,
+		REPLACE,
 		NONE;
 	}
 	
@@ -61,7 +62,7 @@ public class BasicNode implements Serializable {
 	private String m_foreignId;
 	private String m_foreignSource;
 	
-	protected boolean m_valid = true;
+	private boolean m_valid = true;
 		
 	public BasicNode(String label,
 			String foreignSource) {
@@ -235,6 +236,8 @@ public class BasicNode implements Serializable {
 	}
 
 	public void setSnmpProfileWithOutUpdating(String snmpProfile) {
+		if (snmpProfile == null)
+			m_valid = false;
 		m_snmpProfile = snmpProfile;
 	}
 	
@@ -393,6 +396,12 @@ public class BasicNode implements Serializable {
 		return m_syncoperations;
 	}
 
+	public void setReplaceState() {
+		m_syncoperations.clear();
+		m_syncoperations.add(OnmsSync.FALSE);
+		m_onmstate = OnmsState.REPLACE;
+	}
+	
 	public void setDeleteState() {
 		m_syncoperations.clear();
 		m_syncoperations.add(OnmsSync.FALSE);

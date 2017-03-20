@@ -57,6 +57,23 @@ public class IpSnmpProfileDao extends SQLContainer {
 		return getIpSnmpProfileMap().get(ip);
 	}
 
+	public synchronized void remove(String ip) {
+		if (ip == null)
+			return;
+		Item item = getItem(ip);
+		removeItem(item);
+	}
+	
+	public synchronized Object getItemId(String ip) {
+		for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
+			Object itemId = i.next();
+			Item ipsnmpprofiletableRow = getItem(itemId);
+			if (ipsnmpprofiletableRow.getItemProperty("ipaddr").equals(ip)) {
+				return itemId;
+			}
+		}
+		return null;
+	}
 	public synchronized Map<String, IpSnmpProfile> getIpSnmpProfileMap() {
 		Map<String, IpSnmpProfile> ipSnmpProfiles = new HashMap<String, IpSnmpProfile>();
 		for (Iterator<?> i = getItemIds().iterator(); i.hasNext();) {
