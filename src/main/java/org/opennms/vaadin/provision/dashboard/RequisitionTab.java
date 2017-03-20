@@ -651,10 +651,12 @@ public abstract class RequisitionTab extends DashboardTab {
 				logger.info("Updated: " + node.getNodeLabel() + " Valid: " + node.isValid());
 				Notification.show("Save", "Node " +node.getNodeLabel() + " Updated", Type.HUMANIZED_MESSAGE);
 			}
-			//FIXME
-			node.setNoneState();
 
-			m_updates.put(node.getNodeLabel(), node );		
+			if (node.getSyncOperations().size() > 0)
+				m_updates.put(node.getNodeLabel(), node );
+			else
+				node.setNoneState();
+			
 			m_foreignIdNodeLabelMap.put(node.getForeignId(), new HashSet<String>());
 			m_foreignIdNodeLabelMap.get(node.getForeignId()).add(node.getNodeLabel());
 			m_nodeLabelForeignIdMap.put(node.getNodeLabel(), new HashSet<String>());
@@ -708,13 +710,6 @@ public abstract class RequisitionTab extends DashboardTab {
 			node.setDeleteState();
 			m_updates.put(node.getNodeLabel(),node);			
 		}
-		/* FIXME MediaGateway
-		m_updates.put(DashBoardUtils.SIVN_REQU_NAME, new HashMap<String, BasicNode>());
-		BasicNode mg = new BasicNode(mediagateway.getNodeLabel());
-		mg.setUpdateState();
-		mg.setOnmsSyncOperations(OnmsSync.FALSE);
-		m_updates.get(DashBoardUtils.SIVN_REQU_NAME).put(mediagateway.getNodeLabel(),mg);
-		 */
 
 		if ( ! getRequisitionContainer().removeItem(node.getNodeLabel()))
 			getRequisitionContainer().removeItem(getRequisitionContainer().getIdByIndex(0));

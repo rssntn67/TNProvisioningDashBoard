@@ -595,6 +595,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 
 		Map<String, BackupProfile> backupprofilemap = getBackupProfileContainer().getBackupProfileMap();
 		List<String> domains = getDnsDomainContainer().getDomains();
+		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
 		
 		Requisition req = m_onmsDao.getRequisition(DashBoardUtils.TN_REQU_NAME);
 		
@@ -667,6 +668,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				parentId = node.getParentForeignId();
 				parent =foreignIdNodeLabelMap.get(node.getParentForeignId());
 			}
+			
+			String snmpProfile = null;
+			if (primary != null && ipSnmpMap.containsKey(primary))
+				snmpProfile= ipSnmpMap.get(primary).getSnmprofile();
+
 			MediaGatewayNode tnnode = new MediaGatewayNode(
 					descr, 
 					hostname, 
@@ -675,7 +681,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					parent, 
 					parentId,
 					networkCategory, 
-					null, 
+					snmpProfile, 
 					DashBoardUtils.getBackupProfile(node, backupprofilemap), 
 					city, 
 					address1,
