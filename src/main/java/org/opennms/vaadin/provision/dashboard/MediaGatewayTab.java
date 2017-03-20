@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicNode;
@@ -50,6 +51,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	private String m_searchText = null;
 	private BeanContainer<String, MediaGatewayNode> m_requisitionContainer = new BeanContainer<String, MediaGatewayNode>(MediaGatewayNode.class);
 	private boolean loaded=false;
+	private BasicNode m_mg;
 
 	private BeanFieldGroup<MediaGatewayNode> m_editorFields     = new BeanFieldGroup<MediaGatewayNode>(MediaGatewayNode.class);
 	Integer newHost = 0;
@@ -90,9 +92,6 @@ public class MediaGatewayTab extends RequisitionTab {
         m_backupComboBox.setNullSelectionAllowed(false);
         m_backupComboBox.setRequired(true);
         m_backupComboBox.setRequiredError("E' necessario scegliere una profilo di backup");
-        
-		getHead().addComponent(m_syncSIVNRequisButton);
-
 		
 	}
 
@@ -100,12 +99,14 @@ public class MediaGatewayTab extends RequisitionTab {
 	public void load() {
 		if (!loaded) {
 			try {
-				if (getService().getMediaGateway() == null ) {
+				RequisitionNode mg = getService().getMediaGateway();
+				if (mg == null ) {
 					String mediagateway = getService().createMediaGateway();
-					BasicNode mg = new BasicNode(mediagateway,DashBoardUtils.SIVN_REQU_NAME);
-					mg.setUpdateState();
-					mg.setOnmsSyncOperations(OnmsSync.FALSE);
-					m_updates.put(mediagateway, mg);
+					m_mg = new BasicNode(mediagateway,DashBoardUtils.SIVN_REQU_NAME);
+					updateMediaGatewayNode();
+				} else {
+					m_mg = new BasicNode(mg.getNodeLabel(),DashBoardUtils.SIVN_REQU_NAME);
+					m_mg.setNoneState();
 				}
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
@@ -163,6 +164,11 @@ public class MediaGatewayTab extends RequisitionTab {
 		}
 				
 	}
+	private void updateMediaGatewayNode() {
+		m_mg.setUpdateState();
+		m_mg.setOnmsSyncOperations(OnmsSync.FALSE);
+		m_updates.put(m_mg.getNodeLabel(), m_mg);
+	}
 	
 	@Override
 	public void buttonClick(ClickEvent event) {
@@ -176,7 +182,8 @@ public class MediaGatewayTab extends RequisitionTab {
 	public void replace() {
 		Notification.show(DashBoardUtils.TN_REQU_NAME  + 
 				"Sync Required", "Push Sync Button", Notification.Type.TRAY_NOTIFICATION);
-		super.replace();		
+		super.replace();
+		updateMediaGatewayNode();
 	}
 
 	@Override
@@ -185,6 +192,7 @@ public class MediaGatewayTab extends RequisitionTab {
 				DashBoardUtils.SIVN_REQU_NAME + 
 				"Sync Required", "Push Either Sync and Sync Virtual node Buttons", Notification.Type.TRAY_NOTIFICATION);
 		super.delete();		
+		updateMediaGatewayNode();
 	}
 
 	@Override
@@ -193,9 +201,12 @@ public class MediaGatewayTab extends RequisitionTab {
 				DashBoardUtils.SIVN_REQU_NAME + 
 				"Sync Required", "Push Either Sync and Sync Virtual node Buttons", Notification.Type.TRAY_NOTIFICATION);
 		super.save();
+		updateMediaGatewayNode();
 	}
 	
 	private void layout() { 
+
+		getHead().addComponent(m_syncSIVNRequisButton);
 
 		VerticalLayout searchlayout = new VerticalLayout();
 		m_searchField.setWidth("80%");
