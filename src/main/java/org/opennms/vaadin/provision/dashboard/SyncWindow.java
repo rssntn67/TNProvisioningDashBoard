@@ -1,5 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.vaadin.annotations.Theme;
@@ -51,7 +52,10 @@ public class SyncWindow extends Window implements ClickListener{
         buttons.addComponent(m_syncdbonly);
         subContent.addComponent(buttons);        
         subContent.addComponent(new HorizontalLayout());
-        BeanItemContainer<SyncOperationNode> container = m_tab.getUpdates();
+        BeanItemContainer<SyncOperationNode> container = 
+        		DashBoardUtils.
+        		getUpdateContainer(
+        				m_tab.getUpdates());
         if (container.size() == 0) {
 			subContent.addComponent
 			(new Label("No pending operation on Requisition"));
