@@ -209,7 +209,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			        source.getContainerDataSource().removeItem(itemId);
 			        m_editorFields.getItemDataSource().getBean().delService(ip,"ICMP");
 			        m_secondaryIpComboBox.addItem(ip);
-					logger.info("Deleted Secondary ip: " + itemId);
+					logger.info("Deleted Secondary ip: " + ip);
 			      }
 			    });
 			 
