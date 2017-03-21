@@ -77,6 +77,7 @@ public class BasicNode implements Serializable {
 		
 		m_valid=false;
 		m_serviceMap = new HashMap<String, Set<String>>();
+		m_foreignSource=foreignSource;
 		m_onmstate = OnmsState.NEW;
 	}
 
@@ -98,6 +99,7 @@ public class BasicNode implements Serializable {
 		
 		m_valid=false;
 		m_serviceMap = new HashMap<String, Set<String>>();
+		m_foreignSource=foreignSource;
 		m_onmstate = OnmsState.NEW;
 	}
 
@@ -349,8 +351,6 @@ public class BasicNode implements Serializable {
 	}
 
 	public void delService(String ip, String service) {
-		if ("ICMP".equals(service) || "SNMP".equals(service))
-			return;
 		if (!m_serviceMap.containsKey(ip))
 			return;
 		m_serviceMap.get(ip).remove(service);
