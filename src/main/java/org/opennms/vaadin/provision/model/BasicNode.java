@@ -292,13 +292,18 @@ public class BasicNode implements Serializable {
 				m_serviceToDel.put(m_primary, new HashSet<String>());
 			m_serviceToDel.get(m_primary).add("ICMP");
 		}
-		if (!m_serviceMap.containsKey(primary))
+		if (!m_serviceMap.containsKey(primary)) {
 			m_interfToAdd.add(primary);
+			m_serviceMap.put(primary, new HashSet<String>());
+		}
+		m_serviceMap.get(primary).add("ICMP");
+		
 		if (!m_serviceToAdd.containsKey(primary))
 			m_serviceToAdd.put(primary, new HashSet<String>());
 		m_serviceToAdd.get(primary).add("ICMP");
+		
 		m_updatemap.add(DashBoardUtils.PRIMARY);
-		setOnmsSyncOperations(OnmsSync.TRUE);		
+		setOnmsSyncOperations(OnmsSync.DBONLY);		
 		m_primary = primary;
 	}
 
