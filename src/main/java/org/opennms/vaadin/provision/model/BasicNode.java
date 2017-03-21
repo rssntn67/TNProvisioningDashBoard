@@ -362,6 +362,9 @@ public class BasicNode implements Serializable {
 			if (!ip.equals(m_primary)) {
 				m_serviceToDel.remove(ip);
 				m_interfToDel.add(ip);
+			} else {
+				m_serviceToDel.put(ip, new HashSet<String>());
+				m_serviceToDel.get(ip).add(service);
 			}
 		} else {
 			if (!m_serviceToDel.containsKey(ip))
