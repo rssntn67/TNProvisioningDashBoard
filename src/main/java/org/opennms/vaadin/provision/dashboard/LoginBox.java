@@ -237,7 +237,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				logout();
+				reallylogout();
 				confirm.close();
 			}
 		});
@@ -252,7 +252,6 @@ public class LoginBox extends CustomComponent implements ClickListener {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				reallylogout();
 				confirm.close();
 			}
 		});
