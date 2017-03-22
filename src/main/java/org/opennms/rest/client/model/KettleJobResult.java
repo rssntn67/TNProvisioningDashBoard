@@ -11,106 +11,105 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class KettleJobResult {
 
     @XmlElement(name="lines_input")
-	String m_lines_input;
+	String m_linesInput;
     @XmlElement(name="lines_output")
-	String m_lines_output;
+	String m_linesOutput;
     @XmlElement(name="lines_read")
-	String m_lines_read;
+	String m_linesRead;
     @XmlElement(name="lines_written")
-	String m_lines_written;
+	String m_linesWritten;
     @XmlElement(name="lines_updated")
-	String m_lines_updated;
+	String m_linesUpdated;
     @XmlElement(name="lines_rejected")
-	String m_lines_rejected;
+	String m_linesRejected;
     @XmlElement(name="lines_deleted")
-	String m_lines_deleted;
+	String m_linesDeleted;
     @XmlElement(name="nr_errors")
-	String m_nr_errors;
+	String m_nrErrors;
     @XmlElement(name="nr_files_retrieved")
 	String m_nr_files_retrieved;
     @XmlElement(name="entry_nr")
-	String m_entry_nr;
+	String m_entryNr;
     @XmlElement(name="result")
 	String m_result;
     @XmlElement(name="exit_status")
-	String m_exit_status;
+	String m_exitStatus;
     @XmlElement(name="is_stopped")
-	String m_is_stopped;
+	String m_isStopped;
     @XmlElement(name="log_channel_id")
-	String m_log_channel_id;
+	String m_logChannelId;
     @XmlElement(name="log_text")
-	String m_log_text;
+	String m_logText;
     @XmlElement(name="result-file")
-	List<KettleJobResultFile> result_file;
+	List<KettleJobResultFile> resultFile;
     @XmlElement(name="result-rows")
-	List<KettleJobResultFile> m_result_rows;
+	List<KettleJobResultFile> m_resultRows;
      
 	public KettleJobResult() {
-		// TODO Auto-generated constructor stub
 	}
 
-	public String getLines_input() {
-		return m_lines_input;
+	public String getLinesInput() {
+		return m_linesInput;
 	}
 
-	public void setLines_input(String lines_input) {
-		m_lines_input = lines_input;
+	public void setLinesInput(String linesInput) {
+		m_linesInput = linesInput;
 	}
 
-	public String getLines_output() {
-		return m_lines_output;
+	public String getLinesOutput() {
+		return m_linesOutput;
 	}
 
-	public void setLines_output(String lines_output) {
-		m_lines_output = lines_output;
+	public void setLinesOutput(String linesOutput) {
+		m_linesOutput = linesOutput;
 	}
 
-	public String getLines_read() {
-		return m_lines_read;
+	public String getLinesRead() {
+		return m_linesRead;
 	}
 
-	public void setLines_read(String lines_read) {
-		m_lines_read = lines_read;
+	public void setLinesRead(String linesRead) {
+		m_linesRead = linesRead;
 	}
 
-	public String getLines_written() {
-		return m_lines_written;
+	public String getLinesWritten() {
+		return m_linesWritten;
 	}
 
-	public void setLines_written(String lines_written) {
-		m_lines_written = lines_written;
+	public void setLinesWritten(String linesWritten) {
+		m_linesWritten = linesWritten;
 	}
 
-	public String getLines_updated() {
-		return m_lines_updated;
+	public String getLinesUpdated() {
+		return m_linesUpdated;
 	}
 
-	public void setLines_updated(String lines_updated) {
-		m_lines_updated = lines_updated;
+	public void setLinesUpdated(String linesUpdated) {
+		m_linesUpdated = linesUpdated;
 	}
 
-	public String getLines_rejected() {
-		return m_lines_rejected;
+	public String getLinesRejected() {
+		return m_linesRejected;
 	}
 
-	public void setLines_rejected(String lines_rejected) {
-		m_lines_rejected = lines_rejected;
+	public void setLinesRejected(String linesRejected) {
+		m_linesRejected = linesRejected;
 	}
 
-	public String getLines_deleted() {
-		return m_lines_deleted;
+	public String getLinesDeleted() {
+		return m_linesDeleted;
 	}
 
-	public void setLines_deleted(String lines_deleted) {
-		m_lines_deleted = lines_deleted;
+	public void setLinesDeleted(String linesDeleted) {
+		m_linesDeleted = linesDeleted;
 	}
 
-	public String getNr_errors() {
-		return m_nr_errors;
+	public String getNrErrors() {
+		return m_nrErrors;
 	}
 
-	public void setNr_errors(String nr_errors) {
-		m_nr_errors = nr_errors;
+	public void setNrErrors(String nrErrors) {
+		m_nrErrors = nrErrors;
 	}
 
 	public String getNr_files_retrieved() {
@@ -121,12 +120,12 @@ public class KettleJobResult {
 		m_nr_files_retrieved = nr_files_retrieved;
 	}
 
-	public String getEntry_nr() {
-		return m_entry_nr;
+	public String getEntryNr() {
+		return m_entryNr;
 	}
 
-	public void setEntry_nr(String entry_nr) {
-		m_entry_nr = entry_nr;
+	public void setEntryNr(String entryNr) {
+		m_entryNr = entryNr;
 	}
 
 	public String getResult() {
@@ -137,53 +136,54 @@ public class KettleJobResult {
 		m_result = result;
 	}
 
-	public String getExit_status() {
-		return m_exit_status;
+	public String getExitStatus() {
+		return m_exitStatus;
 	}
 
-	public void setExit_status(String exit_status) {
-		m_exit_status = exit_status;
+	public void setExitStatus(String exitStatus) {
+		m_exitStatus = exitStatus;
 	}
 
-	public String getIs_stopped() {
-		return m_is_stopped;
+	public String getIsStopped() {
+		return m_isStopped;
 	}
 
-	public void setIs_stopped(String is_stopped) {
-		m_is_stopped = is_stopped;
+	public void setIsStopped(String isStopped) {
+		m_isStopped = isStopped;
 	}
 
-	public String getLog_channel_id() {
-		return m_log_channel_id;
+	public String getLogChannelId() {
+		return m_logChannelId;
 	}
 
-	public void setLog_channel_id(String log_channel_id) {
-		m_log_channel_id = log_channel_id;
+	public void setLogChannelId(String logChannelId) {
+		m_logChannelId = logChannelId;
 	}
 
-	public String getLog_text() {
-		return m_log_text;
+	public String getLogText() {
+		return m_logText;
 	}
 
-	public void setLog_text(String log_text) {
-		m_log_text = log_text;
+	public void setLogText(String logText) {
+		m_logText = logText;
 	}
 
-	public List<KettleJobResultFile> getResult_file() {
-		return result_file;
+	public List<KettleJobResultFile> getResultFile() {
+		return resultFile;
 	}
 
-	public void setResult_file(List<KettleJobResultFile> result_file) {
-		this.result_file = result_file;
+	public void setResultFile(List<KettleJobResultFile> resultFile) {
+		this.resultFile = resultFile;
 	}
 
-	public List<KettleJobResultFile> getResult_rows() {
-		return m_result_rows;
+	public List<KettleJobResultFile> getResultRows() {
+		return m_resultRows;
 	}
 
-	public void setResult_rows(List<KettleJobResultFile> result_rows) {
-		m_result_rows = result_rows;
+	public void setResultRows(List<KettleJobResultFile> resultRows) {
+		m_resultRows = resultRows;
 	}
+
 	
 
 }
