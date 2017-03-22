@@ -988,7 +988,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			update.put(DashBoardUtils.ADDRESS1, node.getAddress1());
 		if (node.getUpdatemap().contains(DashBoardUtils.BUILDING))
 			update.put(DashBoardUtils.BUILDING_SCALAR, node.getBuilding());
-		if (node.getUpdatemap().contains(DashBoardUtils.LEASEEXPIRES));
+		if (node.getUpdatemap().contains(DashBoardUtils.LEASEEXPIRES))
 			update.put(DashBoardUtils.LEASEEXPIRES, node.getLeaseExpires());
 		if (node.getUpdatemap().contains(DashBoardUtils.LEASE))
 			update.put(DashBoardUtils.LEASE, node.getLease());

@@ -282,7 +282,6 @@ public class SistemiInformativiNode extends BasicNode {
 		if (leaseExpires.equals(m_leaseExpires) )
 			return;
 		m_updatemap.add(DashBoardUtils.LEASEEXPIRES);
-		System.out.println("lease Expire?");
 		setOnmsSyncOperations(OnmsSync.DBONLY);
 		m_leaseExpires = leaseExpires;
 	}
