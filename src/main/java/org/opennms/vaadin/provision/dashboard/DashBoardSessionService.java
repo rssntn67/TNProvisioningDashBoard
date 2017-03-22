@@ -32,6 +32,7 @@ import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
+import org.opennms.vaadin.provision.dao.KettleDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
@@ -78,7 +79,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private FastServiceLinkDao   m_fastservicelinkcontainer;
 	private JobDao               m_jobcontainer;
 	private JobLogDao            m_joblogcontainer;
-
+	private KettleDao            m_kettleDao;
+	
 	private static final long serialVersionUID = 508580392774265535L;
 	private final static Logger logger = Logger.getLogger(DashBoardSessionService.class.getName());	
 	
@@ -135,6 +137,10 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 
 	public JobLogDao getJobLogContainer() {
 		return m_joblogcontainer;
+	}
+	
+	public KettleDao getKettleDao() {
+		return m_kettleDao;
 	}
 	
     public OnmsDao getOnmsDao() {
@@ -194,6 +200,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		TableQuery jltq = new TableQuery("joblogs", m_pool);
 	    jltq.setVersionColumn("versionid");
 		m_joblogcontainer = new JobLogDao(jltq);
+		
+		m_kettleDao = new KettleDao(new JerseyClientImpl(m_config.getKettleUrl(), 
+				m_config.getKettleUsername(), 
+				m_config.getKettlePassword()));
+		
 	}
 
 	public void deleteSnmpProfile(String primary) throws SQLException{

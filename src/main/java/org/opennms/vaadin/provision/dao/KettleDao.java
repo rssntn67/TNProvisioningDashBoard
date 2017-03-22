@@ -7,21 +7,12 @@ import org.opennms.rest.client.model.KettleRunJob;
 
 public class KettleDao {
 
-	private JerseyClientImpl m_jerseyClient;
     
 	private JerseyKettleService m_kettleService;
 
-	public KettleDao() {
+	public KettleDao(JerseyClientImpl client) {
 		m_kettleService = new JerseyKettleService();
-	}
-	
-	public JerseyClientImpl getJerseyClient() {
-		return m_jerseyClient;
-	}
-
-	public void setJerseyClient(JerseyClientImpl jerseyClient) {
-		m_jerseyClient = jerseyClient;
-	    m_kettleService.setJerseyClient(m_jerseyClient);
+	    m_kettleService.setJerseyClient(client);
 	}
 
 	public KettleRunJob runJob() {
