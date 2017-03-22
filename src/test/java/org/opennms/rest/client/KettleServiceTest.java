@@ -31,6 +31,7 @@ package org.opennms.rest.client;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.rest.client.model.KettleJobStatus;
 import org.opennms.rest.client.model.KettleRunJob;
@@ -54,6 +55,7 @@ public class KettleServiceTest {
     }
     
     @Test
+    @Ignore
     public void testKettle() throws Exception {
     	KettleRunJob job = m_kettleservice.runJob();
     	assertEquals("Job started", job.getMessage());
