@@ -60,6 +60,10 @@ public class KettleServiceTest {
     	assertEquals("OK", job.getResult());
     	
     	KettleJobStatus status = m_kettleservice.jobStatus(job);
+    	while ("Running".equals(status.getStatusDescr())) {
+    		Thread.sleep(1000);
+    		status = m_kettleservice.jobStatus(job);
+    	}
     	assertEquals(status.getId(), job.getId());
     	assertEquals("staging_fast", status.getJobname());
     	assertEquals("Finished", status.getStatusDescr());
