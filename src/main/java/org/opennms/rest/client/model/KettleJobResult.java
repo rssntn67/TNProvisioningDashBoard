@@ -41,9 +41,9 @@ public class KettleJobResult {
     @XmlElement(name="log_text")
 	String m_logText;
     @XmlElement(name="result-file")
-	List<KettleJobResultFile> resultFile;
+	List<KettleJobResultFile> m_resultFile;
     @XmlElement(name="result-rows")
-	List<KettleJobResultFile> m_resultRows;
+	String m_resultRows;
      
 	public KettleJobResult() {
 	}
@@ -169,18 +169,18 @@ public class KettleJobResult {
 	}
 
 	public List<KettleJobResultFile> getResultFile() {
-		return resultFile;
+		return m_resultFile;
 	}
 
 	public void setResultFile(List<KettleJobResultFile> resultFile) {
-		this.resultFile = resultFile;
+		m_resultFile = resultFile;
 	}
 
-	public List<KettleJobResultFile> getResultRows() {
+	public String getResultRows() {
 		return m_resultRows;
 	}
 
-	public void setResultRows(List<KettleJobResultFile> resultRows) {
+	public void setResultRows(String resultRows) {
 		m_resultRows = resultRows;
 	}
 
