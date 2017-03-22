@@ -61,7 +61,12 @@ public class KettleServiceTest {
     	
     	KettleJobStatus status = m_kettleservice.jobStatus(job);
     	assertEquals(status.getId(), job.getId());
-    	
+    	assertEquals("staging_fast", status.getJobname());
+    	assertEquals("Finished", status.getStatusDescr());
+    	assertEquals("Y", status.getResult().getResult());
+       	assertEquals(0, Integer.valueOf(status.getResult().getExitStatus()).intValue());
+    	assertEquals("N", status.getResult().getIsStopped());
+           	
     	
     	
     }
