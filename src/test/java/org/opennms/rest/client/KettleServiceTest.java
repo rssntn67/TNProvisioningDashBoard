@@ -45,7 +45,7 @@ public class KettleServiceTest {
     public void setUp() throws Exception {
         m_kettleservice = new JerseyKettleService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "prdbi01.noc.tnnet.it:8080/kettle/","admin","3network");
+                                                         "http://prdbi01.noc.tnnet.it:8080/kettle/","admin","3network");
         m_kettleservice.setJerseyClient(jerseyClient);
     }
 
