@@ -353,7 +353,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			if (node.getAsset(DashBoardUtils.DESCRIPTION) != null)
 				description = node.getAsset(DashBoardUtils.DESCRIPTION).getValue();
 
-			String leaseExpires = null;
+			String leaseExpires = "";
 			if (node.getAsset(DashBoardUtils.LEASEEXPIRES) != null)
 				leaseExpires = node.getAsset(DashBoardUtils.LEASEEXPIRES).getValue();
 
