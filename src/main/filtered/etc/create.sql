@@ -40,11 +40,6 @@ create table dnsdomains (
     versionid integer not null default 0	
 );
 
-create table dnssubdomains (
-	dnssubdomain varchar(253) primary key,
-    versionid integer not null default 0	
-);
-
 create table fastservicedevices (
 	hostname text,
 	ipaddr text,
@@ -109,6 +104,3 @@ create table joblogs (
 	 note text,
 	 versionid integer not null default 0	 
 );
-
-
- 
