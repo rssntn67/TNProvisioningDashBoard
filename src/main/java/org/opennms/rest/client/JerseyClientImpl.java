@@ -119,7 +119,7 @@ public class JerseyClientImpl {
     public void post(Object o, String relativePath) {
     	try {
     		ClientResponse cr = m_webResource.path(relativePath).type(MediaType.APPLICATION_XML_TYPE).post(ClientResponse.class,o);
-    		logger.info("POST: + "+ relativePath + " response: " + cr.getStatusInfo());
+    		logger.info("POST: + "+ relativePath + " response: " + cr.getStatusInfo() + " Object: " + o );
     	} catch (UniformInterfaceException uie) {
     		logger.warning("POST: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
