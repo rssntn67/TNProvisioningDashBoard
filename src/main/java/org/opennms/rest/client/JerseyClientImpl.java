@@ -129,6 +129,25 @@ public class JerseyClientImpl {
     	}
     }
     
+    public <T> T post(Class<T> clazz,String relativePath, MultivaluedMap<String, String> queryParams) {
+    	try {
+    		return m_webResource.path(relativePath).
+    				queryParams(queryParams).
+    				type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
+    				header("Accept", "application/xml").
+    				accept(MediaType.APPLICATION_XML_TYPE).post(new GenericType<T>(clazz));
+    	} catch (UniformInterfaceException uie) {
+    		logger.warning("POST: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		uie.printStackTrace();
+    		throw uie;
+     	} catch (ClientHandlerException che) {
+    		logger.warning("POST: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		che.printStackTrace();
+    		throw che;
+    	}
+    }
+
+    
     public void put(MultivaluedMap<String,String> mvm, String relativePath) {
        	try {
        		ClientResponse cr = m_webResource.queryParams(mvm).path(relativePath).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).put(ClientResponse.class);
