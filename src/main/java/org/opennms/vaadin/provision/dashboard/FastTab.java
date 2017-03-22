@@ -17,6 +17,8 @@ import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.rest.client.model.KettleJobStatus;
+import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
@@ -444,11 +446,30 @@ public class FastTab extends DashboardTab {
 		Map<String, IpSnmpProfile> m_ipsnmp;
 
 
-
-		@Override
-		public void run() {
-			startJob();
-
+		private void runKettleJob() {
+			try {
+				logger.info("run: executing kettle remote procedure");
+				KettleRunJob kjob = getService().getKettleDao().runJob();
+		    	KettleJobStatus status = getService().getKettleDao().jobStatus(kjob);
+				while (getService().getKettleDao().isRunning(status)) {
+					Thread.sleep(1000);
+					status = getService().getKettleDao().jobStatus(kjob);
+				}
+				if (!getService().getKettleDao().isFinished(status) || 
+						!getService().getKettleDao().isCompleted(status)) {
+					logger.log(Level.WARNING,"Failed Kettle runjob", status.getErroDescr());
+					m_job.setJobstatus(JobStatus.FAILED);
+					m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " 
+					+ status.getErroDescr());				
+				}
+			} catch (Exception e){
+				logger.log(Level.WARNING,"Failed Kettle runjob", e);
+				m_job.setJobstatus(JobStatus.FAILED);
+				m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " + e.getMessage());				
+			}
+		}
+		
+		private void check() {
 			try {
 				logger.info("run: loading table vrf");
 				m_vrf = getService().getCatContainer().getCatMap();
@@ -487,13 +508,23 @@ public class FastTab extends DashboardTab {
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed init check Fast. Error: " + e.getMessage());
 			}
+			
+		}
 
+		@Override
+		public void run() {
+			startJob();
+			
+			runKettleJob();
+			
+			if (m_job.getJobstatus() == JobStatus.RUNNING)
+				check();
+
+			if (m_job.getJobstatus() == JobStatus.RUNNING) {
 			try {
-				if (m_job.getJobstatus() == JobStatus.RUNNING) {
-					logger.info("run: sync Fast devices with Requisition");
-					sync();
-					logger.info("run: sync Fast devices with Requisition");
-				}
+				logger.info("run: sync Fast devices with Requisition");
+				sync();
+				logger.info("run: sync Fast devices with Requisition");
 				m_job.setJobstatus(JobStatus.SUCCESS);
 				m_job.setJobdescr("FAST sync: Done");
 			} catch (final UniformInterfaceException e) {
@@ -504,6 +535,7 @@ public class FastTab extends DashboardTab {
 				logger.log(Level.SEVERE,"Failed syncing Fast devices with Requisition", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+			}
 			}
 			
 			endJob();
