@@ -559,6 +559,8 @@ public class SistemiInformativiTab extends RequisitionTab {
 		if (node.getServiceMap() != null) {
 			for (String ip: node.getServiceMap().keySet()) {
 				for (String service: node.getServiceMap().get(ip)) {
+					if (ip.equals(node.getPrimary()) && service.equals("ICMP"))
+						continue;
 					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
 					ipItem.getItemProperty("ip").setValue(ip); 
 					ipItem.getItemProperty("service").setValue(service); 
