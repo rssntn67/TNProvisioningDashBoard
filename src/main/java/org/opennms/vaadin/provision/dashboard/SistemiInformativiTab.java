@@ -227,7 +227,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 			m_optionalGroup.addItem(option);
 		}
 		m_optionalGroup.setInvalidAllowed(false);
-		m_optionalGroup.setNullSelectionAllowed(false);
+		m_optionalGroup.setNullSelectionAllowed(true);
 		m_optionalGroup.setImmediate(true);
 		m_optionalGroup.setMultiSelect(true);
 		
