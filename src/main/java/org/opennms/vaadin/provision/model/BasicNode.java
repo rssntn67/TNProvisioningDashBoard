@@ -281,30 +281,40 @@ public class BasicNode implements Serializable {
 	public String getPrimary() {
 		return m_primary;
 	}
-			
+
+	//FIXME		
 	public void setPrimary(String primary) {
+		if (primary == null)
+			return;
 		if (m_primary != null && m_primary.equals(primary))
 			return;
-		if ( m_primary != null && !m_serviceMap.containsKey(m_primary)) 
-			m_interfToDel.add(new String(m_primary));
-		if (m_primary != null && m_serviceMap.containsKey(m_primary)) {
-			if (!m_serviceToDel.containsKey(m_primary))
-				m_serviceToDel.put(m_primary, new HashSet<String>());
-			m_serviceToDel.get(m_primary).add("ICMP");
+		
+		if (m_primary != null) {
+			m_serviceMap.get(m_primary).remove("ICMP");
+			if (m_serviceMap.get(m_primary).isEmpty()) { 
+				m_serviceMap.remove(m_primary);
+				m_interfToDel.add(new String(m_primary));
+			} else {
+				if (!m_serviceToDel.containsKey(m_primary))
+					m_serviceToDel.put(m_primary, new HashSet<String>());
+				m_serviceToDel.get(m_primary).add("ICMP");
+			}
 		}
+		
+
 		if (!m_serviceMap.containsKey(primary)) {
 			m_interfToAdd.add(primary);
 			m_serviceMap.put(primary, new HashSet<String>());
+		} else {
+			if (!m_serviceToAdd.containsKey(primary))
+				m_serviceToAdd.put(primary, new HashSet<String>());
+			m_serviceToAdd.get(primary).add("ICMP");
 		}
 		m_serviceMap.get(primary).add("ICMP");
 		
-		if (!m_serviceToAdd.containsKey(primary))
-			m_serviceToAdd.put(primary, new HashSet<String>());
-		m_serviceToAdd.get(primary).add("ICMP");
-		
+		m_primary = primary;
 		m_updatemap.add(DashBoardUtils.PRIMARY);
 		setOnmsSyncOperations(OnmsSync.DBONLY);		
-		m_primary = primary;
 	}
 
 	public boolean isValid() {
@@ -358,19 +368,21 @@ public class BasicNode implements Serializable {
 	public void delService(String ip, String service) {
 		if (!m_serviceMap.containsKey(ip))
 			return;
-		m_serviceMap.get(ip).remove(service);
-		boolean removeip = false;
-		if (m_serviceMap.get(ip).isEmpty()) 
-			removeip = true;
-		if (removeip) {
-			m_serviceMap.remove(ip);
-			if (!ip.equals(m_primary)) {
-				m_serviceToDel.remove(ip);
-				m_interfToDel.add(ip);
-			} else {
+		if (ip.equals(m_primary) && "ICMP".equals(service))
+			return;
+		if (ip.equals(m_primary)) {
+			if (!m_serviceToDel.containsKey(ip)) 
 				m_serviceToDel.put(ip, new HashSet<String>());
-				m_serviceToDel.get(ip).add(service);
-			}
+			m_serviceToDel.get(ip).add(service);
+			m_serviceMap.get(ip).remove(service);
+			return;
+		}
+		
+		m_serviceMap.get(ip).remove(service);
+		if (m_serviceMap.get(ip).isEmpty()) {
+			m_serviceMap.remove(ip);
+			m_serviceToDel.remove(ip);
+			m_interfToDel.add(ip);
 		} else {
 			if (!m_serviceToDel.containsKey(ip))
 				m_serviceToDel.put(ip, new HashSet<String>());
