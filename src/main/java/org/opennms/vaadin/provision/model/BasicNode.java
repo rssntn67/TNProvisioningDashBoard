@@ -283,7 +283,9 @@ public class BasicNode implements Serializable {
 	}
 
 	public void setPrimary(String primary) {
-		System.out.println(m_serviceMap);
+		System.out.println("Entro: " + m_serviceMap);
+		System.out.println("primary: " + primary);
+		System.out.println("old primary" + m_primary);
 		if (primary == null)
 			return;
 		if (m_primary != null && m_primary.equals(primary))
@@ -295,6 +297,7 @@ public class BasicNode implements Serializable {
 		if (oldprimary != null) 
 			delService(oldprimary, "ICMP");
 		addService(m_primary, "ICMP");
+		System.out.println("Esco:" +m_serviceMap);
 
 	}
 
