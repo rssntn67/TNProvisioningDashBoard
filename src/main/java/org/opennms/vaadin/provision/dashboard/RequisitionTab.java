@@ -667,6 +667,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			cleanSearchBox();
 			getRequisitionContainer().removeAllContainerFilters();
 		} catch (Exception e) {
+			e.printStackTrace();
 			String localizedMessage = e.getLocalizedMessage();
 			Throwable t = e.getCause();
 			while ( t != null) {
