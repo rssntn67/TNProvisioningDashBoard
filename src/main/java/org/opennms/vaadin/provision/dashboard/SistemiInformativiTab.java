@@ -317,7 +317,6 @@ public class SistemiInformativiTab extends RequisitionTab {
 			    return button;
 			  }
 		});
-		m_secondaryIpTextBox.addValidator(new IpValidator());
 
 		m_serviceComboBox.setNullSelectionAllowed(true);
 		m_serviceComboBox.setInvalidAllowed(false);
@@ -333,6 +332,11 @@ public class SistemiInformativiTab extends RequisitionTab {
 			public void buttonClick(ClickEvent event) {
 				if (m_secondaryIpTextBox.getValue() != null && m_serviceComboBox.getValue() != null) {
 					String ip = m_secondaryIpTextBox.getValue();
+					if (DashBoardUtils.hasInvalidIp(ip)) {
+						Notification.show("Add Service Failed", "Ip is not valid: " + ip, Type.HUMANIZED_MESSAGE);
+						return;
+					}
+						
 					String service = m_serviceComboBox.getValue().toString();
 					IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());

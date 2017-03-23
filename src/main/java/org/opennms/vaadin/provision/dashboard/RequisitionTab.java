@@ -797,7 +797,7 @@ public abstract class RequisitionTab extends DashboardTab {
 		public void validate( Object value) throws InvalidValueException {
 			String ip = (String)value;
 			logger.info("IpValidator: validating ip: " + ip);
-	         if (DashBoardUtils.hasInvalidIp((ip)))
+	        if (DashBoardUtils.hasInvalidIp((ip)))
 	             throw new InvalidValueException("Deve essere inserito un valido indirizzo ip (0.0.0.0 e 127.0.0.0 non sono validi): indirizzo sbagliato:" + ip);
 	       }
 	}
