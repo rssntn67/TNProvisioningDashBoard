@@ -53,6 +53,37 @@ public class DashBoardServiceTest {
 
     }
     
+    @Test 
+    public void testPrimaryUpdate() throws Exception {
+    	BasicNode node = new BasicNode("prova", "prova");
+    	node.setPrimary("1.1.1.1");
+    	node.addService("2.2.2.2", "HTTP");
+    	node.clear();
+    	System.out.println("------------clear=saved-------------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.addService("1.1.1.1", "HTTP");
+    	node.setPrimary("10.10.10.10");
+    	System.out.println("------------1.1.1.1/HTTP primary 10.10.10.10-------------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	
+    }
+    
     @Test
     public void testPrimary() throws Exception {
     	BasicNode node = new BasicNode("prova", "prova");

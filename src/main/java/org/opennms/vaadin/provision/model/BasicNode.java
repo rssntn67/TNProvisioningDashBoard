@@ -370,23 +370,27 @@ public class BasicNode implements Serializable {
 		
 		if (m_serviceMap.get(ip).isEmpty())
 			m_serviceMap.remove(ip);
-		 
+		
+		boolean addinterfacetodelete = true;
+		boolean addservicetodelte = true;
 		if (m_serviceToAdd.containsKey(ip)) {
-			m_serviceToAdd.get(ip).remove(service);
+			if (m_serviceToAdd.get(ip).remove(service))
+				addservicetodelte=false;
 			if (m_serviceToAdd.get(ip).isEmpty()) {
-				m_interfToAdd.remove(ip);
 				m_serviceToAdd.remove(ip);
+				if (m_interfToAdd.remove(ip))
+					addinterfacetodelete=false;
 			}
-			return;
 		}
 
-		if (!m_serviceMap.containsKey(ip)) 
+		if (addinterfacetodelete && !m_serviceMap.containsKey(ip)) 
 			m_interfToDel.add(ip);
 		
-		if (!m_serviceToDel.containsKey(ip))
-			m_serviceToDel.put(ip, new HashSet<String>());
-		m_serviceToDel.get(ip).add(service);
-		
+		if (addservicetodelte) {
+			if (!m_serviceToDel.containsKey(ip))
+				m_serviceToDel.put(ip, new HashSet<String>());
+			m_serviceToDel.get(ip).add(service);
+		}		
 		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 	
