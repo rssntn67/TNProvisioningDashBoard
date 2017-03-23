@@ -282,7 +282,6 @@ public class BasicNode implements Serializable {
 		return m_primary;
 	}
 
-	//FIXME		
 	public void setPrimary(String primary) {
 		if (primary == null)
 			return;

@@ -231,7 +231,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 					IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
 					ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
-			        m_editorFields.getItemDataSource().getBean().addService(ip, "ICMP");;
+			        m_editorFields.getItemDataSource().getBean().addService(ip, "ICMP");
 					logger.info("Added Secondary ip address: " + ip);
 			        m_secondaryIpComboBox.removeItem(ip);
 				}

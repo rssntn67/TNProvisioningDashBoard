@@ -1543,8 +1543,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 
 		for (String ip: serviceToAdd.keySet()) {
-			if (interfaceToAdd.contains(ip))
-				continue;
 			for (String service: serviceToAdd.get(ip)) {
 				m_onmsDao.addRequisitionservice(foreignSource, foreignId, ip, new RequisitionMonitoredService(service));
 			}
