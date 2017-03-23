@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BasicNode;
 
 public class DashBoardServiceTest {
 
@@ -51,4 +52,156 @@ public class DashBoardServiceTest {
     	assertFalse(DashBoardUtils.hasInvalidIp("10.0.1.2"));
 
     }
+    
+    @Test
+    public void testPrimary() throws Exception {
+    	BasicNode node = new BasicNode("prova", "prova");
+    	node.setPrimary("1.1.1.1");
+    	System.out.println("-----set primary 1.1.1.1----------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.setPrimary("2.2.2.2");
+    	System.out.println("-----set primary 2.2.2.2----------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.clear();
+    	System.out.println("------------clear=saved-------------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.setPrimary("1.1.1.1");
+    	System.out.println("-----set primary 1.1.1.1----------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	node.addService("2.2.2.2", "HTTP");
+    	System.out.println("--------added 2.2.2.2/HTTP----------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.clear();
+    	System.out.println("------------clear=saved-------------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+
+    	node.addService("2.2.2.2", "HTTPS");
+    	node.addService("3.3.3.3", "HTTPS");
+    	node.addService("4.4.4.4", "HTTPS");
+    	System.out.println("--------added HTTPS----------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+
+    	node.delService("1.1.1.1", "HTTP");
+    	System.out.println("--------removed not existent HTTP----------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+
+    	node.delService("3.3.3.3", "HTTPS");
+    	System.out.println("--------removed 3.3.3.3 HTTPS----------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+
+    	node.delService("2.2.2.2", "HTTP");
+    	System.out.println("--------removed 2.2.2.2 HTTP----------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.clear();
+    	System.out.println("------------clear=saved-------------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+
+    	node.delService("2.2.2.2", "HTTPS");
+    	System.out.println("--------removed 2.2.2.2 HTTPS----------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+    	
+    	node.clear();
+    	System.out.println("------------clear=saved-------------------");
+    	System.out.println("status:"+ node.getOnmstate());
+    	System.out.println("updatemap:"+ node.getUpdatemap());
+    	System.out.println("syncoperation"+ node.getSyncOperations());
+    	System.out.println("serviceMap:"+node.getServiceMap());
+    	System.out.println("interfaceToAdd:"+node.getInterfToAdd());
+    	System.out.println("interfaceToDel:"+node.getInterfToDel());
+    	System.out.println("serviceToAdd:"+node.getServiceToAdd());
+    	System.out.println("serviceToDel:"+node.getServiceToDel());
+
+
+    }
+
+
 }
