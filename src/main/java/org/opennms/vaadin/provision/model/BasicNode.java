@@ -305,11 +305,12 @@ public class BasicNode implements Serializable {
 		if (!m_serviceMap.containsKey(primary)) {
 			m_interfToAdd.add(primary);
 			m_serviceMap.put(primary, new HashSet<String>());
-		} else {
-			if (!m_serviceToAdd.containsKey(primary))
-				m_serviceToAdd.put(primary, new HashSet<String>());
-			m_serviceToAdd.get(primary).add("ICMP");
-		}
+		} 
+		
+		if (!m_serviceToAdd.containsKey(primary))
+			m_serviceToAdd.put(primary, new HashSet<String>());
+		
+		m_serviceToAdd.get(primary).add("ICMP");
 		m_serviceMap.get(primary).add("ICMP");
 		
 		m_primary = primary;
@@ -353,8 +354,7 @@ public class BasicNode implements Serializable {
 		if (m_interfToDel.contains(ip))
 			m_interfToDel.remove(ip);
 		if (!m_serviceMap.containsKey(ip)) {
-			if (!ip.equals(m_primary))
-				m_interfToAdd.add(ip);
+			m_interfToAdd.add(ip);
 			m_serviceMap.put(ip, new HashSet<String>());
 		}
 		m_serviceMap.get(ip).add(service);
@@ -370,19 +370,12 @@ public class BasicNode implements Serializable {
 			return;
 		if (ip.equals(m_primary) && "ICMP".equals(service))
 			return;
-		if (ip.equals(m_primary)) {
-			if (!m_serviceToDel.containsKey(ip)) 
-				m_serviceToDel.put(ip, new HashSet<String>());
-			m_serviceToDel.get(ip).add(service);
-			m_serviceMap.get(ip).remove(service);
-			return;
-		}
 		
 		m_serviceMap.get(ip).remove(service);
 		if (m_serviceMap.get(ip).isEmpty()) {
 			m_serviceMap.remove(ip);
-			m_serviceToDel.remove(ip);
 			m_interfToDel.add(ip);
+			m_serviceToDel.remove(ip);
 		} else {
 			if (!m_serviceToDel.containsKey(ip))
 				m_serviceToDel.put(ip, new HashSet<String>());

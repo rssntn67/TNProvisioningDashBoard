@@ -81,4 +81,7 @@ public interface ProvisionRequisitionService extends RestFilterService{
     public void deleteAsset(String foreignSource, String foreignid, RequisitionAsset assetfieldname);
     
     public void update(String foreignSource, String foreignid, MultivaluedMap<String, String> map);
+    
+    public void update(String foreignSource, String foreignid, String ipaddress,MultivaluedMap<String, String> map);
+
 }

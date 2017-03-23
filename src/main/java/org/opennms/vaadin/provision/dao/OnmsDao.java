@@ -70,7 +70,11 @@ public class OnmsDao {
 	public void updateRequisitionNode(String foreignSource, String foreignId, MultivaluedMap<String, String> map) {
 		m_provisionService.update(foreignSource, foreignId, map);
 	}
-		
+
+	public void updateRequisitionInterface(String foreignSource, String foreignId, String ipaddress,MultivaluedMap<String, String> map) {
+		m_provisionService.update(foreignSource, foreignId, ipaddress,map);
+	}
+
 	public void addRequisitionAsset(String foreignSource, String foreignid, RequisitionAsset asset) {
 		m_provisionService.add(foreignSource, foreignid, asset);
 	}

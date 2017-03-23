@@ -271,4 +271,11 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 			MultivaluedMap<String, String> map) {
 		getJerseyClient().put(map, buildNodePath(foreignSource, foreignid));
 	}
+	
+	@Override
+	public void update(String foreignSource, String foreignid, String ipaddress,
+			MultivaluedMap<String, String> map) {
+		getJerseyClient().put(map, buildInterfacePath(foreignSource, foreignid,ipaddress));
+	}
+
 }
