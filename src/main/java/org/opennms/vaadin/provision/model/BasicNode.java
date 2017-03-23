@@ -283,6 +283,7 @@ public class BasicNode implements Serializable {
 	}
 
 	public void setPrimary(String primary) {
+		System.out.println(m_serviceMap);
 		if (primary == null)
 			return;
 		if (m_primary != null && m_primary.equals(primary))
