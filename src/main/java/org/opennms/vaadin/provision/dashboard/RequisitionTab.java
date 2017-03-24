@@ -240,9 +240,12 @@ public abstract class RequisitionTab extends DashboardTab {
 					}
 				}
 				m_descrComboBox.removeAllItems();
-				if (node.getDescr() != null)
+				if (node.getDescr() != null) {
 					m_descrComboBox.addItem(node.getDescr());
-
+				} else { 
+					for (String description: DashBoardUtils.m_descr_list)
+						m_descrComboBox.addItem(description);
+				}
 				selectItem(node);
 				getRight().setVisible(true);
 				enableNodeButtons();

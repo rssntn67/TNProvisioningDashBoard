@@ -73,7 +73,7 @@ public class BasicNode implements Serializable {
 		m_city="";
 		m_address1="";
 						
-		m_descr="Provided by Provision Dashboard";
+		m_descr=DashBoardUtils.DESCR_TNPD;
 		
 		m_valid=false;
 		m_serviceMap = new HashMap<String, Set<String>>();
@@ -95,7 +95,7 @@ public class BasicNode implements Serializable {
 		m_vrf = vrf;
 		m_snmpProfile = snmpProfile;
 						
-		m_descr="Provided by Provision Dashboard";
+		m_descr=DashBoardUtils.DESCR_TNPD;
 		
 		m_valid=false;
 		m_serviceMap = new HashMap<String, Set<String>>();

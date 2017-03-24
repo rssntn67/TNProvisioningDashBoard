@@ -225,6 +225,20 @@ public class DashBoardUtils {
 		"Sviluppo"
 	};
 	
+	public static final String DESCR_TNPD="Provided by Provision Dashboard";
+	public static final String DESCR_TN_SCRIPT="provided by TN contrib script";
+	public static final String DESCR_SI_SCRIPT="provided by script";
+	public static final String DESCR_FAST="provided by FAST";
+	public static final String DESCR_NEANMS="imported by NeaNMS";
+	
+	public static final String[] m_descr_list = {
+		DESCR_TNPD,
+		DESCR_TN_SCRIPT,
+		DESCR_FAST,
+		DESCR_SI_SCRIPT,
+		DESCR_NEANMS
+	};
+	
 	public static final String LABEL = "nodeLabel";
 
 	public static final String SNMP_PROFILE    = "snmpProfile";

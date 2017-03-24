@@ -500,8 +500,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					serviceMap.get(ip.getIpAddr()).add(service.getServiceName());
 				}
 			}
-			if (descr == null)
-				descr = "Provisioned By TNPD";
 				
 			Categoria networkCategory = null;
 			for (Categoria lcat: cats) {
@@ -1201,7 +1199,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		if (iptoAdd.isEmpty() && ipToDel.isEmpty())
 			return false;
-		updateNode(null,DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),null,"provided by FAST",
+		updateNode(null,DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),null,DashBoardUtils.DESCR_FAST,
 				new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),new HashMap<String, Set<String>>(),servicetoAdd,null);
 		return true;
 	}
@@ -1309,7 +1307,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			return false;
 		updateNode(null,DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),
 				refdevice.getIpaddr(),
-				"provided by FAST",
+				DashBoardUtils.DESCR_FAST,
 				update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,
 				new HashMap<String, Set<String>>(),servicetoAdd,
 				bck);
@@ -1588,7 +1586,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getIpaddr());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		iface.setDescr("provided by FAST");
+		iface.setDescr(DashBoardUtils.DESCR_FAST);
 		requisitionNode.putInterface(iface);
 
 		for (String ip: secondary) {
@@ -1596,7 +1594,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			ifacesecondary.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
 			ifacesecondary.setIpAddr(ip);
 			ifacesecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-			ifacesecondary.setDescr("provided by FAST");
+			ifacesecondary.setDescr(DashBoardUtils.DESCR_FAST);
 			requisitionNode.putInterface(ifacesecondary);
 		}
 
