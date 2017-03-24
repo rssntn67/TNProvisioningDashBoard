@@ -656,7 +656,7 @@ public abstract class RequisitionTab extends DashboardTab {
 			}
 
 			if (node.getSyncOperations().size() > 0)
-				m_updates.put(node.getNodeLabel(), node );
+				m_updates.put(node.getNodeLabel(), node);
 			else
 				node.setNoneState();
 			
