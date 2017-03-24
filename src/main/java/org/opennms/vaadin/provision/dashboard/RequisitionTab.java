@@ -637,7 +637,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		try {
 			getBeanFieldGroup().commit();
 			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
-			node.setPrimary(m_primary.getValue());
 			node.setValid(true);
 			if (node.getParent() != null)
 				node.setParentId(m_nodeLabelForeignIdMap.get(node.getParent()).iterator().next());

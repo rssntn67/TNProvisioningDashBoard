@@ -376,7 +376,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 			m_editorFields.bind(getHostNameTextField(), DashBoardUtils.HOST);
 			m_editorFields.bind(m_serverLevelComboBox, DashBoardUtils.SERVER_LEVEL_CATEGORY);
 			m_editorFields.bind(getDomainComboBox(), DashBoardUtils.CAT);
-//			m_editorFields.bind(getPrimaryTextField(),DashBoardUtils.PRIMARY);
+			m_editorFields.bind(getPrimaryTextField(),DashBoardUtils.PRIMARY);
 			m_editorFields.bind(getSnmpComboBox(), DashBoardUtils.SNMP_PROFILE);
 			m_editorFields.bind(m_prodComboBox, DashBoardUtils.SERVER_PROD_CATEGORY);
 			m_editorFields.bind(m_notifComboBox, DashBoardUtils.NOTIF_CATEGORY);
