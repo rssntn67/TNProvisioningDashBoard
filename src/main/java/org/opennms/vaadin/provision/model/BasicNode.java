@@ -123,10 +123,7 @@ public class BasicNode implements Serializable {
 		m_descr = descr;
 		m_hostname = hostname;
 		m_vrf = vrf;
-		if (primary != null)
-			m_primary = primary;
-		else
-			m_primary= "0.0.0.0";
+		m_primary = primary;
 		m_parent = parent;
 		m_parentId = parentId;
 		m_snmpProfile = snmpProfile;
