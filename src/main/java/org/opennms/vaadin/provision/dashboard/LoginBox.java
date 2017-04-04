@@ -117,7 +117,8 @@ public class LoginBox extends DashboardTab {
 	    VerticalLayout loggedin= new VerticalLayout();
 	    loggedin.setMargin(true);
 	    loggedin.setSpacing(true);
-	    loggedin.addComponent(getHead());
+
+	    loggedin.addComponent(getLeftHead());
 	    
 	    if (getService().getUser().equals("admin")) {
 		    

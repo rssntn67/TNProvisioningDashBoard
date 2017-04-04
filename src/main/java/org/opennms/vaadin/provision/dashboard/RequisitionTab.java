@@ -270,19 +270,19 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_snmpComboBox.setRequired(true);
 		m_snmpComboBox.setRequiredError("E' necessario scegliere un profilo snmp");
 		
-	    getHead().addComponent(m_syncRequisButton);
-    	getHead().addComponent(m_addNewNodeButton);
-		getHead().addComponent(m_deleteNodeButton);
-		getHead().addComponent(m_saveNodeButton);
-		getHead().addComponent(m_replaceNodeButton);
-		getHead().addComponent(m_resetNodeButton);
+	    getRightHead().addComponent(m_syncRequisButton);
+    	getRightHead().addComponent(m_addNewNodeButton);
+		getRightHead().addComponent(m_deleteNodeButton);
+		getRightHead().addComponent(m_saveNodeButton);
+		getRightHead().addComponent(m_replaceNodeButton);
+		getRightHead().addComponent(m_resetNodeButton);
 		
-		getHead().setComponentAlignment(m_syncRequisButton, Alignment.MIDDLE_CENTER);
-		getHead().setComponentAlignment(m_addNewNodeButton,  Alignment.MIDDLE_CENTER);
-		getHead().setComponentAlignment(m_deleteNodeButton, Alignment.MIDDLE_RIGHT);
-		getHead().setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_RIGHT);
-		getHead().setComponentAlignment(m_replaceNodeButton, Alignment.MIDDLE_RIGHT);
-		getHead().setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
+		getRightHead().setComponentAlignment(m_syncRequisButton, Alignment.MIDDLE_CENTER);
+		getRightHead().setComponentAlignment(m_addNewNodeButton,  Alignment.MIDDLE_CENTER);
+		getRightHead().setComponentAlignment(m_deleteNodeButton, Alignment.MIDDLE_RIGHT);
+		getRightHead().setComponentAlignment(m_saveNodeButton, Alignment.MIDDLE_RIGHT);
+		getRightHead().setComponentAlignment(m_replaceNodeButton, Alignment.MIDDLE_RIGHT);
+		getRightHead().setComponentAlignment(m_resetNodeButton,  Alignment.MIDDLE_RIGHT);
 
 							
 
@@ -293,7 +293,7 @@ public abstract class RequisitionTab extends DashboardTab {
 		updateTabHead();
 		if (!m_loaded) {
 			if (getService().getUser().equals("admin"))
-				getHead().addComponent(m_populateSnmpButton);
+				getRightHead().addComponent(m_populateSnmpButton);
 
 			for (String itemId: getRequisitionContainer().getItemIds()) {
 				BasicNode node = getRequisitionContainer().getItem(itemId).getBean();

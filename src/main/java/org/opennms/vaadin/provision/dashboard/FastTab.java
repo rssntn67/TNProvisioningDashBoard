@@ -178,8 +178,8 @@ public class FastTab extends DashboardTab {
         m_logTable.setVisible(false);
 		m_fast.addClickListener(this);
 
-		getHead().addComponent(m_fast);
-		getHead().setComponentAlignment(m_fast, Alignment.MIDDLE_RIGHT);
+		getRightHead().addComponent(m_fast);
+		getRightHead().setComponentAlignment(m_fast, Alignment.MIDDLE_RIGHT);
 
 		getLeft().addComponent(new Panel("Log Search",searchlayout));
 		getLeft().addComponent(new Panel("Jobs",m_jobTable));

@@ -27,7 +27,8 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private static final long serialVersionUID = 4694567853140078034L;
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
-	private HorizontalLayout m_head = new HorizontalLayout();
+	private HorizontalLayout m_righthead = new HorizontalLayout();
+	HorizontalLayout m_lefthead = new HorizontalLayout();
 	private VerticalLayout m_left = new VerticalLayout();;
 	private VerticalLayout m_right = new VerticalLayout();;
     private Button m_logout = new Button("Logout");
@@ -45,21 +46,20 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
 
-		HorizontalLayout head = new HorizontalLayout();
-		head.setSizeFull();
-		head.addComponent(m_info);	
-		head.addComponent(m_logout);	
-		head.setComponentAlignment(m_info, Alignment.MIDDLE_LEFT);
-		head.setComponentAlignment(m_logout, Alignment.MIDDLE_LEFT);
-		head.setMargin(true);
-		head.setSpacing(true);
+		m_lefthead.setSizeFull();
+		m_lefthead.addComponent(m_info);	
+		m_lefthead.addComponent(m_logout);	
+		m_lefthead.setComponentAlignment(m_info, Alignment.MIDDLE_LEFT);
+		m_lefthead.setComponentAlignment(m_logout, Alignment.MIDDLE_LEFT);
+		m_lefthead.setMargin(true);
+		m_lefthead.setSpacing(true);
 		
-		m_head.setMargin(true);
-		m_head.setSpacing(true);
+		m_righthead.setMargin(true);
+		m_righthead.setSpacing(true);
 		
 		HorizontalSplitPanel headsplitPanel = new HorizontalSplitPanel();
-		headsplitPanel.addComponent(head);
-		headsplitPanel.addComponent(m_head);
+		headsplitPanel.addComponent(m_lefthead);
+		headsplitPanel.addComponent(m_righthead);
 		headsplitPanel.setStyleName(Reindeer.SPLITPANEL_SMALL);
 		headsplitPanel.setSplitPosition(30,Unit.PERCENTAGE);
 
@@ -87,10 +87,15 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 				+". connected to: " + getService().getUrl());  
 	}
 	
-	public HorizontalLayout getHead() {
-		return m_head;
+	public HorizontalLayout getRightHead() {
+		return m_righthead;
+	}
+
+	public HorizontalLayout getLeftHead() {
+		return m_lefthead;
 	}
 	
+
 	public ComponentContainer getCore() {
 		return m_core;
 	}

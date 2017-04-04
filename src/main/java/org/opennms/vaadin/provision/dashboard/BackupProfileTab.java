@@ -114,12 +114,12 @@ public class BackupProfileTab extends DashboardTab {
 
 		getRight().addComponent(m_editBackupLayout);
 
-		getHead().addComponent(m_removeBackupButton);
-		getHead().addComponent(m_saveBackupButton);
-		getHead().addComponent(m_addBackupButton);
-		getHead().setComponentAlignment(m_removeBackupButton, Alignment.MIDDLE_LEFT);
-		getHead().setComponentAlignment(m_saveBackupButton, Alignment.MIDDLE_CENTER);
-		getHead().setComponentAlignment(m_addBackupButton, Alignment.MIDDLE_RIGHT);
+		getRightHead().addComponent(m_removeBackupButton);
+		getRightHead().addComponent(m_saveBackupButton);
+		getRightHead().addComponent(m_addBackupButton);
+		getRightHead().setComponentAlignment(m_removeBackupButton, Alignment.MIDDLE_LEFT);
+		getRightHead().setComponentAlignment(m_saveBackupButton, Alignment.MIDDLE_CENTER);
+		getRightHead().setComponentAlignment(m_addBackupButton, Alignment.MIDDLE_RIGHT);
 		
 		m_backupTable.setVisibleColumns(new Object[] { "name" });
 		m_backupTable.setSelectable(true);

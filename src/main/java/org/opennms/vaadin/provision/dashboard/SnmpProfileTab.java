@@ -111,12 +111,12 @@ public class SnmpProfileTab extends DashboardTab {
 
 		getRight().addComponent(m_editSnmpLayout);
 
-		getHead().addComponent(m_removeSnmpButton);
-		getHead().addComponent(m_saveSnmpButton);
-		getHead().addComponent(m_addSnmpButton);
-		getHead().setComponentAlignment(m_removeSnmpButton, Alignment.MIDDLE_LEFT);
-		getHead().setComponentAlignment(m_saveSnmpButton, Alignment.MIDDLE_CENTER);
-		getHead().setComponentAlignment(m_addSnmpButton, Alignment.MIDDLE_RIGHT);
+		getRightHead().addComponent(m_removeSnmpButton);
+		getRightHead().addComponent(m_saveSnmpButton);
+		getRightHead().addComponent(m_addSnmpButton);
+		getRightHead().setComponentAlignment(m_removeSnmpButton, Alignment.MIDDLE_LEFT);
+		getRightHead().setComponentAlignment(m_saveSnmpButton, Alignment.MIDDLE_CENTER);
+		getRightHead().setComponentAlignment(m_addSnmpButton, Alignment.MIDDLE_RIGHT);
 		
 		m_snmpTable.setVisibleColumns(new Object[] { "name" });
 		m_snmpTable.setSelectable(true);

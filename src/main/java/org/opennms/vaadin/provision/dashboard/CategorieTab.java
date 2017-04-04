@@ -135,12 +135,12 @@ public class CategorieTab extends DashboardTab {
 
 		getRight().addComponent(m_editCatLayout);
 
-		getHead().addComponent(m_removeCatButton);
-		getHead().addComponent(m_saveCatButton);
-		getHead().addComponent(m_addCatButton);
-		getHead().setComponentAlignment(m_removeCatButton, Alignment.MIDDLE_LEFT);
-		getHead().setComponentAlignment(m_saveCatButton, Alignment.MIDDLE_CENTER);
-		getHead().setComponentAlignment(m_addCatButton, Alignment.MIDDLE_RIGHT);
+		getRightHead().addComponent(m_removeCatButton);
+		getRightHead().addComponent(m_saveCatButton);
+		getRightHead().addComponent(m_addCatButton);
+		getRightHead().setComponentAlignment(m_removeCatButton, Alignment.MIDDLE_LEFT);
+		getRightHead().setComponentAlignment(m_saveCatButton, Alignment.MIDDLE_CENTER);
+		getRightHead().setComponentAlignment(m_addCatButton, Alignment.MIDDLE_RIGHT);
 		
 
 		//Add Domain

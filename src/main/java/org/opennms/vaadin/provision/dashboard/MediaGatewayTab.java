@@ -206,7 +206,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	
 	private void layout() { 
 
-		getHead().addComponent(m_syncSIVNRequisButton);
+		getRightHead().addComponent(m_syncSIVNRequisButton);
 
 		VerticalLayout searchlayout = new VerticalLayout();
 		m_searchField.setWidth("80%");
