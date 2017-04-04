@@ -37,11 +37,11 @@ public class FastUI extends DashboardAbstractUI {
 		logger.info("password: " +  password);
 
 		super.init(request);
+		   String url = getSessionService().getConfig().getUrl(name);
+			logger.info("url: " +  url);
 		
        FastTab fastTab= new FastTab();
 	   fastTab.load();
-	   String url = getSessionService().getConfig().getUrl(name);
-		logger.info("url: " +  url);
 		try {
 			getSessionService().login(url, username, password);
 		} catch (Exception e) {
