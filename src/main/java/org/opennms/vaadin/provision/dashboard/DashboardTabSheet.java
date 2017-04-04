@@ -48,41 +48,34 @@ public class DashboardTabSheet extends CustomComponent implements SelectedTabCha
 		m_tabsheet.addSelectedTabChangeListener(this);
 		setCompositionRoot(m_tabsheet);
     	
-		m_loginbox = new LoginBox(service);
-		m_loginbox.setParent(this);
+		m_loginbox = new LoginBox();
         m_tabsheet.addTab(m_loginbox, "Login Box", new ThemeResource("icons/16/user.png"));
     	
-        TrentinoNetworkTab tab=new TrentinoNetworkTab(service);
-    	tab.setParent(this);
+        TrentinoNetworkTab tab=new TrentinoNetworkTab();
     	m_tabsheet.addTab(tab, "Rete TN", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(tab).setEnabled(false);
 
-        MediaGatewayTab mtab=new MediaGatewayTab(service);
-    	mtab.setParent(this);
+        MediaGatewayTab mtab=new MediaGatewayTab();
     	m_tabsheet.addTab(mtab, "Media Gw", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(mtab).setEnabled(false);
 
-    	SistemiInformativiTab stab=new SistemiInformativiTab(service);
+    	SistemiInformativiTab stab=new SistemiInformativiTab();
     	m_tabsheet.addTab(stab, "SI", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(stab).setEnabled(false);
 
-        CategorieTab catTab=new CategorieTab(service);
-    	catTab.setParent(this);
+        CategorieTab catTab=new CategorieTab();
     	m_tabsheet.addTab(catTab, "Categorie", new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(catTab).setEnabled(false);
     	
-    	SnmpProfileTab snmpTab = new SnmpProfileTab(service);
-    	snmpTab.setParent(this);
+    	SnmpProfileTab snmpTab = new SnmpProfileTab();
         m_tabsheet.addTab(snmpTab, "Profili Snmp",new ThemeResource("icons/16/users.png"));
     	m_tabsheet.getTab(snmpTab).setEnabled(false);
     	
-    	BackupProfileTab backupTab = new BackupProfileTab(service);
-    	backupTab.setParent(this);
+    	BackupProfileTab backupTab = new BackupProfileTab();
         m_tabsheet.addTab(backupTab, "Profili Backup",new ThemeResource("icons/16/users.png"));
         m_tabsheet.getTab(backupTab).setEnabled(false);
         
-        FastTab fastTab= new FastTab(service);
-        fastTab.setParent(this);
+        FastTab fastTab= new FastTab();
         m_tabsheet.addTab(fastTab, "Fast",new ThemeResource("icons/16/users.png"));
         m_tabsheet.getTab(fastTab).setEnabled(false);
     	
@@ -94,6 +87,10 @@ public class DashboardTabSheet extends CustomComponent implements SelectedTabCha
 		if (source == m_tabsheet) {
 				((DashboardTab)source.getSelectedTab()).load();
 		}
+	}
+
+	public DashBoardSessionService getDashBoardSessionService() {
+		return m_service;
 	}
 
 	public void login(String url, String username, String password) throws ClientHandlerException,UniformInterfaceException, Exception  {

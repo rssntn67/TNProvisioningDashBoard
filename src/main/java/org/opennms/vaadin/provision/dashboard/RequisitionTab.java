@@ -121,8 +121,8 @@ public abstract class RequisitionTab extends DashboardTab {
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	RequisitionTab(DashBoardSessionService service) {
-		super(service);
+	RequisitionTab() {
+		super();
 		
     	m_populateSnmpButton.addClickListener(this);
     	m_populateSnmpButton.setImmediate(true);

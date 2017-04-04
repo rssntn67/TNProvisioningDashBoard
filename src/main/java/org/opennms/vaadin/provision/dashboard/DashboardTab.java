@@ -24,7 +24,6 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	 * 
 	 */
 	private static final long serialVersionUID = 4694567853140078034L;
-	private DashBoardSessionService m_service;
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
 	private HorizontalLayout m_head = new HorizontalLayout();
@@ -32,18 +31,16 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private VerticalLayout m_right = new VerticalLayout();;
     private Button m_logout = new Button("Logout");
     private Button m_info = new Button("Info");
-    private DashboardTabSheet m_tab;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	DashboardTab(DashBoardSessionService service) {
+	DashboardTab() {
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
      	m_info.addClickListener(this);
     	m_info.setImmediate(true);
-		m_service = service;
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
 
@@ -79,22 +76,13 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 
 	public abstract void load();	
 	public abstract String getName();
-	
-	public void setParent(DashboardTabSheet tab) {
-		m_tab=tab;
-	}
-	
-	public DashboardTabSheet getParent() {
-		return m_tab;
-	}
 
-	public DashBoardSessionService getService() {
-		return m_service;
-	}
-
+	public DashBoardSessionService getService(){
+		return ((DashboardTabSheet)getParent()).getDashBoardSessionService();
+	};
 	public void updateTabHead() {
-		m_headPanel.setCaption("User: " + getService().getUser() 
-				+". connected to: " + getService().getUrl());  
+		m_headPanel.setCaption("User: " + ((DashboardTabSheet)getParent()).getDashBoardSessionService().getUser() 
+				+". connected to: " + ((DashboardTabSheet)getParent()).getDashBoardSessionService().getUrl());  
 	}
 	
 	public HorizontalLayout getHead() {
@@ -108,9 +96,9 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_logout) {
-	    	m_tab.onLogout();
+	    	((DashboardTabSheet)getParent()).onLogout();
 	    } else if (event.getButton() == m_info) {
-	    	m_tab.onInfo();
+	    	((DashboardTabSheet)getParent()).onInfo();
 	    }
 	}
 	

@@ -122,8 +122,8 @@ public class FastTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public FastTab(DashBoardSessionService service) {
-		super(service);
+	public FastTab() {
+		super();
 		
 		VerticalLayout searchlayout = new VerticalLayout();
 		

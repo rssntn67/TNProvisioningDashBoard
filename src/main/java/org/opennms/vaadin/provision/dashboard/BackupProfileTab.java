@@ -68,8 +68,8 @@ public class BackupProfileTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public BackupProfileTab(DashBoardSessionService service) {
-		super(service);
+	public BackupProfileTab() {
+		super();
 	}
 
 	@Override
