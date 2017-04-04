@@ -73,6 +73,7 @@ public class LoginBox extends DashboardTab {
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_login) 
 			login();
+		super.buttonClick(event);
 	}
 
 	public void logout() {
