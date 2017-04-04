@@ -42,10 +42,22 @@ public class FastUI extends DashboardAbstractUI {
 	   fastTab.load();
 	   String url = getSessionService().getConfig().getUrl(name);
 		logger.info("url: " +  password);
-	   getSessionService().login(url, username, password);
-	   fastTab.runFast();
+		try {
+			getSessionService().login(url, username, password);
+		} catch (Exception e) {
+			setContent(new Label("KO"));
+			getUI().getSession().close();
+			return;
+		}
+		if (!getSessionService().isFastRunning()) {
+			fastTab.runFast();
+		} else {
+			setContent(new Label("KO"));
+			getUI().getSession().close();
+			return;			
+		}
+		setContent(new Label("OK"));
 
-	   setContent(new Label("OK"));
 	}
 
 }
