@@ -1,5 +1,6 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -78,8 +79,8 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public abstract String getName();
 
 	public DashBoardSessionService getService(){
-		return ((DashboardAbstractUI)getUI()).getSessionService();
-	};
+		return (DashBoardSessionService) VaadinSession.getCurrent();
+	}
 	
 	public void updateTabHead() {
 		m_headPanel.setCaption("User: " + getService().getUser() 
