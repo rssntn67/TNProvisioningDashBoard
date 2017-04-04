@@ -68,12 +68,17 @@ public class DashboardAbstractUI extends UI {
 	    getUI().getSession().close();		
 	}
 
-	public DashBoardSessionService getSessionservice() {
+	public DashBoardSessionService getSessionService() {
 		return m_sessionservice;
 	}
 
 	public DashBoardService getService() {
 		return m_service;
+	}
+	
+	@Override
+	public DashboardAbstractUI getUI() {
+		return this;
 	}
 	
 	

@@ -86,7 +86,7 @@ public class LoginBox extends DashboardTab {
 	@SuppressWarnings("unchecked")
 	private void login() {	
 		try {
-			((DashboardTabSheet)getParent()).login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
+			((DashboardUI)getUI()).login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
 		} catch (ClientHandlerException che) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",che);

@@ -78,11 +78,11 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public abstract String getName();
 
 	public DashBoardSessionService getService(){
-		return ((DashboardTabSheet)getParent()).getDashBoardSessionService();
+		return ((DashboardAbstractUI)getUI()).getSessionService();
 	};
 	public void updateTabHead() {
-		m_headPanel.setCaption("User: " + ((DashboardTabSheet)getParent()).getDashBoardSessionService().getUser() 
-				+". connected to: " + ((DashboardTabSheet)getParent()).getDashBoardSessionService().getUrl());  
+		m_headPanel.setCaption("User: " + getService().getUser() 
+				+". connected to: " + getService().getUrl());  
 	}
 	
 	public HorizontalLayout getHead() {
@@ -96,9 +96,9 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_logout) {
-	    	((DashboardTabSheet)getParent()).onLogout();
+	    	((DashboardUI)getUI()).onLogout();
 	    } else if (event.getButton() == m_info) {
-	    	((DashboardTabSheet)getParent()).onInfo();
+	    	((DashboardUI)getUI()).onInfo();
 	    }
 	}
 	
