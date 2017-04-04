@@ -38,7 +38,7 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>TNPD</servlet-name>
-        <url-pattern>/TNPD/*</url-pattern>
+        <url-pattern>/*</url-pattern>
     </servlet-mapping>
     
 </web-app>
