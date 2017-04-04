@@ -51,7 +51,7 @@ public class FastUI extends DashboardAbstractUI {
 		}
 		if (!getSessionService().isFastRunning()) {
 			if (!fastTab.runFast()) {
-				setContent(new Label("OK"));
+				setContent(new Label("KO"));
 				getUI().getSession().close();
 				return;			
 			}
