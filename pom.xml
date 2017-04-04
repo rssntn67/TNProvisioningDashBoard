@@ -9,15 +9,15 @@
 	<name>Provisioning Dashboard Web Application</name>
 
 	<properties>
-		<defaultName>${name}</defaultName>
-		<defaultVersion>${version}</defaultVersion>
+		<defaultName>${project.name}</defaultName>
+		<defaultVersion>${project.version}</defaultVersion>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.encoding>UTF-8</project.encoding>
 		<vaadin.version>7.7.7</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<jetty.plugin.version>9.4.0.v20161208</jetty.plugin.version>
-		<project.source.version>1.6</project.source.version>
-		<project.target.version>1.6</project.target.version>
+		<project.source.version>1.8</project.source.version>
+		<project.target.version>1.8</project.target.version>
 		<opennms.version>18.0.3</opennms.version>
 		<jersey.version>1.19.3</jersey.version>
         <timestamp>${maven.build.timestamp}</timestamp>
@@ -299,6 +299,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
 				<configuration>
 					<source>${project.source.version}</source>
 					<target>${project.target.version}</target>
