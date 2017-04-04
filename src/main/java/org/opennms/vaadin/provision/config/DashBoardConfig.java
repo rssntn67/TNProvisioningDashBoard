@@ -92,7 +92,10 @@ public class DashBoardConfig {
     	return m_configuration.getProperty(PROPERTIES_APP_BUILD);
     }
 
-    
+    public String getUrl(String urlKey) {
+    	String key = PROPERTIES_URL_ROOT_KEY+urlKey;
+    	return m_configuration.getProperty(key,"http://localhost:8980/opennms/rest");
+    }
 
 	public String[] getUrls() {
 		List<String> urls = new ArrayList<String>();

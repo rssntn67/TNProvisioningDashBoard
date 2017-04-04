@@ -217,51 +217,55 @@ public class FastTab extends DashboardTab {
     	m_loaded = true;
 	}
 
+	public boolean runFast() {
+		if (m_jobdao.getLastJobId() !=  null) {
+			int jobid = m_jobdao.getLastJobId().getValue();
+			logger.info ("found last job with id: " + jobid);
+		}
+        Job job = new Job();
+		job.setUsername(getService().getUser());
+		job.setJobdescr("FAST sync: started");
+		job.setJobstatus(JobStatus.RUNNING);
+		job.setJobstart(new Date());
+		
+		try {
+			commitJob(job);
+		} catch (SQLException e) {
+			logger.warning("failed creating job: " + e.getLocalizedMessage());
+	        Notification.show("Fast Integration - Status: Cannot Create Job", "Ask Administrator", Type.ERROR_MESSAGE);
+	        return false;
+		}
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		m_jobTable.setSelectable(false);
+		int curjobid = m_jobdao.getLastJobId().getValue();
+		logger.info ("created job with id: " + curjobid);
+		m_logTable.setVisible(false);
+		BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
+		m_logTable.setContainerDataSource(joblogcontainer);
+		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
+		job.setJobid(curjobid);
+        FastIntegrationRunnable runnable = new FastIntegrationRunnable();
+		runnable.setJob(job);
+		runnable.setJobLogContainer(joblogcontainer);
+        UI.getCurrent().setPollInterval(2000);
+        Thread thread = new Thread(runnable);
+        thread.start();		
+		m_logTable.setVisible(true);
+        
+        m_panel.setCaption("Fast Integration - Status: Running");
+        Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);
+        return true;
+		
+	}
 
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_fast) {
-	        
-			if (m_jobdao.getLastJobId() !=  null) {
-				int jobid = m_jobdao.getLastJobId().getValue();
-				logger.info ("found last job with id: " + jobid);
-			}
-	        Job job = new Job();
-			job.setUsername(getService().getUser());
-			job.setJobdescr("FAST sync: started");
-			job.setJobstatus(JobStatus.RUNNING);
-			job.setJobstart(new Date());
-			
-			try {
-				commitJob(job);
-			} catch (SQLException e) {
-				logger.warning("failed creating job: " + e.getLocalizedMessage());
-		        Notification.show("Fast Integration - Status: Cannot Create Job", "Ask Administrator", Type.ERROR_MESSAGE);
-		        return;
-			}
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			m_jobTable.setSelectable(false);
-			int curjobid = m_jobdao.getLastJobId().getValue();
-			logger.info ("created job with id: " + curjobid);
-			m_logTable.setVisible(false);
-			BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
-			m_logTable.setContainerDataSource(joblogcontainer);
-			m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
-			job.setJobid(curjobid);
-	        FastIntegrationRunnable runnable = new FastIntegrationRunnable();
-			runnable.setJob(job);
-			runnable.setJobLogContainer(joblogcontainer);
-	        UI.getCurrent().setPollInterval(2000);
-	        Thread thread = new Thread(runnable);
-	        thread.start();		
-			m_logTable.setVisible(true);
-	        
-	        m_panel.setCaption("Fast Integration - Status: Running");
-	        Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);
+	        runFast();
 		} else {
 			super.buttonClick(event);
 		}
