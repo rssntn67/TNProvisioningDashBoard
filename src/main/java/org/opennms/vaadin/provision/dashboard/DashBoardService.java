@@ -39,7 +39,6 @@ public class DashBoardService extends VaadinServletService implements Serializab
 	public DashBoardService(DashboardServlet servlet,
 			DeploymentConfiguration deploymentConfiguration) throws ServiceException {
 		super(servlet, deploymentConfiguration);
-		init();
 	}
 		
 	@Override
