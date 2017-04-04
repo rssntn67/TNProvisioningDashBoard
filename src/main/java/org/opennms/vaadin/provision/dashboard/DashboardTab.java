@@ -9,6 +9,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
@@ -78,7 +79,7 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public abstract String getName();
 
 	public DashBoardSessionService getService(){
-		return ((DashboardAbstractUI)getUI()).getSessionService();
+		return ((DashboardAbstractUI)UI.getCurrent()).getSessionService();
 	};
 	public void updateTabHead() {
 		m_headPanel.setCaption("User: " + getService().getUser() 

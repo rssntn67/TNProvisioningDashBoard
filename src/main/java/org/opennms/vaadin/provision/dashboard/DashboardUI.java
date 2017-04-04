@@ -59,7 +59,7 @@ public class DashboardUI extends DashboardAbstractUI {
 	    while (ite.hasNext()) {
 	    	try {
 	    		DashboardTab dashboardTab = (DashboardTab) ite.next();
-	    		if (getService().getConfig().isTabDisabled(dashboardTab.getName(),username))
+	    		if (getSessionService().getConfig().isTabDisabled(dashboardTab.getName(),username))
 	    			continue;
 	    		m_tabSheet.getTab(dashboardTab).setEnabled(true);
 	    	} catch (Exception e) {
@@ -173,9 +173,9 @@ public class DashboardUI extends DashboardAbstractUI {
 		VerticalLayout windowcontent = new VerticalLayout();
 		windowcontent.setMargin(true);
 		windowcontent.setSpacing(true);
-		windowcontent.addComponent(new Label(getService().getConfig().getAppName()));
-		windowcontent.addComponent(new Label("Versione: " + getService().getConfig().getAppVersion()));
-		windowcontent.addComponent(new Label("Build: " + getService().getConfig().getAppBuild()));
+		windowcontent.addComponent(new Label(getSessionService().getConfig().getAppName()));
+		windowcontent.addComponent(new Label("Versione: " + getSessionService().getConfig().getAppVersion()));
+		windowcontent.addComponent(new Label("Build: " + getSessionService().getConfig().getAppBuild()));
 		infowindow.setContent(windowcontent);
 		infowindow.setModal(true);
 		infowindow.setWidth("400px");

@@ -41,6 +41,9 @@ public class LoginBox extends DashboardTab {
     
     public LoginBox () {
     	super();
+	}
+
+    public void load() {
         m_panel.setCaption(s_panellogincaption + getService().getConfig().getAppName());
         m_panel.setContent(getLoginBox());
         setCompositionRoot(m_panel);
@@ -53,10 +56,6 @@ public class LoginBox extends DashboardTab {
     	m_select.select(getService().getConfig().getUrls()[0]);
     	m_username.focus();
     	m_login.setClickShortcut(KeyCode.ENTER);
-
-	}
-
-    public void load() {
     	
     }
  

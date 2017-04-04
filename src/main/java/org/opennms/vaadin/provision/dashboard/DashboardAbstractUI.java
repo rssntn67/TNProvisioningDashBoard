@@ -30,13 +30,12 @@ public class DashboardAbstractUI extends UI {
 	private static final long serialVersionUID = -5948892618258879832L;
 
 	private DashBoardSessionService m_sessionservice;
-	private DashBoardService m_service;
+	
 	protected void init(VaadinRequest request) {
 		
 		m_sessionservice = (DashBoardSessionService) VaadinSession.getCurrent();
-		m_service = (DashBoardService)m_sessionservice.getService();
 		
-		if (!m_service.ready()) {
+		if (((DashBoardService)m_sessionservice.getService()).ready()) {
    			layoutInitError("file di configurazione in errore", 
 					"L'applicazione non e' disponibile",
 					"File configurazione non disponibile. Contattare l'amministratore di sistema");
@@ -71,15 +70,5 @@ public class DashboardAbstractUI extends UI {
 	public DashBoardSessionService getSessionService() {
 		return m_sessionservice;
 	}
-
-	public DashBoardService getService() {
-		return m_service;
-	}
-	
-	@Override
-	public DashboardAbstractUI getUI() {
-		return this;
-	}
-	
 	
 }
