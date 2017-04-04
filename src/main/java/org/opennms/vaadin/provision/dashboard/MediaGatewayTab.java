@@ -62,8 +62,8 @@ public class MediaGatewayTab extends RequisitionTab {
 	final ComboBox m_networkCatComboBox = new ComboBox("Network Category");
 	final ComboBox m_backupComboBox  = new ComboBox("Backup Profile");
 
-	public MediaGatewayTab(LoginBox login,DashBoardSessionService service) {
-		super(login,service);
+	public MediaGatewayTab(DashBoardSessionService service) {
+		super(service);
 		
     	m_syncSIVNRequisButton.addClickListener(this);
     	m_syncSIVNRequisButton.setImmediate(true);

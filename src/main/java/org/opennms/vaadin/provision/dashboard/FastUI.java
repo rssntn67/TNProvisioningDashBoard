@@ -18,6 +18,7 @@ public class FastUI extends DashboardAbstractUI {
 		super.init(request);
 		 VerticalLayout content = new VerticalLayout();
 	        setContent(content);
+	        
 
 	        // Display the greeting
 	        content.addComponent(new Label("Hello World!"));

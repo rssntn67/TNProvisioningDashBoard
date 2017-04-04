@@ -139,8 +139,8 @@ public class SistemiInformativiTab extends RequisitionTab {
 	private Table m_secondaryIpAddressTable = new Table();
 	Button m_addSecondaryServiceButton = new Button("Aggiungi Servizio");
 
-	public SistemiInformativiTab(LoginBox login,DashBoardSessionService service) {
-		super(login,service);
+	public SistemiInformativiTab(DashBoardSessionService service) {
+		super(service);
 		
 		for (String[] serverLevel: DashBoardUtils.m_server_levels) {
 			m_serverLevelSearchComboBox.addItem(serverLevel);

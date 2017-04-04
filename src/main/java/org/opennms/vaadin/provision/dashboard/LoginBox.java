@@ -1,15 +1,8 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.model.BasicNode;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -19,26 +12,18 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CustomComponent;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
-import com.vaadin.ui.Button.ClickListener;
 
 import elemental.events.KeyboardEvent.KeyCode;
 
 
-public class LoginBox extends CustomComponent implements ClickListener {
-
-	private DashBoardSessionService m_service;
+public class LoginBox extends DashboardTab {
 
 	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
 
@@ -53,34 +38,27 @@ public class LoginBox extends CustomComponent implements ClickListener {
     private TextField m_username = new TextField("Username:");
     private PasswordField m_password = new PasswordField("Password:");
     private Button m_login = new Button("Login");
-    private Button m_logout = new Button("Logout");
-    private Button m_info = new Button("Info");
-    private TabSheet m_tabs;
     
-    public LoginBox (TabSheet tabs,DashBoardSessionService service) {
-        m_tabs=tabs;
-    	m_service = service;
-        m_panel.setCaption(s_panellogincaption + m_service.getConfig().getAppName());
+    public LoginBox (DashBoardSessionService service) {
+    	super(service);
+        m_panel.setCaption(s_panellogincaption + getService().getConfig().getAppName());
         m_panel.setContent(getLoginBox());
         setCompositionRoot(m_panel);
 
     	m_login.addClickListener(this);
     	m_login.setImmediate(true);
-    	
-    	m_info.addClickListener(this);
-    	m_info.setImmediate(true);
-    	
-    	m_logout.addClickListener(this);
-    	m_logout.setImmediate(true);
-    	
-    	for (String url: m_service.getConfig().getUrls())
+    	    	
+    	for (String url: getService().getConfig().getUrls())
     		m_select.addItem(url);
-    	m_select.select(m_service.getConfig().getUrls()[0]);
+    	m_select.select(getService().getConfig().getUrls()[0]);
     	m_username.focus();
     	m_login.setClickShortcut(KeyCode.ENTER);
 
 	}
 
+    public void load() {
+    	
+    }
  
     private Component getLoginBox() {
     	VerticalLayout layout = new VerticalLayout();
@@ -94,67 +72,27 @@ public class LoginBox extends CustomComponent implements ClickListener {
     
 	@Override
 	public void buttonClick(ClickEvent event) {
-		if (event.getButton() == m_login) {
+		if (event.getButton() == m_login) 
 			login();
-		} else if (event.getButton() == m_logout) {
-	    	logout();
-		} else if (event.getButton() == m_info) {
-	    	info();
-		}
 	}
 
 	public void logout() {
-		if (m_service.isFastRunning()) {
-			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
-			return;
-		}
-		Map<String,Collection<BasicNode>> updatemap = new HashMap<String,Collection<BasicNode>>();
-		Iterator<Component> ite = m_tabs.iterator();
-	    while (ite.hasNext()) {
-	    	Component comp = ite.next();
-	    	if (comp instanceof RequisitionTab) {
-	    		RequisitionTab tab = (RequisitionTab) comp;
-	    		if (!tab.getUpdates().isEmpty())
-	    			updatemap.put(tab.getRequisitionName(),tab.getUpdates());
-	    	}
-    	}
-
-		if (!updatemap.isEmpty()) {
-			createdialogwindown(updatemap);
-			return;
-		}
-		reallylogout();
-	}
-	
-	public void reallylogout() {
 		m_username.setValue("");
 		m_password.setValue("");
-		m_service.logout();
-		m_panel.setCaption(s_panellogincaption + m_service.getConfig().getAppName());
-		Notification.show("Logged Out", "Provide username and password to log in", Notification.Type.HUMANIZED_MESSAGE);
-		m_panel.setContent(getLoginBox());
-		Iterator<Component> ite = m_tabs.iterator();
-	    while (ite.hasNext()) {
-	    	Component comp = ite.next();
-	    	if (comp != this) {
-	    		m_tabs.getTab(comp).setEnabled(false);
-	    	} else {
-	    		m_tabs.setSelectedTab(comp);
-	    	}
-	    }
-	    getUI().getSession().close();
+		m_panel.setCaption(s_panellogincaption + getService().getConfig().getAppName());
+		m_panel.setContent(new Label("Exit Work Session : please reload page to log into"));
 	}
 	
 	@SuppressWarnings("unchecked")
 	private void login() {	
 		try {
-		    m_service.login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
+		    getParent().login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
 		} catch (ClientHandlerException che) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",che);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.logout();
+			getService().logout();
 			return;
 		} catch (UniformInterfaceException uie) {
 			if (uie.getResponse().getStatusInfo() == Status.UNAUTHORIZED)
@@ -166,26 +104,23 @@ public class LoginBox extends CustomComponent implements ClickListener {
 			logger.log(Level.WARNING,"Login Failed for rest access",uie);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.logout();
+			getService().logout();
 			return;
 		} catch (Exception e) {
 			Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",e);
 			m_username.setValue("");
 			m_password.setValue("");
-			m_service.logout();
+			getService().logout();
 			return;
 		}
-	    m_panel.setCaption("User '"+ m_service.getUser()+"' Logged in");
+	    m_panel.setCaption("User '"+ getService().getUser()+"' Logged in");
 	    VerticalLayout loggedin= new VerticalLayout();
 	    loggedin.setMargin(true);
 	    loggedin.setSpacing(true);
-	    HorizontalLayout buttonPanel = new HorizontalLayout();
-	    buttonPanel.setSizeFull();
-	    buttonPanel.addComponent(m_info);
-	    buttonPanel.addComponent(m_logout);
-	    loggedin.addComponent(buttonPanel);
-	    if (m_service.getUser().equals("admin")) {
+	    loggedin.addComponent(getHead());
+	    
+	    if (getService().getUser().equals("admin")) {
 		    
 		    Table conneTable = new Table("Sessioni attive");
 		    conneTable.addContainerProperty("User", String.class, null);
@@ -193,7 +128,7 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		    conneTable.addContainerProperty("Conn", String.class, null);
 		    conneTable.addContainerProperty("Session", String.class, null);
 		    conneTable.addContainerProperty("Pool", String.class, null);
-		    for (DashBoardSessionService sessionService: ((DashBoardService)m_service.getService()).getActiveSessions()) {
+		    for (DashBoardSessionService sessionService: ((DashBoardService)getService().getService()).getActiveSessions()) {
 		    	Object newItemId = conneTable.addItem();
 		    	Item row1 = conneTable.getItem(newItemId);
 		    	row1.getItemProperty("User").setValue(sessionService.getUser());
@@ -209,95 +144,12 @@ public class LoginBox extends CustomComponent implements ClickListener {
 		    loggedin.addComponent(tablelayout);
 
 	    }
-	    m_panel.setContent(loggedin);
-	    
-	    
-	    Iterator<Component> ite = m_tabs.iterator();
-	    while (ite.hasNext()) {
-	    	try {
-	    		DashboardTab dashboardTab = (DashboardTab) ite.next();
-	    		if (m_service.getConfig().isTabDisabled(dashboardTab.getName(),m_username.getValue()))
-	    			continue;
-	    		m_tabs.getTab(dashboardTab).setEnabled(true);
-	    	} catch (Exception e) {
-	    		logger.log(Level.INFO,"Log tab always enabled");
-	    	}
-	    }
+	    m_panel.setContent(loggedin);	    
 	}
 	
-	private void createdialogwindown(Map<String,Collection<BasicNode>> updatemap) {
-		final Window confirm = new Window("Modifiche effettuate e non sincronizzate");
-		Button si = new Button("si");
-		si.addClickListener(new ClickListener() {
-			
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void buttonClick(ClickEvent event) {
-				reallylogout();
-				confirm.close();
-			}
-		});
-		
-		Button no = new Button("no");
-		no.addClickListener(new ClickListener() {
-			
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void buttonClick(ClickEvent event) {
-				confirm.close();
-			}
-		});
-				
-		VerticalLayout windowcontent = new VerticalLayout();
-		windowcontent.setMargin(true);
-		windowcontent.setSpacing(true);
-    
-		for (String requisition: updatemap.keySet()) {
-			Table updatetable = new Table("Operazioni di Sync sospese per Requisition: " + requisition);
-			updatetable.setSelectable(false);
-			updatetable.setContainerDataSource(DashBoardUtils.getUpdateContainer(updatemap.get(requisition)));
-			updatetable.setSizeFull();
-			updatetable.setPageLength(3);
-			windowcontent.addComponent(updatetable);
-		}
-
-		windowcontent.addComponent(new Label("Alcune Modifiche che sono state effettuate "
-				+ "alle Requisition richiedono le "
-				+ "operazioni di sync sopra elencate. Confermi il logout?"));
-		HorizontalLayout buttonbar = new HorizontalLayout();
-		buttonbar.setMargin(true);
-		buttonbar.setSpacing(true);
-    	buttonbar.addComponent(si);
-		buttonbar.addComponent(no);
-		windowcontent.addComponent(buttonbar);
-	    confirm.setContent(windowcontent);
-        confirm.setModal(true);
-        confirm.setWidth("600px");
-        UI.getCurrent().addWindow(confirm);
-		
-	}
-	
-	public void info() {
-		final Window infowindow = new Window("Informazioni TNPD");
-		VerticalLayout windowcontent = new VerticalLayout();
-		windowcontent.setMargin(true);
-		windowcontent.setSpacing(true);
-		windowcontent.addComponent(new Label(m_service.getConfig().getAppName()));
-		windowcontent.addComponent(new Label("Versione: " + m_service.getConfig().getAppVersion()));
-		windowcontent.addComponent(new Label("Build: " + m_service.getConfig().getAppBuild()));
-		infowindow.setContent(windowcontent);
-		infowindow.setModal(true);
-		infowindow.setWidth("400px");
-        UI.getCurrent().addWindow(infowindow);
-
+	@Override
+	public String getName() {
+		return "LoginBox";
 	}
 
 

@@ -120,8 +120,8 @@ public class TrentinoNetworkTab extends RequisitionTab {
 	Button m_addSecondaryIpButton = new Button("Aggiungi indirizzo ip");
 
 
-	public TrentinoNetworkTab(LoginBox login,DashBoardSessionService service) {
-		super(login,service);
+	public TrentinoNetworkTab(DashBoardSessionService service) {
+		super(service);
 
 		m_circuiId.setWidth(8, Unit.CM);
 		m_circuiId.setHeight(6, Unit.MM);

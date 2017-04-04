@@ -32,14 +32,13 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private VerticalLayout m_right = new VerticalLayout();;
     private Button m_logout = new Button("Logout");
     private Button m_info = new Button("Info");
-    private LoginBox m_loginBox;
+    private DashboardTabSheet m_tab;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	DashboardTab(LoginBox login, DashBoardSessionService service) {
-		m_loginBox = login;
+	DashboardTab(DashBoardSessionService service) {
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
      	m_info.addClickListener(this);
@@ -81,6 +80,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public abstract void load();	
 	public abstract String getName();
 	
+	public void setParent(DashboardTabSheet tab) {
+		m_tab=tab;
+	}
+	
+	public DashboardTabSheet getParent() {
+		return m_tab;
+	}
+
 	public DashBoardSessionService getService() {
 		return m_service;
 	}
@@ -101,9 +108,9 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_logout) {
-	    	m_loginBox.logout();
+	    	m_tab.onLogout();
 	    } else if (event.getButton() == m_info) {
-	    	m_loginBox.info();
+	    	m_tab.onInfo();
 	    }
 	}
 	

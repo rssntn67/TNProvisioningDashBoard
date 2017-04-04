@@ -72,8 +72,8 @@ public class CategorieTab extends DashboardTab {
 	
 	private BeanFieldGroup<Categoria> m_editorFields;
 
-	public CategorieTab(LoginBox login,DashBoardSessionService service) {
-		super(login,service);
+	public CategorieTab(DashBoardSessionService service) {
+		super(service);
 	}
 
 	@Override

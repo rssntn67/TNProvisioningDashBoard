@@ -66,8 +66,8 @@ public class SnmpProfileTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
-	public SnmpProfileTab(LoginBox login,DashBoardSessionService service) {
-		super(login,service);
+	public SnmpProfileTab(DashBoardSessionService service) {
+		super(service);
 	}
 
 	@Override
