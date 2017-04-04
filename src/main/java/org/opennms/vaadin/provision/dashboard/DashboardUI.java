@@ -48,9 +48,11 @@ public class DashboardUI extends DashboardAbstractUI {
 	private static final long serialVersionUID = -5948892618258879832L;
 
 	protected void init(VaadinRequest request) {
+		logger.info("Init DashBoardUI: start");
 		super.init(request);
 		m_tabSheet = new DashboardTabSheet();
 		setContent(m_tabSheet);
+		logger.info("Init DashBoardUI: end");
 	}
 	
 	public void login(String url, String username, String password) throws ClientHandlerException,UniformInterfaceException, Exception  {

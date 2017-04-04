@@ -28,8 +28,6 @@ public class DashBoardService extends VaadinServletService implements Serializab
 
 	private static final long serialVersionUID = 508580392774265535L;
 			
-    private boolean m_init = false;
-
 	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
 
     Set<DashBoardSessionService> m_sessions = new HashSet<DashBoardSessionService>();
@@ -44,6 +42,7 @@ public class DashBoardService extends VaadinServletService implements Serializab
 	@Override
 	public void init() throws ServiceException {
 		
+		super.init();
 		m_config = new DashBoardConfig();
 		try {
 			m_config.reload();
@@ -64,14 +63,8 @@ public class DashBoardService extends VaadinServletService implements Serializab
 			throw new ServiceException(e);
 		}
 		
-		super.init();
-		m_init = true;		
 	}
 	
-	public boolean ready() {
-		return m_init;
-	}
-
 	@Override
 	public DashBoardSessionService createVaadinSession(VaadinRequest request) throws 
 		ServiceException {

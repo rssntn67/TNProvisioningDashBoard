@@ -32,13 +32,12 @@ public class DashboardAbstractUI extends UI {
 	private DashBoardSessionService m_sessionservice;
 	
 	protected void init(VaadinRequest request) {
-		
 		m_sessionservice = (DashBoardSessionService) VaadinSession.getCurrent();
 		
-		if (((DashBoardService)m_sessionservice.getService()).ready()) {
-   			layoutInitError("file di configurazione in errore", 
+		if (((DashBoardService)m_sessionservice.getService()) == null ) {
+   			layoutInitError("Errore di inizializzazione", 
 					"L'applicazione non e' disponibile",
-					"File configurazione non disponibile. Contattare l'amministratore di sistema");
+					"Servizio non disponibile. Contattare l'amministratore di sistema");
    			return;
 		}
 		
@@ -64,7 +63,6 @@ public class DashboardAbstractUI extends UI {
 		setContent(layout);
 		logger.log(Level.WARNING, error);
 		Notification.show(error, label, Notification.Type.ERROR_MESSAGE);
-	    getUI().getSession().close();		
 	}
 
 	public DashBoardSessionService getSessionService() {
