@@ -21,7 +21,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -73,7 +72,7 @@ public class DashboardUI extends DashboardAbstractUI {
 	
 	public void onLogout() {
 		if (getSessionService().isFastRunning()) {
-			Notification.show("Cannot Logged Out", "Fast Sync is Running", Notification.Type.WARNING_MESSAGE);
+			createfastdialogwindown();
 			return;
 		}
 		Map<String,Collection<BasicNode>> updatemap = new HashMap<String,Collection<BasicNode>>();
@@ -107,6 +106,56 @@ public class DashboardUI extends DashboardAbstractUI {
 	    }
 		m_tabSheet.getLoginBox().logout();
 	    getUI().getSession().close();
+	}
+
+	private void createfastdialogwindown() {
+		final Window confirm = new Window("FAST integration is running.");
+		Button si = new Button("si");
+		si.addClickListener(new ClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				reallylogout();
+				confirm.close();
+			}
+		});
+		
+		Button no = new Button("no");
+		no.addClickListener(new ClickListener() {
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				confirm.close();
+			}
+		});
+				
+		VerticalLayout windowcontent = new VerticalLayout();
+		windowcontent.setMargin(true);
+		windowcontent.setSpacing(true);
+    
+		windowcontent.addComponent(new Label("L'integrazione con FAST e' in esecuzione."
+				+ "Se fai logout blocchi la esecuzione. Confermi il logout?"));
+		HorizontalLayout buttonbar = new HorizontalLayout();
+		buttonbar.setMargin(true);
+		buttonbar.setSpacing(true);
+    	buttonbar.addComponent(si);
+		buttonbar.addComponent(no);
+		windowcontent.addComponent(buttonbar);
+	    confirm.setContent(windowcontent);
+        confirm.setModal(true);
+        confirm.setWidth("600px");
+        UI.getCurrent().addWindow(confirm);
+		
 	}
 
 	
