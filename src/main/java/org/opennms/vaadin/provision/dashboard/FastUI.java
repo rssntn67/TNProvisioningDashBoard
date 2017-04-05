@@ -85,6 +85,7 @@ public class FastUI extends HttpServlet {
 		logger.info("url: " +  url);
 		
        FastTab fastTab= new FastTab();
+       fastTab.setSessionService(sessionservice);
 	   fastTab.load();
 	   try {
 			sessionservice.login(url, username, password);

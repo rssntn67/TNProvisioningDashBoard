@@ -33,6 +33,7 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	private VerticalLayout m_right = new VerticalLayout();;
     private Button m_logout = new Button("Logout");
     private Button m_info = new Button("Info");
+    private DashBoardSessionService m_session;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
@@ -79,9 +80,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	public abstract String getName();
 
 	public DashBoardSessionService getService(){
+		if (m_session != null)
+			return m_session;
 		return (DashBoardSessionService) VaadinSession.getCurrent();
 	}
 	
+	public void setSessionService(DashBoardSessionService session) {
+		m_session = session;
+	}
 	public void updateTabHead() {
 		m_headPanel.setCaption("User: " + getService().getUser() 
 				+". connected to: " + getService().getUrl());  
