@@ -84,17 +84,15 @@ public class FastUI extends HttpServlet {
 		String url = sessionservice.getConfig().getUrl(name);
 		logger.info("url: " +  url);
 		
-       FastTab fastTab= new FastTab();
-       fastTab.setSessionService(sessionservice);
-	   fastTab.load();
-	   try {
+       FastRun fast= new FastRun(sessionservice);
+ 	   try {
 			sessionservice.login(url, username, password);
 		} catch (Exception e) {
 			out.println("KO: cannot connect to opennms rest interface");
 			return;
 		}
 		if (!sessionservice.isFastRunning()) {
-			if (!fastTab.runFast()) {
+			if (!fast.runFast()) {
 				out.println("KO: FAST integration error");
 				return;
 			}
