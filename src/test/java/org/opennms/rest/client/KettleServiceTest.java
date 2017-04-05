@@ -55,6 +55,7 @@ public class KettleServiceTest {
     }
     
     @Test
+    @Ignore
     public void testKettle() throws Exception {
     	KettleRunJob job = m_kettleservice.runJob();
     	assertEquals("Job started", job.getMessage());

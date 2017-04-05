@@ -48,8 +48,6 @@ import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
@@ -232,7 +230,6 @@ public class FastTab extends DashboardTab {
 			commitJob(job);
 		} catch (SQLException e) {
 			logger.warning("failed creating job: " + e.getLocalizedMessage());
-	        Notification.show("Fast Integration - Status: Cannot Create Job", "Ask Administrator", Type.ERROR_MESSAGE);
 	        return false;
 		}
 		try {
@@ -257,7 +254,6 @@ public class FastTab extends DashboardTab {
 		m_logTable.setVisible(true);
         
         m_panel.setCaption("Fast Integration - Status: Running");
-        Notification.show("Fast Integration - Status: Started", Type.HUMANIZED_MESSAGE);
         return true;
 		
 	}
