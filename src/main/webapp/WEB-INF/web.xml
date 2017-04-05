@@ -24,7 +24,7 @@
     </servlet>
     <servlet>
 		<servlet-name>FAST</servlet-name>
-        <servlet-class>org.opennms.vaadin.provision.dashboard.FASTUI</servlet-class>
+        <servlet-class>org.opennms.vaadin.provision.dashboard.FastUI</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>FAST</servlet-name>
