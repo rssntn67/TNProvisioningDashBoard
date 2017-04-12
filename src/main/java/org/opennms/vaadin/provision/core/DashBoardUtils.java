@@ -18,6 +18,7 @@ import com.vaadin.data.util.BeanItemContainer;
 public class DashBoardUtils {
 	
 	public static final String[] service_list = {
+		"Ceph",
 		"StrafePing",
 		"HTTP",
 		"HTTP-8080",
