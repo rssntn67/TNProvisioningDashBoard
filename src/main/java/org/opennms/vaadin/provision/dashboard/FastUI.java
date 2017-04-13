@@ -4,6 +4,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.opennms.vaadin.provision.config.DashBoardConfig;
+import org.opennms.vaadin.provision.model.JobLogEntry;
 
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
@@ -27,6 +29,8 @@ public class FastUI extends HttpServlet {
 	private static final long serialVersionUID = -7128455812303263101L;
 	DashBoardConfig m_config;
 	JDBCConnectionPool m_pool;
+	FastUIRunnable m_runnable;
+	
 	public void init() throws ServletException {
 		m_config = new DashBoardConfig();
 		m_config.reload();
@@ -67,14 +71,28 @@ public class FastUI extends HttpServlet {
 		if (password == null) {
 			password = "admin";
 		}
-		logger.info("password: " +  password);
 		
 		response.setContentType("text/html");
-		
+		PrintWriter out = response.getWriter();
+		if (m_runnable != null) {
+			if (m_runnable.running()) {
+				out.println("OK: Job Status: Running");
+				return;			
+			}
+			
+			if (m_runnable.failed()) {
+				out.println("OK: Job Status: Failed");
+				return;			
+			}
+			
+			if (m_runnable.success()) {
+				out.println("OK: Job Status: Success");
+				return;			
+			}
+		}
 		DashBoardSessionService sessionservice = new DashBoardSessionService(null);
 		sessionservice.setConfig(m_config);
 		sessionservice.setPool(m_pool);
-		PrintWriter out = response.getWriter();
 		try {
 			sessionservice.init();
 		} catch (SQLException e) {
@@ -84,24 +102,51 @@ public class FastUI extends HttpServlet {
 		String url = sessionservice.getConfig().getUrl(name);
 		logger.info("url: " +  url);
 		
-       FastRun fast= new FastRun(sessionservice);
  	   try {
 			sessionservice.login(url, username, password);
 		} catch (Exception e) {
 			out.println("KO: cannot connect to opennms rest interface");
 			return;
 		}
-		if (!sessionservice.isFastRunning()) {
-			if (!fast.runFast()) {
-				out.println("KO: FAST integration error");
-				return;
-			}
-		} else {
-			out.println("KO: FAST is running");
+		if (sessionservice.isFastRunning()) {
+			out.println("KO: FAST integration is already running");
 			return;			
 		}
+        FastUIRunnable runnable = new FastUIRunnable(sessionservice);
+        runnable.syncRequisition();
+        Thread thread = new Thread(runnable);
+        thread.start();
+
 		out.println("OK: FAST integration started");
 
 	}
+			
+	private class FastUIRunnable extends FastRunnable {
+
+		public FastUIRunnable(DashBoardSessionService session) {
+			super(session);
+		}
+
+		@Override
+		public void updateProgress(Float progress) {
+			
+		}
+
+		@Override
+		public void log(List<JobLogEntry> logs) {
+			for (JobLogEntry log: logs)
+				log(log);
+		}
+
+		@Override
+		public void beforeStartJob() {			
+		}
+
+		@Override
+		public void afterEndJob() {
+		}
+		
+	}
+
 
 }

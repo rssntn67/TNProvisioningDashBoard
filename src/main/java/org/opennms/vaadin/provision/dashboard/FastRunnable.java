@@ -20,9 +20,6 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.model.KettleJobStatus;
 import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
-import org.opennms.vaadin.provision.dao.JobDao;
-import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
@@ -37,288 +34,317 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
 
-public class FastRun {
+public abstract class FastRunnable implements Runnable {
 
-	private static final Logger logger = Logger.getLogger(FastRun.class.getName());
+	Map<String, FastServiceLink>           m_fastOrderCodeServiceLinkMap = new HashMap<String, FastServiceLink>();
+	
+	Map<String, List<FastServiceDevice>>    m_fastHostnameServiceDeviceMap = new HashMap<String, List<FastServiceDevice>>();
+	Map<String,Set<String>>                 m_fastIpHostnameMap            = new HashMap<String,Set<String>>();
 
-    private JobDao m_jobdao;
-    private JobLogDao m_joblogdao;
-    private IpSnmpProfileDao m_ipSnmpProfileDao;
+	Map<String,RequisitionNode>        m_onmsForeignIdRequisitionNodeMap = new HashMap<String, RequisitionNode>();
+	Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
+	Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
+
+	Map<String,Categoria> m_vrf;
+	Map<String, BackupProfile> m_backup;
+	Map<String, SnmpProfile> m_snmp;
+	Map<String, IpSnmpProfile> m_ipsnmp;
+
     private DashBoardSessionService m_session;
-    
-	public FastRun(DashBoardSessionService session) {
-		m_session = session;
-		m_jobdao = m_session.getJobContainer();
-		m_joblogdao = m_session.getJobLogContainer();
-		m_ipSnmpProfileDao = m_session.getIpSnmpProfileContainer();
+	private static final Logger logger = Logger.getLogger(FastRunnable.class.getName());
+
+    Job m_job;
+	BeanItemContainer<JobLogEntry> m_logcontainer;
+	boolean m_syncRequisition = false;
+
+	public void syncRequisition() {
+		m_syncRequisition=true;
 	}
 
+	public FastRunnable(DashBoardSessionService session) {
+		m_session = session;
+		m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
+	}
+	
 	public DashBoardSessionService getService() {
 		return m_session;
 	}
+	public BeanItemContainer<JobLogEntry> getJobLogContainer() {
+		return m_logcontainer;
+	}
+	
+	public abstract void updateProgress(Float progress );
+	public abstract void log(List<JobLogEntry> logs);
 
-	public boolean runFast() {
-		if (m_jobdao.getLastJobId() !=  null) {
-			int jobid = m_jobdao.getLastJobId().getValue();
+	public abstract void  beforeStartJob();
+	public abstract void  afterEndJob();	
+
+	private void commitJob(Job job) throws SQLException {
+		if (job.getJobid() == null)
+			getService().getJobContainer().add(job);
+		else
+			getService().getJobContainer().save(new RowId(new Object[]{job.getJobid()}), job);
+		getService().getJobContainer().commit();
+		
+	}
+ 
+	public synchronized boolean success() {
+		return m_job.getJobstatus() == JobStatus.SUCCESS;		
+	}
+	
+	public synchronized boolean running() {
+		return m_job.getJobstatus() == JobStatus.RUNNING;		
+	}
+	
+	public synchronized boolean failed() {
+		return m_job.getJobstatus() == JobStatus.FAILED;		
+	}
+	
+	private boolean startJob() {
+		if (getService().getJobContainer().getLastJobId() !=  null) {
+			int jobid = getService().getJobContainer().getLastJobId().getValue();
 			logger.info ("found last job with id: " + jobid);
 		}
-        Job job = new Job();
-		job.setUsername(getService().getUser());
-		job.setJobdescr("FAST sync: started");
-		job.setJobstatus(JobStatus.RUNNING);
-		job.setJobstart(new Date());
+        m_job = new Job();
+		m_job.setUsername(getService().getUser());
+		m_job.setJobdescr("FAST sync: started");
+		m_job.setJobstatus(JobStatus.RUNNING);
+		m_job.setJobstart(new Date());
 		
 		try {
-			commitJob(job);
+			commitJob(m_job);
 		} catch (SQLException e) {
-			logger.warning("failed creating job: " + e.getLocalizedMessage());
+			logger.log(Level.SEVERE,"failed creating job", e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Failed commit JobTable");							
 	        return false;
 		}
+		
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "interrupted: ",  e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Interrupted");							
+	        return false;
 		}
-		int curjobid = m_jobdao.getLastJobId().getValue();
+		int curjobid = getService().getJobContainer().getLastJobId().getValue();
 		logger.info ("created job with id: " + curjobid);
-		BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
-		job.setJobid(curjobid);
-        FastIntegrationRunnable runnable = new FastIntegrationRunnable();
-		runnable.setJob(job);
-		runnable.setJobLogContainer(joblogcontainer);
-        Thread thread = new Thread(runnable);
-        thread.start();		
-        return true;
+		m_job.setJobid(curjobid);
 		
+		return true;
 	}
+
+	private boolean endJob() {
+		m_job.setJobend(new Date());
+
+		try {
+			logger.info("ending job in jobs table");
+			commitJob(m_job);
+			logger.info("run: ended job in jobs table");
+		} catch (final Exception e) {
+			logger.log(Level.WARNING,"Cannot end job in job table", e);
+			return false;
+		}
+		
+		for (JobLogEntry joblog: m_logcontainer.getItemIds())
+			getService().getJobLogContainer().add(joblog);
+		
+		try {
+			getService().getJobLogContainer().commit();
+		} catch (SQLException e) {
+			logger.warning("Exception saving logs: " + e.getLocalizedMessage());
+			return false;
+		}
+		
+		try {
+			getService().getIpSnmpProfileContainer().commit();
+		} catch (SQLException e) {
+			logger.warning("Exception saving ipsnmpmap: " + e.getLocalizedMessage());
+			return false;
+		}
+		
+		if (m_syncRequisition) {
+		try {
+			getService().synctrue(DashBoardUtils.TN_REQU_NAME);
+		} catch (Exception e){
+			logger.warning("cannot sync requisition: " + e.getLocalizedMessage());
+			return false;			
+		}
+		}
+		return true;
+	}
+
+	public void log(JobLogEntry jLogE) {
+		jLogE.setJobid(m_job.getJobid());
+		m_logcontainer.addBean(jLogE);
+	}
+
+	public String getNote(RequisitionNode rnode) {
+		StringBuffer deviceNote=new StringBuffer("Notes:");
+		if (rnode.getForeignId() != null) {
+			deviceNote.append(" ForeignId: ");
+			deviceNote.append(rnode.getForeignId());
+		}
+
+		if (rnode.getNodeLabel() != null) {
+			deviceNote.append(" NodeLabel: ");
+			deviceNote.append(rnode.getNodeLabel());
+		}
+		
+		return deviceNote.toString();
+	}
+		
+	@SuppressWarnings("deprecation")
+	public String getNote(RequisitionInterface riface) {
+		StringBuffer deviceNote=new StringBuffer("Notes:");
+		if (riface.getIpAddr() != null) {
+			deviceNote.append(" ipaddr: ");
+			deviceNote.append(riface.getIpAddr());
+		}
+
+		if (riface.getDescr() != null) {
+			deviceNote.append(" description: ");
+			deviceNote.append(riface.getDescr());
+		}
+		
+		if (riface.getSnmpPrimary() != null) {
+			deviceNote.append(" snmpPrimary: ");
+			deviceNote.append(riface.getSnmpPrimary().getCharCode());
+			
+		}
+		return deviceNote.toString();
 	
-	public void commitJob(Job job) throws SQLException {
-		if (job.getJobid() == null)
-			m_jobdao.add(job);
+	}
+
+	public String getNote(FastServiceDevice device) {
+		StringBuffer deviceNote=new StringBuffer("Notes:");
+		if (device.getDeviceType() != null) {
+			deviceNote.append(" deviceType: ");
+			deviceNote.append(device.getDeviceType());
+		}
+		if (device.getCity() != null) {
+			deviceNote.append(" city: ");
+			deviceNote.append(device.getCity());
+		}
+		if (device.getIpAddrLan() != null) {
+			deviceNote.append(" ip lan");
+			deviceNote.append(device.getIpAddrLan());
+		}
+		if (device.isNotmonitoring())
+			deviceNote.append(" not_monitored");
 		else
-			m_jobdao.save(new RowId(new Object[]{job.getJobid()}), job);
-		m_jobdao.commit();
-		
-	}
-	
-	abstract class FastTabAbstractRunnable {
-		double current = 0.0;
-	    Job m_job;
-		BeanItemContainer<JobLogEntry> m_logcontainer;
-
-		public void setJob(Job job) {
-			m_job = job;
-		}
-		
-		public void setJobLogContainer(BeanItemContainer<JobLogEntry> logcontainer) {
-			m_logcontainer = logcontainer;
-		}
-
-		public void startJob() {
-		}
-		
-		public void endJob() {
-			for (JobLogEntry joblog: m_logcontainer.getItemIds())
-				m_joblogdao.add(joblog);
-			try {
-				m_joblogdao.commit();
-			} catch (SQLException e) {
-				logger.warning("Exception saving logs: " + e.getLocalizedMessage());
-			}
-			
-			try {
-				m_ipSnmpProfileDao.commit();
-			} catch (SQLException e) {
-				logger.warning("Exception saving ipsnmpmap: " + e.getLocalizedMessage());
-			}
-		}
-				
-		public void log(JobLogEntry jLogE) {
-			jLogE.setJobid(m_job.getJobid());
-			m_logcontainer.addBean(jLogE);
-		}
-
-		public String getNote(RequisitionNode rnode) {
-			StringBuffer deviceNote=new StringBuffer("Notes:");
-			if (rnode.getForeignId() != null) {
-				deviceNote.append(" ForeignId: ");
-				deviceNote.append(rnode.getForeignId());
-			}
-
-			if (rnode.getNodeLabel() != null) {
-				deviceNote.append(" NodeLabel: ");
-				deviceNote.append(rnode.getNodeLabel());
-			}
-			
-			return deviceNote.toString();
-		}
-		
-		@SuppressWarnings("deprecation")
-		public String getNote(RequisitionInterface riface) {
-			StringBuffer deviceNote=new StringBuffer("Notes:");
-			if (riface.getIpAddr() != null) {
-				deviceNote.append(" ipaddr: ");
-				deviceNote.append(riface.getIpAddr());
-			}
-
-			if (riface.getDescr() != null) {
-				deviceNote.append(" description: ");
-				deviceNote.append(riface.getDescr());
-			}
-			
-			if (riface.getSnmpPrimary() != null) {
-				deviceNote.append(" snmpPrimary: ");
-				deviceNote.append(riface.getSnmpPrimary().getCharCode());
-				
-			}
-			return deviceNote.toString();
-		
-		}
-
-		public String getNote(FastServiceDevice device) {
-			StringBuffer deviceNote=new StringBuffer("Notes:");
-			if (device.getDeviceType() != null) {
-				deviceNote.append(" deviceType: ");
-				deviceNote.append(device.getDeviceType());
-			}
-			if (device.getCity() != null) {
-				deviceNote.append(" city: ");
-				deviceNote.append(device.getCity());
-			}
-			if (device.getIpAddrLan() != null) {
-				deviceNote.append(" ip lan");
-				deviceNote.append(device.getIpAddrLan());
-			}
-			if (device.isNotmonitoring())
-				deviceNote.append(" not_monitored");
-			else
-				deviceNote.append(" monitored");
-			return deviceNote.toString();
-		}
-
-
-		public String getNote(FastServiceLink link) {
-			StringBuffer deviceNote=new StringBuffer("Notes:");
-			if (link.getVrf() != null) {
-				deviceNote.append(" vrf: ");
-				deviceNote.append(link.getVrf());
-			}
-			if (link.getDeliveryDeviceClientSide() != null) {
-				deviceNote.append(" client device: ");
-				deviceNote.append(link.getDeliveryDeviceClientSide());
-			}
-			if (link.getDeliveryDeviceNetworkSide() != null) {
-				deviceNote.append(" network device: ");
-				deviceNote.append(link.getDeliveryDeviceNetworkSide());
-			}
-			
-			if (link.getDeliveryCode() != null) {
-				deviceNote.append(" delivery Code: ");
-				deviceNote.append(link.getDeliveryCode());
-			}
-
-			if (link.getOrderCode() != null) {
-				deviceNote.append(" order Code: ");
-				deviceNote.append(link.getOrderCode());
-			}
-
-			return deviceNote.toString();
-		}
-
+			deviceNote.append(" monitored");
+		return deviceNote.toString();
 	}
 
-	class FastIntegrationRunnable  extends FastTabAbstractRunnable implements Runnable {
 
-		Map<String, FastServiceLink>           m_fastOrderCodeServiceLinkMap = new HashMap<String, FastServiceLink>();
-		
-		Map<String, List<FastServiceDevice>>    m_fastHostnameServiceDeviceMap = new HashMap<String, List<FastServiceDevice>>();
-		Map<String,Set<String>>                 m_fastIpHostnameMap            = new HashMap<String,Set<String>>();
-
-		Map<String,RequisitionNode>        m_onmsForeignIdRequisitionNodeMap = new HashMap<String, RequisitionNode>();
-		Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
-		Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
-
-		Map<String,Categoria> m_vrf;
-		Map<String, BackupProfile> m_backup;
-		Map<String, SnmpProfile> m_snmp;
-		Map<String, IpSnmpProfile> m_ipsnmp;
-
-
-		private void runKettleJob() {
-			try {
-				logger.info("run: executing kettle remote procedure");
-				KettleRunJob kjob = getService().getKettleDao().runJob();
-		    	KettleJobStatus status = getService().getKettleDao().jobStatus(kjob);
-				while (getService().getKettleDao().isRunning(status)) {
-					Thread.sleep(1000);
-					status = getService().getKettleDao().jobStatus(kjob);
-				}
-				if (!getService().getKettleDao().isFinished(status) || 
-						!getService().getKettleDao().isCompleted(status)) {
-					logger.log(Level.WARNING,"Failed Kettle runjob", status.getErroDescr());
-					m_job.setJobstatus(JobStatus.FAILED);
-					m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " 
-					+ status.getErroDescr());				
-				}
-			} catch (Exception e){
-				logger.log(Level.WARNING,"Failed Kettle runjob", e);
-				m_job.setJobstatus(JobStatus.FAILED);
-				m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " + e.getMessage());				
-			}
+	public String getNote(FastServiceLink link) {
+		StringBuffer deviceNote=new StringBuffer("Notes:");
+		if (link.getVrf() != null) {
+			deviceNote.append(" vrf: ");
+			deviceNote.append(link.getVrf());
+		}
+		if (link.getDeliveryDeviceClientSide() != null) {
+			deviceNote.append(" client device: ");
+			deviceNote.append(link.getDeliveryDeviceClientSide());
+		}
+		if (link.getDeliveryDeviceNetworkSide() != null) {
+			deviceNote.append(" network device: ");
+			deviceNote.append(link.getDeliveryDeviceNetworkSide());
 		}
 		
-		private void check() {
-			try {
-				logger.info("run: loading table vrf");
-				m_vrf = getService().getCatContainer().getCatMap();
-				logger.info("run: loaded table vrf");
-
-				logger.info("run: loading table backupprofile");
-				m_backup= getService().getBackupProfileContainer().getBackupProfileMap();
-				logger.info("run: loaded table backupprofile");
-
-				logger.info("run: loading table snmpprofile");
-				m_snmp= getService().getSnmpProfileContainer().getSnmpProfileMap();
-				logger.info("run: loaded table snmpprofile");
-
-				logger.info("run: loading table ip snmpprofile");
-				m_ipsnmp= getService().getIpSnmpProfileContainer().getIpSnmpProfileMap();
-				logger.info("run: loaded table ip snmpprofile");
-
-				logger.info("run: loading table fastservicedevice");
-				checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
-				logger.info("run: loaded table fastservicedevice");
-				
-				logger.info("run: loading table fastservicelink");
-				checkfastlinks(getService().getFastServiceLinkContainer().getFastServiceLinks());
-				logger.info("run: loaded table fastservicelink");
-				
-				logger.info("run: loading requisition: " + DashBoardUtils.TN_REQU_NAME);
-				checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN_REQU_NAME));
-				logger.info("run: loaded requisition: " + DashBoardUtils.TN_REQU_NAME);
-
-			} catch (final UniformInterfaceException e) {
-				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
-				m_job.setJobstatus(JobStatus.FAILED);
-				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
-			} catch (final Exception e) {
-				logger.log(Level.WARNING,"Failed init check fast integration", e);
-				m_job.setJobstatus(JobStatus.FAILED);
-				m_job.setJobdescr("FAST sync: Failed init check Fast. Error: " + e.getMessage());
-			}
-			
+		if (link.getDeliveryCode() != null) {
+			deviceNote.append(" delivery Code: ");
+			deviceNote.append(link.getDeliveryCode());
 		}
 
-		@Override
-		public void run() {
-			startJob();
+		if (link.getOrderCode() != null) {
+			deviceNote.append(" order Code: ");
+			deviceNote.append(link.getOrderCode());
+		}
+
+		return deviceNote.toString();
+	}
+
+	private void runKettleJob() {
+		try {
+			logger.info("run: executing kettle remote procedure");
+			KettleRunJob kjob = getService().getKettleDao().runJob();
+	    	KettleJobStatus status = getService().getKettleDao().jobStatus(kjob);
+			while (getService().getKettleDao().isRunning(status)) {
+				Thread.sleep(1000);
+				status = getService().getKettleDao().jobStatus(kjob);
+			}
+			if (!getService().getKettleDao().isFinished(status) || 
+					!getService().getKettleDao().isCompleted(status)) {
+				logger.log(Level.WARNING,"Failed Kettle runjob", status.getErroDescr());
+				m_job.setJobstatus(JobStatus.FAILED);
+				m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " 
+				+ status.getErroDescr());				
+			}
+		} catch (Exception e){
+			logger.log(Level.WARNING,"Failed Kettle runjob", e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " + e.getMessage());				
+		}
+	}
+		
+	private void check() {
+		try {
+			logger.info("run: loading table vrf");
+			m_vrf = getService().getCatContainer().getCatMap();
+			logger.info("run: loaded table vrf");
+
+			logger.info("run: loading table backupprofile");
+			m_backup= getService().getBackupProfileContainer().getBackupProfileMap();
+			logger.info("run: loaded table backupprofile");
+
+			logger.info("run: loading table snmpprofile");
+			m_snmp= getService().getSnmpProfileContainer().getSnmpProfileMap();
+			logger.info("run: loaded table snmpprofile");
+
+			logger.info("run: loading table ip snmpprofile");
+			m_ipsnmp= getService().getIpSnmpProfileContainer().getIpSnmpProfileMap();
+			logger.info("run: loaded table ip snmpprofile");
+
+			logger.info("run: loading table fastservicedevice");
+			checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
+			logger.info("run: loaded table fastservicedevice");
 			
+			logger.info("run: loading table fastservicelink");
+			checkfastlinks(getService().getFastServiceLinkContainer().getFastServiceLinks());
+			logger.info("run: loaded table fastservicelink");
+			
+			logger.info("run: loading requisition: " + DashBoardUtils.TN_REQU_NAME);
+			checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN_REQU_NAME));
+			logger.info("run: loaded requisition: " + DashBoardUtils.TN_REQU_NAME);
+
+		} catch (final UniformInterfaceException e) {
+			logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
+		} catch (final Exception e) {
+			logger.log(Level.WARNING,"Failed init check fast integration", e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Failed init check Fast. Error: " + e.getMessage());
+		}
+		
+	}
+
+	@Override
+	public void run() {
+		beforeStartJob();
+
+		startJob();
+		
+		if (running())
 			runKettleJob();
-			
-			if (m_job.getJobstatus() == JobStatus.RUNNING)
-				check();
+		
+		if (running())
+			check();
 
-			if (m_job.getJobstatus() == JobStatus.RUNNING) {
+		if (running()) {
 			try {
 				logger.info("run: sync Fast devices with Requisition");
 				sync();
@@ -334,22 +360,22 @@ public class FastRun {
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			}
-			}
-			
-			endJob();
-			m_job.setJobend(new Date());
-
-			try {
-				logger.info("ending job in jobs table");
-				commitJob(m_job);
-				logger.info("run: ended job in jobs table");
-			} catch (final Exception e) {
-				logger.log(Level.WARNING,"Cannot end job in job table", e);
-			}
-
 		}
+		
+		endJob();
+		
+		afterEndJob();
+	}
 
 		private void sync() {
+			double current = 0.0;
+			updateProgress(new Float(current));
+			
+			int i = 0;
+			int step = (m_fastHostnameServiceDeviceMap.size() + m_onmsForeignIdRequisitionNodeMap.size()) / 100;
+			logger.info("run: step: " + step);
+			logger.info("run: size: " + m_fastHostnameServiceDeviceMap.size());
+			int barrier = step;
 
 			try {
 
@@ -360,6 +386,14 @@ public class FastRun {
 						e.printStackTrace();
 					}
 
+					i++;
+					if (i >= barrier) {
+						if (current < 0.99)
+							current += 0.01;
+						updateProgress(new Float(current));
+						barrier += step;
+					}
+					
 					if (!checkduplicatedhostname(hostname) && !checkduplicatedipaddress(hostname)) {
 						Set<String> foreignIds = new HashSet<String>();
 						if (m_onmsForeignIdRequisitionNodeMap.containsKey(hostname)) {
@@ -388,6 +422,14 @@ public class FastRun {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					i++;
+					if (i == barrier) {
+						if (current < 0.99)
+							current += 0.01;
+						updateProgress(new Float(current));
+						barrier += step;
+					}
+
 					
 					if (isDeviceInFast(foreignId))
 						continue;
@@ -491,10 +533,7 @@ public class FastRun {
 				}
 
 			}
-				
-			for (JobLogEntry log: logs) {
-				log(log);
-			}
+			log(logs);
 		}
   		
 		
@@ -659,9 +698,7 @@ public class FastRun {
 				}
 			}
 			
-			for (JobLogEntry log: logs) {
-				log(log);
-			}
+			log(logs);
 		}
 		
 		private void checkfastlinks(List<FastServiceLink> links) {
@@ -734,9 +771,7 @@ public class FastRun {
 				logger.info("skipping service link. Cause: duplicated order_code: "  +  getNote(link));
 			}
 			
-			for (JobLogEntry log: logs) {
-						log(log);
-			}
+			log(logs);
 		}
 
 
@@ -755,10 +790,7 @@ public class FastRun {
 					logger.info("skipping service device. Cause: duplicated foreignid in requisition: " + hostname + getNote(device));
 					logs.add(jloe);
 				}
-				for (JobLogEntry log: logs) {
-							log(log);
-				}
-				
+				log(logs);
 				return true;
 			} 
 			return false;
@@ -783,9 +815,7 @@ public class FastRun {
 				}
 			}
 			if (duplicated) {
-				for (JobLogEntry log: logs) {
-					log(log);
-				}
+				log(logs);
 			}
 			return duplicated;
 		}
@@ -807,9 +837,7 @@ public class FastRun {
 				logs.add(jloe);
 			}
 
-			for (JobLogEntry log: logs) {
-				log(log);
-			}
+			log(logs);
 
 		}
 		
@@ -829,12 +857,11 @@ public class FastRun {
 				logs.add(jloe);
 			}
 
-			for (JobLogEntry log: logs) {
-				log(log);
-			}
+			log(logs);
 
 	
 		}
+		
 		private void add(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			Set<String> secondary = new HashSet<String>(); 
@@ -879,9 +906,7 @@ public class FastRun {
 			getService().addFastNode(hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
 			
 			
-			for (JobLogEntry log: logs) {
-				log(log);
-			}
+			log(logs);
 		}
 				
 		private void update(String hostname, RequisitionNode rnode) {
@@ -907,8 +932,10 @@ public class FastRun {
 				jloe.setJobid(m_job.getJobid());
 				jloe.setDescription("FAST sync: updated Fast Ip.");
 				jloe.setNote(getNote(rnode));
-			
-				log(jloe);
+				
+				List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+				logs.add(jloe);
+				log(logs);
 
 		}
 
@@ -972,7 +999,9 @@ public class FastRun {
 			jloe.setDescription("FAST sync: updated service device.");
 			jloe.setNote(getNote(refdevice));
 			
-			log(jloe);
+			List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+			logs.add(jloe);
+			log(logs);
 			
 
 		}
@@ -982,7 +1011,7 @@ public class FastRun {
 			IpSnmpProfile savedsnmpprofile = m_ipsnmp.get(refdevice.getIpaddr());
 			if ( savedsnmpprofile == null ) {
 				logger.info("FAST sync: set snmp profile: " + snmpprofile);
-				m_ipSnmpProfileDao.add(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
+				getService().getIpSnmpProfileContainer().add(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(refdevice.getHostname());
 				jloe.setIpaddr(refdevice.getIpaddr());
@@ -991,12 +1020,14 @@ public class FastRun {
 				jloe.setDescription("FAST sync: set snmp profile: " + snmpprofile);
 				jloe.setNote(getNote(refdevice));
 				
-				log(jloe);
+				List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+				logs.add(jloe);
+				log(logs);
 				return true;
 			} 
 			if ( !snmpprofile.equals(savedsnmpprofile.getSnmprofile())) {
 				logger.info("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
-				m_ipSnmpProfileDao.update(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
+				getService().getIpSnmpProfileContainer().update(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(refdevice.getHostname());
 				jloe.setIpaddr(refdevice.getIpaddr());
@@ -1005,7 +1036,9 @@ public class FastRun {
 				jloe.setDescription("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
 				jloe.setNote(getNote(refdevice));
 				
-				log(jloe);
+				List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+				logs.add(jloe);
+				log(logs);
 				return true;
 			}
 			
@@ -1046,24 +1079,28 @@ public class FastRun {
 			jloe.setDescription("FAST sync: node deleted");
 			jloe.setNote(getNote(rnode));
 			logger.info("delete node" + getNote(rnode));
-			log(jloe);
+			List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+			logs.add(jloe);
+			log(logs);
 			
 		}
 		
-		private void deleteInterface(String foreignId, RequisitionNode rnode, String ipaddr) {
-			getService().delete(DashBoardUtils.TN_REQU_NAME, foreignId, ipaddr);
-			final JobLogEntry jloe = new JobLogEntry();
-			jloe.setHostname(foreignId);
-			jloe.setIpaddr(ipaddr);
-			jloe.setOrderCode("NA");
-			jloe.setJobid(m_job.getJobid());
-			jloe.setDescription("FAST sync: interface deleted");
-			jloe.setNote(getNote(rnode));
-			logger.info("delete interface node" + getNote(rnode));
-			log(jloe);
-			
-		}
- 		
+	private void deleteInterface(String foreignId, RequisitionNode rnode, String ipaddr) {
+		getService().delete(DashBoardUtils.TN_REQU_NAME, foreignId, ipaddr);
+		final JobLogEntry jloe = new JobLogEntry();
+		jloe.setHostname(foreignId);
+		jloe.setIpaddr(ipaddr);
+		jloe.setOrderCode("NA");
+		jloe.setJobid(m_job.getJobid());
+		jloe.setDescription("FAST sync: interface deleted");
+		jloe.setNote(getNote(rnode));
+		logger.info("delete interface node" + getNote(rnode));
+		List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+		logs.add(jloe);
+		log(logs);
+		
 	}
-
+ 		
 }
+
+
