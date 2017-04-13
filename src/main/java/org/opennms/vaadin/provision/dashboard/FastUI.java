@@ -74,7 +74,6 @@ public class FastUI extends HttpServlet {
 		if (password == null) {
 			password = "admin";
 		}
-		logger.info("password: " +  password);
 		
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
@@ -119,9 +118,9 @@ public class FastUI extends HttpServlet {
 			out.println("KO: FAST integration is already running");
 			return;			
 		}
-        FastUIRunnable runnable = new FastUIRunnable(sessionservice);
-        runnable.syncRequisition();
-        Thread thread = new Thread(runnable);
+        m_runnable = new FastUIRunnable(sessionservice);
+        m_runnable.syncRequisition();
+        Thread thread = new Thread(m_runnable);
         thread.start();
 
 		out.println("OK: FAST integration started");

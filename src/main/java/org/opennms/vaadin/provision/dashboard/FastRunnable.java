@@ -139,11 +139,10 @@ public abstract class FastRunnable implements Runnable {
 		m_job.setJobend(new Date());
 
 		try {
-			logger.info("ending job in jobs table");
 			commitJob(m_job);
 			logger.info("run: ended job in jobs table");
 		} catch (final Exception e) {
-			logger.log(Level.WARNING,"Cannot end job in job table", e);
+			logger.log(Level.SEVERE,"Cannot end job in job table", e);
 			return false;
 		}
 		
@@ -152,23 +151,26 @@ public abstract class FastRunnable implements Runnable {
 		
 		try {
 			getService().getJobLogContainer().commit();
+			logger.info("run: saving logs in joblog table");
 		} catch (SQLException e) {
-			logger.warning("Exception saving logs: " + e.getLocalizedMessage());
+			logger.log(Level.SEVERE,"Exception saving logs ", e);
 			return false;
 		}
 		
 		try {
 			getService().getIpSnmpProfileContainer().commit();
+			logger.info("run: saving profiles in ipsnmpprofile table");
 		} catch (SQLException e) {
-			logger.warning("Exception saving ipsnmpmap: " + e.getLocalizedMessage());
+			logger.log(Level.SEVERE,"Exception saving ipsnmpmap", e);
 			return false;
 		}
 		
 		if (m_syncRequisition) {
 		try {
 			getService().synctrue(DashBoardUtils.TN_REQU_NAME);
+			logger.info("run: sync requisition" + DashBoardUtils.TN_REQU_NAME);
 		} catch (Exception e){
-			logger.warning("cannot sync requisition: " + e.getLocalizedMessage());
+			logger.log(Level.SEVERE,"cannot sync requisition ",e);
 			return false;			
 		}
 		}
