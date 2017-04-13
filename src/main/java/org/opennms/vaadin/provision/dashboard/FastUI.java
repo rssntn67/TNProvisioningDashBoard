@@ -61,6 +61,9 @@ public class FastUI extends HttpServlet {
 			name = "main";
 		}
 		logger.info("name: " +  name);
+		String url = m_config.getUrl(name);
+		logger.info("url: " +  url);
+
 		String username = request.getParameter("username");
 		if (username == null) {
 			username = "admin";
@@ -71,6 +74,7 @@ public class FastUI extends HttpServlet {
 		if (password == null) {
 			password = "admin";
 		}
+		logger.info("password: " +  password);
 		
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
@@ -90,25 +94,28 @@ public class FastUI extends HttpServlet {
 				return;			
 			}
 		}
+		
 		DashBoardSessionService sessionservice = new DashBoardSessionService(null);
 		sessionservice.setConfig(m_config);
 		sessionservice.setPool(m_pool);
 		try {
 			sessionservice.init();
+			logger.info("session service inited");
 		} catch (SQLException e) {
+			logger.log(Level.SEVERE,"cannot init session service", e);
 			out.println("KO: cannot connect to database");
 			return;
 		}
-		String url = sessionservice.getConfig().getUrl(name);
-		logger.info("url: " +  url);
-		
+				
  	   try {
 			sessionservice.login(url, username, password);
 		} catch (Exception e) {
+			logger.log(Level.SEVERE,"cannot login", e);
 			out.println("KO: cannot connect to opennms rest interface");
 			return;
 		}
-		if (sessionservice.isFastRunning()) {
+		
+ 	   if (sessionservice.isFastRunning()) {
 			out.println("KO: FAST integration is already running");
 			return;			
 		}
