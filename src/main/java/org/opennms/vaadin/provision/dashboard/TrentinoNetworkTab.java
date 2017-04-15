@@ -26,7 +26,6 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
@@ -232,15 +231,14 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			public void buttonClick(ClickEvent event) {
 				if (m_secondaryIpComboBox.getValue() != null) {
 					String ip = m_secondaryIpComboBox.getValue().toString();
-					IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
-					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
-					ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
+					BeanItemContainer<BasicService> secondaryIpContainer = (BeanItemContainer<BasicService>)m_secondaryIpAddressTable.getContainerDataSource();
 					BasicInterface bip = new BasicInterface();
 					bip.setDescr(DashBoardUtils.DESCR_TNPD);
 					bip.setIp(ip);
 					bip.setOnmsprimary(OnmsPrimary.N);
 					BasicService bs = new BasicService(bip);
 					bs.setService("ICMP");
+					secondaryIpContainer.addBean(bs);
 			        m_editorFields.getItemDataSource().getBean().addService(bs);
 					logger.info("Added Secondary ip address: " + ip);
 			        m_secondaryIpComboBox.removeItem(ip);
