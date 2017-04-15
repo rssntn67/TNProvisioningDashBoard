@@ -300,7 +300,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					logger.info("adding secondary: " + ip.getIpAddr() 
 							+ ":" + service.getServiceName()+ " foreignid: "
 							+ node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
-					serviceMap.get(ip.getIpAddr()).add(service.getServiceName());
+					serviceMap.get(bip).add(service.getServiceName());
 				}
 			}
 
@@ -502,14 +502,14 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				BasicInterface bip = new BasicInterface();
 				bip.setIp(ip.getIpAddr());
 				bip.setDescr(ip.getDescr());
-				bip.setOnmsprimary(OnmsPrimary.valueOf(ip.getSnmpPrimary().getCode()));
+				bip.setOnmsprimary(OnmsPrimary.valueOf((ip.getSnmpPrimary().getCode())));
 
 				serviceMap.put(bip,new HashSet<String>());
 				for (RequisitionMonitoredService service: ip.getMonitoredServices()) {
 					logger.info("adding secondary: " + ip.getIpAddr() 
 							+ ":" + service.getServiceName()+ " foreignid: "
 							+ node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
-					serviceMap.get(ip.getIpAddr()).add(service.getServiceName());
+					serviceMap.get(bip).add(service.getServiceName());
 				}
 			}
 				
@@ -675,7 +675,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					logger.info("adding secondary: " + ip.getIpAddr() 
 							+ ":" + service.getServiceName()+ " foreignid: "
 							+ node.getForeignId() + ", nodelabel: " + node.getNodeLabel());
-					serviceMap.get(ip.getIpAddr()).add(service.getServiceName());
+					serviceMap.get(bip).add(service.getServiceName());
 				}
 
 			}
