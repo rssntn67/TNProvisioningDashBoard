@@ -36,6 +36,8 @@ import org.opennms.vaadin.provision.dao.KettleDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
+import org.opennms.vaadin.provision.model.BasicInterface;
+import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
@@ -282,14 +284,18 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			}
 			String primary = null;
 			String descr = null;
-			Map<String, Set<String>> serviceMap = new HashMap<String, Set<String>>();
+			Map<BasicInterface, Set<String>> serviceMap = new HashMap<BasicInterface, Set<String>>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
 				} 
-				serviceMap.put(ip.getIpAddr(),new HashSet<String>());
+				BasicInterface bip = new BasicInterface();
+				bip.setIp(ip.getIpAddr());
+				bip.setDescr(ip.getDescr());
+				bip.setOnmsprimary(OnmsPrimary.valueOf(ip.getSnmpPrimary().getCode()));
+				serviceMap.put(bip,new HashSet<String>());
 				for (RequisitionMonitoredService service: ip.getMonitoredServices()) {
 					logger.info("adding secondary: " + ip.getIpAddr() 
 							+ ":" + service.getServiceName()+ " foreignid: "
@@ -486,14 +492,19 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			
 			String primary = null;
 			String descr = null;
-			Map<String,Set<String>> serviceMap = new HashMap<String,Set<String>>();
+			Map<BasicInterface,Set<String>> serviceMap = new HashMap<BasicInterface,Set<String>>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
 				} 
-				serviceMap.put(ip.getIpAddr(),new HashSet<String>());
+				BasicInterface bip = new BasicInterface();
+				bip.setIp(ip.getIpAddr());
+				bip.setDescr(ip.getDescr());
+				bip.setOnmsprimary(OnmsPrimary.valueOf(ip.getSnmpPrimary().getCode()));
+
+				serviceMap.put(bip,new HashSet<String>());
 				for (RequisitionMonitoredService service: ip.getMonitoredServices()) {
 					logger.info("adding secondary: " + ip.getIpAddr() 
 							+ ":" + service.getServiceName()+ " foreignid: "
@@ -647,14 +658,19 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			
 			String primary = null;
 			String descr = null;
-			Map<String,Set<String>> serviceMap = new HashMap<String, Set<String>>();
+			Map<BasicInterface,Set<String>> serviceMap = new HashMap<BasicInterface, Set<String>>();
 			for (RequisitionInterface ip: node.getInterfaces()) {
 				logger.info("parsing foreignid: " + node.getForeignId() + ", nodelabel: " + node.getNodeLabel() + "ip address:" + ip.getIpAddr());
 				if (ip.getSnmpPrimary() != null && ip.getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
 					primary = ip.getIpAddr();
 					descr = ip.getDescr();
 				} 
-				serviceMap.put(ip.getIpAddr(),new HashSet<String>());
+				BasicInterface bip = new BasicInterface();
+				bip.setIp(ip.getIpAddr());
+				bip.setDescr(ip.getDescr());
+				bip.setOnmsprimary(OnmsPrimary.valueOf(ip.getSnmpPrimary().getCode()));
+
+				serviceMap.put(bip,new HashSet<String>());
 				for (RequisitionMonitoredService service: ip.getMonitoredServices()) {
 					logger.info("adding secondary: " + ip.getIpAddr() 
 							+ ":" + service.getServiceName()+ " foreignid: "
@@ -757,8 +773,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (tnnode.getPrimary() != null)
 			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		if (tnnode.getServiceMap() != null) {
-			for (String iface: tnnode.getServiceMap().keySet())
-				m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(iface));
+			for (BasicInterface iface: tnnode.getServiceMap().keySet())
+				m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(iface.getIp()));
 		}
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());
 	}
@@ -881,13 +897,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 		requisitionNode.putInterface(iface);
 
-		for (String ip : node.getServiceMap().keySet()) {
-			if (ip.equals(node.getPrimary()))
+		for (BasicInterface ip : node.getServiceMap().keySet()) {
+			if (ip != null && ip.getIp() != null && ip.getIp().equals(node.getPrimary()))
 				continue;
 			RequisitionInterface face = new RequisitionInterface();
-			face.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-			face.setIpAddr(ip);
-			face.setDescr(node.getDescr());
+			face.setSnmpPrimary(PrimaryType.get(ip.getOnmsprimary().toString()));
+			face.setIpAddr(ip.getIp());
+			face.setDescr(ip.getDescr());
 			for (String service: node.getServiceMap().get(ip)) {
 				face.putMonitoredService(new RequisitionMonitoredService(service));
 			}
@@ -1053,23 +1069,33 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
 				&& node.getBackupProfile() != null)
 			bck = getBackupProfileContainer().getBackupProfile(node.getBackupProfile());
-		updateNode(node.getServiceMap(),DashBoardUtils.TN_REQU_NAME, node.getForeignId(), node.getPrimary(),
-				node.getDescr(), update, node.getInterfToDel(),
-				node.getInterfToAdd(), node.getCategoriesToDel(),
-				node.getCategoriesToAdd(),node.getServiceToDel(),
-				node.getServiceToAdd(),bck);
+		
+		updateNode(
+				node.getServiceMap(),
+				DashBoardUtils.TN_REQU_NAME, 
+				node.getForeignId(), 
+				node.getPrimary(),
+				node.getDescr(), 
+				update, 
+				node.getInterfToDel(),
+				node.getInterfToAdd(), 
+				node.getCategoriesToDel(),
+				node.getCategoriesToAdd(),
+				node.getServiceToDel(),
+				node.getServiceToAdd(),
+				bck);
 		node.clear();
 		
 		RequisitionNode mediagateway = getMediaGateway();
 		if (mediagateway == null) {
 			return;
 		}
-		for (String ipaddr : node.getInterfToDel()) 
-			m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SI_REQU_NAME, mediagateway.getForeignId(), ipaddr);
-		for (String ipaddr : node.getInterfToAdd()) {
+		for (BasicInterface ipaddr : node.getInterfToDel()) 
+			m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SI_REQU_NAME, mediagateway.getForeignId(), ipaddr.getIp());
+		for (BasicInterface ipaddr : node.getInterfToAdd()) {
 			RequisitionInterface mgiface = new RequisitionInterface();
 			mgiface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-			mgiface.setIpAddr(ipaddr);
+			mgiface.setIpAddr(ipaddr.getIp());
 			mgiface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
 			mgiface.setDescr(node.getDescr());
 			m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
@@ -1182,26 +1208,36 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		node.clear();
 	}
 
+	
 	public boolean updateNonFastNode(RequisitionNode rnode,Set<String> ipaddresses) {
-		List<String> iptoAdd = new ArrayList<String>();
-		List<String> ipToDel = new ArrayList<String>();
-		Map<String,Set<String>> servicetoAdd = new HashMap<String, Set<String>>();
+		List<BasicInterface> iptoAdd = new ArrayList<BasicInterface>();
+		List<BasicInterface> ipToDel = new ArrayList<BasicInterface>();
+		Map<BasicInterface,Set<String>> servicetoAdd = new HashMap<BasicInterface, Set<String>>();
 		for (String ip : ipaddresses) {
 			if (rnode.getInterface(ip) == null) {
-				iptoAdd.add(ip);
-				servicetoAdd.put(ip, new HashSet<String>());
-				servicetoAdd.get(ip).add("ICMP");
+				BasicInterface bi = new BasicInterface();
+				bi.setIp(ip);
+				bi.setDescr(DashBoardUtils.DESCR_FAST);
+				bi.setOnmsprimary(OnmsPrimary.N);
+				iptoAdd.add(bi);
+				servicetoAdd.put(bi, new HashSet<String>());
+				servicetoAdd.get(bi).add("ICMP");
 			}
 		}
 		for (RequisitionInterface riface: rnode.getInterfaces()) {
-			if (riface.getDescr().contains("FAST") && !ipaddresses.contains(riface.getIpAddr()))
-				ipToDel.add(riface.getIpAddr());
+			if (riface.getDescr().contains("FAST") && !ipaddresses.contains(riface.getIpAddr())) {
+				BasicInterface bi = new BasicInterface();
+				bi.setIp(riface.getIpAddr());
+				bi.setDescr(DashBoardUtils.DESCR_FAST);
+				bi.setOnmsprimary(OnmsPrimary.N);
+				ipToDel.add(bi);
+			}
 		}
 		
 		if (iptoAdd.isEmpty() && ipToDel.isEmpty())
 			return false;
 		updateNode(null,DashBoardUtils.TN_REQU_NAME,rnode.getForeignId(),null,DashBoardUtils.DESCR_FAST,
-				new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),new HashMap<String, Set<String>>(),servicetoAdd,null);
+				new HashMap<String, String>(),ipToDel,iptoAdd,new ArrayList<String>(),new ArrayList<String>(),new HashMap<BasicInterface, Set<String>>(),servicetoAdd,null);
 		return true;
 	}
 	
@@ -1290,19 +1326,28 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				categoryToDel.add(category.getName());
 		}
 		
-		List<String> iptoAdd = new ArrayList<String>();
-		List<String> ipToDel = new ArrayList<String>();
-		Map<String,Set<String>> servicetoAdd = new HashMap<String, Set<String>>();
+		List<BasicInterface> iptoAdd = new ArrayList<BasicInterface>();
+		List<BasicInterface> ipToDel = new ArrayList<BasicInterface>();
+		Map<BasicInterface,Set<String>> servicetoAdd = new HashMap<BasicInterface, Set<String>>();
 		for (String ip : ipaddresses) {
 			if (rnode.getInterface(ip) == null) {
-				iptoAdd.add(ip);
-				servicetoAdd.put(ip, new HashSet<String>());
-				servicetoAdd.get(ip).add("ICMP");
+				BasicInterface bi = new BasicInterface();
+				bi.setIp(ip);
+				bi.setDescr(DashBoardUtils.DESCR_FAST);
+				bi.setOnmsprimary(OnmsPrimary.N);
+				iptoAdd.add(bi);
+				servicetoAdd.put(bi, new HashSet<String>());
+				servicetoAdd.get(bi).add("ICMP");
 			}
 		}
 		for (RequisitionInterface riface: rnode.getInterfaces()) {
-			if (!ipaddresses.contains(riface.getIpAddr()))
-				ipToDel.add(riface.getIpAddr());
+			if (!ipaddresses.contains(riface.getIpAddr())) {
+				BasicInterface bi = new BasicInterface();
+				bi.setIp(riface.getIpAddr());
+				bi.setDescr(DashBoardUtils.DESCR_FAST);
+				bi.setOnmsprimary(OnmsPrimary.N);
+				ipToDel.add(bi);
+			}
 		}
 		if (update.isEmpty() && categorytoAdd.isEmpty() && categoryToDel.isEmpty() && iptoAdd.isEmpty() && ipToDel.isEmpty())
 			return false;
@@ -1310,16 +1355,24 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				refdevice.getIpaddr(),
 				DashBoardUtils.DESCR_FAST,
 				update,ipToDel,iptoAdd,categoryToDel,categorytoAdd,
-				new HashMap<String, Set<String>>(),servicetoAdd,
+				new HashMap<BasicInterface, Set<String>>(),servicetoAdd,
 				bck);
 		return true;
 	}
 
-	private void updateNode(Map<String,Set<String>> serviceMap,String foreignSource, String foreignId,
-			String primary, String descr, Map<String, String> update,
-			List<String> interfaceToDel, List<String> interfaceToAdd,
-			List<String> categoriesToDel, List<String> categoriesToAdd, 
-			Map<String,Set<String>> serviceToDel, Map<String,Set<String>> serviceToAdd,			
+	private void updateNode(
+			Map<BasicInterface,Set<String>> serviceMap,
+			String foreignSource, 
+			String foreignId,
+			String primary, 
+			String descr, 
+			Map<String, String> update,
+			List<BasicInterface> interfaceToDel, 
+			List<BasicInterface> interfaceToAdd,
+			List<String> categoriesToDel, 
+			List<String> categoriesToAdd, 
+			Map<BasicInterface,Set<String>> serviceToDel, 
+			Map<BasicInterface,Set<String>> serviceToAdd,			
 			BackupProfile bck) {
 
 		MultivaluedMap<String, String> updatemap = new MultivaluedMapImpl();
@@ -1392,24 +1445,37 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (bck != null) {
 			assetsToPut.addAll(bck.getRequisitionAssets().getAssets());
 		}
-		Set<String> ipaddress = new HashSet<String>();
+		Set<BasicInterface> ipaddress = new HashSet<BasicInterface>();
 		if (update.containsKey(DashBoardUtils.PRIMARY)) {
 			ipaddress = serviceMap.keySet();
 		}
 
 		updateonms(foreignSource, 
-				foreignId, primary, true, descr, 
-				updatemap, interfaceToDel, interfaceToAdd, 
+				foreignId, 
+				primary, 
+				true, 
+				descr, 
+				updatemap, 
+				interfaceToDel, interfaceToAdd, 
 				categoriesToDel, categoriesToAdd, serviceToDel, 
 				serviceToAdd, assetsToPut, ipaddress, 
 				update.get(DashBoardUtils.SNMP_PROFILE));
 
 	}
 
-	private void updateNode(Map<String,Set<String>> serviceMap,String foreignSource, String foreignId,
-			String primary, String descr, Map<String, String> update,
-			List<String> interfaceToDel,List<String> interfaceToAdd,
-			List<String> categoriesToDel, List<String> categoriesToAdd, Map<String,Set<String>> serviceToDel, Map<String,Set<String>> serviceToAdd) {
+	private void updateNode(
+			Map<BasicInterface,Set<String>> serviceMap,
+			String foreignSource, 
+			String foreignId,
+			String primary, 
+			String descr, 
+			Map<String, String> update,
+			List<BasicInterface> interfaceToDel,
+			List<BasicInterface> interfaceToAdd,
+			List<String> categoriesToDel, 
+			List<String> categoriesToAdd, 
+			Map<BasicInterface,Set<String>> serviceToDel, 
+			Map<BasicInterface,Set<String>> serviceToAdd) {
 		
 		MultivaluedMap<String, String> updatemap = new MultivaluedMapImpl();
 		List<RequisitionAsset> assetsToPut = new ArrayList<RequisitionAsset>();
@@ -1479,28 +1545,45 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (update.containsKey(DashBoardUtils.MANUFACTURER))
 			assetsToPut.add(new RequisitionAsset("manufacturer", update
 					.get(DashBoardUtils.MANUFACTURER)));
-		Set<String> ipaddress = new HashSet<String>();
+		Set<BasicInterface> ipaddress = new HashSet<BasicInterface>();
 		if (update.containsKey(DashBoardUtils.PRIMARY)) {
 			ipaddress = serviceMap.keySet();
 		}
 		
-		updateonms(foreignSource, foreignId, 
-				primary, false, descr, updatemap, 
-				interfaceToDel, interfaceToAdd, 
-				categoriesToDel, categoriesToAdd, 
-				serviceToDel, serviceToAdd, 
-				assetsToPut, ipaddress,update.get(DashBoardUtils.SNMP_PROFILE));
+		updateonms(foreignSource, 
+				foreignId, 
+				primary, 
+				false, 
+				descr, 
+				updatemap, 
+				interfaceToDel, 
+				interfaceToAdd, 
+				categoriesToDel, 
+				categoriesToAdd, 
+				serviceToDel, 
+				serviceToAdd, 
+				assetsToPut, 
+				ipaddress,
+				update.get(DashBoardUtils.SNMP_PROFILE));
 
 		
 	}
 
 	private void updateonms(String foreignSource, 
-			String foreignId, String primary, boolean addPolicy, String descr,
+			String foreignId, 
+			String primary, 
+			boolean addPolicy, 
+			String descr,
 			MultivaluedMap<String, String> updatemap,
-			List<String> interfaceToDel,List<String> interfaceToAdd,
-			List<String> categoriesToDel, List<String> categoriesToAdd,
-			Map<String,Set<String>> serviceToDel, Map<String,Set<String>> serviceToAdd,
-			List<RequisitionAsset> assetsToPut,Set<String> ipsetN,String snmpProfile) {
+			List<BasicInterface> interfaceToDel,
+			List<BasicInterface> interfaceToAdd,
+			List<String> categoriesToDel, 
+			List<String> categoriesToAdd,
+			Map<BasicInterface,Set<String>> serviceToDel, 
+			Map<BasicInterface,Set<String>> serviceToAdd,
+			List<RequisitionAsset> assetsToPut,
+			Set<BasicInterface> ipsetN,
+			String snmpProfile) {
 				
 		if (snmpProfile != null && primary != null)
 			m_onmsDao.setSnmpInfo(primary, getSnmpProfileContainer()
@@ -1511,39 +1594,35 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_onmsDao
 					.updateRequisitionNode(foreignSource, foreignId, updatemap);
 
-		for (String ip : interfaceToDel) {
+		for (BasicInterface ip : interfaceToDel) {
 			if (addPolicy)
 				m_onmsDao.deletePolicy(foreignSource,
-						DashBoardUtils.getPolicyName(ip));
-			m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ip);		
+						DashBoardUtils.getPolicyName(ip.getIp()));
+			m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ip.getIp());		
 		}
 
-		for (String ip: serviceToDel.keySet()) {
+		for (BasicInterface ip: serviceToDel.keySet()) {
 			if (interfaceToDel.contains(ip))
 				continue;
 			for (String service: serviceToDel.get(ip)) {
-				m_onmsDao.deleteRequisitionservice(foreignSource, foreignId, ip, service);
+				m_onmsDao.deleteRequisitionservice(foreignSource, foreignId, ip.getIp(), service);
 			}
 		}
 		
-		for (String ip : interfaceToAdd) {
+		for (BasicInterface ip : interfaceToAdd) {
 			RequisitionInterface iface = new RequisitionInterface();
-			iface.setIpAddr(ip);
-			iface.setDescr(descr);
-			if ( primary!= null && primary.equals(ip)) {
-				iface.setSnmpPrimary(PrimaryType.PRIMARY);
-			} else {
-				iface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-			}
+			iface.setIpAddr(ip.getIp());
+			iface.setDescr(ip.getDescr());
+			iface.setSnmpPrimary(PrimaryType.get(ip.getOnmsprimary().toString()));
 			m_onmsDao.addRequisitionInterface(foreignSource, foreignId, iface);
 			if (addPolicy)
 				m_onmsDao.addOrReplacePolicy(foreignSource,
-					DashBoardUtils.getPolicyWrapper(ip));
+					DashBoardUtils.getPolicyWrapper(ip.getIp()));
 		}
 
-		for (String ip: serviceToAdd.keySet()) {
+		for (BasicInterface ip: serviceToAdd.keySet()) {
 			for (String service: serviceToAdd.get(ip)) {
-				m_onmsDao.addRequisitionservice(foreignSource, foreignId, ip, new RequisitionMonitoredService(service));
+				m_onmsDao.addRequisitionservice(foreignSource, foreignId, ip.getIp(), new RequisitionMonitoredService(service));
 			}
 		}
 
@@ -1561,12 +1640,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					new RequisitionCategory(category));
 		}
 		
-		for (String ip: ipsetN) {
-			if (ip.equals(primary))
+		for (BasicInterface ip: ipsetN) {
+			if (ip != null && ip.getIp() != null && ip.getIp().equals(primary))
 				continue;
 			MultivaluedMap< String, String> form = new MultivaluedMapImpl();
-			form.add("snmp-primary", "N");
-			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, ip, form);
+			form.add("snmp-primary", ip.getIp());
+			form.add("descr", ip.getDescr());
+			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, ip.getIp(), form);
 		}
 				
 

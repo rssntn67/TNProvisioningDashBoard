@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 
 public class BasicNode implements Serializable {
 		
@@ -35,18 +36,18 @@ public class BasicNode implements Serializable {
 	private OnmsState m_onmstate = OnmsState.NONE;
 
 	// This contains all the ip->service in secondary table but does not contain primary->icmp and primary-snmp
-	private Map<String,Set<String>> m_serviceMap;  
+	private Map<BasicInterface,Set<String>> m_serviceMap;  
 
 	protected Set<String> m_updatemap = new HashSet<String>();
 
 	protected List<String> m_categoriesToAdd = new ArrayList<String>();
 	protected List<String> m_categoriesToDel = new ArrayList<String>();
     
-	protected List<String> m_interfToAdd = new ArrayList<String>();
-	protected List<String> m_interfToDel = new ArrayList<String>();
+	protected List<BasicInterface> m_interfToAdd = new ArrayList<BasicInterface>();
+	protected List<BasicInterface> m_interfToDel = new ArrayList<BasicInterface>();
 
-	private Map<String,Set<String>> m_serviceToAdd = new HashMap<String, Set<String>>();
-	private Map<String,Set<String>> m_serviceToDel = new HashMap<String, Set<String>>();
+	private Map<BasicInterface,Set<String>> m_serviceToAdd = new HashMap<BasicInterface, Set<String>>();
+	private Map<BasicInterface,Set<String>> m_serviceToDel = new HashMap<BasicInterface, Set<String>>();
 
 	private String m_label;
 	private String m_descr;
@@ -76,7 +77,7 @@ public class BasicNode implements Serializable {
 		m_descr=DashBoardUtils.DESCR_TNPD;
 		
 		m_valid=false;
-		m_serviceMap = new HashMap<String, Set<String>>();
+		m_serviceMap = new HashMap<BasicInterface, Set<String>>();
 		m_foreignSource=foreignSource;
 		m_onmstate = OnmsState.NEW;
 	}
@@ -98,13 +99,13 @@ public class BasicNode implements Serializable {
 		m_descr=DashBoardUtils.DESCR_TNPD;
 		
 		m_valid=false;
-		m_serviceMap = new HashMap<String, Set<String>>();
+		m_serviceMap = new HashMap<BasicInterface, Set<String>>();
 		m_foreignSource=foreignSource;
 		m_onmstate = OnmsState.NEW;
 	}
 
 	public BasicNode(
-			Map<String,Set<String>> serviceMap,
+			Map<BasicInterface,Set<String>> serviceMap,
 			String descr, 
 			String hostname,
 			String vrf, 
@@ -161,19 +162,19 @@ public class BasicNode implements Serializable {
 		return m_categoriesToDel;
 	}
 
-	public List<String> getInterfToAdd() {
+	public List<BasicInterface> getInterfToAdd() {
 		return m_interfToAdd;
 	}
 
-	public List<String> getInterfToDel() {
+	public List<BasicInterface> getInterfToDel() {
 		return m_interfToDel;
 	}
 
-	public Map<String, Set<String>> getServiceToAdd() {
+	public Map<BasicInterface, Set<String>> getServiceToAdd() {
 		return m_serviceToAdd;
 	}
 
-	public Map<String, Set<String>> getServiceToDel() {
+	public Map<BasicInterface, Set<String>> getServiceToDel() {
 		return m_serviceToDel;
 	}
 	public String getParentId() {
@@ -291,9 +292,22 @@ public class BasicNode implements Serializable {
 		String oldprimary = m_primary;
 		m_primary = primary;
 		m_updatemap.add(DashBoardUtils.PRIMARY);
-		if (oldprimary != null) 
-			delService(oldprimary, "ICMP");
-		addService(m_primary, "ICMP");
+		if (oldprimary != null) {
+			BasicInterface opi = new BasicInterface();
+			opi.setIp(oldprimary);
+			opi.setDescr(m_descr);
+			opi.setOnmsprimary(OnmsPrimary.P);
+			BasicService bs = new BasicService(opi);
+			bs.setService("ICMP");
+			delService(bs);
+		}
+		BasicInterface primaryi=new BasicInterface();
+		primaryi.setDescr(m_descr);
+		primaryi.setIp(m_primary);
+		primaryi.setOnmsprimary(OnmsPrimary.P);
+		BasicService bs = new BasicService(primaryi);
+		bs.setService("ICMP");
+		addService(bs);
 	}
 
 	public boolean isValid() {
@@ -328,7 +342,9 @@ public class BasicNode implements Serializable {
 		m_building = building;
 	}
 	
-	public void addService(String ip, String service) {
+	public void addService(BasicService bs) {
+		BasicInterface ip = bs.getBasicInterface();
+		String service = bs.getService();
 		if (!m_serviceMap.containsKey(ip)) {
 			m_serviceMap.put(ip, new HashSet<String>());
 		}
@@ -358,7 +374,9 @@ public class BasicNode implements Serializable {
 		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 
-	public void delService(String ip, String service) {
+	public void delService(BasicService bs) {
+		BasicInterface ip = bs.getBasicInterface();
+		String service = bs.getService();
 		if (!m_serviceMap.containsKey(ip))
 			return;
 		if (ip.equals(m_primary) && "ICMP".equals(service))
@@ -393,21 +411,10 @@ public class BasicNode implements Serializable {
 		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 	
-	public Map<String,Set<String>> getServiceMap() {
+	public Map<BasicInterface,Set<String>> getServiceMap() {
 		return m_serviceMap;
 	}
-	
-	public Set<String> getSecondary() {
-		Set<String> secondary = new HashSet<String>();
-		for (String ip: m_serviceMap.keySet()) {
-			if (ip == null || ip.equals(m_primary))
-				continue;
-			secondary.add(ip);
-		}
 			
-		return secondary;
-	}
-		
 	public Set<OnmsSync> getSyncOperations() {
 		return m_syncoperations;
 	}

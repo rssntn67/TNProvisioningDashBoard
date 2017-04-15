@@ -8,9 +8,12 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 import org.opennms.vaadin.provision.model.Categoria;
+import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -22,6 +25,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
@@ -205,10 +209,10 @@ public class TrentinoNetworkTab extends RequisitionTab {
 					private static final long serialVersionUID = 1L;
 
 				@Override public void buttonClick(ClickEvent event) {
-					String ip = (String)source.getContainerProperty(itemId, "indirizzo ip").getValue();
+					BasicService ip = (BasicService) source.getValue();
 			        source.getContainerDataSource().removeItem(itemId);
-			        m_editorFields.getItemDataSource().getBean().delService(ip,"ICMP");
-			        m_secondaryIpComboBox.addItem(ip);
+			        m_editorFields.getItemDataSource().getBean().delService(ip);
+			        m_secondaryIpComboBox.addItem(ip.getIp());
 					logger.info("Deleted Secondary ip: " + ip);
 			      }
 			    });
@@ -231,7 +235,13 @@ public class TrentinoNetworkTab extends RequisitionTab {
 					IndexedContainer secondaryIpContainer = (IndexedContainer)m_secondaryIpAddressTable.getContainerDataSource();
 					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
 					ipItem.getItemProperty("indirizzo ip").setValue(m_secondaryIpComboBox.getValue().toString()); 
-			        m_editorFields.getItemDataSource().getBean().addService(ip, "ICMP");
+					BasicInterface bip = new BasicInterface();
+					bip.setDescr(DashBoardUtils.DESCR_TNPD);
+					bip.setIp(ip);
+					bip.setOnmsprimary(OnmsPrimary.N);
+					BasicService bs = new BasicService(bip);
+					bs.setService("ICMP");
+			        m_editorFields.getItemDataSource().getBean().addService(bs);
 					logger.info("Added Secondary ip address: " + ip);
 			        m_secondaryIpComboBox.removeItem(ip);
 				}
@@ -428,16 +438,15 @@ public class TrentinoNetworkTab extends RequisitionTab {
 		getRight().setVisible(false);		
 	}
 
-	@SuppressWarnings("unchecked")
 	public void selectItem(BasicNode node) {		
 		m_secondaryIpComboBox.removeAllItems();
 		for (String ip: getService().getIpAddresses(DashBoardUtils.TN_REQU_NAME,node.getNodeLabel()) ) {
 			if (ip.equals(node.getPrimary()))
 				continue;
 			boolean add=true;
-			if (node.getSecondary() != null) {
-				for (String secip: node.getSecondary()) {
-					if (ip.equals(secip)) { 
+			if (node.getServiceMap() != null) {
+				for (BasicInterface secip: node.getServiceMap().keySet()) {
+					if (ip.equals(secip.getIp())) { 
 						add=false;
 						break;
 					}
@@ -447,12 +456,16 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				m_secondaryIpComboBox.addItem(ip);
 		}
 		
-		IndexedContainer secondaryIpContainer = new IndexedContainer();
-		secondaryIpContainer.addContainerProperty("indirizzo ip", String.class, null);
-		if (node.getSecondary() != null) {
-			for (String ip: node.getSecondary()) {
-				Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
-				ipItem.getItemProperty("indirizzo ip").setValue(ip); 
+		BeanItemContainer<BasicService> secondaryIpContainer = new BeanItemContainer<BasicService>(BasicService.class);
+		if (node.getServiceMap() != null) {
+			for (BasicInterface ip: node.getServiceMap().keySet()) {
+				for (String service: node.getServiceMap().get(ip)) {
+					if (ip.getIp().equals(node.getPrimary()) && service.equals("ICMP"))
+						continue;
+					BasicService bs = new BasicService(ip);
+					bs.setService(service);
+					secondaryIpContainer.addBean(bs);
+				}
 			}
 		}
 		m_secondaryIpAddressTable.setContainerDataSource(secondaryIpContainer);

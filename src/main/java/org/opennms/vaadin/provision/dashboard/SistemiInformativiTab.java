@@ -4,7 +4,10 @@ package org.opennms.vaadin.provision.dashboard;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BasicInterface;
+import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -17,6 +20,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
@@ -306,11 +310,10 @@ public class SistemiInformativiTab extends RequisitionTab {
 					private static final long serialVersionUID = 1L;
 
 				@Override public void buttonClick(ClickEvent event) {
-					String ip = (String)source.getContainerProperty(itemId, "ip").getValue();
-					String service = (String)source.getContainerProperty(itemId, "service").getValue();
+					BasicService service = (BasicService)source.getValue();
 			        source.getContainerDataSource().removeItem(itemId);
-			        m_editorFields.getItemDataSource().getBean().delService(ip,service);
-					logger.info("Deleted Secondary ip/service: " + ip + "/" + service);
+			        m_editorFields.getItemDataSource().getBean().delService(service);
+					logger.info("Deleted Secondary ip/service: " + service.getIp() + "/" + service.getService());
 			      }
 			    });
 			 
@@ -341,7 +344,13 @@ public class SistemiInformativiTab extends RequisitionTab {
 					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
 					ipItem.getItemProperty("ip").setValue(ip); 
 					ipItem.getItemProperty("service").setValue(service); 
-			        m_editorFields.getItemDataSource().getBean().addService(ip,service);
+					BasicInterface bip = new BasicInterface();
+					bip.setDescr(DashBoardUtils.DESCR_TNPD);
+					bip.setIp(ip);
+					bip.setOnmsprimary(OnmsPrimary.N);
+					BasicService bs = new BasicService(bip);
+					bs.setService(service);
+			        m_editorFields.getItemDataSource().getBean().addService(bs);
 					logger.info("Added Secondary ip/service: " + ip + "/" + service);
 				}
 			}
@@ -554,19 +563,16 @@ public class SistemiInformativiTab extends RequisitionTab {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void selectItem(BasicNode node) {
-		IndexedContainer secondaryIpContainer = new IndexedContainer();
-		secondaryIpContainer.addContainerProperty("ip",      String.class, null);
-		secondaryIpContainer.addContainerProperty("service", String.class, null);
+		BeanItemContainer<BasicService> secondaryIpContainer = new BeanItemContainer<BasicService>(BasicService.class);
 		if (node.getServiceMap() != null) {
-			for (String ip: node.getServiceMap().keySet()) {
+			for (BasicInterface ip: node.getServiceMap().keySet()) {
 				for (String service: node.getServiceMap().get(ip)) {
-					if (ip.equals(node.getPrimary()) && service.equals("ICMP"))
+					if (ip.getIp().equals(node.getPrimary()) && service.equals("ICMP"))
 						continue;
-					Item ipItem = secondaryIpContainer.getItem(secondaryIpContainer.addItem());
-					ipItem.getItemProperty("ip").setValue(ip); 
-					ipItem.getItemProperty("service").setValue(service); 
+					BasicService bs = new BasicService(ip);
+					bs.setService(service);
+					secondaryIpContainer.addBean(bs);
 				}
 			}
 		}
