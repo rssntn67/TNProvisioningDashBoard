@@ -348,6 +348,8 @@ public class BasicNode implements Serializable {
 		if (!m_serviceMap.containsKey(ip)) {
 			m_serviceMap.put(ip, new HashSet<String>());
 		}
+		if (m_serviceMap.get(ip).contains(service))
+			return;
 		m_serviceMap.get(ip).add(service);
 		
 		// clean delete
@@ -409,6 +411,16 @@ public class BasicNode implements Serializable {
 			m_serviceToDel.get(ip).add(service);
 		}		
 		setOnmsSyncOperations(OnmsSync.DBONLY);
+	}
+	
+	public BasicInterface getInterface(String ipaddress) {
+		if (ipaddress == null)
+			return null;
+		for (BasicInterface bi: m_serviceMap.keySet()) {
+			if (ipaddress.equals(bi.getIp()))
+				return bi;
+		}
+		return null;
 	}
 	
 	public Map<BasicInterface,Set<String>> getServiceMap() {

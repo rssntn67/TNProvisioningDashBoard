@@ -14,23 +14,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.opennms.netmgt.model.PrimaryType;
-import org.opennms.netmgt.provision.persist.requisition.Requisition;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
+import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.rest.client.model.KettleJobStatus;
 import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.BasicInterface;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
+import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
 import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.JobLogEntry;
+import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 import org.opennms.vaadin.provision.model.Categoria;
+import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
 
@@ -41,7 +48,7 @@ public abstract class FastRunnable implements Runnable {
 	Map<String, List<FastServiceDevice>>    m_fastHostnameServiceDeviceMap = new HashMap<String, List<FastServiceDevice>>();
 	Map<String,Set<String>>                 m_fastIpHostnameMap            = new HashMap<String,Set<String>>();
 
-	Map<String,RequisitionNode>        m_onmsForeignIdRequisitionNodeMap = new HashMap<String, RequisitionNode>();
+	Map<String,TrentinoNetworkNode>        m_onmsForeignIdRequisitionNodeMap = new HashMap<String, TrentinoNetworkNode>();
 	Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
 	Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
 
@@ -182,7 +189,7 @@ public abstract class FastRunnable implements Runnable {
 		m_logcontainer.addBean(jLogE);
 	}
 
-	public String getNote(RequisitionNode rnode) {
+	public String getNote(TrentinoNetworkNode rnode) {
 		StringBuffer deviceNote=new StringBuffer("Notes:");
 		if (rnode.getForeignId() != null) {
 			deviceNote.append(" ForeignId: ");
@@ -197,12 +204,11 @@ public abstract class FastRunnable implements Runnable {
 		return deviceNote.toString();
 	}
 		
-	@SuppressWarnings("deprecation")
-	public String getNote(RequisitionInterface riface) {
+	public String getNote(BasicInterface riface) {
 		StringBuffer deviceNote=new StringBuffer("Notes:");
-		if (riface.getIpAddr() != null) {
+		if (riface.getIp() != null) {
 			deviceNote.append(" ipaddr: ");
-			deviceNote.append(riface.getIpAddr());
+			deviceNote.append(riface.getIp());
 		}
 
 		if (riface.getDescr() != null) {
@@ -210,9 +216,14 @@ public abstract class FastRunnable implements Runnable {
 			deviceNote.append(riface.getDescr());
 		}
 		
-		if (riface.getSnmpPrimary() != null) {
+		if (riface.getOnmsprimary()!= null) {
 			deviceNote.append(" snmpPrimary: ");
-			deviceNote.append(riface.getSnmpPrimary().getCharCode());
+			deviceNote.append(riface.getOnmsprimary());
+			
+		}
+		if (riface.getDescr() != null) {
+			deviceNote.append(" descr: ");
+			deviceNote.append(riface.getDescr());
 			
 		}
 		return deviceNote.toString();
@@ -319,7 +330,7 @@ public abstract class FastRunnable implements Runnable {
 			logger.info("run: loaded table fastservicelink");
 			
 			logger.info("run: loading requisition: " + DashBoardUtils.TN_REQU_NAME);
-			checkRequisition(getService().getOnmsDao().getRequisition(DashBoardUtils.TN_REQU_NAME));
+			checkRequisition(getService().getTNContainer());
 			logger.info("run: loaded requisition: " + DashBoardUtils.TN_REQU_NAME);
 
 		} catch (final UniformInterfaceException e) {
@@ -401,7 +412,7 @@ public abstract class FastRunnable implements Runnable {
 						if (m_onmsForeignIdRequisitionNodeMap.containsKey(hostname)) {
 							foreignIds.add(hostname);
 						} 
-						for (RequisitionNode rnode : m_onmsForeignIdRequisitionNodeMap
+						for (TrentinoNetworkNode rnode : m_onmsForeignIdRequisitionNodeMap
 								.values()) {
 							if (rnode.getNodeLabel().startsWith(hostname)) 
 								foreignIds.add(rnode.getForeignId());
@@ -409,7 +420,7 @@ public abstract class FastRunnable implements Runnable {
 						if (foreignIds.size() == 0) {
 							add(hostname);
 						} else if (foreignIds.size() == 1) {
-							update(hostname, m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next()));
+							update(m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next()));
 						} else {
 							mismatch(hostname, foreignIds);
 						}
@@ -435,16 +446,37 @@ public abstract class FastRunnable implements Runnable {
 					
 					if (isDeviceInFast(foreignId))
 						continue;
-					RequisitionNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
+					TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
 					if (isManagedByFast(rnode)) {
-						deleteNode(foreignId, rnode);
+						deleteNode(rnode);
 						continue;
 					}
-					for (RequisitionInterface riface: rnode.getInterfaces()) {
-						if (riface.getDescr().contains("FAST") && !m_fastIpHostnameMap.containsKey(riface.getIpAddr())) {
-							deleteInterface(foreignId, rnode, riface.getIpAddr());
+					Set<BasicInterface> inttoDelete = new HashSet<BasicInterface>();
+					for (BasicInterface riface: rnode.getServiceMap().keySet()) {
+						if (riface.getDescr().contains("FAST") && !m_fastIpHostnameMap.containsKey(riface.getIp())) {
+							inttoDelete.add(riface);
 						}
 					}
+					if (inttoDelete.isEmpty())
+						continue;
+					for (BasicInterface bi: inttoDelete) {
+						BasicService bs = new BasicService(bi);
+						bs.setService("ICMP");
+						rnode.delService(bs);
+						final JobLogEntry jloe = new JobLogEntry();
+						jloe.setHostname(rnode.getForeignId());
+						jloe.setIpaddr(bi.getIp());
+						jloe.setOrderCode("NA");
+						jloe.setJobid(m_job.getJobid());
+						jloe.setDescription("FAST sync: interface deleted");
+						jloe.setNote(getNote(rnode));
+						logger.info("delete interface node" + getNote(rnode));
+						List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+						logs.add(jloe);
+						log(logs);
+
+					}
+					updateNonFast(rnode);
 				}
 
 			} catch (final UniformInterfaceException e) {
@@ -454,9 +486,10 @@ public abstract class FastRunnable implements Runnable {
 		}
 		
 						
-		private void checkRequisition(Requisition requisition) {
+		private void checkRequisition(BeanContainer<String, TrentinoNetworkNode> requisition) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-			for (RequisitionNode rnode: requisition.getNodes()) {
+			for (String id : requisition.getItemIds()) {
+				TrentinoNetworkNode rnode = requisition.getItem(id).getBean();
 				if (m_onmsForeignIdRequisitionNodeMap.containsKey(rnode.getForeignId())) {
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(rnode.getForeignId());
@@ -473,7 +506,7 @@ public abstract class FastRunnable implements Runnable {
 			}
 			
 			for (String dupforeignid: m_onmsDuplicatedForeignId) {
-				RequisitionNode rnode = m_onmsForeignIdRequisitionNodeMap.remove(dupforeignid);
+				TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.remove(dupforeignid);
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(rnode.getForeignId());
 				jloe.setIpaddr("NA");
@@ -484,9 +517,10 @@ public abstract class FastRunnable implements Runnable {
 			}
 
 			Map<String, Set<String>> onmsIpForeignIdMap = new HashMap<String, Set<String>>();
-			for (RequisitionNode rnode: requisition.getNodes()) {
-				for (RequisitionInterface riface: rnode.getInterfaces()) {
-					if (riface.getIpAddr() == null) {
+			for (String id: requisition.getItemIds()) {
+				TrentinoNetworkNode rnode = requisition.getItem(id).getBean();
+				for (BasicInterface riface: rnode.getServiceMap().keySet()) {
+					if (riface.getIp() == null) {
 						final JobLogEntry jloe = new JobLogEntry();
 						jloe.setHostname(rnode.getForeignId());
 						jloe.setIpaddr("NA");
@@ -496,10 +530,10 @@ public abstract class FastRunnable implements Runnable {
 						logs.add(jloe);
 						logger.info("Null ip: " + getNote(rnode) + getNote(riface));
 						continue;
-					} else if (DashBoardUtils.hasInvalidIp(riface.getIpAddr())) {
+					} else if (DashBoardUtils.hasInvalidIp(riface.getIp())) {
 						final JobLogEntry jloe = new JobLogEntry();
 						jloe.setHostname(rnode.getForeignId());
-						jloe.setIpaddr(riface.getIpAddr());
+						jloe.setIpaddr(riface.getIp());
 						jloe.setJobid(m_job.getJobid());
 						jloe.setDescription("FAST sync: Invalid Ip Address in Requisition");
 						jloe.setNote(getNote(rnode) + getNote(riface));
@@ -507,9 +541,9 @@ public abstract class FastRunnable implements Runnable {
 						logger.info("Invalid ip: " + getNote(rnode) + getNote(riface));
 						continue;
 					}
-					if (!onmsIpForeignIdMap.containsKey(riface.getIpAddr())) {
-						onmsIpForeignIdMap.put(riface.getIpAddr(), new HashSet<String>());
-					onmsIpForeignIdMap.get(riface.getIpAddr()).add(rnode.getForeignId());
+					if (!onmsIpForeignIdMap.containsKey(riface.getIp())) {
+						onmsIpForeignIdMap.put(riface.getIp(), new HashSet<String>());
+					onmsIpForeignIdMap.get(riface.getIp()).add(rnode.getForeignId());
 					}
 				}
 			}
@@ -519,11 +553,11 @@ public abstract class FastRunnable implements Runnable {
 					continue;
 				m_onmsDuplicatedIpAddress.add(ipaddr);
 				for (String foreignid: onmsIpForeignIdMap.get(ipaddr) ) {
-					RequisitionNode duplicatedipnode = m_onmsForeignIdRequisitionNodeMap.remove(foreignid);
+					TrentinoNetworkNode duplicatedipnode = m_onmsForeignIdRequisitionNodeMap.remove(foreignid);
 					if (duplicatedipnode == null)
 						continue;
-					RequisitionInterface duplicatedinterface = duplicatedipnode.getInterface(ipaddr);
-					if (duplicatedinterface ==  null)
+					BasicInterface duplicatedinterface = duplicatedipnode.getInterface(ipaddr);
+					if (duplicatedinterface == null)
 						continue;
 					final JobLogEntry jloe = new JobLogEntry();
 					jloe.setHostname(foreignid);
@@ -868,23 +902,18 @@ public abstract class FastRunnable implements Runnable {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			Set<String> secondary = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
-			FastServiceLink reflink = null;
 			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(hostname)) {
 				secondary.add(device.getIpaddr());
 				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
 					continue;
 				if (refdevice == null ) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else 	if (device.isMaster() && !refdevice.isMaster()) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				} else if (device.getIpAddrLan() != null && device.getIpAddrLan() == null) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				}
 
 				final JobLogEntry jloe = new JobLogEntry();
@@ -903,96 +932,241 @@ public abstract class FastRunnable implements Runnable {
 				return;
 			}
 
+			FastServiceLink reflink= m_fastOrderCodeServiceLinkMap.get(refdevice.getOrderCode());						
+
+
 			secondary.remove(refdevice.getIpaddr());
 			updateSnmp(refdevice);
-			getService().addFastNode(hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
+//			getService().addFastNode(hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
+/*
+ * 		requisitionNode.setForeignId(foreignId);
+		requisitionNode.setNodeLabel(foreignId+"."+cat.getDnsdomain());
+		
+		if (node.getCity() != null)
+			requisitionNode.setCity(node.getCity());
+		if (link.getDeliveryCode() != null)
+			requisitionNode.setBuilding(link.getDeliveryCode());
+		
+		RequisitionInterface iface = new RequisitionInterface();
+		iface.setSnmpPrimary(PrimaryType.PRIMARY);
+		iface.setIpAddr(node.getIpaddr());
+		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		iface.setDescr(DashBoardUtils.DESCR_FAST);
+		requisitionNode.putInterface(iface);
+
+		for (String ip: secondary) {
+			RequisitionInterface ifacesecondary = new RequisitionInterface();
+			ifacesecondary.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
+			ifacesecondary.setIpAddr(ip);
+			ifacesecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+			ifacesecondary.setDescr(DashBoardUtils.DESCR_FAST);
+			requisitionNode.putInterface(ifacesecondary);
+		}
+
+		requisitionNode.putCategory(new RequisitionCategory(cat.getNetworklevel()));
+		requisitionNode.putCategory(new RequisitionCategory(cat.getName()));
+		
+		if (node.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
+			requisitionNode.putCategory(new RequisitionCategory(cat.getNotifylevel()));
+		else
+			requisitionNode.putCategory(new RequisitionCategory(node.getNotifyCategory()));
 			
+		
+		requisitionNode.putCategory(new RequisitionCategory(cat.getThresholdlevel()));
+		
+		StringBuffer address1 = new StringBuffer();
+		if (node.getAddressDescr() != null)
+			address1.append(node.getAddressDescr());
+		if (node.getAddressName() != null) {
+			if (address1.length() > 0)
+				address1.append(" ");
+			address1.append(node.getAddressName());
+		}
+		if (node.getAddressNumber() != null) {
+			if (address1.length() > 0)
+				address1.append(" ");
+			address1.append(node.getAddressNumber());
+		}
+		
+		if (node.getCity() != null &&  address1.length() > 0)
+			requisitionNode.putAsset(new RequisitionAsset("description", node.getCity() + " - " + address1.toString()));
+		
+		if (address1.length() > 0 )
+			requisitionNode.putAsset(new RequisitionAsset("address1", address1.toString()));
+		
+		if (link.getDeliveryCode() != null)
+			requisitionNode.putAsset(new RequisitionAsset("circuitId", link.getDeliveryCode()));
+		
+		if (node.getIstat() != null && link.getSiteCode() !=  null )
+			requisitionNode.putAsset(new RequisitionAsset("building", node.getIstat()+"-"+link.getSiteCode()));
+
+		for ( RequisitionAsset asset : getBackupProfileContainer().getBackupProfile(node.getBackupprofile()).getRequisitionAssets().getAssets()) {
+			requisitionNode.putAsset(asset);
+		}
+		m_onmsDao.setSnmpInfo(node.getIpaddr(), getSnmpProfileContainer().getSnmpProfile(node.getSnmpprofile()).getSnmpInfo());
+			
+		logger.info("Adding node with foreignId: " + foreignId + " primary: " + node.getIpaddr());
+		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
+		logger.info("Adding policy for interface: " + node.getIpaddr());
+		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getIpaddr()));
+		for (String ip: secondary) {
+			logger.info("Adding policy for interface: " + ip);
+			m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(ip));			
+		}
+			
+ */
 			
 			log(logs);
 		}
 				
-		private void update(String hostname, RequisitionNode rnode) {
+		private void update(TrentinoNetworkNode rnode) {
 			if (isManagedByFast(rnode))
-				updateFast(hostname, rnode);
+				updateFast(rnode);
 			else 
-				updateNonFast(hostname,rnode);
+				updateNonFast(rnode);
 		}
 
-		private void updateNonFast(String hostname, RequisitionNode rnode) {
-			Set<String> ipaddresses = new HashSet<String>(); 
-			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(hostname)) {
-				ipaddresses.add(device.getIpaddr());
+		private void updateNonFast(TrentinoNetworkNode rnode) {
+			if (!m_fastHostnameServiceDeviceMap.containsKey(rnode.getHostname()))
+				return;
+			Set<String> fastipaddressonnode = new HashSet<String>();
+			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(rnode.getHostname())) {
+				BasicInterface bi = rnode.getInterface(device.getIpaddr());
+				if (bi == null) {
+					bi = new BasicInterface();
+					bi.setIp(device.getIpaddr());
+					bi.setDescr(DashBoardUtils.DESCR_FAST);
+					bi.setOnmsprimary(OnmsPrimary.N);
+				}
+				fastipaddressonnode.add(device.getIpaddr());
+				BasicService bs = new BasicService(bi);
+				bs.setService("ICMP");
+				rnode.addService(bs);
 			}
 
-			if (!getService().updateNonFastNode(rnode,ipaddresses))
-				return;
+			Set<BasicInterface> fastiponnodetodelete = new HashSet<BasicInterface>();
+			for (BasicInterface riface: rnode.getServiceMap().keySet()) {
+				if (riface.getDescr().contains("FAST") && !fastipaddressonnode.contains(riface.getIp())) {
+					fastiponnodetodelete.add(riface);
+				}
+			}
+			List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 
+			for (BasicInterface bi: fastiponnodetodelete) {
+				BasicService bs = new BasicService(bi);
+				bs.setService("ICMP");
+				rnode.delService(bs);
 				final JobLogEntry jloe = new JobLogEntry();
-				jloe.setHostname(hostname);
-				jloe.setIpaddr("NA");
+				jloe.setHostname(rnode.getForeignId());
+				jloe.setIpaddr(bi.getIp());
 				jloe.setOrderCode("NA");
 				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: updated Fast Ip.");
+				jloe.setDescription("FAST sync: interface deleted");
 				jloe.setNote(getNote(rnode));
-				
-				List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+				logger.info("delete interface node" + getNote(rnode));
 				logs.add(jloe);
-				log(logs);
+			}
+			
+			if (rnode.getOnmstate() == OnmsState.NONE)
+				return;
+			getService().update(rnode);
+
+			final JobLogEntry jloe = new JobLogEntry();
+			jloe.setHostname(rnode.getHostname());
+			jloe.setIpaddr("NA");
+			jloe.setOrderCode("NA");
+			jloe.setDescription("FAST sync: updated Fast Ip.");
+			jloe.setNote(getNote(rnode));
+			
+			logs.add(jloe);
+			log(logs);
 
 		}
 
-		@SuppressWarnings("deprecation")
-		private void updateFast(String hostname, RequisitionNode rnode) {
+		private void updateFast(TrentinoNetworkNode rnode) {
 			Set<String> ipaddresses = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
-			FastServiceLink reflink = null;
-			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(hostname)) {
+			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(rnode.getHostname())) {
 				ipaddresses.add(device.getIpaddr());
 				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
 					continue;
 				if (refdevice == null ) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
-				} else if (rnode.getInterface(device.getIpaddr()) != null && rnode.getInterface(device.getIpaddr()).getSnmpPrimary().equals(PrimaryType.PRIMARY)) {
+				} else if (rnode.getInterface(device.getIpaddr()) != null && 
+						rnode.getInterface(device.getIpaddr()).getOnmsprimary()
+						== OnmsPrimary.P) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else 	if (device.isMaster() && !refdevice.isMaster()) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());
 				} else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				} else if (device.getIpAddrLan() != null && device.getIpAddrLan() == null) {
 					refdevice= device;
-					reflink= m_fastOrderCodeServiceLinkMap.get(device.getOrderCode());						
 				}
 			}
 
 			if (refdevice == null) {
-				norefdevice(hostname);
+				norefdevice(rnode.getHostname());
 				return;
 			}
-
-			String nodelabel = hostname + "." + m_vrf.get(reflink.getVrf()).getDnsdomain();
-			String backupprofile = refdevice.getBackupprofile();
-			String rnodebckprofile = DashBoardUtils.getBackupProfile(rnode, m_backup);
-			BackupProfile bck = null;
-			if (!backupprofile.equals(rnodebckprofile) && m_backup.containsKey(backupprofile))
-				bck = m_backup.get(backupprofile);
 			
-			if (
-					!getService().updateFastNode(
-						nodelabel, 
-						reflink, 
-						rnode, 
-						refdevice, 
-						m_vrf.get(reflink.getVrf()), 
-						bck, 
-						ipaddresses,
-						updateSnmp(refdevice)
-					)
-				)
+			FastServiceLink reflink = m_fastOrderCodeServiceLinkMap.get(refdevice.getOrderCode());
+			rnode.setVrf(m_vrf.get(reflink.getVrf()).getDnsdomain());
+			rnode.setPrimary(refdevice.getIpaddr());
+			rnode.setBackupProfile(refdevice.getBackupprofile());
+			rnode.setSnmpProfile(refdevice.getSnmpprofile());
+			rnode.setNetworkCategory(m_vrf.get(reflink.getVrf()));
+			rnode.setNotifCategory(refdevice.getNotifyCategory());
+			rnode.setThreshCategory(m_vrf.get(reflink.getVrf()).getThresholdlevel());
+			rnode.setCity(refdevice.getCity());
+			
+			StringBuffer address1 = new StringBuffer();
+			if (refdevice.getAddressDescr() != null)
+				address1.append(refdevice.getAddressDescr());
+			if (refdevice.getAddressName() != null) {
+				if (address1.length() > 0)
+					address1.append(" ");
+				address1.append(refdevice.getAddressName());
+			}
+			if (refdevice.getAddressNumber() != null) {
+				if (address1.length() > 0)
+					address1.append(" ");
+				address1.append(refdevice.getAddressNumber());
+			}
+			rnode.setAddress1(address1.toString());
+			rnode.setCircuitId(reflink.getDeliveryCode());
+			rnode.setBuilding(refdevice.getIstat()+"-"+reflink.getSiteCode());
+			
+			for (String ip : ipaddresses) {
+				if (ip.equals(refdevice.getIpaddr()))
+					continue;
+				BasicInterface bi = rnode.getInterface(ip);
+				if ( bi == null) {
+					bi = new BasicInterface();
+					bi.setIp(ip);
+					bi.setDescr(DashBoardUtils.DESCR_FAST);
+					bi.setOnmsprimary(OnmsPrimary.N);
+				}
+				BasicService bs = new BasicService(bi);
+				bs.setService("ICMP");
+				rnode.addService(bs);
+			}
+			Set<BasicInterface> intefacetodelonnode = new HashSet<BasicInterface>();
+			for (BasicInterface riface: rnode.getServiceMap().keySet()) {
+				if (!ipaddresses.contains(riface.getIp())) {
+					intefacetodelonnode.add(riface);
+				}
+			}
+			for (BasicInterface bi: intefacetodelonnode) {
+				BasicService bs = new BasicService(bi);
+				bs.setService("ICMP");
+				rnode.delService(bs);
+			}
+
+			if (rnode.getOnmstate() == OnmsState.NONE)
 				return;
+			
+			getService().update(rnode);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(refdevice.getHostname());
 			jloe.setIpaddr(refdevice.getIpaddr());
@@ -1060,9 +1234,11 @@ public abstract class FastRunnable implements Runnable {
 			return false;
 		}
 		
-		private boolean isManagedByFast(RequisitionNode rnode) {
-			if (rnode.getCategory(DashBoardUtils.m_network_levels[2]) != null) {
-				for (RequisitionInterface riface: rnode.getInterfaces()) {
+		private boolean isManagedByFast(TrentinoNetworkNode rnode) {
+			if (rnode.getNetworkCategory() != null
+					&& DashBoardUtils.m_network_levels[2].equals(
+					rnode.getNetworkCategory().getName())) {
+				for (BasicInterface riface: rnode.getServiceMap().keySet()) {
 					if (!riface.getDescr().contains("FAST") && !riface.getDescr().contains("NeaNMS"))
 						return false;
 				}
@@ -1071,10 +1247,10 @@ public abstract class FastRunnable implements Runnable {
 			return false;
 		}
 		
-		private void deleteNode(String foreignId, RequisitionNode rnode) {
-			getService().delete(DashBoardUtils.TN_REQU_NAME, rnode);
+		private void deleteNode(TrentinoNetworkNode rnode) {
+			getService().delete(rnode);
 			final JobLogEntry jloe = new JobLogEntry();
-			jloe.setHostname(foreignId);
+			jloe.setHostname(rnode.getForeignId());
 			jloe.setIpaddr("NA");
 			jloe.setOrderCode("NA");
 			jloe.setJobid(m_job.getJobid());
@@ -1085,24 +1261,7 @@ public abstract class FastRunnable implements Runnable {
 			logs.add(jloe);
 			log(logs);
 			
-		}
-		
-	private void deleteInterface(String foreignId, RequisitionNode rnode, String ipaddr) {
-		getService().delete(DashBoardUtils.TN_REQU_NAME, foreignId, ipaddr);
-		final JobLogEntry jloe = new JobLogEntry();
-		jloe.setHostname(foreignId);
-		jloe.setIpaddr(ipaddr);
-		jloe.setOrderCode("NA");
-		jloe.setJobid(m_job.getJobid());
-		jloe.setDescription("FAST sync: interface deleted");
-		jloe.setNote(getNote(rnode));
-		logger.info("delete interface node" + getNote(rnode));
-		List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-		logs.add(jloe);
-		log(logs);
-		
-	}
- 		
+		} 		
 }
 
 

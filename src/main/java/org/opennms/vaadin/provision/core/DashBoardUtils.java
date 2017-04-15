@@ -263,7 +263,6 @@ public class DashBoardUtils {
 	public static final String PARENT = "parent";
 	public static final String VALID = "valid";
 	public static final String CITY    = "city";
-	public static final String BUILDING_SCALAR = "building_scalar";
 
 	public static final String DESCRIPTION = "description";
 	public static final String ADDRESS1 = "address1";
