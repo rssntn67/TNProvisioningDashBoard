@@ -39,8 +39,6 @@ import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.BasicNode;
-import org.opennms.vaadin.provision.model.FastServiceDevice;
-import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
@@ -217,15 +215,15 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_ipsnmpprofilecontainer.commit();
 	}
 
-	public void saveSnmpProfile(String primary, String snmpprofile) throws SQLException{
+	public boolean saveSnmpProfile(String primary, String snmpprofile) throws SQLException{
 		if (primary == null || snmpprofile == null)
-			return;
+			return false;
 		Map<String,IpSnmpProfile>ipSnmpMap = m_ipsnmpprofilecontainer.getIpSnmpProfileMap();
 
 		IpSnmpProfile ipSnmpProfile= new IpSnmpProfile(primary,snmpprofile); 
 		if (ipSnmpMap.containsKey(primary)) {
 			if (ipSnmpMap.get(primary).getSnmprofile().equals(snmpprofile))
-				return;
+				return false;
 			logger.info("syncSnmpProfile: update primary ip/snmpprofile: " + primary+"/"+snmpprofile );
 			m_ipsnmpprofilecontainer.update(ipSnmpProfile);
 		}  else {
@@ -233,6 +231,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_ipsnmpprofilecontainer.add(ipSnmpProfile);				
 		}
 		m_ipsnmpprofilecontainer.commit();
+		return true;
 	}
 	
 	public void syncSnmpProfile(Set<String> primaries) throws SQLException {

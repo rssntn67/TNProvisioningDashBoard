@@ -13,11 +13,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.opennms.netmgt.model.PrimaryType;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
-import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.rest.client.model.KettleJobStatus;
 import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
@@ -27,7 +22,6 @@ import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.FastServiceLink;
-import org.opennms.vaadin.provision.model.IpSnmpProfile;
 import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.JobLogEntry;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
@@ -55,7 +49,6 @@ public abstract class FastRunnable implements Runnable {
 	Map<String,Categoria> m_vrf;
 	Map<String, BackupProfile> m_backup;
 	Map<String, SnmpProfile> m_snmp;
-	Map<String, IpSnmpProfile> m_ipsnmp;
 
     private DashBoardSessionService m_session;
 	private static final Logger logger = Logger.getLogger(FastRunnable.class.getName());
@@ -316,10 +309,6 @@ public abstract class FastRunnable implements Runnable {
 			logger.info("run: loading table snmpprofile");
 			m_snmp= getService().getSnmpProfileContainer().getSnmpProfileMap();
 			logger.info("run: loaded table snmpprofile");
-
-			logger.info("run: loading table ip snmpprofile");
-			m_ipsnmp= getService().getIpSnmpProfileContainer().getIpSnmpProfileMap();
-			logger.info("run: loaded table ip snmpprofile");
 
 			logger.info("run: loading table fastservicedevice");
 			checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
@@ -898,6 +887,14 @@ public abstract class FastRunnable implements Runnable {
 	
 		}
 		
+		private void update(TrentinoNetworkNode rnode) {
+			if (isManagedByFast(rnode))
+				updateFast(rnode);
+			else 
+				updateNonFast(rnode);
+		}
+
+		
 		private void add(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			Set<String> secondary = new HashSet<String>(); 
@@ -931,101 +928,16 @@ public abstract class FastRunnable implements Runnable {
 				norefdevice(hostname);
 				return;
 			}
-
+			
 			FastServiceLink reflink= m_fastOrderCodeServiceLinkMap.get(refdevice.getOrderCode());						
+			TrentinoNetworkNode rnode = new TrentinoNetworkNode(hostname, m_vrf.get(reflink.getVrf()), DashBoardUtils.TN_REQU_NAME);
+			rnode = getnode(refdevice, reflink, rnode, secondary);
 
 
-			secondary.remove(refdevice.getIpaddr());
-			updateSnmp(refdevice);
-//			getService().addFastNode(hostname,refdevice,reflink,m_vrf.get(reflink.getVrf()),secondary);
-/*
- * 		requisitionNode.setForeignId(foreignId);
-		requisitionNode.setNodeLabel(foreignId+"."+cat.getDnsdomain());
-		
-		if (node.getCity() != null)
-			requisitionNode.setCity(node.getCity());
-		if (link.getDeliveryCode() != null)
-			requisitionNode.setBuilding(link.getDeliveryCode());
-		
-		RequisitionInterface iface = new RequisitionInterface();
-		iface.setSnmpPrimary(PrimaryType.PRIMARY);
-		iface.setIpAddr(node.getIpaddr());
-		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-		iface.setDescr(DashBoardUtils.DESCR_FAST);
-		requisitionNode.putInterface(iface);
-
-		for (String ip: secondary) {
-			RequisitionInterface ifacesecondary = new RequisitionInterface();
-			ifacesecondary.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-			ifacesecondary.setIpAddr(ip);
-			ifacesecondary.putMonitoredService(new RequisitionMonitoredService("ICMP"));
-			ifacesecondary.setDescr(DashBoardUtils.DESCR_FAST);
-			requisitionNode.putInterface(ifacesecondary);
-		}
-
-		requisitionNode.putCategory(new RequisitionCategory(cat.getNetworklevel()));
-		requisitionNode.putCategory(new RequisitionCategory(cat.getName()));
-		
-		if (node.getNotifyCategory().equals(DashBoardUtils.m_fast_default_notify))
-			requisitionNode.putCategory(new RequisitionCategory(cat.getNotifylevel()));
-		else
-			requisitionNode.putCategory(new RequisitionCategory(node.getNotifyCategory()));
-			
-		
-		requisitionNode.putCategory(new RequisitionCategory(cat.getThresholdlevel()));
-		
-		StringBuffer address1 = new StringBuffer();
-		if (node.getAddressDescr() != null)
-			address1.append(node.getAddressDescr());
-		if (node.getAddressName() != null) {
-			if (address1.length() > 0)
-				address1.append(" ");
-			address1.append(node.getAddressName());
-		}
-		if (node.getAddressNumber() != null) {
-			if (address1.length() > 0)
-				address1.append(" ");
-			address1.append(node.getAddressNumber());
-		}
-		
-		if (node.getCity() != null &&  address1.length() > 0)
-			requisitionNode.putAsset(new RequisitionAsset("description", node.getCity() + " - " + address1.toString()));
-		
-		if (address1.length() > 0 )
-			requisitionNode.putAsset(new RequisitionAsset("address1", address1.toString()));
-		
-		if (link.getDeliveryCode() != null)
-			requisitionNode.putAsset(new RequisitionAsset("circuitId", link.getDeliveryCode()));
-		
-		if (node.getIstat() != null && link.getSiteCode() !=  null )
-			requisitionNode.putAsset(new RequisitionAsset("building", node.getIstat()+"-"+link.getSiteCode()));
-
-		for ( RequisitionAsset asset : getBackupProfileContainer().getBackupProfile(node.getBackupprofile()).getRequisitionAssets().getAssets()) {
-			requisitionNode.putAsset(asset);
-		}
-		m_onmsDao.setSnmpInfo(node.getIpaddr(), getSnmpProfileContainer().getSnmpProfile(node.getSnmpprofile()).getSnmpInfo());
-			
-		logger.info("Adding node with foreignId: " + foreignId + " primary: " + node.getIpaddr());
-		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
-		logger.info("Adding policy for interface: " + node.getIpaddr());
-		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getIpaddr()));
-		for (String ip: secondary) {
-			logger.info("Adding policy for interface: " + ip);
-			m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(ip));			
-		}
-			
- */
-			
+			updateSnmp(refdevice);			
 			log(logs);
 		}
 				
-		private void update(TrentinoNetworkNode rnode) {
-			if (isManagedByFast(rnode))
-				updateFast(rnode);
-			else 
-				updateNonFast(rnode);
-		}
-
 		private void updateNonFast(TrentinoNetworkNode rnode) {
 			if (!m_fastHostnameServiceDeviceMap.containsKey(rnode.getHostname()))
 				return;
@@ -1083,34 +995,7 @@ public abstract class FastRunnable implements Runnable {
 
 		}
 
-		private void updateFast(TrentinoNetworkNode rnode) {
-			Set<String> ipaddresses = new HashSet<String>(); 
-			FastServiceDevice refdevice = null;
-			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(rnode.getHostname())) {
-				ipaddresses.add(device.getIpaddr());
-				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
-					continue;
-				if (refdevice == null ) {
-					refdevice= device;
-				} else if (rnode.getInterface(device.getIpaddr()) != null && 
-						rnode.getInterface(device.getIpaddr()).getOnmsprimary()
-						== OnmsPrimary.P) {
-					refdevice= device;
-				} else 	if (device.isMaster() && !refdevice.isMaster()) {
-					refdevice= device;
-				} else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
-					refdevice= device;
-				} else if (device.getIpAddrLan() != null && device.getIpAddrLan() == null) {
-					refdevice= device;
-				}
-			}
-
-			if (refdevice == null) {
-				norefdevice(rnode.getHostname());
-				return;
-			}
-			
-			FastServiceLink reflink = m_fastOrderCodeServiceLinkMap.get(refdevice.getOrderCode());
+		private TrentinoNetworkNode getnode(FastServiceDevice refdevice, FastServiceLink reflink, TrentinoNetworkNode rnode, Set<String> ipaddresses) {
 			rnode.setVrf(m_vrf.get(reflink.getVrf()).getDnsdomain());
 			rnode.setPrimary(refdevice.getIpaddr());
 			rnode.setBackupProfile(refdevice.getBackupprofile());
@@ -1162,11 +1047,43 @@ public abstract class FastRunnable implements Runnable {
 				bs.setService("ICMP");
 				rnode.delService(bs);
 			}
+			return rnode;
+		}
+		
+		private void updateFast(TrentinoNetworkNode rnode) {
+			Set<String> ipaddresses = new HashSet<String>(); 
+			FastServiceDevice refdevice = null;
+			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(rnode.getHostname())) {
+				ipaddresses.add(device.getIpaddr());
+				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
+					continue;
+				if (refdevice == null ) {
+					refdevice= device;
+				} else if (rnode.getInterface(device.getIpaddr()) != null && 
+						rnode.getInterface(device.getIpaddr()).getOnmsprimary()
+						== OnmsPrimary.P) {
+					refdevice= device;
+				} else 	if (device.isMaster() && !refdevice.isMaster()) {
+					refdevice= device;
+				} else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
+					refdevice= device;
+				} else if (device.getIpAddrLan() != null && device.getIpAddrLan() == null) {
+					refdevice= device;
+				}
+			}
+
+			if (refdevice == null) {
+				norefdevice(rnode.getHostname());
+				return;
+			}
+			rnode = getnode(refdevice, m_fastOrderCodeServiceLinkMap.get(refdevice.getOrderCode()),rnode, ipaddresses);
 
 			if (rnode.getOnmstate() == OnmsState.NONE)
 				return;
 			
 			getService().update(rnode);
+			updateSnmp(refdevice);
+			
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(refdevice.getHostname());
 			jloe.setIpaddr(refdevice.getIpaddr());
@@ -1182,40 +1099,26 @@ public abstract class FastRunnable implements Runnable {
 
 		}
 		
-		private boolean updateSnmp(FastServiceDevice refdevice) {
+		private boolean updateSnmp(FastServiceDevice refdevice)  {
 			String snmpprofile = refdevice.getSnmpprofile();
-			IpSnmpProfile savedsnmpprofile = m_ipsnmp.get(refdevice.getIpaddr());
-			if ( savedsnmpprofile == null ) {
-				logger.info("FAST sync: set snmp profile: " + snmpprofile);
-				getService().getIpSnmpProfileContainer().add(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
-				final JobLogEntry jloe = new JobLogEntry();
-				jloe.setHostname(refdevice.getHostname());
-				jloe.setIpaddr(refdevice.getIpaddr());
-				jloe.setOrderCode(refdevice.getOrderCode());
-				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: set snmp profile: " + snmpprofile);
-				jloe.setNote(getNote(refdevice));
-				
-				List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-				logs.add(jloe);
-				log(logs);
-				return true;
-			} 
-			if ( !snmpprofile.equals(savedsnmpprofile.getSnmprofile())) {
-				logger.info("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
-				getService().getIpSnmpProfileContainer().update(new IpSnmpProfile(refdevice.getIpaddr(), snmpprofile));
-				final JobLogEntry jloe = new JobLogEntry();
-				jloe.setHostname(refdevice.getHostname());
-				jloe.setIpaddr(refdevice.getIpaddr());
-				jloe.setOrderCode(refdevice.getOrderCode());
-				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: updated snmp profile. Saved: " + savedsnmpprofile.getSnmprofile() + "Updated: " + snmpprofile);
-				jloe.setNote(getNote(refdevice));
-				
-				List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-				logs.add(jloe);
-				log(logs);
-				return true;
+			try {
+				if ( getService().saveSnmpProfile(refdevice.getIpaddr(), snmpprofile) ) {
+					logger.info("FAST sync: set snmp profile: " + snmpprofile);
+					final JobLogEntry jloe = new JobLogEntry();
+					jloe.setHostname(refdevice.getHostname());
+					jloe.setIpaddr(refdevice.getIpaddr());
+					jloe.setOrderCode(refdevice.getOrderCode());
+					jloe.setJobid(m_job.getJobid());
+					jloe.setDescription("FAST sync: set snmp profile: " + snmpprofile);
+					jloe.setNote(getNote(refdevice));
+					
+					List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
+					logs.add(jloe);
+					log(logs);
+					return true;
+				} 
+			} catch (SQLException e) {
+				logger.log(Level.WARNING,"FAST sync: cannot set snmp profile: " + snmpprofile,e);
 			}
 			
 			return false;
