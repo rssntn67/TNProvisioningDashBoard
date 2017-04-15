@@ -62,5 +62,9 @@ public class BasicInterface implements Serializable {
 		return true;
 	}	
 	
+	@Override
+	public String toString() {
+		return m_ip+"/"+m_descr+"/"+m_onmsprimary;
+	}
 
 }
