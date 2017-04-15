@@ -931,6 +931,8 @@ public abstract class FastRunnable implements Runnable {
 			
 			FastServiceLink reflink= m_fastOrderCodeServiceLinkMap.get(refdevice.getOrderCode());						
 			TrentinoNetworkNode rnode = new TrentinoNetworkNode(hostname, m_vrf.get(reflink.getVrf()), DashBoardUtils.TN_REQU_NAME);
+			rnode.setHostname(hostname);
+			rnode.setForeignId(hostname);
 			rnode = getnode(refdevice, reflink, rnode, secondary);
 
 
