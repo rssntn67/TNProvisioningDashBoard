@@ -312,7 +312,7 @@ public class SistemiInformativiTab extends RequisitionTab {
 					BasicService service = (BasicService)source.getValue();
 			        source.getContainerDataSource().removeItem(itemId);
 			        m_editorFields.getItemDataSource().getBean().delService(service);
-					logger.info("Deleted Secondary ip/service: " + service.getIp() + "/" + service.getService());
+					logger.info("Deleted Secondary ip/service: " + service.getInterface() + "/" + service.getService());
 			      }
 			    });
 			 

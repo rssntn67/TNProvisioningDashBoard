@@ -343,7 +343,7 @@ public class BasicNode implements Serializable {
 	}
 	
 	public void addService(BasicService bs) {
-		BasicInterface ip = bs.getBasicInterface();
+		BasicInterface ip = bs.getInterface();
 		String service = bs.getService();
 		if (!m_serviceMap.containsKey(ip)) {
 			m_serviceMap.put(ip, new HashSet<String>());
@@ -375,7 +375,7 @@ public class BasicNode implements Serializable {
 	}
 
 	public void delService(BasicService bs) {
-		BasicInterface ip = bs.getBasicInterface();
+		BasicInterface ip = bs.getInterface();
 		String service = bs.getService();
 		if (!m_serviceMap.containsKey(ip))
 			return;

@@ -211,7 +211,7 @@ public class TrentinoNetworkTab extends RequisitionTab {
 					BasicService ip = (BasicService) source.getValue();
 			        source.getContainerDataSource().removeItem(itemId);
 			        m_editorFields.getItemDataSource().getBean().delService(ip);
-			        m_secondaryIpComboBox.addItem(ip.getIp());
+			        m_secondaryIpComboBox.addItem(ip.getInterface().getIp());
 					logger.info("Deleted Secondary ip: " + ip);
 			      }
 			    });

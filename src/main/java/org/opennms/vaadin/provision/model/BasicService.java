@@ -1,6 +1,8 @@
 package org.opennms.vaadin.provision.model;
 
-public class BasicService extends BasicInterface {
+import java.io.Serializable;
+
+public class BasicService implements Serializable {
 			
 	/**
 	 * 
@@ -8,19 +10,14 @@ public class BasicService extends BasicInterface {
 	private static final long serialVersionUID = 3824402168422477329L;
 	
 	private String m_service;
+	private BasicInterface m_basicInterface;
 
 	public BasicService(BasicInterface bi) {
-		this.setOnmsprimary(bi.getOnmsprimary());
-		this.setIp(bi.getIp());
-		this.setDescr(bi.getDescr());
+		m_basicInterface = bi;
 	}
 
-	public BasicInterface getBasicInterface() {
-		BasicInterface bi = new BasicInterface();
-		bi.setOnmsprimary(getOnmsprimary());
-		bi.setIp(getIp());
-		bi.setDescr(getDescr());
-		return bi;
+	public BasicInterface getInterface() {
+		return m_basicInterface;
 		
 	}
 	public String getService() {
