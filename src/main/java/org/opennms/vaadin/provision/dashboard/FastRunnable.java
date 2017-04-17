@@ -4,6 +4,7 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicInterface;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
@@ -46,6 +48,7 @@ public abstract class FastRunnable implements Runnable {
 	Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
 	Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
 
+	List<BasicNode> m_updates=new ArrayList<BasicNode>();
 	Map<String,Categoria> m_vrf;
 	Map<String, BackupProfile> m_backup;
 	Map<String, SnmpProfile> m_snmp;
@@ -60,7 +63,21 @@ public abstract class FastRunnable implements Runnable {
 	public void syncRequisition() {
 		m_syncRequisition=true;
 	}
+	
+	public Collection<BasicNode> getUpdates() {
+		return m_updates;
+	}
 
+	public void resetUpdateMap() {
+		List<BasicNode> updates = new ArrayList<BasicNode>();
+		for (BasicNode node: m_updates) {
+			if (node.getOnmstate() == OnmsState.NONE)
+				continue;
+			updates.add(node);
+		}
+		m_updates = updates;
+	}
+	
 	public FastRunnable(DashBoardSessionService session) {
 		m_session = session;
 		m_logcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
@@ -437,7 +454,7 @@ public abstract class FastRunnable implements Runnable {
 						continue;
 					TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
 					if (isManagedByFast(rnode)) {
-						deleteNode(rnode);
+						delete(rnode);
 						continue;
 					}
 					Set<BasicInterface> inttoDelete = new HashSet<BasicInterface>();
@@ -936,6 +953,8 @@ public abstract class FastRunnable implements Runnable {
 			rnode = getnode(refdevice, reflink, rnode, secondary);
 
 
+			getService().add(rnode);
+			m_updates.add(rnode);
 			updateSnmp(refdevice);			
 			log(logs);
 		}
@@ -984,6 +1003,7 @@ public abstract class FastRunnable implements Runnable {
 			if (rnode.getOnmstate() == OnmsState.NONE)
 				return;
 			getService().update(rnode);
+			m_updates.add(rnode);
 
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(rnode.getHostname());
@@ -1084,6 +1104,7 @@ public abstract class FastRunnable implements Runnable {
 				return;
 			
 			getService().update(rnode);
+			m_updates.add(rnode);
 			updateSnmp(refdevice);
 			
 			final JobLogEntry jloe = new JobLogEntry();
@@ -1152,7 +1173,9 @@ public abstract class FastRunnable implements Runnable {
 			return false;
 		}
 		
-		private void deleteNode(TrentinoNetworkNode rnode) {
+		private void delete(TrentinoNetworkNode rnode) {
+			rnode.setDeleteState();
+			m_updates.add(rnode);
 			getService().delete(rnode);
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(rnode.getForeignId());

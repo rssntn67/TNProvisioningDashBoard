@@ -1,5 +1,11 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.util.Collection;
+import java.util.Map;
+
+import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
+
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -10,6 +16,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
@@ -78,7 +85,29 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 
 	public abstract void load();	
 	public abstract String getName();
-
+	public abstract void resetUpdateMap();
+	public abstract Map<String, Collection<BasicNode>> getUpdatesMap();
+	
+	public void clearUpdateMap(String requisition, BasicNode.OnmsSync sync) {
+		if (!getUpdatesMap().containsKey(requisition)) 
+			return;
+		for (BasicNode node: getUpdatesMap().get(requisition)) {
+			switch (sync) {
+			case TRUE:
+				node.setNoneState();
+				break;
+			case FALSE:
+				node.deleteOnmsSyncOperation(OnmsSync.FALSE);
+				break;
+			case DBONLY:
+				node.deleteOnmsSyncOperation(OnmsSync.DBONLY);
+				break;
+			}
+		}
+		resetUpdateMap();
+	}
+	
+	
 	public DashBoardSessionService getService(){
 		if (m_session != null)
 			return m_session;
@@ -121,6 +150,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	
 	public VerticalLayout getRight() {
 		return m_right;
+	}
+
+	public void sync(String requisitionName) {
+		SyncWindow subWindow = new SyncWindow(requisitionName);
+        subWindow.center();
+        subWindow.setWidth("600px");
+        subWindow.setCaption("Sincronizzazione dei nodi " + requisitionName);
+        UI.getCurrent().addWindow(subWindow);
 	}
 
 

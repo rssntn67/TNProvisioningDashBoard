@@ -2,16 +2,17 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicNode;
-import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -52,6 +53,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	private BeanContainer<String, MediaGatewayNode> m_requisitionContainer = new BeanContainer<String, MediaGatewayNode>(MediaGatewayNode.class);
 	private boolean loaded=false;
 	private BasicNode m_mg;
+	private Map<String,BasicNode> m_updates = new HashMap<String,BasicNode>();
 
 	private BeanFieldGroup<MediaGatewayNode> m_editorFields     = new BeanFieldGroup<MediaGatewayNode>(MediaGatewayNode.class);
 	Integer newHost = 0;
@@ -99,15 +101,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	public void load() {
 		if (!loaded) {
 			try {
-				RequisitionNode mg = getService().getMediaGateway();
-				if (mg == null ) {
-					String mediagateway = getService().createMediaGateway();
-					m_mg = new BasicNode(mediagateway,DashBoardUtils.SIVN_REQU_NAME);
-					updateMediaGatewayNode();
-				} else {
-					m_mg = new BasicNode(mg.getNodeLabel(),DashBoardUtils.SIVN_REQU_NAME);
-					m_mg.setNoneState();
-				}
+				m_mg = getService().getMediaGateway();
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
 				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
@@ -164,46 +158,49 @@ public class MediaGatewayTab extends RequisitionTab {
 		}
 				
 	}
-	private void updateMediaGatewayNode() {
-		m_mg.setUpdateState();
-		m_mg.setOnmsSyncOperations(OnmsSync.FALSE);
-		m_updates.put(m_mg.getNodeLabel(), m_mg);
-	}
 	
 	@Override
 	public void buttonClick(ClickEvent event) {
-		super.buttonClick(event);
 		if (event.getButton() == m_syncSIVNRequisButton) {
 	    	sync(DashBoardUtils.SIVN_REQU_NAME);
+		} else {
+			super.buttonClick(event);			
 		}
 	}
 
 	@Override
 	public void replace() {
-		Notification.show(DashBoardUtils.TN_REQU_NAME  + 
-				"Sync Required", "Push Sync Button", Notification.Type.TRAY_NOTIFICATION);
 		super.replace();
-		updateMediaGatewayNode();
+		//delete-add
+		m_mg.setUpdateState();
+		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
 
 	@Override
 	public void delete() {
-		Notification.show(DashBoardUtils.TN_REQU_NAME + " and " +  
-				DashBoardUtils.SIVN_REQU_NAME + 
-				"Sync Required", "Push Either Sync and Sync Virtual node Buttons", Notification.Type.TRAY_NOTIFICATION);
 		super.delete();		
-		updateMediaGatewayNode();
+		m_mg.setUpdateState();
+		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
 
 	@Override
 	public void save() {
-		Notification.show(DashBoardUtils.TN_REQU_NAME + " and " +  
-				DashBoardUtils.SIVN_REQU_NAME + 
-				"Sync Required", "Push Either Sync and Sync Virtual node Buttons", Notification.Type.TRAY_NOTIFICATION);
 		super.save();
-		updateMediaGatewayNode();
+		m_mg.setUpdateState();
+		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
-	
+		
+	@Override
+	public Map<String,Collection<BasicNode>> getUpdatesMap() {
+		Map<String,Collection<BasicNode>> updatesmap = super.getUpdatesMap();
+		if (m_mg.getOnmstate() != OnmsState.NONE) {
+			List<BasicNode> sivnnodes = new ArrayList<BasicNode>();
+			sivnnodes.add(m_mg);
+			updatesmap.put(DashBoardUtils.SIVN_REQU_NAME, sivnnodes);
+		}
+		return updatesmap;
+	}
+
 	private void layout() { 
 
 		getRightHead().addComponent(m_syncSIVNRequisButton);

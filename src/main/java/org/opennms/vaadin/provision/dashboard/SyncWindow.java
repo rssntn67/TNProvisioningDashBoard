@@ -1,6 +1,10 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.SyncOperationNode;
 
 import com.vaadin.annotations.Theme;
@@ -24,11 +28,9 @@ public class SyncWindow extends Window implements ClickListener{
 	private Button m_synctrue = new Button("Sync True");
 	private Button m_syncfalse = new Button("Sync False");
 	private Button m_syncdbonly = new Button("Sync DbOnly");
-	private RequisitionTab m_tab;
 	private String m_requisition;
 
-	public SyncWindow(RequisitionTab tab, String requisition) {
-		m_tab=tab;
+	public SyncWindow(String requisition) {
 		m_requisition=requisition;
 		m_synctrue.addClickListener(this);
 		m_syncfalse.addClickListener(this);
@@ -54,17 +56,20 @@ public class SyncWindow extends Window implements ClickListener{
         buttons.addComponent(m_syncdbonly);
         subContent.addComponent(buttons);        
         subContent.addComponent(new HorizontalLayout());
-        BeanItemContainer<SyncOperationNode> container = 
-        		DashBoardUtils.
-        		getUpdateContainer(
-        				m_tab.getUpdates());
-        if (container.size() == 0) {
-			subContent.addComponent
-			(new Label("No pending operation on Requisition"));
-			buttons.setVisible(false);
-		}
-		else {
-			Table updatetable = new Table("Nodi da Sincronizzare");
+        boolean noupdates = true;
+        Map<String,Map<String,Collection<BasicNode>>> updatemap = 
+        		((DashboardUI)getUI()).getUpdatesMapforTabs();
+        for (String tabname: updatemap.keySet()) {
+        	Map<String,Collection<BasicNode>> updatesontab= updatemap.get(tabname);
+        	if (updatemap.isEmpty())
+        		continue;
+        	if (!updatesontab.containsKey(requisition))
+        		continue;
+        	noupdates = true;
+        	BeanItemContainer<SyncOperationNode> container = 
+            		DashBoardUtils.
+            		getUpdateContainer(updatesontab.get(requisition));
+			Table updatetable = new Table("Nodi da Sincronizzare (modificati da: " + tabname +")");
 			updatetable.setSelectable(false);
 			updatetable.setContainerDataSource(container);
 			updatetable.setSizeFull();
@@ -79,21 +84,24 @@ public class SyncWindow extends Window implements ClickListener{
 					m_syncfalse.setEnabled(true);
 			}
 		}
+        if (noupdates) {
+        	subContent.addComponent
+        	(new Label("No pending operation on Requisition"));
+        	buttons.setVisible(false);
+        }
+
 	}
 
 	@Override
 	public void buttonClick(ClickEvent event) {
 		
 		if (event.getButton() == m_synctrue)
-			m_tab.synctrue(m_requisition);
+			((DashboardUI)getUI()).synctrue(m_requisition);
 		else if (event.getButton() == m_syncfalse) 
-			m_tab.syncfalse(m_requisition);
+			((DashboardUI)getUI()).syncfalse(m_requisition);
 		else if (event.getButton() == m_syncdbonly) 
-			m_tab.syncdbonly(m_requisition);
+			((DashboardUI)getUI()).syncdbonly(m_requisition);
 		close();
 	}
 
-	public RequisitionTab getTab() {
-		return m_tab;
-	}
 }

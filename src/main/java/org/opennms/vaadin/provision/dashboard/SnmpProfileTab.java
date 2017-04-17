@@ -1,11 +1,15 @@
 package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
@@ -375,6 +379,15 @@ public class SnmpProfileTab extends DashboardTab {
 	@Override
 	public String getName() {
 		return "SnmpProfileTab";
+	}
+
+	@Override
+	public void resetUpdateMap() {
+	}
+
+	@Override
+	public Map<String, Collection<BasicNode>> getUpdatesMap() {
+		return new HashMap<String, Collection<BasicNode>>();
 	}
 
 

@@ -1,8 +1,13 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.opennms.vaadin.provision.model.BasicNode;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -151,6 +156,15 @@ public class LoginBox extends DashboardTab {
 	@Override
 	public String getName() {
 		return "LoginBox";
+	}
+
+	@Override
+	public void resetUpdateMap() {
+	}
+
+	@Override
+	public Map<String, Collection<BasicNode>> getUpdatesMap() {
+		return new HashMap<String, Collection<BasicNode>>();
 	}
 
 

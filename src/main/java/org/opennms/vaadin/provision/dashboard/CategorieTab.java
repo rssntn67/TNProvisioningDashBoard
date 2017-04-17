@@ -3,13 +3,17 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.Categoria;
 
 import com.vaadin.annotations.Theme;
@@ -657,5 +661,13 @@ public class CategorieTab extends DashboardTab {
 		return "CatTab";
 	}
 
-	
+	@Override
+	public void resetUpdateMap() {
+	}
+
+	@Override
+	public Map<String, Collection<BasicNode>> getUpdatesMap() {
+		return new HashMap<String, Collection<BasicNode>>();
+	}
+
 }

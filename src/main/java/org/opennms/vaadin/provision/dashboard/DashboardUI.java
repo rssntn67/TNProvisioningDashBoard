@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -21,12 +22,14 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Notification.Type;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -69,22 +72,26 @@ public class DashboardUI extends DashboardAbstractUI {
 	    }
 	    m_tabSheet.getLoginBox().setEnabled(true);
 	}
+
+	public Map<String, Map<String,Collection<BasicNode>>> getUpdatesMapforTabs() {
+		Map<String, Map<String,Collection<BasicNode>>> updatemap = 
+				new HashMap<String,Map<String,Collection<BasicNode>>>();
+		Iterator<Component> ite = m_tabSheet.iterator();
+	    while (ite.hasNext()) {
+    		DashboardTab tab = (DashboardTab) ite.next();
+    		if (!tab.getUpdatesMap().isEmpty())
+    			updatemap.put(tab.getName(), tab.getUpdatesMap());
+    	}
+	    return updatemap;
+	}
 	
 	public void onLogout() {
 		if (getSessionService().isFastRunning()) {
 			createfastdialogwindown();
 			return;
 		}
-		Map<String,Collection<BasicNode>> updatemap = new HashMap<String,Collection<BasicNode>>();
-		Iterator<Component> ite = m_tabSheet.iterator();
-	    while (ite.hasNext()) {
-	    	Component comp = ite.next();
-	    	if (comp instanceof RequisitionTab) {
-	    		RequisitionTab tab = (RequisitionTab) comp;
-	    		if (!tab.getUpdates().isEmpty())
-	    			updatemap.put(tab.getRequisitionName(),tab.getUpdates());
-	    	}
-    	}
+		Map<String, Map<String,Collection<BasicNode>>> updatemap = 
+				getUpdatesMapforTabs();
 
 		if (!updatemap.isEmpty()) {
 			createdialogwindown(updatemap);
@@ -93,6 +100,50 @@ public class DashboardUI extends DashboardAbstractUI {
 		reallylogout();	
 	}
 	
+	public void clearUpdateMap(String requisition, BasicNode.OnmsSync sync) {
+		Iterator<Component> ite = m_tabSheet.iterator();
+	    while (ite.hasNext()) {
+    		DashboardTab tab = (DashboardTab) ite.next();
+    		tab.clearUpdateMap(requisition,sync);
+	    }
+	}
+
+	public void synctrue(String requisition) {
+		try {
+			getSessionService().synctrue(requisition);
+			clearUpdateMap(requisition,OnmsSync.TRUE);
+			logger.info("Sync succeed foreign source: " +requisition);
+			Notification.show("Sync " + requisition, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync Failed foreign source: " +requisition + " " + e.getLocalizedMessage());
+			Notification.show("Sync Failed foreign source" + requisition, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}
+	}
+
+	public void syncfalse(String requisition) {
+		try {
+			getSessionService().syncfalse(requisition);
+	    	clearUpdateMap(requisition,OnmsSync.FALSE);
+			logger.info("Sync rescanExisting=false succeed foreign source: " +requisition);
+			Notification.show("Sync rescanExisting=false " + requisition, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync rescanExisting=false Failed foreign source: " +requisition + " " + e.getLocalizedMessage());
+			Notification.show("Sync rescanExisting=false Failed foreign source" + requisition, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}				
+	}
+
+	public void syncdbonly(String requisition) {
+		try {
+			getSessionService().syncdbonly(requisition);
+			clearUpdateMap(requisition,OnmsSync.DBONLY);
+			logger.info("Sync rescanExisting=dbonly succeed foreign source: " +requisition);
+			Notification.show("Sync rescanExisting=dbonly " + requisition, "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
+		} catch (Exception e) {
+			logger.warning("Sync rescanExisting=dbonly Failed foreign source: " +requisition + " " + e.getLocalizedMessage());
+			Notification.show("Sync rescanExisting=dbonly Failed foreign source" + requisition, e.getLocalizedMessage(), Type.ERROR_MESSAGE);
+		}						
+	}
+
 	public void reallylogout() {
 		getSessionService().logout();
 		Iterator<Component> ite = m_tabSheet.iterator();
@@ -159,7 +210,7 @@ public class DashboardUI extends DashboardAbstractUI {
 	}
 
 	
-	private void createdialogwindown(Map<String,Collection<BasicNode>> updatemap) {
+	private void createdialogwindown(Map<String,Map<String,Collection<BasicNode>>> updatemap) {
 		final Window confirm = new Window("Modifiche effettuate e non sincronizzate");
 		Button si = new Button("si");
 		si.addClickListener(new ClickListener() {
@@ -194,14 +245,15 @@ public class DashboardUI extends DashboardAbstractUI {
 		windowcontent.setMargin(true);
 		windowcontent.setSpacing(true);
     
-		for (String requisition: updatemap.keySet()) {
-			Table updatetable = new Table("Operazioni di Sync sospese per Requisition: " + requisition);
+		for (String tabname: updatemap.keySet()) {
+		for (String requisition: updatemap.get(tabname).keySet()) {
+			Table updatetable = new Table("Operazioni di Sync sospese per Tab: "+ tabname + " Requisition: " + requisition);
 			updatetable.setSelectable(false);
-			updatetable.setContainerDataSource(DashBoardUtils.getUpdateContainer(updatemap.get(requisition)));
+			updatetable.setContainerDataSource(DashBoardUtils.getUpdateContainer(updatemap.get(tabname).get(requisition)));
 			updatetable.setSizeFull();
 			updatetable.setPageLength(3);
 			windowcontent.addComponent(updatetable);
-		}
+		}}
 
 		windowcontent.addComponent(new Label("Alcune Modifiche che sono state effettuate "
 				+ "alle Requisition richiedono le "
@@ -231,9 +283,6 @@ public class DashboardUI extends DashboardAbstractUI {
 		infowindow.setModal(true);
 		infowindow.setWidth("400px");
         UI.getCurrent().addWindow(infowindow);
-	}
-
-	
-	
+	}	
 
 }

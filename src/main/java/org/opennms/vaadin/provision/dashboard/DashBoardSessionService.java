@@ -39,6 +39,7 @@ import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
@@ -769,7 +770,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());		
 
-		RequisitionNode mediagateway = getMediaGateway();
+		BasicNode mediagateway = getMediaGateway();
 		if (mediagateway == null)
 			return;
 		m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(), tnnode.getPrimary());
@@ -790,15 +791,38 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	}
 
 
-	public RequisitionNode getMediaGateway() {
-		for (RequisitionNode reqnode: m_onmsDao.getRequisition(DashBoardUtils.SIVN_REQU_NAME).getNodes()) {
+	@SuppressWarnings("deprecation")
+	public BasicNode getMediaGateway() {
+		BasicNode mg=null;
+		Requisition sivn = m_onmsDao.getRequisition(DashBoardUtils.SIVN_REQU_NAME);
+		for (RequisitionNode reqnode: sivn.getNodes()) {
 			if (reqnode.getNodeLabel().equals("mediagateway")) {
-				return reqnode;
+				mg = new BasicNode(reqnode.getNodeLabel(),DashBoardUtils.SIVN_REQU_NAME);
+				for (RequisitionInterface ri: reqnode.getInterfaces()) {
+					BasicInterface bi = new BasicInterface();
+					bi.setIp(ri.getIpAddr());
+					bi.setDescr(ri.getDescr());
+					bi.setOnmsprimary(OnmsPrimary.valueOf(ri.getSnmpPrimary().getCode()));
+					for (RequisitionMonitoredService rs: ri.getMonitoredServices()) {
+						BasicService bs = new BasicService(bi);
+						bs.setService(rs.getServiceName());
+						mg.addService(bs);
+					}
+				}
+				mg.setNoneState();
+				return mg;
 			}
 		}
-		return null;
+		if (mg == null ) {
+			String mediagateway = createMediaGateway();
+			mg = new BasicNode(mediagateway,DashBoardUtils.SIVN_REQU_NAME);
+		}
+
+		return mg;
 	}
 	
+
+
 	public String createMediaGateway() {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		requisitionNode.setForeignId("mediagateway");
@@ -808,7 +832,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return requisitionNode.getNodeLabel();
 	}
 
-	public void add(MediaGatewayNode node) throws SQLException {
+	public void add(MediaGatewayNode node) {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(node.getForeignId());
@@ -851,7 +875,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		node.clear();
 		
-		RequisitionNode mediagateway = getMediaGateway();
+		BasicNode mediagateway = getMediaGateway();
 		if (mediagateway == null )
 			return;
 		RequisitionInterface mgiface = new RequisitionInterface();
@@ -1070,7 +1094,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				bck);
 		node.clear();
 		
-		RequisitionNode mediagateway = getMediaGateway();
+		BasicNode mediagateway = getMediaGateway();
 		if (mediagateway == null) {
 			return;
 		}
@@ -1086,7 +1110,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 	}
 
-	public void add(TrentinoNetworkNode node) throws SQLException {
+	public void add(TrentinoNetworkNode node) {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
 		requisitionNode.setForeignId(node.getForeignId());
@@ -1562,5 +1586,4 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			delete((SistemiInformativiNode)node);
 		}
 	}
-
 }

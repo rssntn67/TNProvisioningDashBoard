@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
-import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -113,7 +112,7 @@ public abstract class RequisitionTab extends DashboardTab {
 	private Map<String,Set<String>> m_foreignIdNodeLabelMap = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> m_nodeLabelForeignIdMap = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> m_primaryipforeignidmap = new HashMap<String, Set<String>>();
-	protected Map<String,BasicNode> m_updates = new HashMap<String,BasicNode>();
+	private Map<String,BasicNode> m_updates = new HashMap<String,BasicNode>();
 
 	private boolean m_loaded = false;
 
@@ -450,10 +449,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		
 	}
 	
-	public Collection<BasicNode> getUpdates() {
-		return m_updates.values();
-	}
-
 	public abstract void selectItem(BasicNode node);
 	public abstract void cleanSearchBox();
 	public abstract BeanContainer<String,? extends BasicNode> getRequisitionContainer();
@@ -615,14 +610,6 @@ public abstract class RequisitionTab extends DashboardTab {
 
 	}
 	
-	public void sync(String requisitionName) {
-		SyncWindow subWindow = new SyncWindow(this,requisitionName);
-        subWindow.center();
-        subWindow.setWidth("600px");
-        subWindow.setCaption("Sincronizzazione dei nodi " + requisitionName);
-        UI.getCurrent().addWindow(subWindow);
-	}
-
 	public void  newNode() {
 		cleanSearchBox();
 		m_replaceNodeButton.setEnabled(false);
@@ -707,12 +694,12 @@ public abstract class RequisitionTab extends DashboardTab {
 				return;
 			}
 		}
-
+		
 		if (node.getOnmstate() == BasicNode.OnmsState.NEW) {
 			m_updates.remove(node.getNodeLabel());
 		} else {
 			node.setDeleteState();
-			m_updates.put(node.getNodeLabel(),node);			
+			m_updates.put(node.getNodeLabel(),node);
 		}
 
 		if ( ! getRequisitionContainer().removeItem(node.getNodeLabel()))
@@ -885,86 +872,30 @@ public abstract class RequisitionTab extends DashboardTab {
 	public ComboBox getParentComboBox() {
 		return m_parentComboBox;
 	}
-	
-	public void synctrue(String requisition) {
-		try {
-			getService().synctrue(requisition);
-	    	clearUpdateMap(requisition,OnmsSync.TRUE);
-			logger.info("Sync succeed foreign source: " +getRequisitionName());
-			Notification.show("Sync " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
-		} catch (Exception e) {
-			logger.warning("Sync Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
-			Notification.show("Sync Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-		}
-	}
-
-	public void syncfalse(String requisition) {
-		try {
-			getService().syncfalse(requisition);
-	    	clearUpdateMap(requisition,OnmsSync.FALSE);
-			logger.info("Sync rescanExisting=false succeed foreign source: " +getRequisitionName());
-			Notification.show("Sync rescanExisting=false " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
-		} catch (Exception e) {
-			logger.warning("Sync rescanExisting=false Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
-			Notification.show("Sync rescanExisting=false Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-		}				
-	}
-
-	public void syncdbonly(String requisition) {
-		try {
-			getService().syncdbonly(requisition);
-	    	clearUpdateMap(requisition,OnmsSync.DBONLY);
-			logger.info("Sync rescanExisting=dbonly succeed foreign source: " +getRequisitionName());
-			Notification.show("Sync rescanExisting=dbonly " + getRequisitionName(), "Request Sent to Rest Service", Type.HUMANIZED_MESSAGE);
-		} catch (Exception e) {
-			logger.warning("Sync rescanExisting=dbonly Failed foreign source: " +getRequisitionName() + " " + e.getLocalizedMessage());
-			Notification.show("Sync rescanExisting=dbonly Failed foreign source" + getRequisitionName(), e.getLocalizedMessage(), Type.ERROR_MESSAGE);
-		}						
-	}
-	
+		
 	public void applyFilter(String hostname) {
 		getRequisitionContainer().addContainerFilter(
 				new RequisitionNodeFilter(hostname));
 
 	}
-	
-	public void clearUpdateMap(String requisition,BasicNode.OnmsSync sync) {
-		Map<String, BasicNode> after = new HashMap<String, BasicNode>();		
-		switch (sync) {
-			case TRUE:
-				for (BasicNode node: m_updates.values()) {
-					if (!requisition.equals(node.getForeignSource()))
-						continue;
-					node.setNoneState();
-				}
-				break;
-			case FALSE:
-				for (BasicNode node: m_updates.values()) {
-					if (!requisition.equals(node.getForeignSource()))
-						continue;
-					node.deleteOnmsSyncOperation(OnmsSync.FALSE);
-					if (node.getSyncOperations().isEmpty())
-						node.setNoneState();
-					else
-						after.put(node.getNodeLabel(), node);
-				}
-				break;
-			case DBONLY:
-				for (BasicNode node: m_updates.values()) {
-					if (!requisition.equals(node.getForeignSource()))
-						continue;
-					node.deleteOnmsSyncOperation(OnmsSync.DBONLY);
-					if (node.getSyncOperations().isEmpty())
-						node.setNoneState();
-					else
-						after.put(node.getNodeLabel(), node);
-				}
-				break;
-		}
-		m_updates = after;
 
+	@Override
+	public void resetUpdateMap() {
+		Map<String, BasicNode> updates = new HashMap<String,BasicNode>();
+		for (String nodelabel : getRequisitionContainer().getItemIds()) {
+			BasicNode node = getRequisitionContainer().getItem(nodelabel).getBean();
+			if (node.getOnmstate() ==  OnmsState.NONE)
+				continue;
+			updates.put(node.getNodeLabel(),node);
+		}
+		m_updates=updates;
 	}
 
-
+	@Override
+	public Map<String,Collection<BasicNode>> getUpdatesMap() {
+		Map<String, Collection<BasicNode>> updatemap = new HashMap<String, Collection<BasicNode>>();
+		updatemap.put(getRequisitionName(), m_updates.values());
+		return updatemap;
+	}
 
 }

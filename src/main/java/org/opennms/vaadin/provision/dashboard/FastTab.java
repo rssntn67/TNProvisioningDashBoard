@@ -2,11 +2,16 @@ package org.opennms.vaadin.provision.dashboard;
 
 
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
+import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.JobLogEntry;
 
 import com.vaadin.annotations.Theme;
@@ -78,13 +83,15 @@ public class FastTab extends DashboardTab {
 
 	private Panel m_panel  = new Panel();
     private Button m_fast = new Button("Start Fast Integration");
+	private Button m_syncfast  = new Button("Sync Fast");
+
     final ProgressBar m_progress = new ProgressBar();
 
     private JobDao m_jobdao;
     private JobLogDao m_joblogdao;
     private boolean m_loaded = false;
 	private TextField m_searchField       = new TextField("Search Job Logs Text");
-    
+	private FastTabRunnable m_runnable;
     private Table m_jobTable =  new Table();
     private Table m_logTable =  new Table();
     
@@ -93,6 +100,20 @@ public class FastTab extends DashboardTab {
 	 */
 	private static final long serialVersionUID = 9020194832144108254L;
 
+	@Override
+	public Map<String, Collection<BasicNode>> getUpdatesMap() {
+		Map<String,Collection<BasicNode>> updatesmap = new HashMap<String, Collection<BasicNode>>();
+		if (m_runnable != null && !m_runnable.getUpdates().isEmpty())
+			updatesmap.put(DashBoardUtils.TN_REQU_NAME, m_runnable.getUpdates());
+		return updatesmap;
+	}
+
+	@Override
+	public void resetUpdateMap() {
+		if (m_runnable != null )
+			m_runnable.resetUpdateMap();
+	}
+	
 	public FastTab() {
 		super();
 		
@@ -148,9 +169,12 @@ public class FastTab extends DashboardTab {
 	    m_progress.setVisible(false);
         m_logTable.setVisible(false);
 		m_fast.addClickListener(this);
+		m_syncfast.addClickListener(this);
 
 		getRightHead().addComponent(m_fast);
-		getRightHead().setComponentAlignment(m_fast, Alignment.MIDDLE_RIGHT);
+		getRightHead().setComponentAlignment(m_fast, Alignment.MIDDLE_LEFT);
+		getRightHead().addComponent(m_syncfast);
+		getRightHead().setComponentAlignment(m_syncfast, Alignment.MIDDLE_RIGHT);
 
 		getLeft().addComponent(new Panel("Log Search",searchlayout));
 		getLeft().addComponent(new Panel("Jobs",m_jobTable));
@@ -193,11 +217,11 @@ public class FastTab extends DashboardTab {
 		int curjobid = m_jobdao.getLastJobId().getValue();
 		logger.info ("created job with id: " + curjobid);
 		m_logTable.setVisible(false);
-        FastTabRunnable runnable = new FastTabRunnable(getService());
-		m_logTable.setContainerDataSource(runnable.getJobLogContainer());
+        m_runnable = new FastTabRunnable(getService());
+		m_logTable.setContainerDataSource(m_runnable.getJobLogContainer());
 
         UI.getCurrent().setPollInterval(5000);
-        Thread thread = new Thread(runnable);
+        Thread thread = new Thread(m_runnable);
         thread.start();		
 		m_logTable.setVisible(true);
         
@@ -210,6 +234,8 @@ public class FastTab extends DashboardTab {
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_fast) {
 	        runFast();
+		} else	if (event.getButton() == m_syncfast) {
+			sync(DashBoardUtils.TN_REQU_NAME);
 		} else {
 			super.buttonClick(event);
 		}
