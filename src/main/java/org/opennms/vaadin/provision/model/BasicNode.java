@@ -458,10 +458,12 @@ public class BasicNode implements Serializable {
 
 	public void deleteOnmsSyncOperation(OnmsSync syncoperation) {
 		m_syncoperations.remove(syncoperation);
+		if (m_syncoperations.isEmpty())
+			m_onmstate =  OnmsState.NONE;
 	}
 	
 	public void setOnmsSyncOperations(OnmsSync syncoperation) {
-		if (m_onmstate == OnmsState.DELETE || m_onmstate == OnmsState.NEW) {
+		if (m_onmstate == OnmsState.DELETE || m_onmstate == OnmsState.NEW || m_onmstate == OnmsState.REPLACE) {
 			m_syncoperations.clear();
 			m_syncoperations.add(OnmsSync.FALSE);
 		} else {
