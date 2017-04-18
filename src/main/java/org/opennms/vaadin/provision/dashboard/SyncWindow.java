@@ -14,6 +14,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -29,6 +30,8 @@ public class SyncWindow extends Window implements ClickListener{
 	private Button m_syncfalse = new Button("Sync False");
 	private Button m_syncdbonly = new Button("Sync DbOnly");
 	private String m_requisition;
+	//private DashboardUI m_ui;
+
 	public SyncWindow(String requisition) {
 		m_requisition=requisition;
 		m_synctrue.addClickListener(this);
@@ -57,7 +60,7 @@ public class SyncWindow extends Window implements ClickListener{
         subContent.addComponent(new HorizontalLayout());
         boolean noupdates = true;
         Map<String,Map<String,Collection<BasicNode>>> updatemap = 
-        		((DashboardUI)getParent()).
+        		((DashboardUI)UI.getCurrent()).
         		getUpdatesMapforTabs();
         for (String tabname: updatemap.keySet()) {
         	Map<String,Collection<BasicNode>> updatesontab= updatemap.get(tabname);
