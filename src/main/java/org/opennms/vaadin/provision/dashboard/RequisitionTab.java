@@ -894,7 +894,8 @@ public abstract class RequisitionTab extends DashboardTab {
 	@Override
 	public Map<String,Collection<BasicNode>> getUpdatesMap() {
 		Map<String, Collection<BasicNode>> updatemap = new HashMap<String, Collection<BasicNode>>();
-		updatemap.put(getRequisitionName(), m_updates.values());
+		if (!m_updates.isEmpty())
+			updatemap.put(getRequisitionName(), m_updates.values());
 		return updatemap;
 	}
 
