@@ -30,7 +30,6 @@ public class SyncWindow extends Window implements ClickListener{
 	private Button m_syncfalse = new Button("Sync False");
 	private Button m_syncdbonly = new Button("Sync DbOnly");
 	private String m_requisition;
-	//private DashboardUI m_ui;
 
 	public SyncWindow(String requisition) {
 		m_requisition=requisition;
@@ -68,7 +67,7 @@ public class SyncWindow extends Window implements ClickListener{
         		continue;
         	if (!updatesontab.containsKey(requisition))
         		continue;
-        	noupdates = true;
+        	noupdates = false;
         	BeanItemContainer<SyncOperationNode> container = 
             		DashBoardUtils.
             		getUpdateContainer(updatesontab.get(requisition));
@@ -98,13 +97,13 @@ public class SyncWindow extends Window implements ClickListener{
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_synctrue)
-    		((DashboardUI)getParent()).
+    		((DashboardUI)UI.getCurrent()).
     		synctrue(m_requisition);
 		else if (event.getButton() == m_syncfalse) 
-    		((DashboardUI)getParent()).
+    		((DashboardUI)UI.getCurrent()).
     		syncfalse(m_requisition);
 		else if (event.getButton() == m_syncdbonly) 
-    		((DashboardUI)getParent()).
+    		((DashboardUI)UI.getCurrent()).
     		syncdbonly(m_requisition);
 		close();
 	}
