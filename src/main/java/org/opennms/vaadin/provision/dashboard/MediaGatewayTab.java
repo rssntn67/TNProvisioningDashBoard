@@ -193,7 +193,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	@Override
 	public Map<String,Collection<BasicNode>> getUpdatesMap() {
 		Map<String,Collection<BasicNode>> updatesmap = super.getUpdatesMap();
-		if (m_mg.getOnmstate() != OnmsState.NONE) {
+		if (m_mg != null && m_mg.getOnmstate() != OnmsState.NONE) {
 			List<BasicNode> sivnnodes = new ArrayList<BasicNode>();
 			sivnnodes.add(m_mg);
 			updatesmap.put(DashBoardUtils.SIVN_REQU_NAME, sivnnodes);
