@@ -831,6 +831,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public void reconcilemediagateway(BasicNode mediagateway) {
 		if (mediagateway == null )
 			return;
+		Set<BasicInterface> ipsN = new HashSet<BasicInterface>();
+		for (BasicInterface bi: mediagateway.getServiceMap().keySet()) {
+			if (bi.getDescr().equals(DashBoardUtils.DESCR_TNPD))
+				continue;
+			bi.setDescr(DashBoardUtils.DESCR_TNPD);
+			ipsN.add(bi);
+		}
 		updateonms(DashBoardUtils.SIVN_REQU_NAME, 
 				mediagateway.getForeignId(), 
 				null, 
@@ -844,7 +851,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				mediagateway.getServiceToDel(), 
 				mediagateway.getServiceToAdd(), 
 				new ArrayList<RequisitionAsset>(), 
-				mediagateway.getServiceMap().keySet(), 
+				ipsN, 
 				null);
 		mediagateway.clear();
 	}

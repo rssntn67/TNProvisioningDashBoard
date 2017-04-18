@@ -17,6 +17,7 @@ import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 
@@ -220,7 +221,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			m_mg.delService(bs);
 		for (BasicService bs: serviceToAdd)
 			m_mg.addService(bs);
-		
+		m_mg.setOnmsSyncOperations(OnmsSync.TRUE);
 		getService().reconcilemediagateway(m_mg);
 		if (openwindow) {
 			final Window reconcilemgvnwindow = new Window(getName() + ": MediaGateway reconcile");
