@@ -806,12 +806,14 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					}
 				}
 				mg.setNoneState();
+				mg.clear();
 				return mg;
 			}
 		}
 		if (mg == null ) {
 			mg = new BasicNode(createMediaGateway(),DashBoardUtils.SIVN_REQU_NAME);
 			mg.setNoneState();
+			mg.clear();
 		}
 
 		return mg;
@@ -844,6 +846,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				new ArrayList<RequisitionAsset>(), 
 				mediagateway.getServiceMap().keySet(), 
 				null);
+		mediagateway.clear();
 	}
 
 	public void add(MediaGatewayNode node) {
