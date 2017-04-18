@@ -29,7 +29,6 @@ public class SyncWindow extends Window implements ClickListener{
 	private Button m_syncfalse = new Button("Sync False");
 	private Button m_syncdbonly = new Button("Sync DbOnly");
 	private String m_requisition;
-
 	public SyncWindow(String requisition) {
 		m_requisition=requisition;
 		m_synctrue.addClickListener(this);
@@ -58,7 +57,8 @@ public class SyncWindow extends Window implements ClickListener{
         subContent.addComponent(new HorizontalLayout());
         boolean noupdates = true;
         Map<String,Map<String,Collection<BasicNode>>> updatemap = 
-        		((DashboardUI)getUI()).getUpdatesMapforTabs();
+        		((DashboardUI)getParent()).
+        		getUpdatesMapforTabs();
         for (String tabname: updatemap.keySet()) {
         	Map<String,Collection<BasicNode>> updatesontab= updatemap.get(tabname);
         	if (updatemap.isEmpty())
@@ -94,13 +94,15 @@ public class SyncWindow extends Window implements ClickListener{
 
 	@Override
 	public void buttonClick(ClickEvent event) {
-		
 		if (event.getButton() == m_synctrue)
-			((DashboardUI)getUI()).synctrue(m_requisition);
+    		((DashboardUI)getParent()).
+    		synctrue(m_requisition);
 		else if (event.getButton() == m_syncfalse) 
-			((DashboardUI)getUI()).syncfalse(m_requisition);
+    		((DashboardUI)getParent()).
+    		syncfalse(m_requisition);
 		else if (event.getButton() == m_syncdbonly) 
-			((DashboardUI)getUI()).syncdbonly(m_requisition);
+    		((DashboardUI)getParent()).
+    		syncdbonly(m_requisition);
 		close();
 	}
 
