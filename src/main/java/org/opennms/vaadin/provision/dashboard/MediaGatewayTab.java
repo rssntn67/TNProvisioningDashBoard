@@ -215,6 +215,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			serviceToAdd.add(bs);
 		}
 		if (serviceToAdd.isEmpty() && serviceToDel.isEmpty()) {
+			getService().reconcilemediagateway(m_mg);
 			m_mg.setNoneState();
 			return;			
 		}

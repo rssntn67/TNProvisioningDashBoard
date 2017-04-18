@@ -833,9 +833,10 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			return;
 		Set<BasicInterface> ipsN = new HashSet<BasicInterface>();
 		for (BasicInterface bi: mediagateway.getServiceMap().keySet()) {
-			if (bi.getDescr().equals(DashBoardUtils.DESCR_TNPD))
+			if (bi.getDescr().equals(DashBoardUtils.DESCR_TNPD) && bi.getOnmsprimary() == OnmsPrimary.N)
 				continue;
 			bi.setDescr(DashBoardUtils.DESCR_TNPD);
+			bi.setOnmsprimary(OnmsPrimary.N);
 			ipsN.add(bi);
 		}
 		updateonms(DashBoardUtils.SIVN_REQU_NAME, 
