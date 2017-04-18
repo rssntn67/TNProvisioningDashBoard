@@ -214,9 +214,14 @@ public class MediaGatewayTab extends RequisitionTab {
 			bs.setService("PattonSIPCalls");
 			serviceToAdd.add(bs);
 		}
-		if (serviceToAdd.isEmpty() && serviceToDel.isEmpty())
-			return;
+		if (serviceToAdd.isEmpty() && serviceToDel.isEmpty()) {
+			m_mg.setNoneState();
+			return;			
+		}
 		
+		m_mg.setUpdateState();
+		m_updates.put(m_mg.getNodeLabel(), m_mg);
+
 		for (BasicService bs: serviceToDel)
 			m_mg.delService(bs);
 		for (BasicService bs: serviceToAdd)
@@ -275,24 +280,18 @@ public class MediaGatewayTab extends RequisitionTab {
 	public void replace() {
 		super.replace();
 		reconcilemgvn(false);
-		m_mg.setUpdateState();
-		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
 
 	@Override
 	public void delete() {
 		super.delete();		
 		reconcilemgvn(false);
-		m_mg.setUpdateState();
-		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
 
 	@Override
 	public void save() {
 		super.save();
 		reconcilemgvn(false);
-		m_mg.setUpdateState();
-		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
 		
 	@Override
