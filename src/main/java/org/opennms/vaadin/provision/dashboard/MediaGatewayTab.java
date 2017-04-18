@@ -5,14 +5,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
+import org.opennms.vaadin.provision.model.BasicInterface;
+import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
+import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -21,6 +26,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
@@ -31,6 +37,9 @@ import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
@@ -129,7 +138,8 @@ public class MediaGatewayTab extends RequisitionTab {
 				logger.warning("Load from rest Failed: "+e.getLocalizedMessage());
 				Notification.show("Load Node Requisition", "Load from rest Failed Failed: "+e.getLocalizedMessage(), Type.WARNING_MESSAGE);
 				return;
-			}		
+			}
+			reconcilemgvn(true);			
 			m_editorFields.setBuffered(true);
 			m_editorFields.bind(getDescrComboBox(), DashBoardUtils.DESCR);
 			m_editorFields.bind(getHostNameTextField(), DashBoardUtils.HOST);
@@ -159,6 +169,95 @@ public class MediaGatewayTab extends RequisitionTab {
 				
 	}
 	
+	private void reconcilemgvn(boolean openwindow) {
+		Map<BasicInterface, Set<String>> serviceMap = m_mg.getServiceMap();
+		Set<BasicService> serviceToDel = new HashSet<BasicService>();
+		Set<BasicService> serviceToAdd = new HashSet<BasicService>();
+		Set<String> ips=new HashSet<String>();
+		
+		for (String nodelabel: m_requisitionContainer.getItemIds()) {
+			MediaGatewayNode mgnode = m_requisitionContainer.getItem(nodelabel).getBean();
+			if (mgnode.getPrimary() == null)
+				continue;
+			ips.add(mgnode.getPrimary());
+		}
+		
+		for (BasicInterface bi: serviceMap.keySet()) {
+			if (ips.contains(bi.getIp())) {
+				for (String service: serviceMap.get(bi)) {
+					if (service.equals("PattonSIPCalls"))
+						continue;
+					BasicService bs = new BasicService(bi);
+					bs.setService(service);
+					serviceToDel.add(bs);
+				}
+			} else {
+				for (String service: serviceMap.get(bi)) {
+					BasicService bs = new BasicService(bi);
+					bs.setService(service);
+					serviceToDel.add(bs);
+				}
+			}
+		}
+		
+		for (String ip: ips) {
+			BasicInterface bi = new BasicInterface();
+			bi.setIp(ip);
+			bi.setDescr(DashBoardUtils.DESCR_TNPD);
+			bi.setOnmsprimary(OnmsPrimary.N);
+			if (serviceMap.containsKey(bi) &&
+					serviceMap.get(bi).contains("PattonSIPCalls"))
+					continue;
+			BasicService bs = new BasicService(bi);
+			bs.setService("PattonSIPCalls");
+			serviceToAdd.add(bs);
+		}
+		if (serviceToAdd.isEmpty() && serviceToDel.isEmpty())
+			return;
+		
+		for (BasicService bs: serviceToDel)
+			m_mg.delService(bs);
+		for (BasicService bs: serviceToAdd)
+			m_mg.addService(bs);
+		
+		getService().reconcilemediagateway(m_mg);
+		if (openwindow) {
+			final Window reconcilemgvnwindow = new Window(getName() + ": MediaGateway reconcile");
+			VerticalLayout windowcontent = new VerticalLayout();
+			windowcontent.setMargin(true);
+			windowcontent.setSpacing(true);
+			if (!serviceToDel.isEmpty()) {
+				Table servicetoDelTable = new Table("Servizi rimossi da mediagateway");
+				BeanItemContainer<BasicService> secondaryIpContainer = 
+						new BeanItemContainer<BasicService>(BasicService.class);
+				for (BasicService bs: serviceToDel) {
+					secondaryIpContainer.addBean(bs);
+				}
+				servicetoDelTable.setContainerDataSource(secondaryIpContainer);
+				windowcontent.addComponent(servicetoDelTable);
+			}
+			if (!serviceToAdd.isEmpty()) {
+				Table servicetoAddTable = new Table("Servizi aggiunti a mediagateway");
+				BeanItemContainer<BasicService> secondaryIpContainer = 
+						new BeanItemContainer<BasicService>(BasicService.class);
+				for (BasicService bs: serviceToAdd) {
+					secondaryIpContainer.addBean(bs);
+				}
+				servicetoAddTable.setContainerDataSource(secondaryIpContainer);
+				windowcontent.addComponent(servicetoAddTable);				
+			}
+
+			reconcilemgvnwindow.setContent(windowcontent);
+			reconcilemgvnwindow.setModal(false);
+			reconcilemgvnwindow.setWidth("400px");
+	        UI.getCurrent().addWindow(reconcilemgvnwindow);
+		}
+
+		
+		
+
+	}
+	
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_syncSIVNRequisButton) {
@@ -171,7 +270,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	@Override
 	public void replace() {
 		super.replace();
-		//delete-add
+		reconcilemgvn(false);
 		m_mg.setUpdateState();
 		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
@@ -179,6 +278,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	@Override
 	public void delete() {
 		super.delete();		
+		reconcilemgvn(false);
 		m_mg.setUpdateState();
 		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}
@@ -186,6 +286,7 @@ public class MediaGatewayTab extends RequisitionTab {
 	@Override
 	public void save() {
 		super.save();
+		reconcilemgvn(false);
 		m_mg.setUpdateState();
 		m_updates.put(m_mg.getNodeLabel(), m_mg);
 	}

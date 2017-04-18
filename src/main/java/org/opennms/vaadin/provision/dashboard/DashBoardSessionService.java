@@ -769,11 +769,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (tnnode.getPrimary() != null)
 			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());		
-
-		BasicNode mediagateway = getMediaGateway();
-		if (mediagateway == null)
-			return;
-		m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(), tnnode.getPrimary());
 	}
 	
 	public List<String> getIpAddresses(String foreignSource,String nodelabel) {
@@ -814,14 +809,12 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			}
 		}
 		if (mg == null ) {
-			String mediagateway = createMediaGateway();
-			mg = new BasicNode(mediagateway,DashBoardUtils.SIVN_REQU_NAME);
+			mg = new BasicNode(createMediaGateway(),DashBoardUtils.SIVN_REQU_NAME);
+			mg.setNoneState();
 		}
 
 		return mg;
 	}
-	
-
 
 	public String createMediaGateway() {
 		RequisitionNode requisitionNode = new RequisitionNode();
@@ -830,6 +823,26 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		requisitionNode.putCategory(new RequisitionCategory(DashBoardUtils.MEDIAGATEWAY_CATEGORY));
 		m_onmsDao.addRequisitionNode(DashBoardUtils.SIVN_REQU_NAME, requisitionNode);
 		return requisitionNode.getNodeLabel();
+	}
+
+	public void reconcilemediagateway(BasicNode mediagateway) {
+		if (mediagateway == null )
+			return;
+		updateonms(DashBoardUtils.SIVN_REQU_NAME, 
+				mediagateway.getForeignId(), 
+				null, 
+				false, 
+				null, 
+				new MultivaluedMapImpl(),
+				mediagateway.getInterfToDel(),
+				mediagateway.getInterfToAdd(), 
+				mediagateway.getCategoriesToDel(), 
+				mediagateway.getCategoriesToAdd(), 
+				mediagateway.getServiceToDel(), 
+				mediagateway.getServiceToAdd(), 
+				new ArrayList<RequisitionAsset>(), 
+				new HashSet<BasicInterface>(), 
+				null);
 	}
 
 	public void add(MediaGatewayNode node) {
@@ -875,19 +888,9 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		
 		node.clear();
 		
-		BasicNode mediagateway = getMediaGateway();
-		if (mediagateway == null )
-			return;
-		RequisitionInterface mgiface = new RequisitionInterface();
-		mgiface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-		mgiface.setIpAddr(node.getPrimary());
-		mgiface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
-		mgiface.setDescr(node.getDescr());
-		
-		m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
 			
 	}
-
+	
 	public void add(SistemiInformativiNode node) {
 		RequisitionNode requisitionNode = new RequisitionNode();
 		
@@ -1092,22 +1095,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				node.getServiceToDel(),
 				node.getServiceToAdd(),
 				bck);
-		node.clear();
-		
-		BasicNode mediagateway = getMediaGateway();
-		if (mediagateway == null) {
-			return;
-		}
-		for (BasicInterface ipaddr : node.getInterfToDel()) 
-			m_onmsDao.deleteRequisitionInterface(DashBoardUtils.SI_REQU_NAME, mediagateway.getForeignId(), ipaddr.getIp());
-		for (BasicInterface ipaddr : node.getInterfToAdd()) {
-			RequisitionInterface mgiface = new RequisitionInterface();
-			mgiface.setSnmpPrimary(PrimaryType.NOT_ELIGIBLE);
-			mgiface.setIpAddr(ipaddr.getIp());
-			mgiface.putMonitoredService(new RequisitionMonitoredService("PattonSIPCalls"));
-			mgiface.setDescr(node.getDescr());
-			m_onmsDao.addRequisitionInterface(DashBoardUtils.SIVN_REQU_NAME, mediagateway.getForeignId(),mgiface);
-		}
+		node.clear();		
 	}
 
 	public void add(TrentinoNetworkNode node) {
