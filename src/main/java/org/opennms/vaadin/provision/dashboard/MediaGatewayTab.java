@@ -182,6 +182,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			ips.add(mgnode.getPrimary());
 		}
 		
+		logger.info("found media gateway ip: " + ips);
 		for (BasicInterface bi: serviceMap.keySet()) {
 			if (ips.contains(bi.getIp())) {
 				for (String service: serviceMap.get(bi)) {
@@ -207,7 +208,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			bi.setOnmsprimary(OnmsPrimary.N);
 			if (serviceMap.containsKey(bi) &&
 					serviceMap.get(bi).contains("PattonSIPCalls"))
-					continue;
+				continue;
 			BasicService bs = new BasicService(bi);
 			bs.setService("PattonSIPCalls");
 			serviceToAdd.add(bs);
