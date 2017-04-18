@@ -793,6 +793,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		for (RequisitionNode reqnode: sivn.getNodes()) {
 			if (reqnode.getNodeLabel().equals("mediagateway")) {
 				mg = new BasicNode(reqnode.getNodeLabel(),DashBoardUtils.SIVN_REQU_NAME);
+				mg.setForeignId(reqnode.getForeignId());
 				for (RequisitionInterface ri: reqnode.getInterfaces()) {
 					BasicInterface bi = new BasicInterface();
 					bi.setIp(ri.getIpAddr());
@@ -841,7 +842,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				mediagateway.getServiceToDel(), 
 				mediagateway.getServiceToAdd(), 
 				new ArrayList<RequisitionAsset>(), 
-				new HashSet<BasicInterface>(), 
+				mediagateway.getServiceMap().keySet(), 
 				null);
 	}
 
