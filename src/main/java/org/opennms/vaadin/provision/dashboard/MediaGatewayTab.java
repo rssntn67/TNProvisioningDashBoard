@@ -229,6 +229,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			windowcontent.setSpacing(true);
 			if (!serviceToDel.isEmpty()) {
 				Table servicetoDelTable = new Table("Servizi rimossi da mediagateway");
+				servicetoDelTable.setSizeFull();
 				BeanItemContainer<BasicService> secondaryIpContainer = 
 						new BeanItemContainer<BasicService>(BasicService.class);
 				for (BasicService bs: serviceToDel) {
@@ -239,6 +240,7 @@ public class MediaGatewayTab extends RequisitionTab {
 			}
 			if (!serviceToAdd.isEmpty()) {
 				Table servicetoAddTable = new Table("Servizi aggiunti a mediagateway");
+				servicetoAddTable.setSizeFull();
 				BeanItemContainer<BasicService> secondaryIpContainer = 
 						new BeanItemContainer<BasicService>(BasicService.class);
 				for (BasicService bs: serviceToAdd) {
