@@ -1495,7 +1495,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			if (ip != null && ip.getIp() != null && ip.getIp().equals(primary))
 				continue;
 			MultivaluedMap< String, String> form = new MultivaluedMapImpl();
-			form.add("snmp-primary", ip.getIp());
+			form.add("snmp-primary", ip.getOnmsprimary().name());
 			form.add("descr", ip.getDescr());
 			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, ip.getIp(), form);
 		}
