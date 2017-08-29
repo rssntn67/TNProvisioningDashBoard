@@ -189,14 +189,17 @@ public class SnmpProfileTab extends DashboardTab {
 		snmp_retries.setImmediate(true);
 		snmp_retries.setNullSelectionAllowed(false);
 		snmp_retries.addItem("1");
+		snmp_retries.addItem("2");
 		snmp_retries.addItem("3");
 		snmp_retries.addItem("5");
 
 		snmp_max.setRequired(true);
-		snmp_max.setRequiredError("E' necessario specificare il numero di retry");
+		snmp_max.setRequiredError("E' necessario specificare il numero di max var per pdu");
 		snmp_max.setImmediate(true);
 		snmp_max.setNullSelectionAllowed(false);
 		snmp_max.addItem("1");
+		snmp_max.addItem("2");
+		snmp_max.addItem("3");
 		snmp_max.addItem("5");
 		snmp_max.addItem("10");
 
