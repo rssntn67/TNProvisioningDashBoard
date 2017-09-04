@@ -164,11 +164,13 @@ public class FastUI extends HttpServlet {
 		}
 
 		@Override
-		public void beforeStartJob() {			
+		public void beforeJob() {			
+			startJob();
 		}
 
 		@Override
-		public void afterEndJob() {
+		public void afterJob() {
+			endJob();
 		}
 		
 	}

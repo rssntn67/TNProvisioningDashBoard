@@ -93,8 +93,8 @@ public abstract class FastRunnable implements Runnable {
 	public abstract void updateProgress(Float progress );
 	public abstract void log(List<JobLogEntry> logs);
 
-	public abstract void  beforeStartJob();
-	public abstract void  afterEndJob();	
+	public abstract void  beforeJob();
+	public abstract void  afterJob();	
 
 	private void commitJob(Job job) throws SQLException {
 		if (job.getJobid() == null)
@@ -117,7 +117,7 @@ public abstract class FastRunnable implements Runnable {
 		return m_job.getJobstatus() == JobStatus.FAILED;		
 	}
 	
-	private boolean startJob() {
+	public boolean startJob() {
 		if (getService().getJobContainer().getLastJobId() !=  null) {
 			int jobid = getService().getJobContainer().getLastJobId().getValue();
 			logger.info ("found last job with id: " + jobid);
@@ -152,7 +152,7 @@ public abstract class FastRunnable implements Runnable {
 		return true;
 	}
 
-	private boolean endJob() {
+	public boolean endJob() {
 		m_job.setJobend(new Date());
 
 		try {
@@ -353,9 +353,7 @@ public abstract class FastRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		beforeStartJob();
-
-		startJob();
+		beforeJob();
 		
 		if (running())
 			runKettleJob();
@@ -380,10 +378,8 @@ public abstract class FastRunnable implements Runnable {
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			}
 		}
-		
-		endJob();
-		
-		afterEndJob();
+				
+		afterJob();
 	}
 
 		private void sync() {
