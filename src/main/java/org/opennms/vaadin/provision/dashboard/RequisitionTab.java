@@ -152,7 +152,7 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_hostname.setWidth(4, Unit.CM);
 		m_hostname.setHeight(6, Unit.MM);
 		m_hostname.setRequired(true);
-		m_hostname.setRequiredError("hostname must be defined");
+		m_hostname.setRequiredError("E' necessario specificare un hostname");
 		m_hostname.addValidator(new DnsNodeLabelValidator());
 		m_hostname.addValidator(new DuplicatedForeignIdValidator());
 		m_hostname.addValidator(new DuplicatedNodelabelValidator());
@@ -167,6 +167,8 @@ public abstract class RequisitionTab extends DashboardTab {
 		m_descrComboBox.setInvalidAllowed(false);
 		m_descrComboBox.setNullSelectionAllowed(false);
 		m_descrComboBox.setWidth(8, Unit.CM);
+		m_descrComboBox.setRequired(true);
+		m_descrComboBox.setRequiredError("E' necessario selezionare una description");
 
 		m_parentComboBox.setInvalidAllowed(false);
 		m_parentComboBox.setNullSelectionAllowed(true);

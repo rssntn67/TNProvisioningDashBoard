@@ -389,6 +389,8 @@ public class DashBoardUtils {
 	public static boolean valid(SistemiInformativiNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
 			return false;
+		if (node.getDescr() == null)
+			return false;
 		if (node.getNodeLabel() == null)
 			return false;
 		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
@@ -415,31 +417,45 @@ public class DashBoardUtils {
 	public static boolean valid(TrentinoNetworkNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
 			return false;
+		
+		if (node.getDescr() == null)
+			return false;
+		
 		if (node.getNodeLabel() == null)
 			return false;
 		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
 			return false;
+		
 		if (node.getVrf() == null) 
 			return false;
+		
 		if (node.getPrimary() == null)
 			return false;
 		else if (hasInvalidIp(node.getPrimary()))
 			return false;
+		
 		if (node.getNetworkCategory() == null)
 			return false;
+		
 		if (node.getNotifCategory() == null)
 			return false;
+		
 		if (node.getThreshCategory() == null)
 			return false;
+		
 		if (node.getBackupProfile() == null)
 			return false;
+		
 		if (hasUnSupportedDnsDomain(node.getNodeLabel(),subdomains))
 			return false;		
+		
 		return true;
 	}
 	
 	public static boolean valid(MediaGatewayNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
+			return false;
+		if (node.getDescr() == null)
 			return false;
 		if (node.getNodeLabel() == null)
 			return false;
