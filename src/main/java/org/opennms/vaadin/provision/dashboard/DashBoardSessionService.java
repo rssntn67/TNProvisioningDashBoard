@@ -1514,6 +1514,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 		
 		if (updatedescr) {
+			System.err.println("Update Description true: " + foreignSource + ":"+foreignId+":"+primary);
 			MultivaluedMap< String, String> form = new MultivaluedMapImpl();
 			form.add("descr", descr);
 			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, primary, form);
