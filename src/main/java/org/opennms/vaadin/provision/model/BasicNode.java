@@ -232,6 +232,8 @@ public class BasicNode implements Serializable {
 
 	public void setDescr(String descr) {
 		m_descr = descr;
+		m_updatemap.add(DashBoardUtils.DESCR);
+		setOnmsSyncOperations(OnmsSync.DBONLY);
 	}
 	
 	public String getSnmpProfile() {

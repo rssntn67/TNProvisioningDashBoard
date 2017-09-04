@@ -843,7 +843,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				mediagateway.getForeignId(), 
 				null, 
 				false, 
-				null, 
+				null,
+				false,
 				new MultivaluedMapImpl(),
 				mediagateway.getInterfToDel(),
 				mediagateway.getInterfToAdd(), 
@@ -1059,8 +1060,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (node.getUpdatemap().contains(DashBoardUtils.DESCRIPTION))
 			update.put(DashBoardUtils.DESCRIPTION, node.getDescription());
 		
+		boolean updateDescr = node.getUpdatemap().contains(DashBoardUtils.DESCR);
 		updateNode(node.getServiceMap(),DashBoardUtils.SI_REQU_NAME, node.getForeignId(), node.getPrimary(),
-				node.getDescr(), update, node.getInterfToDel(),
+				node.getDescr(),
+				updateDescr,
+				update, node.getInterfToDel(),
 				node.getInterfToAdd(), node.getCategoriesToDel(),
 				node.getCategoriesToAdd(),node.getServiceToDel(),node.getServiceToAdd());
 		node.clear();
@@ -1092,13 +1096,14 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
 				&& node.getBackupProfile() != null)
 			bck = getBackupProfileContainer().getBackupProfile(node.getBackupProfile());
-		
+		boolean updatedescr = node.getUpdatemap().contains(DashBoardUtils.DESCR);
 		updateNode(
 				node.getServiceMap(),
 				DashBoardUtils.TN_REQU_NAME, 
 				node.getForeignId(), 
 				node.getPrimary(),
-				node.getDescr(), 
+				node.getDescr(),
+				updatedescr,
 				update, 
 				node.getInterfToDel(),
 				node.getInterfToAdd(), 
@@ -1206,9 +1211,12 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (node.getUpdatemap().contains(DashBoardUtils.BACKUP_PROFILE)
 				&& node.getBackupProfile() != null) {
 			bck = getBackupProfileContainer().getBackupProfile(node.getBackupProfile());
-		}		
+		}
+		boolean updateDescr = node.getUpdatemap().contains(DashBoardUtils.DESCR);
 		updateNode(node.getServiceMap(),DashBoardUtils.TN_REQU_NAME, node.getForeignId(), node.getPrimary(),
-				node.getDescr(), update, node.getInterfToDel(),
+				node.getDescr(), 
+				updateDescr,
+				update, node.getInterfToDel(),
 				node.getInterfToAdd(), node.getCategoriesToDel(),
 				node.getCategoriesToAdd(),node.getServiceToDel(),
 				node.getServiceToAdd(),bck);
@@ -1221,6 +1229,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			String foreignId,
 			String primary, 
 			String descr, 
+			boolean updatedescr,
 			Map<String, String> update,
 			List<BasicInterface> interfaceToDel, 
 			List<BasicInterface> interfaceToAdd,
@@ -1307,7 +1316,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				foreignId, 
 				primary, 
 				true, 
-				descr, 
+				descr,
+				false,
 				updatemap, 
 				interfaceToDel, interfaceToAdd, 
 				categoriesToDel, categoriesToAdd, serviceToDel, 
@@ -1321,7 +1331,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			String foreignSource, 
 			String foreignId,
 			String primary, 
-			String descr, 
+			String descr,
+			boolean updatedescr,
 			Map<String, String> update,
 			List<BasicInterface> interfaceToDel,
 			List<BasicInterface> interfaceToAdd,
@@ -1405,7 +1416,8 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 				foreignId, 
 				primary, 
 				false, 
-				descr, 
+				descr,
+				false,
 				updatemap, 
 				interfaceToDel, 
 				interfaceToAdd, 
@@ -1425,6 +1437,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			String primary, 
 			boolean addPolicy, 
 			String descr,
+			boolean updatedescr,
 			MultivaluedMap<String, String> updatemap,
 			List<BasicInterface> interfaceToDel,
 			List<BasicInterface> interfaceToAdd,
@@ -1499,7 +1512,12 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			form.add("descr", ip.getDescr());
 			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, ip.getIp(), form);
 		}
-				
+		
+		if (updatedescr) {
+			MultivaluedMap< String, String> form = new MultivaluedMapImpl();
+			form.add("descr", descr);
+			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, primary, form);
+		}
 
 	}
 	
