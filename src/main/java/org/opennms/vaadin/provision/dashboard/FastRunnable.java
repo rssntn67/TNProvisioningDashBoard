@@ -459,7 +459,12 @@ public abstract class FastRunnable implements Runnable {
 					}
 					Set<BasicInterface> inttoDelete = new HashSet<BasicInterface>();
 					for (BasicInterface riface: rnode.getServiceMap().keySet()) {
-						if (riface.getDescr().contains("FAST") && !m_fastIpHostnameMap.containsKey(riface.getIp())) {
+						if (riface.getDescr() == null) {
+							logger.info("no Description on interface node" + getNote(rnode));
+							continue;
+						}
+						if (riface.getDescr().contains("FAST") 
+								&& !m_fastIpHostnameMap.containsKey(riface.getIp())) {
 							inttoDelete.add(riface);
 						}
 					}
