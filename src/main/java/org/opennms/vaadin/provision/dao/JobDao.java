@@ -50,7 +50,12 @@ public class JobDao extends SQLContainer {
 		if (lastItemId() == null )
 			return false;
 		return 
-			JobStatus.RUNNING == JobStatus.valueOf(getItem(lastItemId()).getItemProperty("jobstatus").getValue().toString());
+			JobStatus.RUNNING == JobStatus.valueOf(
+					getItem(
+							lastItemId()).
+							getItemProperty("jobstatus").
+							getValue().
+							toString());
 	}
 
 }
