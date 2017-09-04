@@ -628,6 +628,13 @@ public abstract class RequisitionTab extends DashboardTab {
 	public void save() {
 		try {
 			getBeanFieldGroup().commit();
+		} catch (CommitException c) {
+			logger.warning("Commit Failed: " + c.getInvalidFields());
+			Notification.show("Commit Failed", c.getInvalidFields().toString(), Type.ERROR_MESSAGE);
+			return;
+		}
+		
+		try {
 			BasicNode node = getBeanFieldGroup().getItemDataSource().getBean();
 			node.setValid(true);
 			if (node.getParent() != null)
@@ -659,7 +666,6 @@ public abstract class RequisitionTab extends DashboardTab {
 			cleanSearchBox();
 			getRequisitionContainer().removeAllContainerFilters();
 		} catch (Exception e) {
-			e.printStackTrace();
 			String localizedMessage = e.getLocalizedMessage();
 			Throwable t = e.getCause();
 			while ( t != null) {
