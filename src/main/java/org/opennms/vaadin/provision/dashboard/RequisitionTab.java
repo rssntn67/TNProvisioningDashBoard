@@ -356,6 +356,8 @@ public abstract class RequisitionTab extends DashboardTab {
 
 			Set<String> duplicatedPrimaries = new HashSet<String>();
 			for (String primary: m_primaryipforeignidmap.keySet()) {
+				if (primary ==  null)
+					continue;
 				if (m_primaryipforeignidmap.get(primary).size() > 1)
 					duplicatedPrimaries.add(primary);
 			}
