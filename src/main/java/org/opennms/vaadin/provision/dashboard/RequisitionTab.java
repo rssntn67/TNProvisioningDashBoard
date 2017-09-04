@@ -18,6 +18,7 @@ import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.vaadin.ui.Field;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
@@ -629,8 +630,10 @@ public abstract class RequisitionTab extends DashboardTab {
 		try {
 			getBeanFieldGroup().commit();
 		} catch (CommitException c) {
-			logger.warning("Commit Failed: " + c.getInvalidFields());
-			Notification.show("Commit Failed", c.getInvalidFields().toString(), Type.ERROR_MESSAGE);
+			for (Field<?> errorcompo: c.getInvalidFields().keySet()) {
+				logger.warning("Commit Failed: " + errorcompo.getRequiredError());
+				Notification.show("Commit Failed", errorcompo.getRequiredError(), Type.ERROR_MESSAGE);
+			}
 			return;
 		}
 		
