@@ -470,17 +470,14 @@ public abstract class FastRunnable implements Runnable {
 						BasicService bs = new BasicService(bi);
 						bs.setService("ICMP");
 						rnode.delService(bs);
-						BasicService bs1 = new BasicService(bi);
-						bs1.setService("SNMP");
-						rnode.delService(bs1);
 						final JobLogEntry jloe = new JobLogEntry();
 						jloe.setHostname(rnode.getForeignId());
 						jloe.setIpaddr(bi.getIp());
 						jloe.setOrderCode("NA");
 						jloe.setJobid(m_job.getJobid());
-						jloe.setDescription("FAST sync: old referenced FAST interface deleted");
+						jloe.setDescription("FAST sync: interface deleted");
 						jloe.setNote(getNote(rnode));
-						logger.info("FAST sync: old referenced FAST delete interface node" + getNote(rnode));
+						logger.info("delete interface node" + getNote(rnode));
 						List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 						logs.add(jloe);
 						log(logs);
@@ -993,17 +990,14 @@ public abstract class FastRunnable implements Runnable {
 				BasicService bs = new BasicService(bi);
 				bs.setService("ICMP");
 				rnode.delService(bs);
-				BasicService bs2 = new BasicService(bi);
-				bs2.setService("SNMP");
-				rnode.delService(bs2);
 				final JobLogEntry jloe = new JobLogEntry();
 				jloe.setHostname(rnode.getForeignId());
 				jloe.setIpaddr(bi.getIp());
 				jloe.setOrderCode("NA");
 				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: updateNonFast: interface deleted");
+				jloe.setDescription("FAST sync: interface deleted");
 				jloe.setNote(getNote(rnode));
-				logger.info("updateNonFast: delete interface node" + getNote(rnode));
+				logger.info("delete interface node" + getNote(rnode));
 				logs.add(jloe);
 			}
 			
@@ -1014,7 +1008,7 @@ public abstract class FastRunnable implements Runnable {
 
 			final JobLogEntry jloe = new JobLogEntry();
 			jloe.setHostname(rnode.getHostname());
-			jloe.setIpaddr(rnode.getPrimary());
+			jloe.setIpaddr("NA");
 			jloe.setOrderCode("NA");
 			jloe.setDescription("FAST sync: updated Fast Ip.");
 			jloe.setNote(getNote(rnode));
@@ -1075,9 +1069,6 @@ public abstract class FastRunnable implements Runnable {
 				BasicService bs = new BasicService(bi);
 				bs.setService("ICMP");
 				rnode.delService(bs);
-				BasicService bs2 = new BasicService(bi);
-				bs2.setService("SNMP");
-				rnode.delService(bs2);
 			}
 			return rnode;
 		}
@@ -1122,7 +1113,7 @@ public abstract class FastRunnable implements Runnable {
 			jloe.setIpaddr(refdevice.getIpaddr());
 			jloe.setOrderCode(refdevice.getOrderCode());
 			jloe.setJobid(m_job.getJobid());
-			jloe.setDescription("FAST sync: updateFast: updated service device.");
+			jloe.setDescription("FAST sync: updated service device.");
 			jloe.setNote(getNote(refdevice));
 			
 			List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
@@ -1159,9 +1150,8 @@ public abstract class FastRunnable implements Runnable {
 		}
 
 		private boolean isDeviceInFast(String foreignId) {
-			if (m_fastHostnameServiceDeviceMap.containsKey(foreignId)) {
+			if (m_fastHostnameServiceDeviceMap.containsKey(foreignId))
 				return true;
-			}
 			for (String hostname: m_fastHostnameServiceDeviceMap.keySet()) {
 				if (m_onmsForeignIdRequisitionNodeMap.get(foreignId).getNodeLabel().
 						startsWith(hostname)) {
@@ -1172,17 +1162,15 @@ public abstract class FastRunnable implements Runnable {
 		}
 		
 		private boolean isManagedByFast(TrentinoNetworkNode rnode) {
-			for (BasicInterface riface: rnode.getServiceMap().keySet()) {
-				if (riface.getOnmsprimary() == null || !riface.getOnmsprimary().equals(OnmsPrimary.P)) {
-					continue;
+			if (rnode.getNetworkCategory() != null
+					&& DashBoardUtils.m_network_levels[2].equals(
+					rnode.getNetworkCategory().getName())) {
+				for (BasicInterface riface: rnode.getServiceMap().keySet()) {
+					if (!riface.getDescr().contains("FAST") && !riface.getDescr().contains("NeaNMS"))
+						return false;
 				}
-				if (riface.getDescr() != null &&
-						riface.getDescr().contains("FAST") ) {
-					logger.info("FAST sync: isManagedByFast: " + rnode.getHostname());
-					return true;
-				}
-			}
-			logger.info("FAST sync: isManagedByFast is Not: " + rnode.getHostname());
+				return true;
+			}				
 			return false;
 		}
 		
