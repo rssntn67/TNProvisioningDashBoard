@@ -278,18 +278,18 @@ public class FastTab extends DashboardTab {
 			        m_progress.setIndeterminate(true);
 			        m_progress.setVisible(true);
 			        m_progress.setEnabled(true);
-			        startJob();
 				}
 			});
+	        startJob();
 		}
 
 		@Override
 		public void afterJob() {
+			endJob();
 			UI.getCurrent().access(new Runnable() {
 
 				@Override
 				public void run() {
-					endJob();
 					m_progress.setValue(new Float(0.0));
 					m_progress.setEnabled(false);
 					m_progress.setVisible(false);
