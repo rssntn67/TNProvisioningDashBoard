@@ -369,11 +369,13 @@ public abstract class FastRunnable implements Runnable {
 				m_job.setJobstatus(JobStatus.SUCCESS);
 				m_job.setJobdescr("FAST sync: Done");
 			} catch (final UniformInterfaceException e) {
+				e.printStackTrace();
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			} catch (final Exception e) {
-				logger.log(Level.SEVERE,"Failed syncing Fast devices with Requisition", e);
+				e.printStackTrace();
+				logger.log(Level.SEVERE,"Failed syncing Fast", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			}
