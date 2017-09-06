@@ -395,6 +395,7 @@ public abstract class FastRunnable implements Runnable {
 			try {
 
 				for (String hostname: m_fastHostnameServiceDeviceMap.keySet()) {
+					logger.info("FAST sync: parsing hostname: " + hostname);
 					try {
 						Thread.sleep(20);
 					} catch (InterruptedException e) {
@@ -414,15 +415,22 @@ public abstract class FastRunnable implements Runnable {
 						if (m_onmsForeignIdRequisitionNodeMap.containsKey(hostname)) {
 							foreignIds.add(hostname);
 						} 
+
 						for (TrentinoNetworkNode rnode : m_onmsForeignIdRequisitionNodeMap
 								.values()) {
-							if (rnode.getNodeLabel().startsWith(hostname)) 
+							if (rnode.getNodeLabel().startsWith(hostname)) { 
 								foreignIds.add(rnode.getForeignId());
+							}
 						}
+						
 						if (foreignIds.size() == 0) {
 							add(hostname);
 						} else if (foreignIds.size() == 1) {
 							TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next());
+							if (rnode == null) {
+								logger.info("FAST sync: updateFast null rnode: ");
+								continue;
+							}
 							if (isManagedByFast(rnode)) {
 									updateFast(rnode);
 							} else { 
@@ -1123,7 +1131,8 @@ public abstract class FastRunnable implements Runnable {
 			jloe.setJobid(m_job.getJobid());
 			jloe.setDescription("FAST sync: updateFast: updated service device.");
 			jloe.setNote(getNote(refdevice));
-			
+			logger.info("FAST sync: updateFast updated: " + getNote(refdevice));
+
 			List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			logs.add(jloe);
 			log(logs);
