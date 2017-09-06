@@ -207,7 +207,7 @@ public class FastTab extends DashboardTab {
 		m_jobdao = getService().getJobContainer();
 		m_joblogdao = getService().getJobLogContainer();
 		m_jobTable.setContainerDataSource(m_jobdao);
-		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
+		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobdescr","jobstart","jobend"});
     	m_loaded = true;
 	}
 
