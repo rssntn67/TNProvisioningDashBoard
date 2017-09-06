@@ -214,8 +214,6 @@ public class FastTab extends DashboardTab {
 	public boolean runFast() {
 		m_jobTable.setSelectable(false);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
-		int curjobid = m_jobdao.getLastJobId().getValue();
-		logger.info ("created job with id: " + curjobid);
 		m_logTable.setVisible(false);
         m_runnable = new FastTabRunnable(getService());
 		m_logTable.setContainerDataSource(m_runnable.getJobLogContainer());
