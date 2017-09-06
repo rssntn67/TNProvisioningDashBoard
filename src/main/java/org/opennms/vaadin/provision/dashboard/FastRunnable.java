@@ -422,13 +422,16 @@ public abstract class FastRunnable implements Runnable {
 						if (foreignIds.size() == 0) {
 							add(hostname);
 						} else if (foreignIds.size() == 1) {
-							update(m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next()));
+							TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next());
+							if (isManagedByFast(rnode)) {
+									updateFast(rnode);
+							} else { 
+									updateNonFast(rnode);
+							}
 						} else {
 							mismatch(hostname, foreignIds);
 						}
 					}
-
-	
 				}
 
 				for (String foreignId: m_onmsForeignIdRequisitionNodeMap.keySet()) {
@@ -907,15 +910,7 @@ public abstract class FastRunnable implements Runnable {
 
 	
 		}
-		
-		private void update(TrentinoNetworkNode rnode) {
-			if (isManagedByFast(rnode))
-				updateFast(rnode);
-			else 
-				updateNonFast(rnode);
-		}
-
-		
+				
 		private void add(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 			Set<String> secondary = new HashSet<String>(); 
@@ -942,7 +937,6 @@ public abstract class FastRunnable implements Runnable {
 				jloe.setDescription("FAST sync: added service device.");
 				jloe.setNote(getNote(device));
 				logs.add(jloe);
-
 			}
 
 			if (refdevice == null) {
@@ -1016,7 +1010,7 @@ public abstract class FastRunnable implements Runnable {
 			jloe.setHostname(rnode.getHostname());
 			jloe.setIpaddr(rnode.getPrimary());
 			jloe.setOrderCode("NA");
-			jloe.setDescription("FAST sync: updated Fast Ip.");
+			jloe.setDescription("FAST sync: updateNonFast: updated Fast Ip.");
 			jloe.setNote(getNote(rnode));
 			
 			logs.add(jloe);
@@ -1030,7 +1024,12 @@ public abstract class FastRunnable implements Runnable {
 			rnode.setBackupProfile(refdevice.getBackupprofile());
 			rnode.setSnmpProfile(refdevice.getSnmpprofile());
 			rnode.setNetworkCategory(m_vrf.get(reflink.getVrf()));
-			rnode.setNotifCategory(refdevice.getNotifyCategory());
+			if (refdevice.getNotifyCategory().
+					equals(DashBoardUtils.m_fast_default_notify)) {
+				rnode.setNotifCategory(m_vrf.get(reflink.getVrf()).getNotifylevel());
+			} else {
+				rnode.setNotifCategory(refdevice.getNotifyCategory());
+			}
 			rnode.setThreshCategory(m_vrf.get(reflink.getVrf()).getThresholdlevel());
 			rnode.setCity(refdevice.getCity());
 			
@@ -1172,14 +1171,22 @@ public abstract class FastRunnable implements Runnable {
 		}
 		
 		private boolean isManagedByFast(TrentinoNetworkNode rnode) {
-			for (BasicInterface riface: rnode.getServiceMap().keySet()) {
-				if (riface.getOnmsprimary() == null || !riface.getOnmsprimary().equals(OnmsPrimary.P)) {
-					continue;
-				}
-				if (riface.getDescr() != null &&
-						riface.getDescr().contains("FAST") ) {
-					logger.info("FAST sync: isManagedByFast: " + rnode.getHostname());
-					return true;
+			if (rnode.getNetworkCategory() == null) {
+				logger.info("FAST sync: isManagedByFast is Not: " + rnode.getHostname());
+				return false;
+			}
+			if (DashBoardUtils.m_network_levels[2].equals(rnode.getNetworkCategory().getNetworklevel())) {
+				logger.info("FAST sync: isManagedByFast: "+  
+					rnode.getNetworkCategory().getNetworklevel() + " : " + rnode.getHostname());
+				for (BasicInterface riface: rnode.getServiceMap().keySet()) {
+					if (riface.getOnmsprimary() == null || !riface.getOnmsprimary().equals(OnmsPrimary.P)) {
+						continue;
+					}
+					if (riface.getDescr() != null &&
+							riface.getDescr().contains("FAST") ) {
+						logger.info("FAST sync: isManagedByFast: " + rnode.getHostname());
+						return true;
+					}
 				}
 			}
 			logger.info("FAST sync: isManagedByFast is Not: " + rnode.getHostname());
