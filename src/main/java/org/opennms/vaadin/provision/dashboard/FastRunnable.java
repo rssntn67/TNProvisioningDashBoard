@@ -369,12 +369,10 @@ public abstract class FastRunnable implements Runnable {
 				m_job.setJobstatus(JobStatus.SUCCESS);
 				m_job.setJobdescr("FAST sync: Done");
 			} catch (final UniformInterfaceException e) {
-				e.printStackTrace();
 				logger.log(Level.WARNING,"Failed syncing Fast devices with Requisition", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
 			} catch (final Exception e) {
-				e.printStackTrace();
 				logger.log(Level.SEVERE,"Failed syncing Fast", e);
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: " + e.getMessage());				
@@ -428,15 +426,12 @@ public abstract class FastRunnable implements Runnable {
 						if (foreignIds.size() == 0) {
 							add(hostname);
 						} else if (foreignIds.size() == 1) {
-							TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignIds.iterator().next());
-							if (rnode == null) {
-								logger.info("FAST sync: updateFast null rnode: ");
-								continue;
-							}
+							String foreignId = foreignIds.iterator().next();
+							TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
 							if (isManagedByFast(rnode)) {
-									updateFast(rnode);
+								updateFast(rnode,m_fastHostnameServiceDeviceMap.get(foreignId));
 							} else { 
-									updateNonFast(rnode);
+								updateNonFast(rnode,m_fastHostnameServiceDeviceMap.get(foreignId));
 							}
 						} else {
 							mismatch(hostname, foreignIds);
@@ -458,7 +453,6 @@ public abstract class FastRunnable implements Runnable {
 						barrier += step;
 					}
 
-					
 					if (isDeviceInFast(foreignId))
 						continue;
 					TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
@@ -497,9 +491,7 @@ public abstract class FastRunnable implements Runnable {
 						List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 						logs.add(jloe);
 						log(logs);
-
 					}
-					updateNonFast(rnode);
 				}
 
 			} catch (final UniformInterfaceException e) {
@@ -967,11 +959,9 @@ public abstract class FastRunnable implements Runnable {
 			log(logs);
 		}
 				
-		private void updateNonFast(TrentinoNetworkNode rnode) {
-			if (!m_fastHostnameServiceDeviceMap.containsKey(rnode.getHostname()))
-				return;
+		private void updateNonFast(TrentinoNetworkNode rnode, List<FastServiceDevice> devices) {
 			Set<String> fastipaddressonnode = new HashSet<String>();
-			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(rnode.getHostname())) {
+			for (FastServiceDevice device: devices) {
 				BasicInterface bi = rnode.getInterface(device.getIpaddr());
 				if (bi == null) {
 					bi = new BasicInterface();
@@ -1091,10 +1081,10 @@ public abstract class FastRunnable implements Runnable {
 			return rnode;
 		}
 		
-		private void updateFast(TrentinoNetworkNode rnode) {
+		private void updateFast(TrentinoNetworkNode rnode,List<FastServiceDevice> fastdevices) {
 			Set<String> ipaddresses = new HashSet<String>(); 
 			FastServiceDevice refdevice = null;
-			for (FastServiceDevice device: m_fastHostnameServiceDeviceMap.get(rnode.getHostname())) {
+			for (FastServiceDevice device: fastdevices) {
 				ipaddresses.add(device.getIpaddr());
 				if (!m_fastOrderCodeServiceLinkMap.containsKey(device.getOrderCode()))
 					continue;
@@ -1187,8 +1177,6 @@ public abstract class FastRunnable implements Runnable {
 				return false;
 			}
 			if (DashBoardUtils.m_network_levels[2].equals(rnode.getNetworkCategory().getNetworklevel())) {
-				logger.info("FAST sync: isManagedByFast: "+  
-					rnode.getNetworkCategory().getNetworklevel() + " : " + rnode.getHostname());
 				for (BasicInterface riface: rnode.getServiceMap().keySet()) {
 					if (riface.getOnmsprimary() == null || !riface.getOnmsprimary().equals(OnmsPrimary.P)) {
 						continue;
