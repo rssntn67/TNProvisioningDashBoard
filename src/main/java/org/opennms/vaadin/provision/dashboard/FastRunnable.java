@@ -429,9 +429,9 @@ public abstract class FastRunnable implements Runnable {
 							String foreignId = foreignIds.iterator().next();
 							TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
 							if (isManagedByFast(rnode)) {
-								updateFast(rnode,m_fastHostnameServiceDeviceMap.get(foreignId));
+								updateFast(rnode,m_fastHostnameServiceDeviceMap.get(hostname));
 							} else { 
-								updateNonFast(rnode,m_fastHostnameServiceDeviceMap.get(foreignId));
+								updateNonFast(rnode,m_fastHostnameServiceDeviceMap.get(hostname));
 							}
 						} else {
 							mismatch(hostname, foreignIds);
