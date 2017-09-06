@@ -295,6 +295,7 @@ public class FastTab extends DashboardTab {
 					m_progress.setVisible(false);
 
 					m_fast.setEnabled(true);
+					m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobdescr","jobstart","jobend"});
 					m_jobTable.setSelectable(true);
 					m_panel.setCaption("Fast Integration - Status: Ready");
 
