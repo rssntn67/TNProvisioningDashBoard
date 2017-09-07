@@ -28,6 +28,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Table;
@@ -94,6 +95,7 @@ public class FastTab extends DashboardTab {
 	private FastTabRunnable m_runnable;
     private Table m_jobTable =  new Table();
     private Table m_logTable =  new Table();
+	private Label m_loginfo = new Label();
     
 	/**
 	 * 
@@ -158,6 +160,7 @@ public class FastTab extends DashboardTab {
 				logger.info ("selected job with id: " + jobid);
 				for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
 					joblogcontainer.addBean(jlog);
+				m_loginfo.setCaption("Description for Job: " + "'"+jobid+"': " + event.getItem().getItemProperty("jobdescr"));
 				m_logTable.setContainerDataSource(joblogcontainer);
 				m_logTable.setSizeFull();
 				m_logTable.setVisibleColumns(new Object[] {"hostname","ipaddr","orderCode","description","note"});
@@ -181,7 +184,10 @@ public class FastTab extends DashboardTab {
 
 		getRight().addComponent(m_progress);
 		getRight().addComponent(m_panel);
-		getRight().addComponent(new Panel("Logs",m_logTable));
+		VerticalLayout joblog = new VerticalLayout();
+		joblog.addComponent(m_loginfo);
+		joblog.addComponent(m_logTable);
+		getRight().addComponent(new Panel("Logs",joblog));
 	}
 	
 
@@ -207,7 +213,7 @@ public class FastTab extends DashboardTab {
 		m_jobdao = getService().getJobContainer();
 		m_joblogdao = getService().getJobLogContainer();
 		m_jobTable.setContainerDataSource(m_jobdao);
-		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobdescr","jobstart","jobend"});
+		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
     	m_loaded = true;
 	}
 
@@ -216,6 +222,7 @@ public class FastTab extends DashboardTab {
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 		m_logTable.setVisible(false);
         m_runnable = new FastTabRunnable(getService());
+        m_loginfo.setCaption("");
 		m_logTable.setContainerDataSource(m_runnable.getJobLogContainer());
 
         UI.getCurrent().setPollInterval(5000);
@@ -295,8 +302,8 @@ public class FastTab extends DashboardTab {
 					m_progress.setVisible(false);
 
 					m_fast.setEnabled(true);
-					m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobdescr","jobstart","jobend"});
 					m_jobTable.setSelectable(true);
+					m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 					m_panel.setCaption("Fast Integration - Status: Ready");
 
 					// Stop polling
