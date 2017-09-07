@@ -1179,10 +1179,8 @@ public abstract class FastRunnable implements Runnable {
 			if (rnode.getNetworkCategory() != null 
 					&& DashBoardUtils.m_network_levels[2].equals(
 							rnode.getNetworkCategory().getNetworklevel())) {
-				logger.info("FAST sync: isManagedByFast: true: " + rnode.getHostname());
 				return true;
 			}
-			logger.info("FAST sync: isManagedByFast: false: " + rnode.getHostname());
 			return false;
 		}
 		
