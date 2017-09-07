@@ -291,19 +291,17 @@ public class BasicNode implements Serializable {
 	}
 
 	public void setPrimary(String primary) {
-		logger.info("new primary: " + primary + " old primary: " + m_primary);
 		if (primary == null)
 			return;
 		if (m_primary != null && m_primary.equals(primary))
 			return;
 		
+		logger.info("new primary: " + primary + " old primary: " + m_primary);
 		String oldprimary = new String(m_primary);
 		m_primary = primary;
 		m_updatemap.add(DashBoardUtils.PRIMARY);
-		logger.info("set primary update: " + m_primary);
 
 		if (oldprimary != null) {
-			logger.info("delete old primary:" + oldprimary);
 			BasicInterface opi = new BasicInterface();
 			opi.setIp(oldprimary);
 			opi.setDescr(m_descr);
@@ -316,7 +314,6 @@ public class BasicNode implements Serializable {
 			delService(obs2);
 		}
 
-		logger.info("add new primary:" + m_primary);
 		BasicInterface primaryi=new BasicInterface();
 		primaryi.setDescr(m_descr);
 		primaryi.setIp(m_primary);
