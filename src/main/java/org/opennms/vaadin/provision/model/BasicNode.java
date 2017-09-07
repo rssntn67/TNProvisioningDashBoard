@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dashboard.DashboardTab;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 
 public class BasicNode implements Serializable {
