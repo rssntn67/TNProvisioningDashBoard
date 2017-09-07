@@ -462,12 +462,18 @@ public abstract class FastRunnable implements Runnable {
 					}
 					Set<BasicInterface> inttoDelete = new HashSet<BasicInterface>();
 					for (BasicInterface riface: rnode.getServiceMap().keySet()) {
-						if (riface.getDescr() == null) {
-							logger.info("no Description on interface node" + getNote(rnode));
+						
+						if (m_fastIpHostnameMap.containsKey(riface.getIp())) {
 							continue;
 						}
-						if (riface.getDescr().contains("FAST") 
-								&& !m_fastIpHostnameMap.containsKey(riface.getIp())) {
+						if (riface.getOnmsprimary() == OnmsPrimary.P) {
+							logger.info("ip primary on interface node" + getNote(rnode));
+							continue;
+							
+						}
+						if (riface.getDescr() != null 
+								&& riface.getDescr().contains("FAST") 
+						   ) {
 							inttoDelete.add(riface);
 						}
 					}
@@ -1172,23 +1178,13 @@ public abstract class FastRunnable implements Runnable {
 		}
 		
 		private boolean isManagedByFast(TrentinoNetworkNode rnode) {
-			if (rnode.getNetworkCategory() == null) {
-				logger.info("FAST sync: isManagedByFast is Not: " + rnode.getHostname());
-				return false;
+			if (rnode.getNetworkCategory() != null 
+					&& DashBoardUtils.m_network_levels[2].equals(
+							rnode.getNetworkCategory().getNetworklevel())) {
+				logger.info("FAST sync: isManagedByFast: true: " + rnode.getHostname());
+				return true;
 			}
-			if (DashBoardUtils.m_network_levels[2].equals(rnode.getNetworkCategory().getNetworklevel())) {
-				for (BasicInterface riface: rnode.getServiceMap().keySet()) {
-					if (riface.getOnmsprimary() == null || !riface.getOnmsprimary().equals(OnmsPrimary.P)) {
-						continue;
-					}
-					if (riface.getDescr() != null &&
-							riface.getDescr().contains("FAST") ) {
-						logger.info("FAST sync: isManagedByFast: " + rnode.getHostname());
-						return true;
-					}
-				}
-			}
-			logger.info("FAST sync: isManagedByFast is Not: " + rnode.getHostname());
+			logger.info("FAST sync: isManagedByFast: false: " + rnode.getHostname());
 			return false;
 		}
 		
