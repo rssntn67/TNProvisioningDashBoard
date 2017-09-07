@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.model.PrimaryType;
-import org.opennms.netmgt.model.discovery.IPPollAddress;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;

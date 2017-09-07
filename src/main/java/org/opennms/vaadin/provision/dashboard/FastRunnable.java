@@ -395,7 +395,6 @@ public abstract class FastRunnable implements Runnable {
 			try {
 
 				for (String hostname: m_fastHostnameServiceDeviceMap.keySet()) {
-					logger.info("FAST sync: parsing hostname: " + hostname);
 					try {
 						Thread.sleep(20);
 					} catch (InterruptedException e) {
@@ -467,9 +466,7 @@ public abstract class FastRunnable implements Runnable {
 							continue;
 						}
 						if (riface.getOnmsprimary() == OnmsPrimary.P) {
-							logger.info("ip primary on interface node" + getNote(rnode));
 							continue;
-							
 						}
 						if (riface.getDescr() != null 
 								&& riface.getDescr().contains("FAST") 
