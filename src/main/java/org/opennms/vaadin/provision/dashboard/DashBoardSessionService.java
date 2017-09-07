@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.model.PrimaryType;
+import org.opennms.netmgt.model.discovery.IPPollAddress;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
@@ -1505,8 +1506,14 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 		
 		for (BasicInterface ip: ipsetN) {
-			if (ip != null && ip.getIp() != null && ip.getIp().equals(primary))
+			if (ip != null && ip.getIp() != null && ip.getIp().equals(primary)) {
+				if (ip.getOnmsprimary() == null || ip.getOnmsprimary() != OnmsPrimary.P) {
+					MultivaluedMap< String, String> form = new MultivaluedMapImpl();
+					form.add("snmp-primary", OnmsPrimary.P.name());
+					m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, primary, form);
+				}
 				continue;
+			}
 			MultivaluedMap< String, String> form = new MultivaluedMapImpl();
 			form.add("snmp-primary", ip.getOnmsprimary().name());
 			form.add("descr", ip.getDescr());
@@ -1518,7 +1525,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			form.add("descr", descr);
 			m_onmsDao.updateRequisitionInterface(foreignSource, foreignId, primary, form);
 		}
-
 	}
 	
 	public String getUser() {
