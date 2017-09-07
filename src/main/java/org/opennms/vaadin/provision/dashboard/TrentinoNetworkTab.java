@@ -464,6 +464,8 @@ public class TrentinoNetworkTab extends RequisitionTab {
 				for (String service: node.getServiceMap().get(ip)) {
 					if (ip.getIp().equals(node.getPrimary()) && service.equals("ICMP"))
 						continue;
+					if (ip.getIp().equals(node.getPrimary()) && service.equals("SNMP"))
+						continue;
 					BasicService bs = new BasicService(ip);
 					bs.setService(service);
 					secondaryIpContainer.addBean(bs);
