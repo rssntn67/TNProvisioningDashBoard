@@ -231,6 +231,8 @@ public class BasicNode implements Serializable {
 	}
 
 	public void setDescr(String descr) {
+		if (m_descr != null && m_descr.equals(descr))
+			return;
 		m_descr = descr;
 		m_updatemap.add(DashBoardUtils.DESCR);
 		setOnmsSyncOperations(OnmsSync.DBONLY);
