@@ -7,12 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.dashboard.DashboardTab;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
 
 public class BasicNode implements Serializable {
 		
+	private static final Logger logger = Logger.getLogger(BasicNode.class.getName());
+
 	public enum OnmsState {
 		NEW,
 		DELETE,
@@ -288,15 +292,18 @@ public class BasicNode implements Serializable {
 	}
 
 	public void setPrimary(String primary) {
+		logger.info("new primary: " + primary + " old primary: " + m_primary);
 		if (primary == null)
 			return;
 		if (m_primary != null && m_primary.equals(primary))
 			return;
 		
-		String oldprimary = m_primary;
+		logger.info("set primary update");
+		String oldprimary = new String(m_primary);
 		m_primary = primary;
 		m_updatemap.add(DashBoardUtils.PRIMARY);
 		if (oldprimary != null) {
+			logger.info("delete old primary:" + oldprimary);
 			BasicInterface opi = new BasicInterface();
 			opi.setIp(oldprimary);
 			opi.setDescr(m_descr);
@@ -304,7 +311,11 @@ public class BasicNode implements Serializable {
 			BasicService bs = new BasicService(opi);
 			bs.setService("ICMP");
 			delService(bs);
+			BasicService bs1 = new BasicService(opi);
+			bs1.setService("ICMP");
+			delService(bs1);
 		}
+		logger.info("add new primary:" + m_primary);
 		BasicInterface primaryi=new BasicInterface();
 		primaryi.setDescr(m_descr);
 		primaryi.setIp(m_primary);
@@ -381,6 +392,8 @@ public class BasicNode implements Serializable {
 	}
 
 	public void delService(BasicService bs) {
+		if (bs == null)
+			return;
 		BasicInterface ip = bs.getInterface();
 		String service = bs.getService();
 		if (!m_serviceMap.containsKey(ip))

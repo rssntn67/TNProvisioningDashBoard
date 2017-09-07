@@ -1025,6 +1025,7 @@ public abstract class FastRunnable implements Runnable {
 		}
 
 		private TrentinoNetworkNode getnode(FastServiceDevice refdevice, FastServiceLink reflink, TrentinoNetworkNode rnode, Set<String> ipaddresses) {
+			rnode.setDescr(DashBoardUtils.DESCR_FAST);
 			rnode.setVrf(m_vrf.get(reflink.getVrf()).getDnsdomain());
 			rnode.setPrimary(refdevice.getIpaddr());
 			rnode.setBackupProfile(refdevice.getBackupprofile());
