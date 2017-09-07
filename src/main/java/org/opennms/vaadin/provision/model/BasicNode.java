@@ -301,18 +301,7 @@ public class BasicNode implements Serializable {
 		m_primary = primary;
 		m_updatemap.add(DashBoardUtils.PRIMARY);
 		logger.info("set primary update: " + m_primary);
-		logger.info("add new primary:" + m_primary);
-		BasicInterface primaryi=new BasicInterface();
-		primaryi.setDescr(m_descr);
-		primaryi.setIp(m_primary);
-		primaryi.setOnmsprimary(OnmsPrimary.P);
-		BasicService nbs1 = new BasicService(primaryi);
-		nbs1.setService("ICMP");
-		addService(nbs1);
-		BasicService nbs2 = new BasicService(primaryi);
-		nbs2.setService("SNMP");
-		addService(nbs2);
-		
+
 		if (oldprimary != null) {
 			logger.info("delete old primary:" + oldprimary);
 			BasicInterface opi = new BasicInterface();
@@ -326,6 +315,19 @@ public class BasicNode implements Serializable {
 			obs2.setService("SNMP");
 			delService(obs2);
 		}
+
+		logger.info("add new primary:" + m_primary);
+		BasicInterface primaryi=new BasicInterface();
+		primaryi.setDescr(m_descr);
+		primaryi.setIp(m_primary);
+		primaryi.setOnmsprimary(OnmsPrimary.P);
+		BasicService nbs1 = new BasicService(primaryi);
+		nbs1.setService("ICMP");
+		addService(nbs1);
+		BasicService nbs2 = new BasicService(primaryi);
+		nbs2.setService("SNMP");
+		addService(nbs2);
+		
 	}
 
 	public boolean isValid() {
