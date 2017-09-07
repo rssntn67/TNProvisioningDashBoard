@@ -287,12 +287,23 @@ public class FastTab extends DashboardTab {
 			        m_progress.setEnabled(true);
 				}
 			});
-	        startJob();
+			UI.getCurrent().getSession().getLockInstance().lock();
+			try {
+				startJob();
+			} finally {
+				UI.getCurrent().getSession().getLockInstance().unlock();
+				
+			}
 		}
 
 		@Override
 		public void afterJob() {
-			endJob();
+			UI.getCurrent().getSession().getLockInstance().lock();
+			try {
+				endJob();
+			} finally {
+				UI.getCurrent().getSession().getLockInstance().unlock();				
+			}
 			UI.getCurrent().access(new Runnable() {
 
 				@Override
