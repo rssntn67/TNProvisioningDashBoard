@@ -160,7 +160,7 @@ public class FastTab extends DashboardTab {
 				logger.info ("selected job with id: " + jobid);
 				for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
 					joblogcontainer.addBean(jlog);
-				m_loginfo.setCaption("Description for Job: " + "'"+jobid+"': " + event.getItem().getItemProperty("jobdescr"));
+				m_loginfo.setCaption("Description for Job: " + "'"+jobid+"': " + event.getItem().getItemProperty("jobdescr").getValue());
 				m_logTable.setContainerDataSource(joblogcontainer);
 				m_logTable.setSizeFull();
 				m_logTable.setVisibleColumns(new Object[] {"hostname","ipaddr","orderCode","description","note"});
