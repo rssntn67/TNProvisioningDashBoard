@@ -297,7 +297,10 @@ public class BasicNode implements Serializable {
 			return;
 		
 		logger.info("new primary: " + primary + " old primary: " + m_primary);
-		String oldprimary = new String(m_primary);
+		String oldprimary = null;
+		if (m_primary != null ) {
+			oldprimary=new String(m_primary);
+		}
 		m_primary = primary;
 		m_updatemap.add(DashBoardUtils.PRIMARY);
 
