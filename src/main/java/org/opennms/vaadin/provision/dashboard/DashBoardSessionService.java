@@ -875,6 +875,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getPrimary());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
 		iface.setDescr(node.getDescr());
 		
 		requisitionNode.putInterface(iface);
@@ -919,6 +920,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setIpAddr(node.getPrimary());
 		iface.setDescr(node.getDescr());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
 		requisitionNode.putInterface(iface);
 
 		for (BasicInterface ip : node.getServiceMap().keySet()) {
@@ -1132,6 +1134,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setSnmpPrimary(PrimaryType.PRIMARY);
 		iface.setIpAddr(node.getPrimary());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
+		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
 		iface.setDescr(node.getDescr());
 		
 		requisitionNode.putInterface(iface);
