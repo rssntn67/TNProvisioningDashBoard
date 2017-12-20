@@ -153,8 +153,9 @@ public class FastTab extends DashboardTab {
 
 			@Override
 			public void itemClick(ItemClickEvent event) {
-				if (getService().isFastRunning())
+				if (getService().isFastRunning()) {
 					return;
+				}
 				BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
 				Integer jobid = (Integer)event.getItem().getItemProperty("jobid").getValue();
 				logger.info ("selected job with id: " + jobid);

@@ -47,15 +47,16 @@ public class JobDao extends SQLContainer {
 	}
 
 	public synchronized boolean isFastRunning() {
-		if (lastItemId() == null )
+		if (lastItemId() == null ) {
 			return false;
+		}
 		return 
 			JobStatus.RUNNING == JobStatus.valueOf(
 					getItem(
 							lastItemId()).
 							getItemProperty("jobstatus").
 							getValue().
-							toString());
+							toString().toUpperCase());
 	}
 
 }
