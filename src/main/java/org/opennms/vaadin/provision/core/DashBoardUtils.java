@@ -213,11 +213,13 @@ public class DashBoardUtils {
 	public static final String[] m_server_optional = {
 		"VoIP",
 		"Videoconferenza",
-		"VideoconferenzaTerminali",
 		"Videosorveglianza",
 		"ControlloAccessi",
+		"Tetra",
+		"TrentinoEmergenza",
 		"TrentinoWifi",
 		"Testbed",
+		"XIFI",
 		"Ydam"
 	};
 
