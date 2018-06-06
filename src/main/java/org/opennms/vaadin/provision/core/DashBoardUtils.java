@@ -218,7 +218,6 @@ public class DashBoardUtils {
 		"Tetra",
 		"TrentinoEmergenza",
 		"TrentinoWifi",
-		"Testbed",
 		"XIFI",
 		"Ydam"
 	};
