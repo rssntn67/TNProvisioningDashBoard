@@ -39,11 +39,11 @@ public class JobLogDao extends SQLContainer {
 		getContainerProperty(id, "note").setValue(joblog.getNote());
 	}
 	
-	public synchronized void saveOrUpdate(RowId id, JobLogEntry job) {
+	public synchronized void saveOrUpdate(RowId id, JobLogEntry joblog) {
 		if (id == null)
-			save((RowId)addItem(),job);
+			save((RowId)addItem(),joblog);
 		else
-			save(id, job);
+			save(id, joblog);
 	}
 	
 	public synchronized List<JobLogEntry> getJoblogs(int jobid) {

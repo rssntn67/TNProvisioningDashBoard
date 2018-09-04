@@ -20,6 +20,8 @@ import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
+import com.vaadin.data.util.sqlcontainer.query.QueryDelegate.RowIdChangeEvent;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
@@ -189,6 +191,7 @@ public class FastTab extends DashboardTab {
 		joblog.addComponent(m_loginfo);
 		joblog.addComponent(m_logTable);
 		getRight().addComponent(new Panel("Logs",joblog));
+		
 	}
 	
 
@@ -201,7 +204,6 @@ public class FastTab extends DashboardTab {
 	public void load() {
 		updateTabHead();
 
-		logger.info("Last job Id found is:" + getService().getJobContainer().getLastJobId().getValue());
 		if (getService().isFastRunning()) {
 			m_fast.setEnabled(false);
 			m_panel.setCaption("Fast Integration - Status: Running");
@@ -231,6 +233,7 @@ public class FastTab extends DashboardTab {
         thread.start();		
 		m_logTable.setVisible(true);
         
+		logger.info ("Fast Integration - Status: Running");
         m_panel.setCaption("Fast Integration - Status: Running");
         return true;
 		

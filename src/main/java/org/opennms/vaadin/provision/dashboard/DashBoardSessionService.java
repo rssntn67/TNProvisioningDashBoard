@@ -38,6 +38,8 @@ import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
+import org.opennms.vaadin.provision.model.Job;
+import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
@@ -55,7 +57,10 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.model.OnmsIpInterface;
 
+import com.vaadin.data.Item;
+import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.sqlcontainer.RowId;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
 import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.util.sqlcontainer.query.TableQuery;
@@ -1536,9 +1541,28 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public void setUser(String user) {
 		m_user = user;
 	}
-		
-    public boolean isFastRunning() {
-    	return getJobContainer().isFastRunning();
+
+    public synchronized boolean isFastRunning() {
+    	Item lastJob = null;
+    	Integer lastJobId = null;
+    	for (RowId itemId: (Collection<RowId>) m_jobcontainer.getItemIds()) {
+			Item curJob = m_jobcontainer.getItem(itemId);
+        	Property<Integer> curJobItemId = curJob.getItemProperty("jobid");
+    		if (lastJob == null) {
+    			lastJob = curJob;
+    			lastJobId = curJobItemId.getValue();
+    		} else if (lastJobId.intValue() < curJobItemId.getValue().intValue()){
+    			lastJob = curJob;
+    		}
+    	}
+		if (lastJob == null ) {
+			return false;
+		}
+		return 
+			JobStatus.RUNNING == JobStatus.valueOf(
+				lastJob.getItemProperty("jobstatus").
+				getValue().
+				toString().toUpperCase());
     }
     
     public void synctrue(String foregnSource) {

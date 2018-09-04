@@ -36,10 +36,11 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
+import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
+import com.vaadin.data.util.sqlcontainer.query.QueryDelegate.RowIdChangeEvent;
 
 public abstract class FastRunnable implements Runnable {
 
-	
 	Map<String, List<FastServiceDevice>>    m_fastHostnameServiceDeviceMap;
 	Map<String, FastServiceLink>            m_fastOrderCodeServiceLinkMap;
 	Map<String,Set<String>>                 m_fastIpHostnameMap = new HashMap<String, Set<String>>();
@@ -56,9 +57,20 @@ public abstract class FastRunnable implements Runnable {
     private DashBoardSessionService m_session;
 	private static final Logger logger = Logger.getLogger(FastRunnable.class.getName());
 
-    Job m_job;
-	BeanItemContainer<JobLogEntry> m_logcontainer;
+    private Job m_job;
+	private BeanItemContainer<JobLogEntry> m_logcontainer;
 	boolean m_syncRequisition = false;
+
+	public synchronized Job getJob() {
+		return m_job;
+	}
+	
+	public synchronized void setJobId(RowId jobid) {
+		if (m_job != null) {
+			m_job.setJobid(Integer.parseInt(jobid.toString()));
+		}
+			
+	}
 
 	public void syncRequisition() {
 		m_syncRequisition=true;
@@ -96,14 +108,6 @@ public abstract class FastRunnable implements Runnable {
 	public abstract void  beforeJob();
 	public abstract void  afterJob();	
 
-	private void commitJob(Job job) throws SQLException {
-		if (job.getJobid() == null)
-			getService().getJobContainer().add(job);
-		else
-			getService().getJobContainer().save(new RowId(new Object[]{job.getJobid()}), job);
-		getService().getJobContainer().commit();
-		
-	}
  
 	public synchronized boolean success() {
 		return m_job.getJobstatus() == JobStatus.SUCCESS;		
@@ -118,19 +122,29 @@ public abstract class FastRunnable implements Runnable {
 	}
 	
 	public boolean startJob() {
-		if (getService().getJobContainer().getLastJobId() !=  null) {
-			int jobid = getService().getJobContainer().getLastJobId().getValue();
-			logger.info ("found last job with id: " + jobid);
-		}
-        m_job = new Job();
+
+
+        
+		m_job = new Job();
 		m_job.setUsername(getService().getUser());
 		m_job.setJobdescr("FAST sync: started");
 		m_job.setJobstatus(JobStatus.RUNNING);
 		m_job.setJobstart(new Date());
+		getService().getJobContainer().add(m_job);
+		
+		getService().getJobContainer().addListener(new QueryDelegate.RowIdChangeListener() {
+			@Override
+			public void rowIdChange(RowIdChangeEvent event) {
+				logger.info ("new job id: " + event.getNewRowId());
+				setJobId(event.getNewRowId());
+			}
+		});
 		
 		try {
-			commitJob(m_job);
-		} catch (SQLException e) {
+			logger.info ("run: adding job in jobs table");
+			getService().getJobContainer().commit();
+			logger.info("run: added job in jobs table");
+	} catch (SQLException e) {
 			logger.log(Level.SEVERE,"failed creating job", e);
 			m_job.setJobstatus(JobStatus.FAILED);
 			m_job.setJobdescr("FAST sync: Failed commit JobTable");							
@@ -145,26 +159,26 @@ public abstract class FastRunnable implements Runnable {
 			m_job.setJobdescr("FAST sync: Interrupted");							
 	        return false;
 		}
-		int curjobid = getService().getJobContainer().getLastJobId().getValue();
-		logger.info ("created job with id: " + curjobid);
-		m_job.setJobid(curjobid);
 		
 		return true;
 	}
 
 	public boolean endJob() {
 		m_job.setJobend(new Date());
+		RowId jobId=new RowId(new Object[]{m_job.getJobid()});
+		getService().getJobContainer().save(jobId, m_job);
 
 		try {
-			commitJob(m_job);
+			getService().getJobContainer().commit();
 			logger.info("run: ended job in jobs table");
 		} catch (final Exception e) {
 			logger.log(Level.SEVERE,"Cannot end job in job table", e);
 			return false;
 		}
 		
-		for (JobLogEntry joblog: m_logcontainer.getItemIds())
+		for (JobLogEntry joblog: m_logcontainer.getItemIds()) {
 			getService().getJobLogContainer().add(joblog);
+		}
 		
 		try {
 			getService().getJobLogContainer().commit();
@@ -355,18 +369,17 @@ public abstract class FastRunnable implements Runnable {
 	@Override
 	public void run() {
 		beforeJob();
-		
-		if (running())
+		if (running()) {
 			runKettleJob();
-		
-		if (running())
+		}
+		if (running()) {
 			check();
+		}
 
 		if (running()) {
 			try {
 				logger.info("run: sync Fast devices with Requisition");
 				sync();
-				logger.info("run: sync Fast devices with Requisition");
 				m_job.setJobstatus(JobStatus.SUCCESS);
 				m_job.setJobdescr("FAST sync: Done");
 			} catch (final UniformInterfaceException e) {
