@@ -80,8 +80,6 @@ public class FastTab extends DashboardTab {
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 
-	private String m_searchText = null;
-
 	private Panel m_panel  = new Panel();
     private Button m_fast = new Button("Start Fast Integration");
 	private Button m_syncfast  = new Button("Sync Fast");
@@ -96,6 +94,8 @@ public class FastTab extends DashboardTab {
     private Table m_jobTable =  new Table();
     private Table m_logTable =  new Table();
 	private Label m_loginfo = new Label();
+	
+	private Item m_selectLog=null;
     
 	/**
 	 * 
@@ -127,18 +127,17 @@ public class FastTab extends DashboardTab {
 		searchlayout.setWidth("100%");
 		searchlayout.setMargin(true);
 
-		m_searchField.setInputPrompt("Search nodes");
+		m_searchField.setInputPrompt("Search Text");
 		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
 		m_searchField.addTextChangeListener(new TextChangeListener() {
 			private static final long serialVersionUID = 1L;
 			@SuppressWarnings("unchecked")
 			public void textChange(final TextChangeEvent event) {
-				m_searchText = event.getText();
 				if (m_logTable.getContainerDataSource() == null)
 					return;
 				((BeanItemContainer<JobLogEntry>)m_logTable.getContainerDataSource()).removeAllContainerFilters();
 				((BeanItemContainer<JobLogEntry>)m_logTable.getContainerDataSource()).addContainerFilter(
-						new JobLogFilter(m_searchText));
+						new JobLogFilter(event.getText()));
 			}
 		});
 
@@ -157,11 +156,23 @@ public class FastTab extends DashboardTab {
 					return;
 				}
 				BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
+				Integer oldjobId = -1;
+				if (m_selectLog != null) {
+					oldjobId = (Integer)m_selectLog.getItemProperty("jobid").getValue();
+				}
 				Integer jobid = (Integer)event.getItem().getItemProperty("jobid").getValue();
-				logger.info ("selected job with id: " + jobid);
-				for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
-					joblogcontainer.addBean(jlog);
-				m_loginfo.setCaption("Description for Job: " + "'"+jobid+"': " + event.getItem().getItemProperty("jobdescr").getValue());
+				if (oldjobId.intValue() == jobid.intValue()) {
+					jobid = -1;
+					m_selectLog = null;
+					logger.info ("un selected job with id: " + jobid);
+					m_loginfo.setCaption("");
+				} else {
+					m_selectLog = event.getItem();
+					m_loginfo.setCaption("Description for Job: " + "'"+jobid+"': " + event.getItem().getItemProperty("jobdescr").getValue());
+					for (JobLogEntry jlog: m_joblogdao.getJoblogs(jobid))
+						joblogcontainer.addBean(jlog);
+					logger.info ("selected job with id: " + jobid);
+				}
 				m_logTable.setContainerDataSource(joblogcontainer);
 				m_logTable.setSizeFull();
 				m_logTable.setVisibleColumns(new Object[] {"hostname","ipaddr","orderCode","description","note"});
@@ -219,8 +230,11 @@ public class FastTab extends DashboardTab {
 	}
 
 	public boolean runFast() {
-		m_searchField.clear();
 		m_searchField.setVisible(false);
+		if (m_selectLog != null) {
+			m_jobTable.unselect(m_selectLog);
+			m_selectLog = null;
+		}
 		m_jobTable.setSelectable(false);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 		m_logTable.setVisible(false);
