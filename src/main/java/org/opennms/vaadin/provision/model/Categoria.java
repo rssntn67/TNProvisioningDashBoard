@@ -1,6 +1,14 @@
 package org.opennms.vaadin.provision.model;
 
-public class Categoria implements Comparable<Categoria> {
+import java.io.Serializable;
+
+public class Categoria implements Comparable<Categoria>, Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2680049857112741096L;
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

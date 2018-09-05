@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
 
 import org.opennms.vaadin.provision.config.DashBoardConfig;
@@ -31,7 +29,6 @@ public class DashBoardService extends VaadinServletService implements Serializab
 	private final static Logger logger = Logger.getLogger(DashBoardService.class.getName());
 
     Set<DashBoardSessionService> m_sessions = new HashSet<DashBoardSessionService>();
-    Queue<JDBCConnectionPool> m_pools = new LinkedList<JDBCConnectionPool>();
     DashBoardConfig m_config;
     
 	public DashBoardService(DashboardServlet servlet,
@@ -47,52 +44,49 @@ public class DashBoardService extends VaadinServletService implements Serializab
 		try {
 			m_config.reload();
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "init: cannot init configuration file", e);
+			logger.log(Level.SEVERE, "cannot init configuration file", e);
 			throw new ServiceException(e);
 		}
-		
-		try {
-			for (int i=0;i<3;i++)
-			m_pools.add(new SimpleJDBCConnectionPool(
-					"org.postgresql.Driver", m_config.getDbUrl(), m_config
-							.getDbUsername(), m_config.getDbPassword()));
-			logger.info("created connection pool to database: " + m_config.getDbUrl());
-		} catch (SQLException e) {
-			logger.log(Level.SEVERE,
-					"cannot create collection pools", e);
-			throw new ServiceException(e);
-		}
-		
+				
 	}
 	
 	@Override
 	public DashBoardSessionService createVaadinSession(VaadinRequest request) throws 
 		ServiceException {
 
-		DashBoardSessionService sessionservice = new DashBoardSessionService(this);
-		registerSession(sessionservice);
-		return sessionservice;
+		try {
+			m_config.reload();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, "cannot reload configuration file", e);
+			throw new ServiceException(e);
+		}
+
+		DashBoardSessionService session = new DashBoardSessionService(this);
+		session.setConfig(m_config);
+		JDBCConnectionPool pool;
+		try {
+				pool =	new SimpleJDBCConnectionPool(
+					"org.postgresql.Driver", m_config.getDbUrl(), m_config
+							.getDbUsername(), m_config.getDbPassword());
+			logger.info("created connection pool to database: " + m_config.getDbUrl());
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE,
+					"cannot create collection pool", e);
+			throw new ServiceException(e);
+		}
+		session.setPool(pool);		
+
+		logger.info("registering DashBoardSessionService: " + session + " with pool: " + pool);
+		m_sessions.add(session);
+		return session;
 	}
 
 	public Set<DashBoardSessionService> getActiveSessions() {
 		return m_sessions;
 	}
-	
-	public Queue<JDBCConnectionPool> getPools() {
-		return m_pools;
-	}
-	
+		
 	public DashBoardConfig getConfig() {
 		return m_config;
-	}
-
-	public synchronized void registerSession(DashBoardSessionService session) {
-		session.setConfig(m_config);
-		JDBCConnectionPool pool = m_pools.remove();
-		session.setPool(pool);
-		logger.info("registering DashBoardSessionService: " + session + " with pool: " + pool);
-		m_pools.offer(pool);
-		m_sessions.add(session);
 	}
 	
 	public synchronized void unregisterSession(DashBoardSessionService session) {

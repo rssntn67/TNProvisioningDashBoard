@@ -3,14 +3,19 @@ package org.opennms.vaadin.provision.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DashBoardConfig {
+public class DashBoardConfig implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5792020022013510381L;
 	protected static final String PROPERTIES_FILE_PATH = "provision-dashboard.properties";
 	protected static final String[] PROPERTIES_FILE_PATHS = {
 		"/opt/opennms/etc/provision-dashboard.properties",

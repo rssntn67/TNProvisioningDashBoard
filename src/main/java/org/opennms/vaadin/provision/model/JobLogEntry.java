@@ -1,7 +1,13 @@
 package org.opennms.vaadin.provision.model;
 
-public class JobLogEntry {
+import java.io.Serializable;
 
+public class JobLogEntry implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5344344886863404461L;
 	private int m_joblogid;
 	private int m_jobid;
 	private String m_hostname;

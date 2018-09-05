@@ -38,7 +38,6 @@ import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
-import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicService;
@@ -160,6 +159,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public void logout() {
 		if (m_onmsDao.getJerseyClient() != null)
 			m_onmsDao.getJerseyClient().destroy();
+		m_pool.destroy();
 		logger.info("logged out: user: " + m_user + " url: " + m_url);
 	}
 	
