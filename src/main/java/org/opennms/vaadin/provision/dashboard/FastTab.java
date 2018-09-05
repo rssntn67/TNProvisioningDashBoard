@@ -20,8 +20,6 @@ import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
-import com.vaadin.data.util.sqlcontainer.query.QueryDelegate.RowIdChangeEvent;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
@@ -221,6 +219,8 @@ public class FastTab extends DashboardTab {
 	}
 
 	public boolean runFast() {
+		m_searchField.clear();
+		m_searchField.setVisible(false);
 		m_jobTable.setSelectable(false);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 		m_logTable.setVisible(false);
@@ -320,6 +320,7 @@ public class FastTab extends DashboardTab {
 					m_jobTable.setSelectable(true);
 					m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 					m_panel.setCaption("Fast Integration - Status: Ready");
+					m_searchField.setVisible(true);
 
 					// Stop polling
 					UI.getCurrent().setPollInterval(-1);
