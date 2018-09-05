@@ -232,7 +232,7 @@ public class FastTab extends DashboardTab {
 	public boolean runFast() {
 		m_searchField.setVisible(false);
 		if (m_selectLog != null) {
-			m_jobTable.unselect(m_selectLog.getItemProperty("jobid").getValue());
+			m_jobTable.setValue(null);
 			m_selectLog = null;
 		}
 		m_jobTable.setSelectable(false);
