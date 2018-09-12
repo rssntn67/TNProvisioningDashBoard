@@ -17,6 +17,8 @@ import java.util.logging.Logger;
 import org.opennms.rest.client.model.KettleJobStatus;
 import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
+import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicNode;
@@ -36,10 +38,14 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
+import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.util.sqlcontainer.query.QueryDelegate;
 import com.vaadin.data.util.sqlcontainer.query.QueryDelegate.RowIdChangeEvent;
 
 public abstract class FastRunnable implements Runnable {
+
+	private FastServiceDeviceDao m_fastservicedevicecontainer;
+	private FastServiceLinkDao   m_fastservicelinkcontainer;
 
 	Map<String, List<FastServiceDevice>>    m_fastHostnameServiceDeviceMap;
 	Map<String, FastServiceLink>            m_fastOrderCodeServiceLinkMap;
@@ -326,6 +332,24 @@ public abstract class FastRunnable implements Runnable {
 			m_job.setJobstatus(JobStatus.FAILED);
 			m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " + e.getMessage());				
 		}
+		
+	    try {
+			m_fastservicedevicecontainer = new FastServiceDeviceDao
+					(new FreeformQuery("select * from fastservicedevices", m_session.getPool()));
+		} catch (SQLException e) {
+			logger.log(Level.WARNING,"Failed Kettle runjob", e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Failed Load fastservicedevices. Error: " + e.getMessage());				
+		}
+
+	    try {
+		m_fastservicelinkcontainer = new FastServiceLinkDao
+				(new FreeformQuery("select * from fastservicelink", m_session.getPool()));
+		} catch (SQLException e) {
+			logger.log(Level.WARNING,"Failed Kettle runjob", e);
+			m_job.setJobstatus(JobStatus.FAILED);
+			m_job.setJobdescr("FAST sync: Failed Load fastservicelink. Error: " + e.getMessage());				
+		}
 	}
 		
 	private void check() {
@@ -343,11 +367,11 @@ public abstract class FastRunnable implements Runnable {
 			logger.info("run: loaded table snmpprofile");
 
 			logger.info("run: loading table fastservicedevice");
-			m_fastHostnameServiceDeviceMap = checkfastdevices(getService().getFastServiceDeviceContainer().getFastServiceDevices());
+			m_fastHostnameServiceDeviceMap = checkfastdevices(m_fastservicedevicecontainer.getFastServiceDevices());
 			logger.info("run: loaded table fastservicedevice");
 			
 			logger.info("run: loading table fastservicelink");
-			m_fastOrderCodeServiceLinkMap = checkfastlinks(getService().getFastServiceLinkContainer().getFastServiceLinks());
+			m_fastOrderCodeServiceLinkMap = checkfastlinks(m_fastservicelinkcontainer.getFastServiceLinks());
 			logger.info("run: loaded table fastservicelink");
 			
 			logger.info("run: loading requisition: " + DashBoardUtils.TN_REQU_NAME);

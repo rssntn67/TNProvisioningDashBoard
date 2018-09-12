@@ -80,8 +80,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private BackupProfileDao     m_backupprofilecontainer;
 	private CategoriaDao         m_catcontainer;
 	private DnsDomainDao         m_dnsdomaincontainer;
-	private FastServiceDeviceDao m_fastservicedevicecontainer;
-	private FastServiceLinkDao   m_fastservicelinkcontainer;
 	private JobDao               m_jobcontainer;
 	private JobLogDao            m_joblogcontainer;
 	private KettleDao            m_kettleDao;
@@ -122,14 +120,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 
 	public CategoriaDao getCatContainer() {
     	return m_catcontainer;
-    }
-
-	public FastServiceDeviceDao getFastServiceDeviceContainer() {
-		return m_fastservicedevicecontainer;
-    }
-    
-	public FastServiceLinkDao getFastServiceLinkContainer() {
-		return m_fastservicelinkcontainer;
     }
 
 	public DnsDomainDao getDnsDomainContainer() {
@@ -194,12 +184,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	    dnstq.setVersionColumn("versionid");
 	    m_dnsdomaincontainer =  new DnsDomainDao(dnstq);	
 	    
-	    m_fastservicedevicecontainer = new FastServiceDeviceDao
-	    		(new FreeformQuery("select * from fastservicedevices", m_pool));
-
-		m_fastservicelinkcontainer = new FastServiceLinkDao
-				(new FreeformQuery("select * from fastservicelink", m_pool));
-
 	    TableQuery jtq = new TableQuery("jobs", m_pool);
 	    jtq.setVersionColumn("versionid");
 		m_jobcontainer = new JobDao(jtq);

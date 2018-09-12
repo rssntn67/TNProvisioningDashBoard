@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.model.BasicNode;
-import org.opennms.vaadin.provision.model.FastServiceDevice;
 import org.opennms.vaadin.provision.model.SnmpProfile;
 
 import com.vaadin.annotations.Theme;
@@ -80,9 +79,6 @@ public class SnmpProfileTab extends DashboardTab {
 		if (!loaded) {
 			m_snmpContainer = getService().getSnmpProfileContainer();
 			m_snmpTable.setContainerDataSource(m_snmpContainer);
-			for (FastServiceDevice fsd: getService().getFastServiceDeviceContainer().getFastServiceDevices()) {
-				m_fastSnmpProfile.add(fsd.getSnmpprofile());
-			}
 			layout();
 			loaded=true;
 		}
