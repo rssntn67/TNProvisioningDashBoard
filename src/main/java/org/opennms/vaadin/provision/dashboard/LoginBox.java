@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.model.BasicNode;
@@ -98,23 +97,23 @@ public class LoginBox extends DashboardTab {
 		try {
 			getService().login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
 			((DashboardUI)getUI()).enabletabs(m_username.getValue());
-		} catch (ClientHandlerException che) {
+		} catch (ClientHandlerException e) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
-			logger.log(Level.WARNING,"Login Failed for rest access",che);
+			logger.warning("Login Failed for rest access: " + e.getMessage());
 			closeSession();
-		} catch (UniformInterfaceException uie) {
-			if (uie.getResponse().getStatusInfo() == Status.UNAUTHORIZED) {
+		} catch (UniformInterfaceException e) {
+			if (e.getResponse().getStatusInfo() == Status.UNAUTHORIZED) {
 				Notification.show("Authentication Failed", "Verificare Username e Password", Notification.Type.ERROR_MESSAGE);
-			} else if (uie.getResponse().getStatusInfo() == Status.FORBIDDEN) {
+			} else if (e.getResponse().getStatusInfo() == Status.FORBIDDEN) {
 				Notification.show("Authorization Failed", "Verificare che lo user: "+ m_username+" abbia ROLE_PROVISIONING", Notification.Type.ERROR_MESSAGE);
 			} else {
 				Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
 			}
-			logger.log(Level.WARNING,"Login Failed for rest access",uie);
+			logger.warning("Login Failed for rest access: " + e.getMessage());
 			closeSession();
 		} catch (SQLException e) {
 			Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
-			logger.log(Level.WARNING,"Login Failed for rest access",e);
+			logger.warning("Login Failed for rest access: " + e.getMessage());
 			closeSession();
 		}
 	}
