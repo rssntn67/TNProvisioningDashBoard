@@ -91,6 +91,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private String m_user;
 	private String m_url;
 	
+	private boolean m_loggedin = false;
 	public void setPool(JDBCConnectionPool pool) {
 		m_pool=pool;
 	}
@@ -144,7 +145,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		if (m_onmsDao.getJerseyClient() != null) {
 			m_onmsDao.getJerseyClient().destroy();
 		}
-		if (m_pool != null ) {
+		if ( m_pool != null && m_loggedin) {
 			m_pool.destroy();
 		}
 	}
@@ -157,6 +158,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		logger.info("logged in user: " + username + "@" + url);
 		m_user = username;
 		m_url = url;
+		m_loggedin = true;
 
 		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
