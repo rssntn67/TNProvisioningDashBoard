@@ -143,7 +143,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     	return m_pool;
     }
     
-	public void logout() {
+	public void cleanSessionObjects() {
 		if (m_onmsDao.getJerseyClient() != null) {
 			m_onmsDao.getJerseyClient().destroy();
 		}

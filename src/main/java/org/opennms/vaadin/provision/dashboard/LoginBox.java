@@ -1,6 +1,7 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,6 +88,12 @@ public class LoginBox extends DashboardTab {
 		m_panel.setCaption(s_panellogincaption + getService().getConfig().getAppName());
 		m_panel.setContent(new Label("Exit Work Session : please reload page to log into"));
 	}
+
+	private void closeSession() {
+		getService().cleanSessionObjects();
+		logout();
+		getUI().getSession().close();
+	}
 	
 	@SuppressWarnings("unchecked")
 	private void login() {	
@@ -95,31 +102,36 @@ public class LoginBox extends DashboardTab {
 		} catch (ClientHandlerException che) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",che);
-			m_username.setValue("");
-			m_password.setValue("");
-			getService().logout();
+			closeSession();
 			return;
 		} catch (UniformInterfaceException uie) {
-			if (uie.getResponse().getStatusInfo() == Status.UNAUTHORIZED)
+			if (uie.getResponse().getStatusInfo() == Status.UNAUTHORIZED) {
 				Notification.show("Authentication Failed", "Verificare Username e Password", Notification.Type.ERROR_MESSAGE);
-			else if (uie.getResponse().getStatusInfo() == Status.FORBIDDEN)
+			} else if (uie.getResponse().getStatusInfo() == Status.FORBIDDEN) {
 				Notification.show("Authorization Failed", "Verificare che lo user: "+ m_username+" abbia ROLE_PROVISIONING", Notification.Type.ERROR_MESSAGE);
-			else
+			} else {
 				Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
+			}
 			logger.log(Level.WARNING,"Login Failed for rest access",uie);
-			m_username.setValue("");
-			m_password.setValue("");
-			getService().logout();
+			closeSession();
 			return;
 		} catch (Exception e) {
 			Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",e);
-			m_username.setValue("");
-			m_password.setValue("");
-			getService().logout();
+			closeSession();
 			return;
 		}
+		
+		try {
+			getService().init();
+			logger.info("Dashboard Servlet Service: init completed");
+		} catch (SQLException e) {
+			Notification.show("Init Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
+			logger.log(Level.WARNING,"Init Failed for rest access",e);
+			closeSession();
+		}
 	    m_panel.setCaption("User '"+ getService().getUser()+"' Logged in");
+
 	    VerticalLayout loggedin= new VerticalLayout();
 	    loggedin.setMargin(true);
 	    loggedin.setSpacing(true);

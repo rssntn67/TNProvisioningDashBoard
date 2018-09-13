@@ -145,7 +145,7 @@ public class DashboardUI extends DashboardAbstractUI {
 	}
 
 	public void reallylogout() {
-		getSessionService().logout();
+		getSessionService().cleanSessionObjects();
 		Iterator<Component> ite = m_tabSheet.iterator();
 	    while (ite.hasNext()) {
 	    	Component comp = ite.next();
