@@ -128,13 +128,19 @@ public class FastTab extends DashboardTab {
 		searchlayout.setMargin(true);
 
 		m_searchField.setInputPrompt("Search Text");
+		m_searchField.setNullRepresentation("");
+		m_searchField.setNullSettingAllowed(true);
 		m_searchField.setTextChangeEventMode(TextChangeEventMode.LAZY);
 		m_searchField.addTextChangeListener(new TextChangeListener() {
 			private static final long serialVersionUID = 1L;
 			@SuppressWarnings("unchecked")
 			public void textChange(final TextChangeEvent event) {
-				if (m_logTable.getContainerDataSource() == null)
+				if (m_logTable.getContainerDataSource() == null) {
 					return;
+				}
+				if (event.getText() == null) {
+					return;
+				}
 				((BeanItemContainer<JobLogEntry>)m_logTable.getContainerDataSource()).removeAllContainerFilters();
 				((BeanItemContainer<JobLogEntry>)m_logTable.getContainerDataSource()).addContainerFilter(
 						new JobLogFilter(event.getText()));
@@ -155,6 +161,7 @@ public class FastTab extends DashboardTab {
 				if (getService().isFastRunning()) {
 					return;
 				}
+				m_searchField.setValue(null);
 				BeanItemContainer<JobLogEntry> joblogcontainer = new BeanItemContainer<JobLogEntry>(JobLogEntry.class);
 				Integer oldjobId = -1;
 				if (m_selectLog != null) {
