@@ -93,11 +93,9 @@ public class BackupProfileTab extends DashboardTab {
 				layout();
 				loaded=true;
 			} catch (SQLException e) {
-				logger.warning("Failed to load Snmp Fast Profiles");
+				logger.warning("Failed to load Backup Fast Profiles");
 				Notification.show("Error Loading Tab", Type.HUMANIZED_MESSAGE);
 			}
-			layout();
-			loaded=true;
 		}
 	}
 	
