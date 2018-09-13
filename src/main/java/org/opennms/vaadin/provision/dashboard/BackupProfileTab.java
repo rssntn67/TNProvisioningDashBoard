@@ -87,8 +87,8 @@ public class BackupProfileTab extends DashboardTab {
 			try {
 				SQLContainer fastBackupName = new SQLContainer(new FreeformQuery("select distinct backupprofiles from fastservicedevices", getService().getPool()));
 				for (Iterator<?> i = fastBackupName.getItemIds().iterator(); i.hasNext();) {
-					Property<String> snmpprofile= fastBackupName.getItem(i.next()).getItemProperty("backupprofiles");
-					m_fastBackupProfile.add(snmpprofile.getValue());
+					Property<String> backupprofile= fastBackupName.getItem(i.next()).getItemProperty("backupprofiles");
+					m_fastBackupProfile.add(backupprofile.getValue());
 				}
 				layout();
 				loaded=true;
