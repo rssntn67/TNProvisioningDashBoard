@@ -14,11 +14,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.model.KettleJobStatus;
 import org.opennms.rest.client.model.KettleRunJob;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
 import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
+import org.opennms.vaadin.provision.dao.KettleDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicNode;
@@ -314,14 +316,18 @@ public abstract class FastRunnable implements Runnable {
 	private void runKettleJob() {
 		try {
 			logger.info("run: executing kettle remote procedure");
-			KettleRunJob kjob = getService().getKettleDao().runJob();
-	    	KettleJobStatus status = getService().getKettleDao().jobStatus(kjob);
-			while (getService().getKettleDao().isRunning(status)) {
+			KettleDao kettleDao = new KettleDao(new JerseyClientImpl(getService().getConfig().getKettleUrl(), 
+					getService().getConfig().getKettleUsername(), 
+					getService().getConfig().getKettlePassword()));
+
+			KettleRunJob kjob = kettleDao.runJob();
+	    	KettleJobStatus status = kettleDao.jobStatus(kjob);
+			while (kettleDao.isRunning(status)) {
 				Thread.sleep(1000);
-				status = getService().getKettleDao().jobStatus(kjob);
+				status = kettleDao.jobStatus(kjob);
 			}
-			if (!getService().getKettleDao().isFinished(status) || 
-					!getService().getKettleDao().isCompleted(status)) {
+			if (!kettleDao.isFinished(status) || 
+					!kettleDao.isCompleted(status)) {
 				logger.log(Level.WARNING,"Failed Kettle runjob", status.getErroDescr());
 				m_job.setJobstatus(JobStatus.FAILED);
 				m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: " 

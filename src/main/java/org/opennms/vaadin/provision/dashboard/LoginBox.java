@@ -90,7 +90,6 @@ public class LoginBox extends DashboardTab {
 	}
 
 	private void closeSession() {
-		getService().cleanSessionObjects();
 		logout();
 		getUI().getSession().close();
 	}

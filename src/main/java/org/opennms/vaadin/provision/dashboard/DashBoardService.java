@@ -90,6 +90,7 @@ public class DashBoardService extends VaadinServletService implements Serializab
 	}
 	
 	public synchronized void unregisterSession(DashBoardSessionService session) {
+		session.cleanSessionObjects();
 		logger.info("unregistering DashBoardSessionService: " + session);
 		m_sessions.remove(session);		
 	}

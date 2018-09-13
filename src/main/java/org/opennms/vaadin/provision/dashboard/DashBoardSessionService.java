@@ -30,7 +30,6 @@ import org.opennms.vaadin.provision.dao.DnsDomainDao;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
-import org.opennms.vaadin.provision.dao.KettleDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
@@ -79,7 +78,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private DnsDomainDao         m_dnsdomaincontainer;
 	private JobDao               m_jobcontainer;
 	private JobLogDao            m_joblogcontainer;
-	private KettleDao            m_kettleDao;
 	
 	private static final long serialVersionUID = 508580392774265535L;
 	private final static Logger logger = Logger.getLogger(DashBoardSessionService.class.getName());	
@@ -130,11 +128,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public JobLogDao getJobLogContainer() {
 		return m_joblogcontainer;
 	}
-	
-	public KettleDao getKettleDao() {
-		return m_kettleDao;
-	}
-	
+		
     public OnmsDao getOnmsDao() {
 		return m_onmsDao;
 	}
@@ -144,13 +138,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     }
     
 	public void cleanSessionObjects() {
+		logger.info("clean session object");
 		if (m_onmsDao.getJerseyClient() != null) {
 			m_onmsDao.getJerseyClient().destroy();
 		}
 		if (m_pool != null ) {
 			m_pool.destroy();
 		}
-		logger.info("logged out: user: " + m_user + " url: " + m_url);
 	}
 	
 	public void login(String url, String username, String password) {
@@ -191,11 +185,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		TableQuery jltq = new TableQuery("joblogs", m_pool);
 	    jltq.setVersionColumn("versionid");
 		m_joblogcontainer = new JobLogDao(jltq);
-		
-		m_kettleDao = new KettleDao(new JerseyClientImpl(m_config.getKettleUrl(), 
-				m_config.getKettleUsername(), 
-				m_config.getKettlePassword()));
-		
+				
 	}
 
 	public void deleteSnmpProfile(String primary) throws SQLException{
