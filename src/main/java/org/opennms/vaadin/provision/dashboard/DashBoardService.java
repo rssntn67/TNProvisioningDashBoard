@@ -38,16 +38,8 @@ public class DashBoardService extends VaadinServletService implements Serializab
 		
 	@Override
 	public void init() throws ServiceException {
-		
 		super.init();
 		m_config = new DashBoardConfig();
-		try {
-			m_config.reload();
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, "cannot init configuration file", e);
-			throw new ServiceException(e);
-		}
-				
 	}
 	
 	@Override

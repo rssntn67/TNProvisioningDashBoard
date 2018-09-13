@@ -147,7 +147,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 	}
 	
-	public void login(String url, String username, String password) {
+	public void login(String url, String username, String password) throws SQLException {
 		logger.info("loggin user: " + username + "@" + url);
 		m_onmsDao.setJerseyClient(
 				new JerseyClientImpl(url,username,password));
@@ -155,9 +155,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		logger.info("logged in user: " + username + "@" + url);
 		m_user = username;
 		m_url = url;
-	}
-		
-	public void init() throws SQLException {
+
 		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
         m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);

@@ -31,6 +31,7 @@ public class DashboardServlet extends VaadinServlet implements SessionDestroyLis
 	protected DashBoardService createServletService(DeploymentConfiguration deploymentConfiguration) throws ServiceException  {
 		logger.info("creating Dashboard Servlet Service ");
 		DashBoardService service = new DashBoardService(this, deploymentConfiguration);
+		service.init();
 		return service;
 	}
 	

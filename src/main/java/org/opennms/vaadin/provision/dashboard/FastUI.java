@@ -109,14 +109,6 @@ public class FastUI extends HttpServlet {
 			DashBoardSessionService sessionservice = new DashBoardSessionService(null);
 			sessionservice.setConfig(m_config);
 			sessionservice.setPool(m_pool);
-			try {
-				sessionservice.init();
-				logger.info("session service inited");
-			} catch (SQLException e) {
-				logger.log(Level.SEVERE,"cannot init session service", e);
-				out.println("KO: cannot connect to database");
-				return;
-			}
 					
 	 	   try {
 				sessionservice.login(url, username, password);
