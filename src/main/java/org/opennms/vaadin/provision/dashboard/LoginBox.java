@@ -1,6 +1,7 @@
 package org.opennms.vaadin.provision.dashboard;
 
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,8 +96,8 @@ public class LoginBox extends DashboardTab {
 	
 	private void login() {	
 		try {
-			((DashboardUI)getUI()).login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
-			loginlayout();
+			getService().login(m_select.getValue().toString(),m_username.getValue(),m_password.getValue());
+			((DashboardUI)getUI()).enabletabs(m_username.getValue());
 		} catch (ClientHandlerException che) {
 			Notification.show("Connection Failed", "Verificare che OpenNMS  sia \'running\': " + m_select.getValue().toString(), Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",che);
@@ -111,14 +112,14 @@ public class LoginBox extends DashboardTab {
 			}
 			logger.log(Level.WARNING,"Login Failed for rest access",uie);
 			closeSession();
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			Notification.show("Login Failed", "Contattare l'amministratore del sistema", Notification.Type.ERROR_MESSAGE);
 			logger.log(Level.WARNING,"Login Failed for rest access",e);
 			closeSession();
 		}
 	}
 
-	private void loginlayout() {
+	public void loginlayout() {
 	    m_panel.setCaption("User '"+ getService().getUser()+"' Logged in");
 
 	    VerticalLayout loggedin= new VerticalLayout();

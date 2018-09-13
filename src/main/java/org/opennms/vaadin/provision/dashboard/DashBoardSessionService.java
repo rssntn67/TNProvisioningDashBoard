@@ -48,6 +48,8 @@ import org.opennms.vaadin.provision.model.Categoria;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import org.opennms.rest.client.JerseyClientImpl;
@@ -147,7 +149,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		}
 	}
 	
-	public void login(String url, String username, String password) throws SQLException {
+	public void login(String url, String username, String password) throws SQLException,ClientHandlerException,UniformInterfaceException {
 		logger.info("loggin user: " + username + "@" + url);
 		m_onmsDao.setJerseyClient(
 				new JerseyClientImpl(url,username,password));

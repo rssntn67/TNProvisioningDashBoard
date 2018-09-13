@@ -5,15 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
 
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -57,20 +54,17 @@ public class DashboardUI extends DashboardAbstractUI {
 		logger.info("Init DashBoardUI: end");
 	}
 	
-	public void login(String url, String username, String password) throws ClientHandlerException,UniformInterfaceException, Exception  {
-		getSessionService().login(url,username,password);
+	public void enabletabs(String username)  {
 	    Iterator<Component> ite = m_tabSheet.iterator();
 	    while (ite.hasNext()) {
-	    	try {
 	    		DashboardTab dashboardTab = (DashboardTab) ite.next();
-	    		if (getSessionService().getConfig().isTabDisabled(dashboardTab.getName(),username))
+	    		if (getSessionService().getConfig().isTabDisabled(dashboardTab.getName(),username)) {
 	    			continue;
+	    		}
 	    		m_tabSheet.getTab(dashboardTab).setEnabled(true);
-	    	} catch (Exception e) {
-	    		logger.log(Level.WARNING,"Not a DashboardTab", e);
-	    	}
 	    }
 	    m_tabSheet.getLoginBox().setEnabled(true);
+	    m_tabSheet.getLoginBox().loginlayout();
 	}
 
 	public Map<String, Map<String,Collection<BasicNode>>> getUpdatesMapforTabs() {
