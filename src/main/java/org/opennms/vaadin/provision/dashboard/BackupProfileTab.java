@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -22,6 +23,8 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.RowId;
+import com.vaadin.data.util.sqlcontainer.SQLContainer;
+import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -81,6 +84,18 @@ public class BackupProfileTab extends DashboardTab {
 		if (!loaded) {
 			m_backupContainer = getService().getBackupProfileContainer();
 			m_backupTable.setContainerDataSource(m_backupContainer);
+			try {
+				SQLContainer fastBackupName = new SQLContainer(new FreeformQuery("select distinct backupprofiles from fastservicedevices", getService().getPool()));
+				for (Iterator<?> i = fastBackupName.getItemIds().iterator(); i.hasNext();) {
+					Property<String> snmpprofile= fastBackupName.getItem(i.next()).getItemProperty("backupprofiles");
+					m_fastBackupProfile.add(snmpprofile.getValue());
+				}
+				layout();
+				loaded=true;
+			} catch (SQLException e) {
+				logger.warning("Failed to load Snmp Fast Profiles");
+				Notification.show("Error Loading Tab", Type.HUMANIZED_MESSAGE);
+			}
 			layout();
 			loaded=true;
 		}
