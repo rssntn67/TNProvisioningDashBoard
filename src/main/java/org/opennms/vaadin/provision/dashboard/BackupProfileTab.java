@@ -65,7 +65,7 @@ public class BackupProfileTab extends DashboardTab {
 	private VerticalLayout m_editBackupLayout  = new VerticalLayout();
 	TextField m_backup_name = new TextField("Nome");
 
-	private BeanFieldGroup<BackupProfile> m_editorFields     = new BeanFieldGroup<BackupProfile>(BackupProfile.class);
+	private BeanFieldGroup<BackupProfile> m_editorFields = new BeanFieldGroup<BackupProfile>(BackupProfile.class);
 
 	private Set<String> m_fastBackupProfile = new HashSet<String>();
 
