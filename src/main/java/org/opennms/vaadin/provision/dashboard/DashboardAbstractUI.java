@@ -41,15 +41,6 @@ public class DashboardAbstractUI extends UI {
    			return;
 		}
 		
-		try {
-			m_sessionservice.init();
-		} catch (Exception e) {
-			logger.log(Level.SEVERE,e.getLocalizedMessage(),e);
-			layoutInitError("Init Failed per accesso database", 
-				"L'applicazione non e' disponibile",
-				"Accesso al database non dispobile, contattare l'amministratore di sistema");
-			return;
-		}
 	}
 
 	private void layoutInitError(String error, String message, String label) {
