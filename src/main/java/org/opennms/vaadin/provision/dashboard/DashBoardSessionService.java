@@ -27,8 +27,6 @@ import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
-import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
-import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
@@ -61,7 +59,6 @@ import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.sqlcontainer.RowId;
 import com.vaadin.data.util.sqlcontainer.connection.JDBCConnectionPool;
-import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 import com.vaadin.server.VaadinSession;
 
@@ -147,9 +144,12 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
     }
     
 	public void logout() {
-		if (m_onmsDao.getJerseyClient() != null)
+		if (m_onmsDao.getJerseyClient() != null) {
 			m_onmsDao.getJerseyClient().destroy();
-		m_pool.destroy();
+		}
+		if (m_pool != null ) {
+			m_pool.destroy();
+		}
 		logger.info("logged out: user: " + m_user + " url: " + m_url);
 	}
 	
