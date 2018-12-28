@@ -952,18 +952,30 @@ public abstract class FastRunnable implements Runnable {
 		
 		private void norefdevice(String hostname) {
 			final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-
-			for (FastServiceDevice device : m_fastHostnameServiceDeviceMap
-					.get(hostname)) {
-				final JobLogEntry jloe = new JobLogEntry();
-				jloe.setHostname(device.getHostname());
-				jloe.setIpaddr(device.getIpaddr());
-				jloe.setOrderCode(device.getOrderCode());
-				jloe.setJobid(m_job.getJobid());
-				jloe.setDescription("FAST sync: skipping add service device. Cause: No Valid ref device for order_code");
-				jloe.setNote(getNote(device));
-				logger.info("skipping service add device. Cause: No Valid ref device for order_code " + getNote(device));
-				logs.add(jloe);
+			if (m_fastHostnameServiceDeviceMap.containsKey(hostname)) {
+        			for (FastServiceDevice device : m_fastHostnameServiceDeviceMap
+        					.get(hostname)) {
+        				final JobLogEntry jloe = new JobLogEntry();
+        				jloe.setHostname(device.getHostname());
+        				jloe.setIpaddr(device.getIpaddr());
+        				jloe.setOrderCode(device.getOrderCode());
+        				jloe.setJobid(m_job.getJobid());
+        				jloe.setDescription("FAST sync: skipping add service device. Cause: No Valid ref device for order_code");
+        				jloe.setNote(getNote(device));
+        				logger.info("skipping service add device. Cause: No Valid ref device for order_code " + getNote(device));
+        				logs.add(jloe);
+        			}
+			} else {
+		             final JobLogEntry jloe = new JobLogEntry();
+                             jloe.setHostname(hostname);
+                             jloe.setIpaddr("0.0.0.0");
+                             jloe.setOrderCode("null");
+                             jloe.setJobid(m_job.getJobid());
+                             jloe.setDescription("FAST sync: skipping add service device. Cause: No Valid ref device for hostname");
+                             jloe.setNote("Cannot found device name in Fast");
+                             logger.info("skipping service add device. Cause: No Valid ref device for hostname " + hostname);
+                             logs.add(jloe);
+                 
 			}
 
 			log(logs);
