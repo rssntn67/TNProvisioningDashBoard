@@ -101,7 +101,7 @@ public class NodesServiceTest {
     	for (OnmsIpInterface ip: ips.getIpInterfaces()) {
     		System.out.println(ip.getIpAddress());
     		if (ip.getSnmpInterface() != null)
-    			System.out.println(ip.getSnmpInterface().getNetMask());
+    			System.out.println(ip.getSnmpInterface().getIfAlias());
     		System.out.println(ip.getIpHostName());
     	}
     }

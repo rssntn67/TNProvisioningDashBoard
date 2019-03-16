@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.opennms.netmgt.model.OnmsNodeList;
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
@@ -22,39 +24,35 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionInterface;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredService;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
-import org.opennms.web.svclayer.model.SnmpInfo;
+import org.opennms.rest.client.JerseyClientImpl;
+import org.opennms.rest.client.model.OnmsIpInterface;
 import org.opennms.vaadin.provision.config.DashBoardConfig;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
+import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
 import org.opennms.vaadin.provision.dao.OnmsDao;
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
-import org.opennms.vaadin.provision.dao.CategoriaDao;
+import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
-import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicService;
+import org.opennms.vaadin.provision.model.Categoria;
 import org.opennms.vaadin.provision.model.IpSnmpProfile;
+import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.MediaGatewayNode;
 import org.opennms.vaadin.provision.model.SistemiInformativiNode;
-import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
-import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.SnmpProfile;
-import org.opennms.vaadin.provision.model.Categoria;
-
-import javax.ws.rs.core.MultivaluedMap;
+import org.opennms.vaadin.provision.model.TrentinoNetworkNode;
+import org.opennms.web.svclayer.model.SnmpInfo;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-
-import org.opennms.rest.client.JerseyClientImpl;
-import org.opennms.rest.client.model.OnmsIpInterface;
-
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanContainer;
@@ -736,19 +734,11 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	
 	public void delete(TrentinoNetworkNode tnnode) {
 		logger.info("Deleting TN node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
-		if (tnnode.getPrimary() != null)
-			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
-		if (tnnode.getServiceMap() != null) {
-			for (BasicInterface iface: tnnode.getServiceMap().keySet())
-				m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(iface.getIp()));
-		}
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());
 	}
 
 	public void delete(MediaGatewayNode tnnode) {
 		logger.info("Deleting media gateway node with foreignId: " + tnnode.getForeignId() + " primary: " + tnnode.getPrimary());
-		if (tnnode.getPrimary() != null)
-			m_onmsDao.deletePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyName(tnnode.getPrimary()));
 		m_onmsDao.deleteRequisitionNode(DashBoardUtils.TN_REQU_NAME, tnnode.getForeignId());		
 	}
 	
@@ -878,8 +868,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_onmsDao.setSnmpInfo(node.getPrimary(), getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
 		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
-		logger.info("Adding policy for interface: " + node.getPrimary());
-		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getPrimary()));
 		
 		node.clear();
 		
@@ -1157,8 +1145,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_onmsDao.setSnmpInfo(node.getPrimary(), getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
 		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
-		logger.info("Adding policy for interface: " + node.getPrimary());
-		m_onmsDao.addOrReplacePolicy(DashBoardUtils.TN_REQU_NAME, DashBoardUtils.getPolicyWrapper(node.getPrimary()));		
 		node.clear();			
 	}
 
@@ -1443,9 +1429,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 					.updateRequisitionNode(foreignSource, foreignId, updatemap);
 
 		for (BasicInterface ip : interfaceToDel) {
-			if (addPolicy)
-				m_onmsDao.deletePolicy(foreignSource,
-						DashBoardUtils.getPolicyName(ip.getIp()));
 			m_onmsDao.deleteRequisitionInterface(foreignSource, foreignId, ip.getIp());		
 		}
 
@@ -1463,9 +1446,6 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			iface.setDescr(ip.getDescr());
 			iface.setSnmpPrimary(PrimaryType.get(ip.getOnmsprimary().toString()));
 			m_onmsDao.addRequisitionInterface(foreignSource, foreignId, iface);
-			if (addPolicy)
-				m_onmsDao.addOrReplacePolicy(foreignSource,
-					DashBoardUtils.getPolicyWrapper(ip.getIp()));
 		}
 
 		for (BasicInterface ip: serviceToAdd.keySet()) {
