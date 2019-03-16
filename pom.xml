@@ -18,7 +18,7 @@
 		<jetty.plugin.version>9.4.0.v20161208</jetty.plugin.version>
 		<project.source.version>1.8</project.source.version>
 		<project.target.version>1.8</project.target.version>
-		<opennms.version>18.0.3</opennms.version>
+		<opennms.version>23.0.1</opennms.version>
 		<jersey.version>1.19.3</jersey.version>
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm Z</maven.build.timestamp.format>
