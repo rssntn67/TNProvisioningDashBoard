@@ -847,6 +847,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		iface.setIpAddr(node.getPrimary());
 		iface.putMonitoredService(new RequisitionMonitoredService("ICMP"));
 		iface.putMonitoredService(new RequisitionMonitoredService("SNMP"));
+                iface.putMonitoredService(new RequisitionMonitoredService("HTTP_JSON"));
 		iface.setDescr(node.getDescr());
 		
 		requisitionNode.putInterface(iface);
