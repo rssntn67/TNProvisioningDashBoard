@@ -315,6 +315,11 @@ public class BasicNode implements Serializable {
 			BasicService obs2 = new BasicService(opi);
 			obs2.setService("SNMP");
 			delService(obs2);
+			if (this instanceof MediaGatewayNode) {
+                            BasicService obs3 = new BasicService(opi);
+                            obs3.setService("HTTP_JSON");
+                            delService(obs3);
+			}
 		}
 
 		BasicInterface primaryi=new BasicInterface();
@@ -327,6 +332,12 @@ public class BasicNode implements Serializable {
 		BasicService nbs2 = new BasicService(primaryi);
 		nbs2.setService("SNMP");
 		addService(nbs2);
+                if (this instanceof MediaGatewayNode) {
+                    BasicService nbs3 = new BasicService(primaryi);
+                    nbs3.setService("HTTP_JSON");
+                    addService(nbs3);
+                }
+
 		
 	}
 
