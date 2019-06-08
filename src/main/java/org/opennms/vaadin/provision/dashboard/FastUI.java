@@ -4,7 +4,6 @@ package org.opennms.vaadin.provision.dashboard;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -150,9 +149,8 @@ public class FastUI extends HttpServlet {
 		}
 
 		@Override
-		public void log(List<JobLogEntry> logs) {
-			for (JobLogEntry log: logs)
-				log(log);
+		public void log(JobLogEntry log) {
+		    persist(log);
 		}
 
 		@Override

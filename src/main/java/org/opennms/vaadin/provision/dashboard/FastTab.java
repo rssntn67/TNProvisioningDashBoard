@@ -4,7 +4,6 @@ package org.opennms.vaadin.provision.dashboard;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -20,14 +19,14 @@ import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.ui.Button;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
@@ -289,14 +288,12 @@ public class FastTab extends DashboardTab {
 		}
 
 		@Override
-		public void log(List<JobLogEntry> logs) {
+		public void log(JobLogEntry log) {
 			UI.getCurrent().access(new Runnable() {
 				
 				@Override
 				public void run() {
-					for (JobLogEntry log: logs) {
-						log(log);
-					}
+				    persist(log);
 				}
 			});
 		}
