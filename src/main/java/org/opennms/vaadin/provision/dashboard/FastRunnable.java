@@ -62,6 +62,24 @@ public abstract class FastRunnable implements Runnable {
     private final static String ONMS_DUPLICATED_ID ="ONMS(error): Duplicated Foreign Id";
     private final static String ONMS_NULL_IP ="ONMS(error): Null Ip Address";
     private final static String ONMS_INVALID_IP ="ONMS(error): Invalid Ip Address";
+    private final static String FAST_DUPLICATED_ONMS_ID = "FAST(warning): mapped to duplicated foreign id in requisition";
+    private final static String FAST_DUPLICATED_ONMS_IP = "FAST(warning): mapped to duplicated ip address in requisition";
+    private final static String FAST_MISHMATCH_ONMS = "FAST(error): mismatch hostname/foreignIds";
+    private final static String FAST_NO_REF_DEVICE = "FAST(error): no valid ref device for order code";
+    private final static String FAST_NO_DEVICE = "FAST(error): no device find";
+    private final static String ONMS_ADDED_DEVICE = "ONMS(info): added device";
+    private final static String ONMS_DELETED_DEVICE = "ONMS(info): deleted device";
+    private final static String ONMS_UPDATED_NO_FAST_DEVICE = "ONMS(info): updated device not maneged by FAST  ";
+    private final static String ONMS_UPDATED_FAST_DEVICE = "ONMS(info): updated device maneged by FAST  ";
+    private final static String ONMS_DELETED_IP = "ONMS(info): deleted interface";
+    private final static String ONMS_ADDED_IP = "ONMS(info): added interface";
+    private final static String ONMS_UPDATE_SNMP_PROFILE = "ONMS(info): updated Snmp Profile";
+    
+    private final static String JOB_FAILS_COMMIT="FAST run: Failed Commit Job to Table";
+    private final static String JOB_FAILS_INTERRUPTED="FAST run: Interrupted";
+    private final static String JOB_FAILS_SYNC="FAST run: Requisition Updated - Sync Failed";
+    private final static String JOB_FAILS_REQU="FAST run: Failed Requisition Update";
+    private final static String JOB_FAILS_REQU_DOWNLOAD="FAST run: Failed Requisition Download";
     private FastServiceDeviceDao m_fastservicedevicecontainer;
     private FastServiceLinkDao m_fastservicelinkcontainer;
 
@@ -94,6 +112,12 @@ public abstract class FastRunnable implements Runnable {
             m_job.setJobid(Integer.parseInt(jobid.toString()));
         }
 
+    }
+
+    private void fails(String description, Exception e) {
+        m_job.setJobstatus(JobStatus.FAILED);
+        m_job.setJobdescr(description+": " + e.getMessage());
+        logger.log(Level.SEVERE, description, e);
     }
 
     public void syncRequisition() {
@@ -135,6 +159,12 @@ public abstract class FastRunnable implements Runnable {
 
     public abstract void afterJob();
 
+    public void persist(JobLogEntry jLogE) {
+        jLogE.setJobid(m_job.getJobid());
+        m_logcontainer.addBean(jLogE);
+    }
+
+
     public synchronized boolean success() {
         return m_job.getJobstatus() == JobStatus.SUCCESS;
     }
@@ -148,13 +178,7 @@ public abstract class FastRunnable implements Runnable {
     }
 
     @SuppressWarnings("deprecation")
-    public boolean startJob() {
-
-        m_job = new Job();
-        m_job.setUsername(getService().getUser());
-        m_job.setJobdescr("FAST sync: started");
-        m_job.setJobstatus(JobStatus.RUNNING);
-        m_job.setJobstart(new Date());
+    public void startJob() {
         getService().getJobContainer().add(m_job);
 
         getService().getJobContainer().addListener(new QueryDelegate.RowIdChangeListener() {
@@ -172,35 +196,28 @@ public abstract class FastRunnable implements Runnable {
             getService().getJobContainer().commit();
             logger.info("run: added job in jobs table");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "failed creating job", e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST sync: Failed commit JobTable");
-            return false;
+            fails(JOB_FAILS_COMMIT, e);
+            return;
         }
 
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "interrupted: ", e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST sync: Interrupted");
-            return false;
+            fails(JOB_FAILS_INTERRUPTED, e);
         }
 
-        return true;
     }
 
-    public boolean endJob() {
-        m_job.setJobend(new Date());
+    public void endJob() {
         RowId jobId = new RowId(new Object[] { m_job.getJobid() });
         getService().getJobContainer().save(jobId, m_job);
 
         try {
             getService().getJobContainer().commit();
-            logger.info("run: ended job in jobs table");
+            logger.info("run: commit job in jobs table");
         } catch (final Exception e) {
-            logger.log(Level.SEVERE, "Cannot end job in job table", e);
-            return false;
+            logger.log(Level.SEVERE, "Cannot commit job in job table", e);
+            return;
         }
 
         for (JobLogEntry joblog : m_logcontainer.getItemIds()) {
@@ -209,40 +226,41 @@ public abstract class FastRunnable implements Runnable {
 
         try {
             getService().getJobLogContainer().commit();
-            logger.info("run: saving logs in joblog table");
+            logger.info("run: commit logs in joblog table");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Exception saving logs ", e);
-            return false;
+            logger.log(Level.SEVERE, "Exception commit logs ", e);
+            return;
         }
 
         try {
             getService().getIpSnmpProfileContainer().commit();
-            logger.info("run: saving profiles in ipsnmpprofile table");
+            logger.info("run: commit profiles in ipsnmpprofile table");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Exception saving ipsnmpmap", e);
-            return false;
+            logger.log(Level.SEVERE, "Exception commit ipsnmpprofile", e);
         }
 
-        if (m_syncRequisition) {
-            try {
-                getService().synctrue(DashBoardUtils.TN_REQU_NAME);
-                logger.info("run: sync requisition"
-                        + DashBoardUtils.TN_REQU_NAME);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "cannot sync requisition ", e);
-                return false;
-            }
-            m_updates.clear();
+    }
+
+    @Override
+    public void run() {
+        m_job = new Job();
+        m_job.setUsername(getService().getUser());
+        m_job.setJobdescr("FAST sync: started");
+        m_job.setJobstatus(JobStatus.RUNNING);
+        m_job.setJobstart(new Date());
+
+        beforeJob();
+        
+        if (running()) {
+            sync();
         }
-        return true;
-    }
 
-    public void persist(JobLogEntry jLogE) {
-        jLogE.setJobid(m_job.getJobid());
-        m_logcontainer.addBean(jLogE);
+        m_job.setJobend(new Date());
+        afterJob();
+        
     }
-
-    private void runKettleJob() {
+    
+    private void sync() {
         try {
             logger.info("run: executing kettle remote procedure");
             KettleDao kettleDao = new KettleDao(new JerseyClientImpl(getService().getConfig().getKettleUrl(),
@@ -257,8 +275,6 @@ public abstract class FastRunnable implements Runnable {
             }
             if (!kettleDao.isFinished(status)
                     || !kettleDao.isCompleted(status)) {
-                logger.log(Level.WARNING, "Failed Kettle runjob",
-                           status.getErroDescr());
                 m_job.setJobstatus(JobStatus.FAILED);
                 m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: "
                         + status.getErroDescr());
@@ -268,6 +284,7 @@ public abstract class FastRunnable implements Runnable {
             m_job.setJobstatus(JobStatus.FAILED);
             m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: "
                     + e.getMessage());
+            return;
         }
 
         try {
@@ -278,6 +295,7 @@ public abstract class FastRunnable implements Runnable {
             m_job.setJobstatus(JobStatus.FAILED);
             m_job.setJobdescr("FAST sync: Failed Load fastservicedevices. Error: "
                     + e.getMessage());
+            return;
         }
 
         try {
@@ -288,10 +306,10 @@ public abstract class FastRunnable implements Runnable {
             m_job.setJobstatus(JobStatus.FAILED);
             m_job.setJobdescr("FAST sync: Failed Load fastservicelink. Error: "
                     + e.getMessage());
+            return;
         }
-    }
 
-    private void check() {
+
         try {
             logger.info("run: loading table vrf");
             m_vrf = getService().getCatContainer().getCatMap();
@@ -481,50 +499,17 @@ public abstract class FastRunnable implements Runnable {
             m_job.setJobstatus(JobStatus.FAILED);
             m_job.setJobdescr("FAST check: Failed syncing Fast devices with Requisition. Error: "
                     + e.getMessage());
+            return;
         } catch (final Exception e) {
             logger.log(Level.WARNING, "Failed init check fast integration",
                        e);
             m_job.setJobstatus(JobStatus.FAILED);
             m_job.setJobdescr("FAST check: Failed init check Fast. Error: "
                     + e.getMessage());
+            return;
         }
-
-    }
-
-    @Override
-    public void run() {
-        beforeJob();
-        if (running()) {
-            runKettleJob();
-        }
-        if (running()) {
-            check();
-        }
-
-        if (running()) {
-            try {
-                logger.info("run: sync Fast devices with Requisition");
-                sync();
-                m_job.setJobstatus(JobStatus.SUCCESS);
-                m_job.setJobdescr("FAST sync: Done");
-            } catch (final UniformInterfaceException e) {
-                logger.log(Level.WARNING,
-                           "Failed syncing Fast devices with Requisition", e);
-                m_job.setJobstatus(JobStatus.FAILED);
-                m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: "
-                        + e.getMessage());
-            } catch (final Exception e) {
-                logger.log(Level.SEVERE, "Failed syncing Fast", e);
-                m_job.setJobstatus(JobStatus.FAILED);
-                m_job.setJobdescr("FAST sync: Failed syncing Fast devices with Requisition. Error: "
-                        + e.getMessage());
-            }
-        }
-
-        afterJob();
-    }
-
-    private void sync() {
+                
+        logger.info("run: sync Fast devices with Requisition");
         double current = 0.0;
         updateProgress(new Float(current));
 
@@ -541,7 +526,8 @@ public abstract class FastRunnable implements Runnable {
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    fails(JOB_FAILS_INTERRUPTED, e);
+                    return;
                 }
 
                 i++;
@@ -571,7 +557,7 @@ public abstract class FastRunnable implements Runnable {
                         String foreignId = foreignIds.iterator().next();
                         TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.get(foreignId);
                         if (isManagedByFast(rnode)) {
-                            updateFast(rnode,
+                            updateFastDevice(rnode,
                                        m_fastHostnameServiceDeviceMap.get(hostname));
                         } else {
                             updateNonFast(rnode,
@@ -587,7 +573,8 @@ public abstract class FastRunnable implements Runnable {
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    fails(JOB_FAILS_INTERRUPTED, e);
+                    return;
                 }
                 i++;
                 if (i == barrier) {
@@ -618,34 +605,40 @@ public abstract class FastRunnable implements Runnable {
                         inttoDelete.add(riface);
                     }
                 }
-                if (inttoDelete.isEmpty())
-                    continue;
                 for (BasicInterface bi : inttoDelete) {
                     BasicService bs = new BasicService(bi);
                     bs.setService("ICMP");
                     rnode.delService(bs);
-                    BasicService bs1 = new BasicService(bi);
-                    bs1.setService("SNMP");
-                    rnode.delService(bs1);
-                    final JobLogEntry jloe = new JobLogEntry();
-                    jloe.setHostname(rnode.getForeignId());
-                    jloe.setIpaddr(bi.getIp());
-                    jloe.setOrderCode("NA");
-                    jloe.setJobid(m_job.getJobid());
-                    jloe.setDescription("FAST sync: old referenced FAST interface deleted");
-                    jloe.setNote(getNote(rnode));
-                    logger.info("FAST sync: old referenced FAST delete interface node"
-                            + getNote(rnode));
-                    log(jloe);
+                    log(rnode,bi,ONMS_DELETED_IP);
                 }
             }
 
         } catch (final UniformInterfaceException e) {
-            throw e;
+            fails(JOB_FAILS_REQU, e);
+            return;
         }
 
+        m_job.setJobstatus(JobStatus.SUCCESS);
+        m_job.setJobdescr("FAST run: Done without sync");
+
+       if (m_syncRequisition) {
+           try {
+               getService().synctrue(DashBoardUtils.TN_REQU_NAME);
+               logger.info("run: sync requisition"
+                       + DashBoardUtils.TN_REQU_NAME);
+               m_job.setJobstatus(JobStatus.SUCCESS);
+               m_job.setJobdescr("FAST run: Done with sync");
+               m_updates.clear();
+           } catch (Exception e) {
+               fails(JOB_FAILS_SYNC, e);
+           }
+       }
+
+
+       
     }
 
+ 
     private void log(TrentinoNetworkNode rnode, String description) {
         final JobLogEntry jloe = new JobLogEntry();
         jloe.setHostname(rnode.getForeignId());
@@ -758,7 +751,6 @@ public abstract class FastRunnable implements Runnable {
         jloe.setHostname(link.getDeliveryDeviceClientSide());
         jloe.setIpaddr("NA");
         jloe.setOrderCode("NA");
-        jloe.setJobid(m_job.getJobid());
         jloe.setDescription(description);
         jloe.setNote(getNote(link));
     }
@@ -791,110 +783,55 @@ public abstract class FastRunnable implements Runnable {
         return deviceNote.toString();
     }
 
+
+    private void log(String hostname, String description) {
+        final JobLogEntry jloe = new JobLogEntry();
+        jloe.setHostname(hostname);
+        jloe.setIpaddr("NA");
+        jloe.setOrderCode("NA");
+        jloe.setDescription(description);
+    }
+
     private boolean checkduplicatedhostname(String hostname) {
-        final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
         if (m_onmsDuplicatedForeignId.contains(hostname)) {
             for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.get(hostname)) {
-                final JobLogEntry jloe = new JobLogEntry();
-                jloe.setHostname(hostname);
-                jloe.setIpaddr(device.getIpaddr());
-                jloe.setOrderCode(device.getOrderCode());
-                jloe.setJobid(m_job.getJobid());
-                jloe.setDescription("FAST sync: skipping service device. Cause: duplicated foreign id in requisition");
-                jloe.setNote("Hostname correspond to a duplicated foreignid: "
-                        + hostname + getNote(device));
-                logger.info("skipping service device. Cause: duplicated foreignid in requisition: "
-                        + hostname + getNote(device));
-                logs.add(jloe);
+                log(device,FAST_DUPLICATED_ONMS_ID);
             }
-            log(logs);
             return true;
         }
         return false;
     }
 
     private boolean checkduplicatedipaddress(String hostname) {
-        final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-        boolean duplicated = false;
+        boolean duplicated=false;
         for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.get(hostname)) {
             if (m_onmsDuplicatedIpAddress.contains(device.getIpaddr())) {
+                log(device,FAST_DUPLICATED_ONMS_IP);
                 duplicated = true;
-                final JobLogEntry jloe = new JobLogEntry();
-                jloe.setHostname(device.getHostname());
-                jloe.setIpaddr(device.getIpaddr());
-                jloe.setOrderCode(device.getOrderCode());
-                jloe.setJobid(m_job.getJobid());
-                jloe.setDescription("FAST sync: skipping service device. Cause: duplicated ipaddr in requisition");
-                jloe.setNote(getNote(device) + " Duplicated ips: "
-                        + device.getIpaddr());
-                logger.info("skipping service device. Cause: duplicated ipaddr in requisition "
-                        + getNote(device) + " Duplicated ips: "
-                        + device.getIpaddr());
-                logs.add(jloe);
             }
-        }
-        if (duplicated) {
-            log(logs);
         }
         return duplicated;
     }
 
     private void mismatch(String hostname, Set<String> foreignIds) {
-        final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-
         for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.get(hostname)) {
-            final JobLogEntry jloe = new JobLogEntry();
-            jloe.setHostname(device.getHostname());
-            jloe.setIpaddr(device.getIpaddr());
-            jloe.setOrderCode(device.getOrderCode());
-            jloe.setJobid(m_job.getJobid());
-            jloe.setDescription("FAST sync: skipping service device. Cause: Mismatch hostname/foreignIds");
-            jloe.setNote("hostname/foreignIds" + hostname + "/" + foreignIds
-                    + getNote(device));
-            logger.info("skipping service device. Cause: Mismatch hostname/foreignIds"
-                    + hostname + "/" + foreignIds);
-            logs.add(jloe);
+            log(device,FAST_MISHMATCH_ONMS);
         }
 
-        log(logs);
 
     }
 
     private void norefdevice(String hostname) {
-        final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
         if (m_fastHostnameServiceDeviceMap.containsKey(hostname)) {
             for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.get(hostname)) {
-                final JobLogEntry jloe = new JobLogEntry();
-                jloe.setHostname(device.getHostname());
-                jloe.setIpaddr(device.getIpaddr());
-                jloe.setOrderCode(device.getOrderCode());
-                jloe.setJobid(m_job.getJobid());
-                jloe.setDescription("FAST sync: skipping add service device. Cause: No Valid ref device for order_code");
-                jloe.setNote(getNote(device));
-                logger.info("skipping service add device. Cause: No Valid ref device for order_code "
-                        + getNote(device));
-                logs.add(jloe);
+                log(device,FAST_NO_REF_DEVICE);
             }
         } else {
-            final JobLogEntry jloe = new JobLogEntry();
-            jloe.setHostname(hostname);
-            jloe.setIpaddr("0.0.0.0");
-            jloe.setOrderCode("null");
-            jloe.setJobid(m_job.getJobid());
-            jloe.setDescription("FAST sync: skipping add service device. Cause: No Valid ref device for hostname");
-            jloe.setNote("Cannot found device name in Fast");
-            logger.info("skipping service add device. Cause: No Valid ref device for hostname "
-                    + hostname);
-            logs.add(jloe);
-
+            log(hostname,FAST_NO_DEVICE);
         }
-
-        log(logs);
-
     }
 
     private void add(String hostname) {
-        final List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
         Set<String> secondary = new HashSet<String>();
         FastServiceDevice refdevice = null;
         for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.get(hostname)) {
@@ -911,15 +848,7 @@ public abstract class FastRunnable implements Runnable {
                     && device.getIpAddrLan() == null) {
                 refdevice = device;
             }
-
-            final JobLogEntry jloe = new JobLogEntry();
-            jloe.setHostname(device.getHostname());
-            jloe.setIpaddr(device.getIpaddr());
-            jloe.setOrderCode(device.getOrderCode());
-            jloe.setJobid(m_job.getJobid());
-            jloe.setDescription("FAST sync: added service device.");
-            jloe.setNote(getNote(device));
-            logs.add(jloe);
+            log(device,ONMS_ADDED_DEVICE);
         }
 
         if (refdevice == null) {
@@ -938,52 +867,34 @@ public abstract class FastRunnable implements Runnable {
         getService().add(rnode);
         m_updates.add(rnode);
         updateSnmp(refdevice);
-        log(logs);
     }
 
     private void updateNonFast(TrentinoNetworkNode rnode,
             List<FastServiceDevice> devices) {
         Set<String> fastipaddressonnode = new HashSet<String>();
         for (FastServiceDevice device : devices) {
+            fastipaddressonnode.add(device.getIpaddr());
             BasicInterface bi = rnode.getInterface(device.getIpaddr());
             if (bi == null) {
                 bi = new BasicInterface();
                 bi.setIp(device.getIpaddr());
                 bi.setDescr(DashBoardUtils.DESCR_FAST);
                 bi.setOnmsprimary(OnmsPrimary.N);
-            }
-            fastipaddressonnode.add(device.getIpaddr());
-            BasicService bs = new BasicService(bi);
-            bs.setService("ICMP");
-            rnode.addService(bs);
-        }
-
-        Set<BasicInterface> fastiponnodetodelete = new HashSet<BasicInterface>();
-        for (BasicInterface riface : rnode.getServiceMap().keySet()) {
-            if (riface.getDescr().contains("FAST")
-                    && !fastipaddressonnode.contains(riface.getIp())) {
-                fastiponnodetodelete.add(riface);
+                BasicService bs = new BasicService(bi);
+                bs.setService("ICMP");
+                rnode.addService(bs);
+                log(rnode, bi, ONMS_ADDED_IP);
             }
         }
-        List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
 
-        for (BasicInterface bi : fastiponnodetodelete) {
-            BasicService bs = new BasicService(bi);
-            bs.setService("ICMP");
-            rnode.delService(bs);
-            BasicService bs2 = new BasicService(bi);
-            bs2.setService("SNMP");
-            rnode.delService(bs2);
-            final JobLogEntry jloe = new JobLogEntry();
-            jloe.setHostname(rnode.getForeignId());
-            jloe.setIpaddr(bi.getIp());
-            jloe.setOrderCode("NA");
-            jloe.setJobid(m_job.getJobid());
-            jloe.setDescription("FAST sync: updateNonFast: interface deleted");
-            jloe.setNote(getNote(rnode));
-            logger.info("updateNonFast: delete interface node"
-                    + getNote(rnode));
-            logs.add(jloe);
+        for (BasicInterface bi : rnode.getServiceMap().keySet()) {
+            if (bi.getDescr().contains("FAST")
+                    && !fastipaddressonnode.contains(bi.getIp())) {
+                BasicService bs = new BasicService(bi);
+                bs.setService("ICMP");
+                rnode.delService(bs);
+                log(rnode, bi, ONMS_DELETED_IP);
+            }
         }
 
         if (rnode.getOnmstate() == OnmsState.NONE)
@@ -991,15 +902,7 @@ public abstract class FastRunnable implements Runnable {
         getService().update(rnode);
         m_updates.add(rnode);
 
-        final JobLogEntry jloe = new JobLogEntry();
-        jloe.setHostname(rnode.getHostname());
-        jloe.setIpaddr(rnode.getPrimary());
-        jloe.setOrderCode("NA");
-        jloe.setDescription("FAST sync: updateNonFast: updated Fast Ip.");
-        jloe.setNote(getNote(rnode));
-
-        logs.add(jloe);
-        log(logs);
+        log(rnode,ONMS_UPDATED_NO_FAST_DEVICE);
 
     }
 
@@ -1061,14 +964,11 @@ public abstract class FastRunnable implements Runnable {
             BasicService bs = new BasicService(bi);
             bs.setService("ICMP");
             rnode.delService(bs);
-            BasicService bs2 = new BasicService(bi);
-            bs2.setService("SNMP");
-            rnode.delService(bs2);
         }
         return rnode;
     }
 
-    private void updateFast(TrentinoNetworkNode rnode,
+    private void updateFastDevice(TrentinoNetworkNode rnode,
             List<FastServiceDevice> fastdevices) {
         Set<String> ipaddresses = new HashSet<String>();
         FastServiceDevice refdevice = null;
@@ -1105,19 +1005,7 @@ public abstract class FastRunnable implements Runnable {
         getService().update(rnode);
         m_updates.add(rnode);
         updateSnmp(refdevice);
-
-        final JobLogEntry jloe = new JobLogEntry();
-        jloe.setHostname(refdevice.getHostname());
-        jloe.setIpaddr(refdevice.getIpaddr());
-        jloe.setOrderCode(refdevice.getOrderCode());
-        jloe.setJobid(m_job.getJobid());
-        jloe.setDescription("FAST sync: updateFast: updated service device.");
-        jloe.setNote(getNote(refdevice));
-        logger.info("FAST sync: updateFast updated: " + getNote(refdevice));
-
-        List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-        logs.add(jloe);
-        log(logs);
+        log(refdevice,ONMS_UPDATED_FAST_DEVICE);
 
     }
 
@@ -1126,19 +1014,7 @@ public abstract class FastRunnable implements Runnable {
         try {
             if (getService().saveSnmpProfile(refdevice.getIpaddr(),
                                              snmpprofile)) {
-                logger.info("FAST sync: set snmp profile: " + snmpprofile);
-                final JobLogEntry jloe = new JobLogEntry();
-                jloe.setHostname(refdevice.getHostname());
-                jloe.setIpaddr(refdevice.getIpaddr());
-                jloe.setOrderCode(refdevice.getOrderCode());
-                jloe.setJobid(m_job.getJobid());
-                jloe.setDescription("FAST sync: set snmp profile: "
-                        + snmpprofile);
-                jloe.setNote(getNote(refdevice));
-
-                List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-                logs.add(jloe);
-                log(logs);
+                log(refdevice,ONMS_UPDATE_SNMP_PROFILE+ ": " + snmpprofile);
                 return true;
             }
         } catch (SQLException e) {
@@ -1146,7 +1022,6 @@ public abstract class FastRunnable implements Runnable {
                        "FAST sync: cannot set snmp profile: " + snmpprofile,
                        e);
         }
-
         return false;
 
     }
@@ -1175,17 +1050,7 @@ public abstract class FastRunnable implements Runnable {
         rnode.setDeleteState();
         m_updates.add(rnode);
         getService().delete(rnode);
-        final JobLogEntry jloe = new JobLogEntry();
-        jloe.setHostname(rnode.getForeignId());
-        jloe.setIpaddr("NA");
-        jloe.setOrderCode("NA");
-        jloe.setJobid(m_job.getJobid());
-        jloe.setDescription("FAST sync: node deleted");
-        jloe.setNote(getNote(rnode));
-        logger.info("delete node" + getNote(rnode));
-        List<JobLogEntry> logs = new ArrayList<JobLogEntry>();
-        logs.add(jloe);
-        log(logs);
+        log(rnode,ONMS_DELETED_DEVICE);
 
     }
 }
