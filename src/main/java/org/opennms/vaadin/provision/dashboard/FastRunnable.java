@@ -79,22 +79,12 @@ public abstract class FastRunnable implements Runnable {
     private final static String JOB_FAILS_INTERRUPTED="FAST run: Interrupted";
     private final static String JOB_FAILS_SYNC="FAST run: Requisition Updated - Sync Failed";
     private final static String JOB_FAILS_REQU="FAST run: Failed Requisition Update";
-    private final static String JOB_FAILS_REQU_DOWNLOAD="FAST run: Failed Requisition Download";
-    private FastServiceDeviceDao m_fastservicedevicecontainer;
-    private FastServiceLinkDao m_fastservicelinkcontainer;
-
-    Map<String, List<FastServiceDevice>> m_fastHostnameServiceDeviceMap;
-    Map<String, FastServiceLink> m_fastOrderCodeServiceLinkMap;
-    Map<String, Set<String>> m_fastIpHostnameMap = new HashMap<String, Set<String>>();
-
-    Map<String, TrentinoNetworkNode> m_onmsForeignIdRequisitionNodeMap;
-    Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
-    Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
-
+    private final static String JOB_FAILS_REQU_GET="FAST run: Failed Requisition Download";
+    private final static String JOB_FAILS_FAST_DEVICES="FAST run: Failed Load Fast Service Devices";
+    private final static String JOB_FAILS_FAST_LINKS="FAST run: Failed load Fast Service Links";
+    private final static String JOB_FAILS_KETTLE="FAST run: Failed Kettle Run";
+    
     List<BasicNode> m_updates = new ArrayList<BasicNode>();
-    Map<String, Categoria> m_vrf;
-    Map<String, BackupProfile> m_backup;
-    Map<String, SnmpProfile> m_snmp;
 
     private DashBoardSessionService m_session;
     private static final Logger logger = Logger.getLogger(FastRunnable.class.getName());
@@ -261,12 +251,11 @@ public abstract class FastRunnable implements Runnable {
     }
     
     private void sync() {
-        try {
-            logger.info("run: executing kettle remote procedure");
-            KettleDao kettleDao = new KettleDao(new JerseyClientImpl(getService().getConfig().getKettleUrl(),
-                                                                     getService().getConfig().getKettleUsername(),
-                                                                     getService().getConfig().getKettlePassword()));
+        KettleDao kettleDao = new KettleDao(new JerseyClientImpl(getService().getConfig().getKettleUrl(),
+                                                                 getService().getConfig().getKettleUsername(),
+                                                                 getService().getConfig().getKettlePassword()));
 
+        try {
             KettleRunJob kjob = kettleDao.runJob();
             KettleJobStatus status = kettleDao.jobStatus(kjob);
             while (kettleDao.isRunning(status)) {
@@ -275,238 +264,223 @@ public abstract class FastRunnable implements Runnable {
             }
             if (!kettleDao.isFinished(status)
                     || !kettleDao.isCompleted(status)) {
-                m_job.setJobstatus(JobStatus.FAILED);
-                m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: "
-                        + status.getErroDescr());
+                fails(JOB_FAILS_KETTLE, new Exception(status.getErroDescr()));
+                return;
             }
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed Kettle runjob", e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST sync: Failed Kettle runJob. Error: "
-                    + e.getMessage());
+            fails(JOB_FAILS_KETTLE, e);
             return;
         }
 
+        FastServiceDeviceDao m_fastservicedevicecontainer;
         try {
+            logger.info("run: loading table fastservicedevice");
             m_fastservicedevicecontainer = new FastServiceDeviceDao(new FreeformQuery("select * from fastservicedevices",
                                                                                       m_session.getPool()));
+            logger.info("run: loaded table fastservicedevice");
         } catch (SQLException e) {
-            logger.log(Level.WARNING, "Failed Kettle runjob", e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST sync: Failed Load fastservicedevices. Error: "
-                    + e.getMessage());
+            fails(JOB_FAILS_FAST_DEVICES, e);
             return;
         }
 
+        FastServiceLinkDao m_fastservicelinkcontainer;
         try {
+            logger.info("run: loading table fastservicelink");
             m_fastservicelinkcontainer = new FastServiceLinkDao(new FreeformQuery("select * from fastservicelink",
                                                                                   m_session.getPool()));
+            logger.info("run: loaded table fastservicelink");
         } catch (SQLException e) {
-            logger.log(Level.WARNING, "Failed Kettle runjob", e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST sync: Failed Load fastservicelink. Error: "
-                    + e.getMessage());
+            fails(JOB_FAILS_FAST_LINKS, e);
             return;
         }
 
-
+        BeanContainer<String, TrentinoNetworkNode> requisition;
         try {
-            logger.info("run: loading table vrf");
-            m_vrf = getService().getCatContainer().getCatMap();
-            logger.info("run: loaded table vrf");
-
-            logger.info("run: loading table backupprofile");
-            m_backup = getService().getBackupProfileContainer().getBackupProfileMap();
-            logger.info("run: loaded table backupprofile");
-
-            logger.info("run: loading table snmpprofile");
-            m_snmp = getService().getSnmpProfileContainer().getSnmpProfileMap();
-            logger.info("run: loaded table snmpprofile");
-
-            logger.info("run: loading table fastservicedevice");
-            m_fastHostnameServiceDeviceMap.clear();
-            m_fastIpHostnameMap.clear();
-            for (FastServiceDevice device : m_fastservicedevicecontainer.getFastServiceDevices()) {
-                boolean valid = true;
-                if (device.getIpaddr() == null) {
-                    log(device,FAST_NULL_IP);
-                    valid = false;
-                }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr())) {
-                    log(device,FAST_INVALID_IP);
-                    valid = false;
-                } 
-                if (device.getHostname() == null) {
-                    log(device,FAST_NULL_HOSTNAME);                
-                    valid = false;
-                } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname())) {
-                    log(device,FAST_INVALID_HOSTNAME);
-                    valid = false;
-                } 
-                if (device.getNotifyCategory() == null) {
-                    log(device,FAST_NULL_NOTIFY);
-                } else if (!DashBoardUtils.isValidNotifyLevel(device.getNotifyCategory())) {
-                    log(device,FAST_INVALID_NOTIFY+ " :" +device.getNotifyCategory());
-                } 
-                if (device.getSnmpprofile() == null) {
-                    log(device,FAST_NULL_SNMP_PROFILE);
-                } else if (!m_snmp.containsKey(device.getSnmpprofile())) {
-                    log(device,FAST_INVALID_SNMP_PROFILE+ " :" +device.getSnmpprofile());
-                } 
-                if (device.getBackupprofile() == null) {
-                    log(device,FAST_NULL_BACKUP_PROFILE);
-                } else if(!m_backup.containsKey(device.getBackupprofile())) {
-                    log(device,FAST_INVALID_BACKUP_PROFILE+ " :" +device.getBackupprofile());
-                } 
-
-                if (device.getOrderCode() == null) {
-                    log(device,FAST_NULL_ORDER_CODE);
-                    valid = false;
-                } 
-
-                if (valid && !device.isNotmonitoring()) {
-
-                    if (!m_fastHostnameServiceDeviceMap.containsKey(device.getHostname().toLowerCase())) {
-                        m_fastHostnameServiceDeviceMap.put(device.getHostname().toLowerCase(),
-                                                         new ArrayList<FastServiceDevice>());
-                    }
-                    m_fastHostnameServiceDeviceMap.get(device.getHostname().toLowerCase()).add(device);
-
-                    if (!m_fastIpHostnameMap.containsKey(device.getIpaddr())) {
-                        m_fastIpHostnameMap.put(device.getIpaddr(),
-                                                new HashSet<String>());
-                    }
-                    m_fastIpHostnameMap.get(device.getIpaddr()).add(device.getHostname().toLowerCase());
-                }
-            }
-
-            for (String ipaddr : m_fastIpHostnameMap.keySet()) {
-                if (m_fastIpHostnameMap.get(ipaddr).size() == 1)
-                    continue;
-                for (String hostname : m_fastIpHostnameMap.get(ipaddr)) {
-                    List<FastServiceDevice> survived = new ArrayList<FastServiceDevice>();
-                    for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.remove(hostname)) {
-                        if (device.getIpaddr().equals(ipaddr)) {
-                            log(device,FAST_DUPLICATED_IP);
-                        } else {
-                            survived.add(device);
-                        }
-                    }
-                    if (!survived.isEmpty())
-                        m_fastHostnameServiceDeviceMap.put(hostname, survived);
-
-                }
-            }
-
-            logger.info("run: loaded table fastservicedevice");
-
-            logger.info("run: loading table fastservicelink");
-            m_fastOrderCodeServiceLinkMap.clear();
-            final Set<String> duplicatedEntry = new HashSet<String>();
-            boolean valid = true;
-            for (FastServiceLink link : m_fastservicelinkcontainer.getFastServiceLinks()) {
-                if (link.getOrderCode() == null) {               
-                    log(link,FAST_NULL_ORDER_CODE);
-                    valid = false;
-                }
-                if (link.getVrf() == null) {
-                    log(link,FAST_NULL_VRF);
-                    valid = false;
-                } else if (!m_vrf.containsKey(link.getVrf())) {
-                    log(link,FAST_INVALID_VRF+": " + link.getVrf());
-                    valid = false;
-                }
-
-                if (m_fastOrderCodeServiceLinkMap.containsKey(link.getOrderCode())) {
-                    log(link, FAST_DUPLICATED_ORDER_CODE);
-                    duplicatedEntry.add(link.getOrderCode());                
-                    continue;
-
-                }
-                if (valid) {
-                    m_fastOrderCodeServiceLinkMap.put(link.getOrderCode(), link);
-                }
-            }
-            for (String duplioc : duplicatedEntry) {
-                FastServiceLink link = m_fastOrderCodeServiceLinkMap.remove(duplioc);
-                log(link, FAST_DUPLICATED_ORDER_CODE);
-                duplicatedEntry.add(link.getOrderCode());                
-            }
-            logger.info("run: loaded table fastservicelink");
-
             logger.info("run: loading requisition: "
                     + DashBoardUtils.TN_REQU_NAME);
-            m_onmsForeignIdRequisitionNodeMap.clear();
-            m_onmsDuplicatedForeignId.clear();
-            m_onmsDuplicatedIpAddress.clear();
-
-            BeanContainer<String, TrentinoNetworkNode> requisition = getService().getTNContainer();
-            for (String id : requisition.getItemIds()) {
-                TrentinoNetworkNode rnode = requisition.getItem(id).getBean();
-                if (m_onmsForeignIdRequisitionNodeMap.containsKey(rnode.getForeignId())) {
-                    m_onmsDuplicatedForeignId.add(rnode.getForeignId());
-                    log(rnode,ONMS_DUPLICATED_ID);
-                } else {
-                    m_onmsForeignIdRequisitionNodeMap.put(rnode.getForeignId(),
-                                                        rnode);
-                }
-            }
-
-            for (String dupforeignid : m_onmsDuplicatedForeignId) {
-                TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.remove(dupforeignid);
-                log(rnode,ONMS_DUPLICATED_ID);
-            }
-
-            Map<String, Set<String>> onmsIpForeignIdMap = new HashMap<String, Set<String>>();
-            for (String id : requisition.getItemIds()) {
-                TrentinoNetworkNode rnode = requisition.getItem(id).getBean();
-                for (BasicInterface riface : rnode.getServiceMap().keySet()) {
-                    if (riface.getIp() == null) {
-                        log(rnode,riface,ONMS_NULL_IP);
-                        continue;
-                    } else if (DashBoardUtils.hasInvalidIp(riface.getIp())) {
-                        log(rnode,riface,ONMS_INVALID_IP);
-                        continue;
-                    }
-                    if (!onmsIpForeignIdMap.containsKey(riface.getIp())) {
-                        onmsIpForeignIdMap.put(riface.getIp(),
-                                               new HashSet<String>());
-                        onmsIpForeignIdMap.get(riface.getIp()).add(rnode.getForeignId());
-                    }
-                }
-            }
-
-            for (String ipaddr : onmsIpForeignIdMap.keySet()) {
-                if (onmsIpForeignIdMap.get(ipaddr).size() == 1)
-                    continue;
-                m_onmsDuplicatedIpAddress.add(ipaddr);
-                for (String foreignid : onmsIpForeignIdMap.get(ipaddr)) {
-                    TrentinoNetworkNode duplicatedipnode = m_onmsForeignIdRequisitionNodeMap.remove(foreignid);
-                    if (duplicatedipnode == null)
-                        continue;
-                    BasicInterface duplicatedinterface = duplicatedipnode.getInterface(ipaddr);
-                    if (duplicatedinterface == null)
-                        continue;
-                    log(duplicatedipnode,duplicatedinterface,ONMS_DUPLICATED_ID);
-                }
-
-            }
+            requisition = getService().getTNContainer();
             logger.info("run: loaded requisition: "
                     + DashBoardUtils.TN_REQU_NAME);
-
         } catch (final UniformInterfaceException e) {
-            logger.log(Level.WARNING,
-                       "Failed syncing Fast devices with Requisition", e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST check: Failed syncing Fast devices with Requisition. Error: "
-                    + e.getMessage());
+            fails(JOB_FAILS_REQU_GET, e);
             return;
         } catch (final Exception e) {
-            logger.log(Level.WARNING, "Failed init check fast integration",
-                       e);
-            m_job.setJobstatus(JobStatus.FAILED);
-            m_job.setJobdescr("FAST check: Failed init check Fast. Error: "
-                    + e.getMessage());
+            fails(JOB_FAILS_REQU_GET, e);
             return;
+        }
+        
+        logger.info("run: loading table vrf");
+        Map<String, Categoria> m_vrf = getService().getCatContainer().getCatMap();
+        logger.info("run: loaded table vrf");
+
+        logger.info("run: loading table backupprofile");
+        Map<String, BackupProfile> m_backup = getService().getBackupProfileContainer().getBackupProfileMap();
+        logger.info("run: loaded table backupprofile");
+
+        logger.info("run: loading table snmpprofile");
+        Map<String, SnmpProfile> m_snmp = getService().getSnmpProfileContainer().getSnmpProfileMap();
+        logger.info("run: loaded table snmpprofile");
+
+        Map<String, List<FastServiceDevice>> m_fastHostnameServiceDeviceMap = new HashMap<>();
+        Map<String, Set<String>> m_fastIpHostnameMap = new HashMap<String, Set<String>>();
+
+        for (FastServiceDevice device : m_fastservicedevicecontainer.getFastServiceDevices()) {
+            boolean valid = true;
+            if (device.getIpaddr() == null) {
+                log(device,FAST_NULL_IP);
+                valid = false;
+            }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr())) {
+                log(device,FAST_INVALID_IP);
+                valid = false;
+            } 
+            if (device.getHostname() == null) {
+                log(device,FAST_NULL_HOSTNAME);                
+                valid = false;
+            } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname())) {
+                log(device,FAST_INVALID_HOSTNAME);
+                valid = false;
+            } 
+            if (device.getNotifyCategory() == null) {
+                log(device,FAST_NULL_NOTIFY);
+            } else if (!DashBoardUtils.isValidNotifyLevel(device.getNotifyCategory())) {
+                log(device,FAST_INVALID_NOTIFY+ " :" +device.getNotifyCategory());
+            } 
+            if (device.getSnmpprofile() == null) {
+                log(device,FAST_NULL_SNMP_PROFILE);
+            } else if (!m_snmp.containsKey(device.getSnmpprofile())) {
+                log(device,FAST_INVALID_SNMP_PROFILE+ " :" +device.getSnmpprofile());
+            } 
+            if (device.getBackupprofile() == null) {
+                log(device,FAST_NULL_BACKUP_PROFILE);
+            } else if(!m_backup.containsKey(device.getBackupprofile())) {
+                log(device,FAST_INVALID_BACKUP_PROFILE+ " :" +device.getBackupprofile());
+            } 
+
+            if (device.getOrderCode() == null) {
+                log(device,FAST_NULL_ORDER_CODE);
+                valid = false;
+            } 
+
+            if (valid && !device.isNotmonitoring()) {
+
+                if (!m_fastHostnameServiceDeviceMap.containsKey(device.getHostname().toLowerCase())) {
+                    m_fastHostnameServiceDeviceMap.put(device.getHostname().toLowerCase(),
+                                                     new ArrayList<FastServiceDevice>());
+                }
+                m_fastHostnameServiceDeviceMap.get(device.getHostname().toLowerCase()).add(device);
+
+                if (!m_fastIpHostnameMap.containsKey(device.getIpaddr())) {
+                    m_fastIpHostnameMap.put(device.getIpaddr(),
+                                            new HashSet<String>());
+                }
+                m_fastIpHostnameMap.get(device.getIpaddr()).add(device.getHostname().toLowerCase());
+            }
+        }
+        
+        for (String ipaddr : m_fastIpHostnameMap.keySet()) {
+            if (m_fastIpHostnameMap.get(ipaddr).size() == 1)
+                continue;
+            for (String hostname : m_fastIpHostnameMap.get(ipaddr)) {
+                List<FastServiceDevice> survived = new ArrayList<FastServiceDevice>();
+                for (FastServiceDevice device : m_fastHostnameServiceDeviceMap.remove(hostname)) {
+                    if (device.getIpaddr().equals(ipaddr)) {
+                        log(device,FAST_DUPLICATED_IP);
+                    } else {
+                        survived.add(device);
+                    }
+                }
+                if (!survived.isEmpty())
+                    m_fastHostnameServiceDeviceMap.put(hostname, survived);
+
+            }
+        }
+
+
+        Map<String, FastServiceLink> m_fastOrderCodeServiceLinkMap = new HashMap<>();
+        final Set<String> duplicatedEntry = new HashSet<String>();
+        boolean valid = true;
+        for (FastServiceLink link : m_fastservicelinkcontainer.getFastServiceLinks()) {
+            if (link.getOrderCode() == null) {               
+                log(link,FAST_NULL_ORDER_CODE);
+                valid = false;
+            }
+            if (link.getVrf() == null) {
+                log(link,FAST_NULL_VRF);
+                valid = false;
+            } else if (!m_vrf.containsKey(link.getVrf())) {
+                log(link,FAST_INVALID_VRF+": " + link.getVrf());
+                valid = false;
+            }
+
+            if (m_fastOrderCodeServiceLinkMap.containsKey(link.getOrderCode())) {
+                log(link, FAST_DUPLICATED_ORDER_CODE);
+                duplicatedEntry.add(link.getOrderCode());                
+                continue;
+
+            }
+            if (valid) {
+                m_fastOrderCodeServiceLinkMap.put(link.getOrderCode(), link);
+            }
+        }
+        for (String duplioc : duplicatedEntry) {
+            FastServiceLink link = m_fastOrderCodeServiceLinkMap.remove(duplioc);
+            log(link, FAST_DUPLICATED_ORDER_CODE);
+            duplicatedEntry.add(link.getOrderCode());                
+        }
+
+
+        Map<String, TrentinoNetworkNode> m_onmsForeignIdRequisitionNodeMap = new HashMap<>();
+        Set<String> m_onmsDuplicatedForeignId = new HashSet<String>();
+        Set<String> m_onmsDuplicatedIpAddress = new HashSet<String>();
+        for (String id : requisition.getItemIds()) {
+            TrentinoNetworkNode rnode = requisition.getItem(id).getBean();
+            if (m_onmsForeignIdRequisitionNodeMap.containsKey(rnode.getForeignId())) {
+                m_onmsDuplicatedForeignId.add(rnode.getForeignId());
+                log(rnode,ONMS_DUPLICATED_ID);
+            } else {
+                m_onmsForeignIdRequisitionNodeMap.put(rnode.getForeignId(),
+                                                    rnode);
+            }
+        }
+
+        for (String dupforeignid : m_onmsDuplicatedForeignId) {
+            TrentinoNetworkNode rnode = m_onmsForeignIdRequisitionNodeMap.remove(dupforeignid);
+            log(rnode,ONMS_DUPLICATED_ID);
+        }
+
+        Map<String, Set<String>> onmsIpForeignIdMap = new HashMap<String, Set<String>>();
+        for (String id : requisition.getItemIds()) {
+            TrentinoNetworkNode rnode = requisition.getItem(id).getBean();
+            for (BasicInterface riface : rnode.getServiceMap().keySet()) {
+                if (riface.getIp() == null) {
+                    log(rnode,riface,ONMS_NULL_IP);
+                    continue;
+                } else if (DashBoardUtils.hasInvalidIp(riface.getIp())) {
+                    log(rnode,riface,ONMS_INVALID_IP);
+                    continue;
+                }
+                if (!onmsIpForeignIdMap.containsKey(riface.getIp())) {
+                    onmsIpForeignIdMap.put(riface.getIp(),
+                                           new HashSet<String>());
+                    onmsIpForeignIdMap.get(riface.getIp()).add(rnode.getForeignId());
+                }
+            }
+        }
+
+        for (String ipaddr : onmsIpForeignIdMap.keySet()) {
+            if (onmsIpForeignIdMap.get(ipaddr).size() == 1)
+                continue;
+            m_onmsDuplicatedIpAddress.add(ipaddr);
+            for (String foreignid : onmsIpForeignIdMap.get(ipaddr)) {
+                TrentinoNetworkNode duplicatedipnode = m_onmsForeignIdRequisitionNodeMap.remove(foreignid);
+                if (duplicatedipnode == null)
+                    continue;
+                BasicInterface duplicatedinterface = duplicatedipnode.getInterface(ipaddr);
+                if (duplicatedinterface == null)
+                    continue;
+                log(duplicatedipnode,duplicatedinterface,ONMS_DUPLICATED_ID);
+            }
+
         }
                 
         logger.info("run: sync Fast devices with Requisition");
