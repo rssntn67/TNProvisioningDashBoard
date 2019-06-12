@@ -796,23 +796,19 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
     }
     
     private String getNote(FastServiceDevice device) {
-        StringBuffer deviceNote = new StringBuffer("Notes:");
+        StringBuffer deviceNote = new StringBuffer("");
         if (device.getDeviceType() != null) {
-            deviceNote.append(" deviceType: ");
             deviceNote.append(device.getDeviceType());
+            deviceNote.append(" ");
         }
         if (device.getCity() != null) {
-            deviceNote.append(" city: ");
             deviceNote.append(device.getCity());
-        }
-        if (device.getIpAddrLan() != null) {
-            deviceNote.append(" ip lan");
-            deviceNote.append(device.getIpAddrLan());
+            deviceNote.append(" ");
         }
         if (device.isNotmonitoring())
-            deviceNote.append(" not_monitored");
+            deviceNote.append("not_monitored");
         else
-            deviceNote.append(" monitored");
+            deviceNote.append("monitored");
         return deviceNote.toString();
     }
 
@@ -821,7 +817,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         if (link.getDeliveryDeviceClientSide() != null) {
             jloe.setHostname(link.getDeliveryDeviceClientSide());
         } else {
-            jloe.setOrderCode("NA");
+            jloe.setHostname("NA");
         }
         jloe.setIpaddr("NA");
         if (link.getOrderCode() != null) {
@@ -836,18 +832,18 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
     }
 
     private String getNote(FastServiceLink link) {
-        StringBuffer deviceNote = new StringBuffer("Notes:");
+        StringBuffer deviceNote = new StringBuffer("");
         if (link.getVrf() != null) {
-            deviceNote.append(" vrf: ");
             deviceNote.append(link.getVrf());
+            deviceNote.append(" ");
         }
         if (link.getDeliveryDeviceNetworkSide() != null) {
-            deviceNote.append(" network device: ");
             deviceNote.append(link.getDeliveryDeviceNetworkSide());
+            deviceNote.append(" ");
         }
         if (link.getDeliveryCode() != null) {
-            deviceNote.append(" delivery Code: ");
             deviceNote.append(link.getDeliveryCode());
+            deviceNote.append(" delivery Code: ");
         }
 
         return deviceNote.toString();
