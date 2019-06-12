@@ -852,15 +852,6 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         return deviceNote.toString();
     }
 
-
-    private void log(String hostname, String description) {
-        final JobLogEntry jloe = new JobLogEntry();
-        jloe.setHostname(hostname);
-        jloe.setIpaddr("NA");
-        jloe.setOrderCode("NA");
-        jloe.setDescription(description);
-    }
-
     private void add(FastServiceDevice refdevice, FastServiceLink reflink, List<FastServiceDevice> devices) {
 
         TrentinoNetworkNode rnode = new TrentinoNetworkNode(refdevice.getHostname(),
