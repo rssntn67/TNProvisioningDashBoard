@@ -1421,10 +1421,12 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 			Set<BasicInterface> ipsetN,
 			String snmpProfile) {
 				
-		if (snmpProfile != null && primary != null)
+		if (snmpProfile != null && primary != null) {
+	                logger.info("Setting snmpprofile for node with foreignId: " + foreignId + " primary: " + primary + ": " + snmpProfile);
 			m_onmsDao.setSnmpInfo(primary, getSnmpProfileContainer()
 					.getSnmpProfile(snmpProfile)
 					.getSnmpInfo());
+		}
 
 		if (!updatemap.isEmpty())
 			m_onmsDao
