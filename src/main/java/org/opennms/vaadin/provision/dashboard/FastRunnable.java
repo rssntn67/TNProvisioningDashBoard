@@ -371,9 +371,11 @@ public abstract class FastRunnable implements Runnable {
         try {
             KettleRunJob kjob = kettleDao.runJob();
             KettleJobStatus status = kettleDao.jobStatus(kjob);
+            logger.info("run: kettle status: " + status.getStatusDescr());
             while (kettleDao.isRunning(status)) {
                 Thread.sleep(1000);
                 status = kettleDao.jobStatus(kjob);
+                logger.info("run: kettle status: " + status.getStatusDescr());
             }
             if (!kettleDao.isFinished(status)
                     || !kettleDao.isCompleted(status)) {
