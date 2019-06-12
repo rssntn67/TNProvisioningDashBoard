@@ -818,9 +818,18 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
     private void log(FastServiceLink link, String description) {
         final JobLogEntry jloe = new JobLogEntry();
-        jloe.setHostname(link.getDeliveryDeviceClientSide());
+        if (link.getDeliveryDeviceClientSide() != null) {
+            jloe.setHostname(link.getDeliveryDeviceClientSide());
+        } else {
+            jloe.setOrderCode("NA");
+        }
         jloe.setIpaddr("NA");
-        jloe.setOrderCode("NA");
+        if (link.getOrderCode() != null) {
+            jloe.setOrderCode(link.getOrderCode());
+        } else {
+            jloe.setOrderCode("NA");
+            
+        }
         jloe.setDescription(description);
         jloe.setNote(getNote(link));
         log(jloe);
@@ -832,23 +841,13 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
             deviceNote.append(" vrf: ");
             deviceNote.append(link.getVrf());
         }
-        if (link.getDeliveryDeviceClientSide() != null) {
-            deviceNote.append(" client device: ");
-            deviceNote.append(link.getDeliveryDeviceClientSide());
-        }
         if (link.getDeliveryDeviceNetworkSide() != null) {
             deviceNote.append(" network device: ");
             deviceNote.append(link.getDeliveryDeviceNetworkSide());
         }
-
         if (link.getDeliveryCode() != null) {
             deviceNote.append(" delivery Code: ");
             deviceNote.append(link.getDeliveryCode());
-        }
-
-        if (link.getOrderCode() != null) {
-            deviceNote.append(" order Code: ");
-            deviceNote.append(link.getOrderCode());
         }
 
         return deviceNote.toString();
