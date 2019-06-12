@@ -1143,9 +1143,10 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		for ( RequisitionAsset asset : getBackupProfileContainer().getBackupProfile(node.getBackupProfile()).getRequisitionAssets().getAssets()) {
 			requisitionNode.putAsset(asset);
 		}
-		m_onmsDao.setSnmpInfo(node.getPrimary(), getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		logger.info("Adding node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary());
 		m_onmsDao.addRequisitionNode(DashBoardUtils.TN_REQU_NAME, requisitionNode);
+                logger.info("Setting snmpprofile for node with foreignId: " + node.getForeignId() + " primary: " + node.getPrimary() + ": " + node.getSnmpProfile());
+                m_onmsDao.setSnmpInfo(node.getPrimary(), getSnmpProfileContainer().getSnmpProfile(node.getSnmpProfile()).getSnmpInfo());
 		node.clear();			
 	}
 
