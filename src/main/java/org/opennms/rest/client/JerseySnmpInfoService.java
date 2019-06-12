@@ -49,10 +49,6 @@ public class JerseySnmpInfoService extends JerseyAbstractService implements Snmp
 			form.add("retries", Integer.toString(snmpinfo.getRetries()));
                 if (snmpinfo.getMaxVarsPerPdu() > 0) 
                     form.add("maxVarsPerPdu", Integer.toString(snmpinfo.getMaxVarsPerPdu()));
-                if (snmpinfo.getMaxRepetitions() > 0) 
-                    form.add("maxRepetitions", Integer.toString(snmpinfo.getMaxRepetitions()));
-                if (snmpinfo.getMaxRequestSize() > 0) 
-                    form.add("maxRequestSize", Integer.toString(snmpinfo.getMaxRequestSize()));
 		return form;
 	}
 
