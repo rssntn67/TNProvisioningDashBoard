@@ -58,33 +58,31 @@ public class SnmpInfoServiceTest {
     	snmp.setReadCommunity("sarag8");
     	snmp.setVersion("v1");
     	snmp.setTimeout(1890);
-    	snmp.setMaxVarsPerPdu(20);
-    	snmp.setRetries(3);
+    	snmp.setRetries(5);
     	snmp.setPort(161);
-    	m_snmpinfoservice.set("10.10.1.1", snmp);
+    	m_snmpinfoservice.set("10.10.1.10", snmp);
     	
-    	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.1");
+    	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.10");
     	assertEquals("sarag8", snmpstored.getReadCommunity());
     	assertEquals(161, snmpstored.getPort().intValue());
-    	assertEquals(3, snmpstored.getRetries().intValue());
+    	assertEquals(5, snmpstored.getRetries().intValue());
     	assertEquals(1890, snmpstored.getTimeout().intValue());
     	assertEquals("v1", snmpstored.getVersion());
-        assertEquals(20, snmpstored.getMaxVarsPerPdu().intValue());
     	
     	SnmpInfo snmp2 = new SnmpInfo();
     	snmp2.setReadCommunity("sarag8");
-    	snmp2.setTimeout(1800);
+    	snmp2.setTimeout(1820);
     	snmp2.setVersion("v2c");
         snmp2.setMaxVarsPerPdu(24);
-        snmp2.setRetries(1);
+        snmp2.setRetries(6);
         snmp2.setPort(161);
     	m_snmpinfoservice.set("10.10.1.1", snmp2);
     	
     	SnmpInfo snmpstored2 = m_snmpinfoservice.get("10.10.1.1");
     	assertEquals("sarag8", snmpstored2.getReadCommunity());
     	assertEquals(161, snmpstored2.getPort().intValue());
-    	assertEquals(3, snmpstored2.getRetries().intValue());
-    	assertEquals(1800, snmpstored2.getTimeout().intValue());
+    	assertEquals(6, snmpstored2.getRetries().intValue());
+    	assertEquals(1820, snmpstored2.getTimeout().intValue());
     	assertEquals("v2c", snmpstored2.getVersion());
         assertEquals(24, snmpstored2.getMaxVarsPerPdu().intValue());
     	

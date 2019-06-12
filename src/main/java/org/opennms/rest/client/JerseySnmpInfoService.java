@@ -2,6 +2,7 @@ package org.opennms.rest.client;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.hibernate.annotations.GenerationTime;
 import org.opennms.web.svclayer.model.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -39,16 +40,21 @@ public class JerseySnmpInfoService extends JerseyAbstractService implements Snmp
 		if (snmpinfo.getReadCommunity() != null) {
 		    form.add("community", snmpinfo.getReadCommunity());
 		}
-		if (snmpinfo.getVersion() != null )
+		boolean version1=false;
+		if (snmpinfo.getVersion() != null ) {
 			form.add("version", snmpinfo.getVersion());
-		if (snmpinfo.getTimeout() > 0)
+			version1 = snmpinfo.getVersion().equals("v1");
+		}
+		if (snmpinfo.getTimeout() != null && snmpinfo.getTimeout() > 0)
 			form.add("timeout", Integer.toString(snmpinfo.getTimeout()));
-		if (snmpinfo.getPort() > 0 ) 
+		if (snmpinfo.getPort() != null && snmpinfo.getPort() > 0 ) 
 			form.add("port", Integer.toString(snmpinfo.getPort()));
-		if (snmpinfo.getRetries() > 0) 
+		if (snmpinfo.getRetries() != null && snmpinfo.getRetries() > 0) 
 			form.add("retries", Integer.toString(snmpinfo.getRetries()));
-                if (snmpinfo.getMaxVarsPerPdu() > 0) 
+                if (!version1 && snmpinfo.getMaxVarsPerPdu() != null && snmpinfo.getMaxVarsPerPdu() > 0) {
                     form.add("maxVarsPerPdu", Integer.toString(snmpinfo.getMaxVarsPerPdu()));
+                    
+                }
 		return form;
 	}
 
