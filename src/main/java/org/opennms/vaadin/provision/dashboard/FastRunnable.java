@@ -281,7 +281,7 @@ public abstract class FastRunnable implements Runnable {
         if (device.getOrderCode() == null) {
             log(device,FAST_NULL_ORDER_CODE);
             valid = false;
-        } else {
+        } else if (!orderCodes.contains(device.getOrderCode())){
             log(device,FAST_INVALID_ORDER_CODE);
             valid = false;
         }
@@ -533,7 +533,6 @@ public abstract class FastRunnable implements Runnable {
             }
         }
                 
-        logger.info("run: sync Fast devices with Requisition");
         double current = 0.0;
         updateProgress(new Float(current));
 
