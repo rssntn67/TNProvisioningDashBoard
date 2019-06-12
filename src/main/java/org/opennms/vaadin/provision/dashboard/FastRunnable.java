@@ -843,7 +843,6 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         }
         if (link.getDeliveryCode() != null) {
             deviceNote.append(link.getDeliveryCode());
-            deviceNote.append(" delivery Code: ");
         }
 
         return deviceNote.toString();
