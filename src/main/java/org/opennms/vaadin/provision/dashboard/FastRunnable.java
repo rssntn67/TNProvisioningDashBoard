@@ -823,6 +823,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         jloe.setOrderCode("NA");
         jloe.setDescription(description);
         jloe.setNote(getNote(link));
+        log(jloe);
     }
 
     private String getNote(FastServiceLink link) {
