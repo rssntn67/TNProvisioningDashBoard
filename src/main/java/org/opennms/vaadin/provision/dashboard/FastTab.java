@@ -87,9 +87,8 @@ public class FastTab extends DashboardTab {
 
     private JobDao m_jobdao;
     private JobLogDao m_joblogdao;
-    private boolean m_loaded = false;
-	private TextField m_searchField       = new TextField("Search Job Logs Text");
-	private FastTabRunnable m_runnable;
+    private TextField m_searchField       = new TextField("Search Job Logs Text");
+    private FastTabRunnable m_runnable;
     private Table m_jobTable =  new Table();
     private Table m_logTable =  new Table();
 	private Label m_loginfo = new Label();
@@ -226,13 +225,10 @@ public class FastTab extends DashboardTab {
 		} else {
 			m_panel.setCaption("Fast Integration - Status: Ready");			
 		}
-		if (m_loaded) 
-			return;
 		m_jobdao = getService().getJobContainer();
 		m_joblogdao = getService().getJobLogContainer();
 		m_jobTable.setContainerDataSource(m_jobdao);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
-    	m_loaded = true;
 	}
 
 	public boolean runFast() {

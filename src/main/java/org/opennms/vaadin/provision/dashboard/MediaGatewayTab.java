@@ -61,7 +61,6 @@ public class MediaGatewayTab extends RequisitionTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
 	private BeanContainer<String, MediaGatewayNode> m_requisitionContainer = new BeanContainer<String, MediaGatewayNode>(MediaGatewayNode.class);
-	private boolean loaded=false;
 	private BasicNode m_mg;
 	private Map<String,BasicNode> m_updates = new HashMap<String,BasicNode>();
 
@@ -109,7 +108,6 @@ public class MediaGatewayTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		if (!loaded) {
 			try {
 				m_mg = getService().getMediaGateway();
 			} catch (UniformInterfaceException e) {
@@ -127,7 +125,6 @@ public class MediaGatewayTab extends RequisitionTab {
 				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
 				getRequisitionTable().setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
 				layout();
-				loaded=true;
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
 				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
@@ -154,7 +151,6 @@ public class MediaGatewayTab extends RequisitionTab {
 		    m_editorFields.bind(getAddressTextField(), DashBoardUtils.ADDRESS1);
 			m_editorFields.bind(getBuildingTextField(),DashBoardUtils.BUILDING);
 
-		}
 		super.load();
 		Map<String,BackupProfile> bckupprofilemap = 
 				getService().getBackupProfileContainer().getBackupProfileMap();

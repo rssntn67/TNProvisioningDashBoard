@@ -54,7 +54,6 @@ public class BackupProfileTab extends DashboardTab {
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private BackupProfileDao m_backupContainer;
-	private boolean loaded = false;
 	private boolean add = false;
 	
 	private Table m_backupTable   	= new Table();
@@ -81,7 +80,6 @@ public class BackupProfileTab extends DashboardTab {
 	@Override
 	public void load() {
 		updateTabHead();
-		if (!loaded) {
 			m_backupContainer = getService().getBackupProfileContainer();
 			m_backupTable.setContainerDataSource(m_backupContainer);
 			try {
@@ -91,12 +89,10 @@ public class BackupProfileTab extends DashboardTab {
 					m_fastBackupProfile.add(backupprofile.getValue());
 				}
 				layout();
-				loaded=true;
 			} catch (SQLException e) {
 				logger.warning("Failed to load Backup Fast Profiles");
 				Notification.show("Error Loading Tab", Type.HUMANIZED_MESSAGE);
 			}
-		}
 	}
 	
 	private void layout() {

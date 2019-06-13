@@ -63,7 +63,6 @@ public class CategorieTab extends DashboardTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private CategoriaDao m_catContainer;
 	private DnsDomainDao m_domainContainer;
-	private boolean loaded=false;
 	private boolean add=false;
 
 	private Table m_catTable   	= new Table();
@@ -83,13 +82,10 @@ public class CategorieTab extends DashboardTab {
 	@Override
 	public void load() {
 		updateTabHead();
-		if (!loaded) {
-			m_domainContainer = getService().getDnsDomainContainer();
-			m_catContainer = getService().getCatContainer();
-			m_catTable.setContainerDataSource(m_catContainer);
-			layout();
-			loaded=true;
-		}
+		m_domainContainer = getService().getDnsDomainContainer();
+		m_catContainer = getService().getCatContainer();
+		m_catTable.setContainerDataSource(m_catContainer);
+		layout();
 	}
 		
 	private void layout() {

@@ -115,8 +115,6 @@ public abstract class RequisitionTab extends DashboardTab {
 	private Map<String,Set<String>> m_primaryipforeignidmap = new HashMap<String, Set<String>>();
 	private Map<String,BasicNode> m_updates = new HashMap<String,BasicNode>();
 
-	private boolean m_loaded = false;
-
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
@@ -293,7 +291,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		
 	public void load() {
 		updateTabHead();
-		if (!m_loaded) {
 			if (getService().getUser().equals("admin"))
 				getRightHead().addComponent(m_populateSnmpButton);
 
@@ -424,8 +421,6 @@ public abstract class RequisitionTab extends DashboardTab {
 		        UI.getCurrent().addWindow(nullipwindow);
 				logger.warning(getRequisitionName() + ": Found Null Primary IP: " + Arrays.toString(nullprims.toArray()));
 			}
-
-		}
 		
 		m_parentComboBox.removeAllItems();
 		for (String nodelabel :m_nodeLabelForeignIdMap.keySet())
@@ -448,9 +443,6 @@ public abstract class RequisitionTab extends DashboardTab {
 					"(community:"+snmpprofilemap.get(snmpprofile).getCommunity()+")"
 					+ "(version:"+ snmpprofilemap.get(snmpprofile).getVersion()+")");
 		}
-
-
-		m_loaded=true;
 		
 	}
 	

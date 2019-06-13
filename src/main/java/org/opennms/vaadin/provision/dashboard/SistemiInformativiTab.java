@@ -102,7 +102,6 @@ public class SistemiInformativiTab extends RequisitionTab {
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
 	private BeanContainer<String, SistemiInformativiNode> m_requisitionContainer = new BeanContainer<String, SistemiInformativiNode>(SistemiInformativiNode.class);
-	private boolean loaded=false;
 
 	private BeanFieldGroup<SistemiInformativiNode> m_editorFields     = new BeanFieldGroup<SistemiInformativiNode>(SistemiInformativiNode.class);
 	Integer newHost = 0;
@@ -358,13 +357,11 @@ public class SistemiInformativiTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		if (!loaded) {
 			try {
 				m_requisitionContainer = getService().getSIContainer();
 				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
 				getRequisitionTable().setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
 				layout();
-				loaded=true;
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
 				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
@@ -407,7 +404,6 @@ public class SistemiInformativiTab extends RequisitionTab {
 			m_editorFields.bind(m_modelNumber,DashBoardUtils.MODELNUMBER);
 			m_editorFields.bind(m_manufacturer,DashBoardUtils.MANUFACTURER);
 			m_editorFields.bind(m_description,DashBoardUtils.DESCRIPTION);
-		}
 		super.load();
 	}
 	

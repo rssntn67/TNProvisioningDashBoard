@@ -53,7 +53,6 @@ public class SnmpProfileTab extends DashboardTab {
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private SnmpProfileDao m_snmpContainer;
-	private boolean loaded = false;
 	private boolean add = false;
 	private Table m_snmpTable   	= new Table();
 	private Button m_addSnmpButton  = new Button("Nuovo Profilo Snmp");
@@ -79,7 +78,6 @@ public class SnmpProfileTab extends DashboardTab {
 	@Override
 	public void load() {
 		updateTabHead();
-		if (!loaded) {
 			m_snmpContainer = getService().getSnmpProfileContainer();
 			m_snmpTable.setContainerDataSource(m_snmpContainer);
 			try {
@@ -89,12 +87,10 @@ public class SnmpProfileTab extends DashboardTab {
 					m_fastSnmpProfile.add(snmpprofile.getValue());
 				}
 				layout();
-				loaded=true;
 			} catch (SQLException e) {
 				logger.warning("Failed to load Snmp Fast Profiles");
 				Notification.show("Error Loading Tab", Type.HUMANIZED_MESSAGE);
 			}
-		}
 	}
 
 	private void layout() {

@@ -97,7 +97,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 	private static final Logger logger = Logger.getLogger(DashboardTab.class.getName());
 	private String m_searchText = null;
-	private boolean loaded=false;
 
 	private BeanContainer<String, TrentinoNetworkNode> m_requisitionContainer = new BeanContainer<String, TrentinoNetworkNode>(TrentinoNetworkNode.class);
 	private BeanFieldGroup<TrentinoNetworkNode> m_editorFields     = new BeanFieldGroup<TrentinoNetworkNode>(TrentinoNetworkNode.class);
@@ -289,13 +288,11 @@ public class TrentinoNetworkTab extends RequisitionTab {
 
 	@Override
 	public void load() {
-		if (!loaded) {
 			try {
 				m_requisitionContainer = getService().getTNContainer();
 				getRequisitionTable().setContainerDataSource(m_requisitionContainer);
 				getRequisitionTable().setVisibleColumns(new Object[] { DashBoardUtils.LABEL,DashBoardUtils.VALID });
 				layout();
-				loaded=true;
 			} catch (UniformInterfaceException e) {
 				logger.info("Response Status:" + e.getResponse().getStatus() + " Reason: "+e.getResponse().getStatusInfo().getReasonPhrase());
 				if (e.getResponse().getStatusInfo().getStatusCode() == ClientResponse.Status.NOT_FOUND.getStatusCode()) {
@@ -327,7 +324,6 @@ public class TrentinoNetworkTab extends RequisitionTab {
 			m_editorFields.bind(m_optionalGroup, DashBoardUtils.SERVER_OPTIONAL_CATEGORY);
 		    m_editorFields.bind(m_circuiId, DashBoardUtils.CIRCUITID);
 
-		}
 		
 		super.load();
 		Map<String,BackupProfile> bckupprofilemap = 
