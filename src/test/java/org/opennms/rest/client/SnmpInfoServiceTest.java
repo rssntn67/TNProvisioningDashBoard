@@ -53,21 +53,24 @@ public class SnmpInfoServiceTest {
     }
     
     @Test
+    @Ignore
     public void testSnmpconfig() throws Exception {
     	SnmpInfo snmp = new SnmpInfo();
-    	snmp.setReadCommunity("sarag8");
+    	snmp.setReadCommunity("sarag888v1");
     	snmp.setVersion("v1");
     	snmp.setTimeout(1890);
     	snmp.setRetries(5);
     	snmp.setPort(161);
-    	m_snmpinfoservice.set("10.10.1.10", snmp);
+        snmp.setMaxVarsPerPdu(2);
+    	m_snmpinfoservice.set("10.10.1.101", snmp);
     	
-    	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.10");
-    	assertEquals("sarag8", snmpstored.getReadCommunity());
+    	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.101");
+    	assertEquals("sarag888v1", snmpstored.getReadCommunity());
     	assertEquals(161, snmpstored.getPort().intValue());
     	assertEquals(5, snmpstored.getRetries().intValue());
     	assertEquals(1890, snmpstored.getTimeout().intValue());
     	assertEquals("v1", snmpstored.getVersion());
+        assertEquals(2, snmpstored.getMaxVarsPerPdu().intValue());
     	
     	SnmpInfo snmp2 = new SnmpInfo();
     	snmp2.setReadCommunity("sarag8");
