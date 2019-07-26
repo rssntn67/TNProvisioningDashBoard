@@ -2,7 +2,6 @@ package org.opennms.rest.client;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.hibernate.annotations.GenerationTime;
 import org.opennms.web.svclayer.model.SnmpInfo;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;

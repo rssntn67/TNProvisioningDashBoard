@@ -23,7 +23,8 @@ public class JobDao extends SQLContainer {
 		save((RowId)addItem(),job);
 	}
 	
-	public synchronized void save(RowId id, Job job) {
+	@SuppressWarnings("unchecked")
+    public synchronized void save(RowId id, Job job) {
 		getContainerProperty(id, "jobdescr").setValue(job.getJobdescr());
 		getContainerProperty(id, "jobstatus").setValue(job.getJobstatus().name());
 		getContainerProperty(id, "jobstart").setValue(job.getJobstart());

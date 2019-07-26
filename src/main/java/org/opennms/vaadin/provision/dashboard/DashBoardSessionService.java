@@ -1502,6 +1502,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_user = user;
 	}
 
+    @SuppressWarnings("unchecked")
     public synchronized boolean isFastRunning() {
     	Item lastJob = null;
     	Integer lastJobId = null;

@@ -81,6 +81,7 @@ public class SnmpProfileTab extends DashboardTab {
             SQLContainer fastSnmpName = new SQLContainer(new FreeformQuery("select distinct snmpprofiles from fastservicedevices",
                                                                            getService().getPool()));
             for (Iterator<?> i = fastSnmpName.getItemIds().iterator(); i.hasNext();) {
+                @SuppressWarnings("unchecked")
                 Property<String> snmpprofile = fastSnmpName.getItem(i.next()).getItemProperty("snmpprofiles");
                 m_fastSnmpProfile.add(snmpprofile.getValue());
             }

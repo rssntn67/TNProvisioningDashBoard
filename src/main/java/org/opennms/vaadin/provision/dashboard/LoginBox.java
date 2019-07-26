@@ -118,7 +118,8 @@ public class LoginBox extends DashboardTab {
 		}
 	}
 
-	public void loginlayout() {
+	@SuppressWarnings("unchecked")
+    public void loginlayout() {
 	    m_panel.setCaption("User '"+ getService().getUser()+"' Logged in");
 
 	    VerticalLayout loggedin= new VerticalLayout();
