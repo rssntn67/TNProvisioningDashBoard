@@ -624,14 +624,18 @@ public abstract class FastRunnable implements Runnable {
                     }
                     continue;
                 }
-                Categoria categoria = m_vrf.get(refdevice.getOrderCode());
                 List<FastServiceLink> fastAssets = fastOrderCodeAssetsMap.get(refdevice.getOrderCode());
                 FastServiceLink refLink = electFastLink(fastAssets);
+                if (refLink == null) {
+                    fastAssets.forEach( link -> log(link,FAST_INVALID_VRF));
+                    continue;
+                }
+                Categoria categoria = m_vrf.get(refLink.getVrf());
 
                 if (foreignIds.size() == 0) {
                     add(refdevice,categoria,refLink.getDeliveryCode(),refLink.getSiteCode(),validFastServicesDevices);
                 } else  {
-                        updateFastDevice(rnode, refdevice, categoria, refLink.getDeliveryCode(),refLink.getOrderCode(),
+                    updateFastDevice(rnode, refdevice, categoria, refLink.getDeliveryCode(),refLink.getSiteCode(),
                                    validFastServicesDevices);
                 }
             }
