@@ -71,8 +71,8 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_NO_REF_DEVICE = "FAST(error): no valid ref device for order code";
     private final static String ONMS_ADDED_DEVICE = "ONMS(info): added device";
     private final static String ONMS_DELETED_DEVICE = "ONMS(info): deleted device";
-    private final static String ONMS_UPDATED_NO_FAST_DEVICE = "ONMS(info): updated device not maneged by FAST  ";
-    private final static String ONMS_UPDATED_FAST_DEVICE = "ONMS(info): updated device maneged by FAST  ";
+    private final static String ONMS_UPDATED_NO_FAST_DEVICE = "ONMS(info): updated device not managed by FAST  ";
+    private final static String ONMS_UPDATED_FAST_DEVICE = "ONMS(info): updated device managed by FAST  ";
     private final static String ONMS_DELETED_IP = "ONMS(info): deleted interface";
     private final static String ONMS_ADDED_IP = "ONMS(info): added interface";
     private final static String ONMS_UPDATE_SNMP_PROFILE = "ONMS(info): updated Snmp Profile";
