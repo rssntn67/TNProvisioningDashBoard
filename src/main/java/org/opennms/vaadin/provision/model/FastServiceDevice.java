@@ -47,28 +47,28 @@ public class FastServiceDevice {
 			Property<String> orderCode,
 			Property<String> deviceType) {
 		super();
-		if (hostname != null)
+		if (hostname != null && hostname.getValue() != null)
 			m_hostname = hostname.getValue().trim().toLowerCase();
 		else 
 			m_hostname = null;
 		
-		if (ipaddr != null)
+		if (ipaddr != null && ipaddr.getValue() != null)
 			m_ipaddr = ipaddr.getValue().trim();
 		else 
 			m_ipaddr = null;
 		
-		if (ipAddrLan != null)
+		if (ipAddrLan != null && ipAddrLan.getValue() != null)
 			m_ipAddrLan = ipAddrLan.getValue().trim();
 		else 
 			m_ipAddrLan = null;
 		
-		if (netMaskLan != null)
+		if (netMaskLan != null && netMaskLan.getValue() != null)
 			m_netMaskLan = netMaskLan.getValue().trim();
 		else
 			m_netMaskLan = null;
 		
-		if (serialNumber != null)
-			m_serialNumber = serialNumber.getValue().trim();
+		if (serialNumber != null )
+			m_serialNumber = serialNumber.getValue();
 		else 
 			m_serialNumber = null;
 		
