@@ -4,7 +4,14 @@ import java.io.Serializable;
 
 public class JobLogEntry implements Serializable{
 
-	/**
+	@Override
+    public String toString() {
+        return "JobLogEntry [m_hostname=" + m_hostname + ", m_ipaddr="
+                + m_ipaddr + ", m_orderCode=" + m_orderCode
+                + ", m_description=" + m_description + ", m_note=" + m_note
+                + "]";
+    }
+    /**
 	 * 
 	 */
 	private static final long serialVersionUID = 5344344886863404461L;
