@@ -48,7 +48,11 @@ public class FastServiceDevice {
 			Property<String> deviceType) {
 		super();
 		if (hostname != null && hostname.getValue() != null)
-			m_hostname = hostname.getValue().trim().toLowerCase();
+			m_hostname = hostname.getValue()
+			    .trim()
+			    .toLowerCase()
+			    .replace(".wl.tnnet.it", "")
+			    .replace(".infotn.it", "");
 		else 
 			m_hostname = null;
 		
