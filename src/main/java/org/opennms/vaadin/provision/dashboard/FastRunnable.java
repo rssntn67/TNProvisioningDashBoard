@@ -54,14 +54,14 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_NULL_HOSTNAME ="FAST(error): Device Null Hostname";
     private final static String FAST_INVALID_IP ="FAST(error): Device Invalid Ip Address";
     private final static String FAST_INVALID_HOSTNAME ="FAST(error): Device Invalid Hostname";
-    private final static String FAST_NULL_NOTIFY ="FAST(error): Null Notify Category";
-    private final static String FAST_INVALID_NOTIFY ="FAST(error): Invalid Notify Category";
-    private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Null Snmp Profile";
-    private final static String FAST_INVALID_SNMP_PROFILE ="FAST(error): Invalid Snmp Profile";
-    private final static String FAST_NULL_BACKUP_PROFILE ="FAST(error): Null Backup Profile";
-    private final static String FAST_INVALID_BACKUP_PROFILE ="FAST(error): Invalid Backup Profile";
-    private final static String FAST_NULL_VRF ="FAST(error): Null VRF";
-    private final static String FAST_INVALID_VRF ="FAST(error): Invalid VRF";
+    private final static String FAST_NULL_NOTIFY ="FAST(error): Device Null Notify Category";
+    private final static String FAST_INVALID_NOTIFY ="FAST(error): Device Invalid Notify Category";
+    private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Device Null Snmp Profile";
+    private final static String FAST_INVALID_SNMP_PROFILE ="FAST(error): Device Invalid Snmp Profile";
+    private final static String FAST_NULL_BACKUP_PROFILE ="FAST(error): Device Null Backup Profile";
+    private final static String FAST_INVALID_BACKUP_PROFILE ="FAST(error): Device Invalid Backup Profile";
+    private final static String FAST_NULL_VRF ="FAST(error): Asset Null VRF";
+    private final static String FAST_INVALID_VRF ="FAST(error): Asset Invalid VRF";
     private final static String ONMS_DUPLICATED_ID ="ONMS(error): Duplicated Foreign Id";
     private final static String ONMS_NULL_IP ="ONMS(error): Null Ip Address";
     private final static String ONMS_INVALID_IP ="ONMS(error): Invalid Ip Address";
@@ -716,6 +716,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         jloe.setIpaddr("NA");
         jloe.setDescription(description);
         jloe.setNote(getNote(rnode));
+        jloe.setOrderCode("NA");
         log(jloe);        
     }
 
@@ -861,8 +862,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         getService().add(rnode);
         m_updates.add(rnode);
         updateSnmp(refdevice);
-        log(rnode,ONMS_ADDED_DEVICE);
-
+        devices.forEach( device ->log(device,ONMS_ADDED_DEVICE));
     }
 
     private void updateNonFast(TrentinoNetworkNode rnode,
@@ -898,7 +898,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         getService().update(rnode);
         m_updates.add(rnode);
 
-        log(rnode,ONMS_UPDATED_NO_FAST_DEVICE);
+        devices.forEach( device ->log(device,ONMS_UPDATED_NO_FAST_DEVICE));
 
     }
 
@@ -976,7 +976,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         getService().update(rnode);
         m_updates.add(rnode);
         updateSnmp(refdevice);
-        log(refdevice,ONMS_UPDATED_FAST_DEVICE);
+        devices.forEach( device ->log(device,ONMS_UPDATED_FAST_DEVICE));
     }
 
     private void updateSnmp(FastServiceDevice refdevice) {
