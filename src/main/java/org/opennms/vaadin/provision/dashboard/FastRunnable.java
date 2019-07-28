@@ -289,14 +289,14 @@ public abstract class FastRunnable implements Runnable {
         if (device.getIpaddr() == null) {
             log(device,FAST_NULL_IP);
             valid = false;
-        }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr().trim())) {
+        }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr())) {
             log(device,FAST_INVALID_IP);
             valid = false;
         } 
         if (device.getHostname() == null) {
             log(device,FAST_NULL_HOSTNAME);                
             valid = false;
-        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname().trim())) {
+        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname())) {
             log(device,FAST_INVALID_HOSTNAME);
             valid = false;
         } 
@@ -313,7 +313,7 @@ public abstract class FastRunnable implements Runnable {
             } else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
                 refdevice = device;
             } else if (device.getIpAddrLan() != null
-                    && device.getIpAddrLan() == null) {
+                    && refdevice.getIpAddrLan() == null) {
                 refdevice = device;
             }
         }
@@ -451,17 +451,17 @@ public abstract class FastRunnable implements Runnable {
             }
             if (isValid(device, fastOrderCodeServiceLinkMap.keySet()) ) {
 
-                if (!fastHostnameServiceDeviceMap.containsKey(device.getHostname().toLowerCase())) {
-                    fastHostnameServiceDeviceMap.put(device.getHostname().toLowerCase(),
+                if (!fastHostnameServiceDeviceMap.containsKey(device.getHostname())) {
+                    fastHostnameServiceDeviceMap.put(device.getHostname(),
                                                      new ArrayList<FastServiceDevice>());
                 }
-                fastHostnameServiceDeviceMap.get(device.getHostname().toLowerCase()).add(device);
+                fastHostnameServiceDeviceMap.get(device.getHostname()).add(device);
 
                 if (!fastIpHostnameMap.containsKey(device.getIpaddr())) {
                     fastIpHostnameMap.put(device.getIpaddr(),
                                             new HashSet<String>());
                 }
-                fastIpHostnameMap.get(device.getIpaddr()).add(device.getHostname().toLowerCase());
+                fastIpHostnameMap.get(device.getIpaddr()).add(device.getHostname());
             }
         }        
         for (String ipaddr : fastIpHostnameMap.keySet()) {

@@ -48,27 +48,27 @@ public class FastServiceDevice {
 			Property<String> deviceType) {
 		super();
 		if (hostname != null)
-			m_hostname = hostname.getValue();
+			m_hostname = hostname.getValue().trim().toLowerCase();
 		else 
 			m_hostname = null;
 		
 		if (ipaddr != null)
-			m_ipaddr = ipaddr.getValue();
+			m_ipaddr = ipaddr.getValue().trim();
 		else 
 			m_ipaddr = null;
 		
 		if (ipAddrLan != null)
-			m_ipAddrLan = ipAddrLan.getValue();
+			m_ipAddrLan = ipAddrLan.getValue().trim();
 		else 
 			m_ipAddrLan = null;
 		
 		if (netMaskLan != null)
-			m_netMaskLan = netMaskLan.getValue();
+			m_netMaskLan = netMaskLan.getValue().trim();
 		else
 			m_netMaskLan = null;
 		
 		if (serialNumber != null)
-			m_serialNumber = serialNumber.getValue();
+			m_serialNumber = serialNumber.getValue().trim();
 		else 
 			m_serialNumber = null;
 		
