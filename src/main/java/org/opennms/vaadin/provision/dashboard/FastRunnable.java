@@ -45,14 +45,15 @@ import com.vaadin.data.util.sqlcontainer.query.QueryDelegate.RowIdChangeEvent;
 
 public abstract class FastRunnable implements Runnable {
 
-    private final static String FAST_NULL_ORDER_CODE ="FAST(error): Null Order Code";
-    private final static String FAST_INVALID_ORDER_CODE ="FAST(error): Invalid Order Code";
-    private final static String FAST_DUPLICATED_ORDER_CODE ="FAST(error): Duplicated Order Code";
-    private final static String FAST_NULL_IP ="FAST(error): Null Ip Address";
-    private final static String FAST_DUPLICATED_IP ="FAST(error): Duplicated Ip Address";
-    private final static String FAST_NULL_HOSTNAME ="FAST(error): Null Hostname";
-    private final static String FAST_INVALID_IP ="FAST(error): Invalid Ip Address";
-    private final static String FAST_INVALID_HOSTNAME ="FAST(error): Invalid Hostname";
+    private final static String FAST_NULL_ORDER_CODE ="FAST(error): Device Null Order Code";
+    private final static String FAST_ASSET_ORPHAN_ORDER_CODE ="FAST(error): Asset Orphan Order Code";
+    private final static String FAST_INVALID_ORDER_CODE ="FAST(error): Device with Invalid Order Code";
+    private final static String FAST_DUPLICATED_ORDER_CODE ="FAST(error): Asset Duplicated Order Code";
+    private final static String FAST_NULL_IP ="FAST(error): Device Null Ip Address";
+    private final static String FAST_DUPLICATED_IP ="FAST(error): Device Duplicated Ip Address";
+    private final static String FAST_NULL_HOSTNAME ="FAST(error): Device Null Hostname";
+    private final static String FAST_INVALID_IP ="FAST(error): Device Invalid Ip Address";
+    private final static String FAST_INVALID_HOSTNAME ="FAST(error): Device Invalid Hostname";
     private final static String FAST_NULL_NOTIFY ="FAST(error): Null Notify Category";
     private final static String FAST_INVALID_NOTIFY ="FAST(error): Invalid Notify Category";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Null Snmp Profile";
@@ -262,7 +263,7 @@ public abstract class FastRunnable implements Runnable {
     private boolean isValid(FastServiceLink link) {
         boolean valid = true;
         if (link.getOrderCode() == null) {               
-            log(link,FAST_NULL_ORDER_CODE);
+            log(link,FAST_ASSET_ORPHAN_ORDER_CODE);
             valid = false;
         }
         if (link.getVrf() == null) {
@@ -288,14 +289,14 @@ public abstract class FastRunnable implements Runnable {
         if (device.getIpaddr() == null) {
             log(device,FAST_NULL_IP);
             valid = false;
-        }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr())) {
+        }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr().trim())) {
             log(device,FAST_INVALID_IP);
             valid = false;
         } 
         if (device.getHostname() == null) {
             log(device,FAST_NULL_HOSTNAME);                
             valid = false;
-        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname())) {
+        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname().trim())) {
             log(device,FAST_INVALID_HOSTNAME);
             valid = false;
         } 
