@@ -896,8 +896,8 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
         getService().add(rnode);
         m_updates.add(rnode);
+        log(refdevice,ONMS_ADDED_DEVICE);
         updateSnmp(refdevice);
-        devices.forEach( device ->log(device,ONMS_ADDED_DEVICE));
     }
 
     private void updateNonFast(TrentinoNetworkNode rnode,
@@ -1014,8 +1014,8 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
         getService().update(rnode);
         m_updates.add(rnode);
+        log(refdevice,ONMS_UPDATED_FAST_DEVICE);
         updateSnmp(refdevice);
-        devices.forEach( device ->log(device,ONMS_UPDATED_FAST_DEVICE));
     }
 
     private void updateSnmp(FastServiceDevice refdevice) {
