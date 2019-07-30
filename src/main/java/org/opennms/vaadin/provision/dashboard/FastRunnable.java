@@ -688,6 +688,8 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
                     rnode.delService(bs);
                     log(rnode,bi,ONMS_DELETED_IP);
                 }
+                getService().update(rnode);
+
             }
 
         } catch (final UniformInterfaceException e) {
