@@ -723,7 +723,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
                 fastLink = fsl;
                 continue;
             }
-            if (fastLink.getDeliveryCode() == null && fsl.getLinkType() != null) {
+            if (fastLink.getDeliveryCode() == null && fsl.getDeliveryCode() != null) {
                 fastLink = fsl;
             } else if (fastLink.getSiteCode() == null && fsl.getSiteCode() != null) {
                 fastLink = fsl;
