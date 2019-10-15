@@ -2,8 +2,28 @@ package org.opennms.rest.client.model;
 
 public class FastAsset {
 
+    public enum Meta {
+        Router,
+        Switch,
+        Modem,
+        Radio,
+        MediaGW,
+        Firewall,
+        ADSL,
+        OpticFiber,
+        Wireless,
+        AL,
+        DarkFiber,
+        Phones,
+        ISDN,
+        RTG,
+        CallSrv,
+        Internet,
+        HDSL,
+        IPMux
+    }
     private Long id;
-    private String meta;
+    private Meta meta;
     private String t_date;
     private String t_time;
     private String username;
@@ -23,10 +43,10 @@ public class FastAsset {
     public void setId(Long id) {
         this.id = id;
     }
-    public String getMeta() {
+    public Meta getMeta() {
         return meta;
     }
-    public void setMeta(String meta) {
+    public void setMeta(Meta meta) {
         this.meta = meta;
     }
     public String getT_date() {

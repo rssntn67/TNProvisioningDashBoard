@@ -35,6 +35,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.rest.client.model.FastAsset;
+import org.opennms.rest.client.model.FastAsset.Meta;
 import org.opennms.rest.client.model.FastAssetAttributes;
 
 public class FastServiceTest {
@@ -47,7 +48,7 @@ public class FastServiceTest {
     public void setUp() throws Exception {
         m_fastservice = new JerseyFastService();
         m_jerseyClient = 
-                new JerseyClientImpl("https://localhost/api/v1/fast/","admin","admin");
+                new JerseyClientImpl("https://fast-api.si.tnnet.it/api/v1/fast/","arusso","conferenzaatrento");
         m_fastservice.setJerseyClient(m_jerseyClient);
     }
 
@@ -90,6 +91,16 @@ public class FastServiceTest {
         String result = m_jerseyClient.get("/assets/198263/attrs");
         assertNotNull(result);
         System.out.println(result);
+    }
+
+    @Test
+    public void testGetByMetaFilter() throws Exception {
+        FastAsset[] assets = m_fastservice.getAssetsByMeta(Meta.Switch);
+        assertNotNull(assets);
+        for (FastAsset asset: assets) {
+            System.out.println(asset);
+        }
+
     }
 
 }

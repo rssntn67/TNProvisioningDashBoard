@@ -37,6 +37,24 @@ public class FastAssetAttributes {
     @JsonProperty("Dominio")
     private String dominio;    
 
+    @JsonProperty("NonMonitorare")
+    private Integer nonMonitorare;
+    
+    private boolean close;
+    
+    @JsonProperty("Marca")
+    private String marca;
+    
+    @JsonProperty("Modello")
+    private String modello;
+    
+    @JsonProperty("NonMonitorareForzato")
+    private Integer nonMonitorareForzato;
+
+    @JsonProperty("Indirizzo2")
+    private String indirizzo2;
+    
+    private 
     public Long getAsset_id() {
         return asset_id;
     }
