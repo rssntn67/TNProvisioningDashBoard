@@ -39,9 +39,34 @@ public class FastAssetAttributes {
 
     @JsonProperty("NonMonitorare")
     private Integer nonMonitorare;
-    
-    private boolean close;
-    
+        
+    public Integer getNonMonitorare() {
+        return nonMonitorare;
+    }
+    public void setNonMonitorare(Integer nonMonitorare) {
+        this.nonMonitorare = nonMonitorare;
+    }
+    public String getMarca() {
+        return marca;
+    }
+    public void setMarca(String marca) {
+        this.marca = marca;
+    }
+    public String getModello() {
+        return modello;
+    }
+    public void setModello(String modello) {
+        this.modello = modello;
+    }
+    public Integer getNonMonitorareForzato() {
+        return nonMonitorareForzato;
+    }
+    public void setNonMonitorareForzato(Integer nonMonitorareForzato) {
+        this.nonMonitorareForzato = nonMonitorareForzato;
+    }
+    public Integer getBackup() {
+        return backup;
+    }
     @JsonProperty("Marca")
     private String marca;
     
@@ -50,11 +75,7 @@ public class FastAssetAttributes {
     
     @JsonProperty("NonMonitorareForzato")
     private Integer nonMonitorareForzato;
-
-    @JsonProperty("Indirizzo2")
-    private String indirizzo2;
     
-    private 
     public Long getAsset_id() {
         return asset_id;
     }
@@ -104,6 +125,17 @@ public class FastAssetAttributes {
         this.dominio = dominio;
     }
 
+    public boolean monitorato() {
+        if (nonMonitorare != null)
+            return nonMonitorare.intValue() == 0;
+        if (nonMonitorareForzato != null)
+            return nonMonitorareForzato == 0;
+        return true;
+    }
     
+    public boolean eseguiBackUp() {
+        return backup == 1;
+    }
+
     
 }

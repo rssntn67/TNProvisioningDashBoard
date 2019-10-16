@@ -31,6 +31,7 @@ import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
 import org.opennms.vaadin.provision.dao.CategoriaDao;
 import org.opennms.vaadin.provision.dao.DnsDomainDao;
+import org.opennms.vaadin.provision.dao.FastApiDao;
 import org.opennms.vaadin.provision.dao.IpSnmpProfileDao;
 import org.opennms.vaadin.provision.dao.JobDao;
 import org.opennms.vaadin.provision.dao.JobLogDao;
@@ -66,6 +67,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	public DashBoardSessionService(DashBoardService service) {
 		super(service);
 		m_onmsDao = new OnmsDao();
+		m_fastApiDao = new FastApiDao();
 	}
 
 	/**
@@ -83,6 +85,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 	private final static Logger logger = Logger.getLogger(DashBoardSessionService.class.getName());	
 	
 	final private OnmsDao m_onmsDao;
+	final private FastApiDao m_fastApiDao;
 	private JDBCConnectionPool m_pool; 
 	private DashBoardConfig m_config;
 
@@ -130,9 +133,13 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		return m_joblogcontainer;
 	}
 		
-    public OnmsDao getOnmsDao() {
+        public OnmsDao getOnmsDao() {
 		return m_onmsDao;
 	}
+        
+        public FastApiDao getFastApiDao() {
+            return m_fastApiDao;
+        }
     
     public JDBCConnectionPool getPool() {
     	return m_pool;
@@ -157,16 +164,17 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_user = username;
 		m_url = url;
 		m_loggedin = true;
+		m_onmsDao.setJerseyClient(new JerseyClientImpl(m_config.getKFastApiUrl(), m_config.getFastApiUsername(), m_config.getFastApiPassword()));
 
 		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
-        m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
+		m_ipsnmpprofilecontainer = new IpSnmpProfileDao(ipsnmptq);
 
 		TableQuery snmptq = new TableQuery("snmpprofiles", m_pool);
 		snmptq.setVersionColumn("versionid");
-        m_snmpprofilecontainer = new SnmpProfileDao(snmptq);
-        
-        TableQuery bcktq = new TableQuery("backupprofiles", m_pool);
+            m_snmpprofilecontainer = new SnmpProfileDao(snmptq);
+            
+            TableQuery bcktq = new TableQuery("backupprofiles", m_pool);
 		bcktq.setVersionColumn("versionid");
 		m_backupprofilecontainer = new BackupProfileDao(bcktq);
 

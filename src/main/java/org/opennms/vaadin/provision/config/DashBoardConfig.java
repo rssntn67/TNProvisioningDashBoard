@@ -29,9 +29,9 @@ public class DashBoardConfig implements Serializable {
 	protected static final String PROPERTIES_DB_USER_KEY = "db_username";
 	protected static final String PROPERTIES_DB_PASS_KEY = "db_password";
 
-	protected static final String PROPERTIES_KETTLE_URL_KEY = "kettle_url";
-	protected static final String PROPERTIES_KETTLE_USER_KEY = "kettle_username";
-	protected static final String PROPERTIES_KETTLE_PASS_KEY = "kettle_password";
+	protected static final String PROPERTIES_FASTAPI_URL_KEY = "fastapi_url";
+	protected static final String PROPERTIES_FASTAPI_USER_KEY = "fastapi_username";
+	protected static final String PROPERTIES_FASTAPI_PASS_KEY = "fastapi_password";
 
 	protected static final String VERSION_FILE_PATH = "provision-version.properties";
 	protected static final String PROPERTIES_APP_NAME = "projectName";
@@ -139,23 +139,23 @@ public class DashBoardConfig implements Serializable {
 		
 	}
 
-	public String getKettleUrl() {
-		if (m_configuration.getProperty(PROPERTIES_KETTLE_URL_KEY) != null ) 
-			return m_configuration.getProperty(PROPERTIES_KETTLE_URL_KEY);
+	public String getKFastApiUrl() {
+		if (m_configuration.getProperty(PROPERTIES_FASTAPI_URL_KEY) != null ) 
+			return m_configuration.getProperty(PROPERTIES_FASTAPI_URL_KEY);
 		else 
-			return "http://localhost:8080/kettle/";
+			return "https://localhost/api/v1/fast/";
 	}
 	
-	public String getKettleUsername() {
-		if (m_configuration.getProperty(PROPERTIES_KETTLE_USER_KEY) != null ) 
-			return m_configuration.getProperty(PROPERTIES_KETTLE_USER_KEY);
+	public String getFastApiUsername() {
+		if (m_configuration.getProperty(PROPERTIES_FASTAPI_USER_KEY) != null ) 
+			return m_configuration.getProperty(PROPERTIES_FASTAPI_USER_KEY);
 		else 
 			return "admin";
 	}
 	
-	public String getKettlePassword() {
-		if (m_configuration.getProperty(PROPERTIES_KETTLE_PASS_KEY) != null ) 
-			return m_configuration.getProperty(PROPERTIES_KETTLE_PASS_KEY);
+	public String getFastApiPassword() {
+		if (m_configuration.getProperty(PROPERTIES_FASTAPI_PASS_KEY) != null ) 
+			return m_configuration.getProperty(PROPERTIES_FASTAPI_PASS_KEY);
 		else 
 			return "admin";
 	}

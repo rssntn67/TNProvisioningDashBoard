@@ -13,13 +13,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.opennms.rest.client.FastService;
 import org.opennms.rest.client.JerseyClientImpl;
-import org.opennms.rest.client.model.KettleJobStatus;
-import org.opennms.rest.client.model.KettleRunJob;
+import org.opennms.rest.client.JerseyFastService;
+import org.opennms.rest.client.model.FastAsset;
+import org.opennms.rest.client.model.FastAsset.Meta;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
-import org.opennms.vaadin.provision.dao.FastServiceDeviceDao;
-import org.opennms.vaadin.provision.dao.FastServiceLinkDao;
-import org.opennms.vaadin.provision.dao.KettleDao;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicInterface;
 import org.opennms.vaadin.provision.model.BasicInterface.OnmsPrimary;
@@ -27,8 +26,6 @@ import org.opennms.vaadin.provision.model.BasicNode;
 import org.opennms.vaadin.provision.model.BasicNode.OnmsState;
 import org.opennms.vaadin.provision.model.BasicService;
 import org.opennms.vaadin.provision.model.Categoria;
-import org.opennms.vaadin.provision.model.FastServiceDevice;
-import org.opennms.vaadin.provision.model.FastServiceLink;
 import org.opennms.vaadin.provision.model.Job;
 import org.opennms.vaadin.provision.model.Job.JobStatus;
 import org.opennms.vaadin.provision.model.JobLogEntry;
@@ -54,6 +51,8 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_NULL_HOSTNAME ="FAST(error): Device Null Hostname";
     private final static String FAST_INVALID_IP ="FAST(error): Device Invalid Ip Address";
     private final static String FAST_INVALID_HOSTNAME ="FAST(error): Device Invalid Hostname";
+    private final static String FAST_NULL_DOMAIN ="FAST(error): Device Null Domain";
+    private final static String FAST_INVALID_DOMAIN ="FAST(error): Device Invalid Domain";
     private final static String FAST_NULL_NOTIFY ="FAST(error): Device Null Notify Category";
     private final static String FAST_INVALID_NOTIFY ="FAST(error): Device Invalid Notify Category";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Device Null Snmp Profile";
@@ -82,9 +81,7 @@ public abstract class FastRunnable implements Runnable {
     private final static String JOB_FAILS_SYNC="FAST run: Requisition Updated - Sync Failed";
     private final static String JOB_FAILS_REQU="FAST run: Failed Requisition Update";
     private final static String JOB_FAILS_REQU_GET="FAST run: Failed Requisition Download";
-    private final static String JOB_FAILS_FAST_DEVICES="FAST run: Failed Load Fast Service Devices";
-    private final static String JOB_FAILS_FAST_LINKS="FAST run: Failed load Fast Service Links";
-    private final static String JOB_FAILS_KETTLE="FAST run: Failed Kettle Run";
+    private final static String JOB_FAILS_FAST_API="FAST run: Failed Load Fast Assets";
     
     List<BasicNode> m_updates = new ArrayList<BasicNode>();
 
@@ -259,92 +256,62 @@ public abstract class FastRunnable implements Runnable {
         afterJob();
         
     }
-    
-    private boolean isValid(FastServiceLink link) {
+            
+    private boolean isValid(FastAsset device) {
         boolean valid = true;
-        if (link.getOrderCode() == null) {               
-            log(link,FAST_ASSET_ORPHAN_ORDER_CODE);
-            valid = false;
-        }
-        if (link.getVrf() == null) {
-            log(link,FAST_NULL_VRF);
-            valid = false;
-        } else if (!m_vrf.containsKey(link.getVrf())) {
-            log(link,FAST_INVALID_VRF+": " + link.getVrf());
-            valid = false;
-        }
-        return valid;
-    }
-    
-    
-    private boolean isValid(FastServiceDevice device, Set<String> orderCodes) {
-        boolean valid = true;
-        if (device.getOrderCode() == null) {
+        if (device.getOrder_id() == null) {
             log(device,FAST_NULL_ORDER_CODE);
             valid = false;
-        } else if (!orderCodes.contains(device.getOrderCode())){
-            log(device,FAST_INVALID_ORDER_CODE);
-            valid = false;
         }
-        if (device.getIpaddr() == null) {
+        if (device.getAttributes().getIndirizzoIP() == null) {
             log(device,FAST_NULL_IP);
             valid = false;
-        }  else if (DashBoardUtils.hasInvalidIp(device.getIpaddr())) {
+        }  else if (DashBoardUtils.hasInvalidIp(device.getAttributes().getIndirizzoIP())) {
             log(device,FAST_INVALID_IP);
             valid = false;
         } 
-        if (device.getHostname() == null) {
+        if (device.getAttributes().getHostName() == null) {
             log(device,FAST_NULL_HOSTNAME);                
             valid = false;
-        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getHostname())) {
+        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getAttributes().getHostName())) {
             log(device,FAST_INVALID_HOSTNAME);
             valid = false;
         } 
-        return valid;
-    }
-    
-    private FastServiceDevice getRefFastServiceDevice(List<FastServiceDevice> devices) {
-        FastServiceDevice refdevice = null;
-        for (FastServiceDevice device : devices) {
-            if (refdevice == null) {
-                refdevice = device;
-            } else if (device.isMaster() && !refdevice.isMaster()) {
-                refdevice = device;
-            } else if (device.isSaveconfig() && !refdevice.isSaveconfig()) {
-                refdevice = device;
-            } else if (device.getIpAddrLan() != null
-                    && refdevice.getIpAddrLan() == null) {
-                refdevice = device;
-            }
+
+        if (device.getAttributes().getDominio() == null) {
+            log(device,FAST_NULL_DOMAIN);
+            valid = false;
+        } else if (hasUnSupportedDomain(device.getAttributes().getDominio())) {
+            log(device,FAST_INVALID_DOMAIN+" :" + device.getAttributes().getDominio());
+            valid = false;
+            
         }
-        return refdevice;
-    }
-    
-    private boolean isValidFastDevice(FastServiceDevice device) {
-        boolean valid = true;
-        if (device.getNotifyCategory() == null) {
-            log(device,FAST_NULL_NOTIFY);
-            valid = false;
-        } else if (!DashBoardUtils.isValidNotifyLevel(device.getNotifyCategory())) {
-            log(device,FAST_INVALID_NOTIFY+ " :" +device.getNotifyCategory());
-            valid = false;
-        } 
-        if (device.getSnmpprofile() == null) {
+        
+        if (device.getAttributes().getProfiloSNMP() == null) {
             log(device,FAST_NULL_SNMP_PROFILE);
             valid = false;
-        } else if (!m_snmp.containsKey(device.getSnmpprofile())) {
-            log(device,FAST_INVALID_SNMP_PROFILE+ " :" +device.getSnmpprofile());
+        } else if (!m_snmp.containsKey(device.getAttributes().getProfiloSNMP())) {
+            log(device,FAST_INVALID_SNMP_PROFILE+ " :" +device.getAttributes().getProfiloSNMP());
             valid = false;
         } 
-        if (device.getBackupprofile() == null) {
+        if (device.getAttributes().getProfiloBackup() == null) {
             log(device,FAST_NULL_BACKUP_PROFILE);
             valid = false;
-        } else if(!m_backup.containsKey(device.getBackupprofile())) {
-            log(device,FAST_INVALID_BACKUP_PROFILE+ " :" +device.getBackupprofile());
+        } else if(!m_backup.containsKey(device.getAttributes().getProfiloBackup())) {
+            log(device,FAST_INVALID_BACKUP_PROFILE+ " :" +device.getAttributes().getProfiloBackup());
             valid = false;
         } 
 
         return valid;
+    }
+
+    private boolean hasUnSupportedDomain(String dominio) {
+        for (Categoria vrf: m_vrf.values()) {
+            if (vrf.getDnsdomain().equalsIgnoreCase(dominio)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void sync() {
@@ -361,54 +328,7 @@ public abstract class FastRunnable implements Runnable {
         m_snmp = getService().getSnmpProfileContainer().getSnmpProfileMap();
         logger.info("run: loaded table snmpprofile");
 
-        KettleDao kettleDao = new KettleDao(
-                                        new JerseyClientImpl(
-                                                     getService().getConfig().getKettleUrl(),
-                                                     getService().getConfig().getKettleUsername(),
-                                                     getService().getConfig().getKettlePassword()
-                                         )
-                                    );
 
-        try {
-            KettleRunJob kjob = kettleDao.runJob();
-            KettleJobStatus status = kettleDao.jobStatus(kjob);
-            logger.info("run: kettle status: " + status.getStatusDescr());
-            while (kettleDao.isRunning(status)) {
-                Thread.sleep(1000);
-                status = kettleDao.jobStatus(kjob);
-                logger.info("run: kettle status: " + status.getStatusDescr());
-            }
-            if (!kettleDao.isFinished(status)
-                    || !kettleDao.isCompleted(status)) {
-                fails(JOB_FAILS_KETTLE, new Exception(status.getErroDescr()));
-                return;
-            }
-        } catch (Exception e) {
-            fails(JOB_FAILS_KETTLE, e);
-            return;
-        }
-
-        FastServiceDeviceDao m_fastservicedevicecontainer;
-        try {
-            logger.info("run: loading table fastservicedevice");
-            m_fastservicedevicecontainer = new FastServiceDeviceDao(new FreeformQuery("select * from fastservicedevices",
-                                                                                      m_session.getPool()));
-            logger.info("run: loaded table fastservicedevice");
-        } catch (SQLException e) {
-            fails(JOB_FAILS_FAST_DEVICES, e);
-            return;
-        }
-
-        FastServiceLinkDao m_fastservicelinkcontainer;
-        try {
-            logger.info("run: loading table fastservicelink");
-            m_fastservicelinkcontainer = new FastServiceLinkDao(new FreeformQuery("select * from fastservicelink",
-                                                                                  m_session.getPool()));
-            logger.info("run: loaded table fastservicelink");
-        } catch (SQLException e) {
-            fails(JOB_FAILS_FAST_LINKS, e);
-            return;
-        }
 
         BeanContainer<String, TrentinoNetworkNode> requisition;
         try {
@@ -425,58 +345,74 @@ public abstract class FastRunnable implements Runnable {
             return;
         }
         
-        Map<String, String> fastOrderCodeVrfMap = new HashMap<>();
-        Map<String, List<FastServiceLink>> fastOrderCodeAssetsMap = new HashMap<>();
-        final Set<String> duplicatedOrderCode = new HashSet<String>();
-        for (FastServiceLink link : m_fastservicelinkcontainer.getFastServiceLinks()) {
-            if (isValid(link)) {
-                String predecheckedVrf = fastOrderCodeVrfMap.get(link.getOrderCode());
-                if ( predecheckedVrf != null && !predecheckedVrf.equals(link.getVrf())) {
-                    duplicatedOrderCode.add(link.getOrderCode());   
-                    fastOrderCodeAssetsMap.get(predecheckedVrf).add(link);
-                } else {
-                    fastOrderCodeVrfMap.put(link.getOrderCode(), link.getVrf());
-                }
-                if (!fastOrderCodeAssetsMap.containsKey(link.getOrderCode())) {
-                    fastOrderCodeAssetsMap.put(link.getOrderCode(), new ArrayList<>());
-                }
-                fastOrderCodeAssetsMap.get(link.getOrderCode()).add(link);
-            }
-        }
+        List<FastAsset> assets = new ArrayList<>();
         
-        for (String duplioc : duplicatedOrderCode) {
-            fastOrderCodeVrfMap.remove(duplioc);
-            fastOrderCodeAssetsMap.get(duplioc).forEach(link -> log(link, FAST_MISTMATCH_ORDER_CODE));
+        try {
+            logger.info("run: loading fast Asset: " + Meta.Router);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Router));
+            logger.info("run: loaded requisition: " + Meta.Router);
+
+            logger.info("run: loading fast Asset: " + Meta.Switch);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Switch));
+            logger.info("run: loaded requisition: " + Meta.Switch);
+            
+            logger.info("run: loading fast Asset: " + Meta.Firewall);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Firewall));
+            logger.info("run: loaded requisition: " + Meta.Firewall);
+            
+            logger.info("run: loading fast Asset: " + Meta.Radio);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Radio));
+            logger.info("run: loaded requisition: " + Meta.Radio);
+            
+            logger.info("run: loading fast Asset: " + Meta.Wireless);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Wireless));
+            logger.info("run: loaded requisition: " + Meta.Wireless);
+            
+            logger.info("run: loading fast Asset: " + Meta.Internet);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Internet));
+            logger.info("run: loaded requisition: " + Meta.Internet);
+            
+            logger.info("run: loading fast Asset: " + Meta.MediaGW);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.MediaGW));
+            logger.info("run: loaded requisition: " + Meta.MediaGW);
+            
+        } catch (final UniformInterfaceException e) {
+            fails(JOB_FAILS_FAST_API, e);
+            return;
+        } catch (final Exception e) {
+            fails(JOB_FAILS_FAST_API, e);
+            return;
         }
 
-        Map<String, List<FastServiceDevice>> fastHostnameServiceDeviceMap = new HashMap<>();
+        Map<String, List<FastAsset>> fastHostnameServiceDeviceMap = new HashMap<>();
         Map<String, Set<String>> fastIpHostnameMap = new HashMap<String, Set<String>>();
-        for (FastServiceDevice device : m_fastservicedevicecontainer.getFastServiceDevices()) {
-            if (device.isNotmonitoring()) {
+        for (FastAsset device : assets) {
+            if (!device.getAttributes().monitorato()) {
                 continue;
             }
-            if (isValid(device, fastOrderCodeVrfMap.keySet()) ) {
-
-                if (!fastHostnameServiceDeviceMap.containsKey(device.getHostname())) {
-                    fastHostnameServiceDeviceMap.put(device.getHostname(),
-                                                     new ArrayList<FastServiceDevice>());
-                }
-                fastHostnameServiceDeviceMap.get(device.getHostname()).add(device);
-
-                if (!fastIpHostnameMap.containsKey(device.getIpaddr())) {
-                    fastIpHostnameMap.put(device.getIpaddr(),
-                                            new HashSet<String>());
-                }
-                fastIpHostnameMap.get(device.getIpaddr()).add(device.getHostname());
+            if (!isValid(device)) {
+                continue;
             }
-        }        
+
+            if (!fastHostnameServiceDeviceMap.containsKey(device.getAttributes().getHostName())) {
+                fastHostnameServiceDeviceMap.put(device.getAttributes().getHostName(),
+                                                 new ArrayList<FastAsset>());
+            }
+            fastHostnameServiceDeviceMap.get(device.getAttributes().getHostName()).add(device);
+
+            if (!fastIpHostnameMap.containsKey(device.getAttributes().getIndirizzoIP())) {
+                fastIpHostnameMap.put(device.getAttributes().getIndirizzoIP(),
+                                        new HashSet<String>());
+            }
+            fastIpHostnameMap.get(device.getAttributes().getIndirizzoIP()).add(device.getAttributes().getHostName());
+        }
         for (String ipaddr : fastIpHostnameMap.keySet()) {
             if (fastIpHostnameMap.get(ipaddr).size() == 1)
                 continue;
             for (String hostname : fastIpHostnameMap.get(ipaddr)) {
-                List<FastServiceDevice> survived = new ArrayList<FastServiceDevice>();
-                for (FastServiceDevice device : fastHostnameServiceDeviceMap.remove(hostname)) {
-                    if (device.getIpaddr().equals(ipaddr)) {
+                List<FastAsset> survived = new ArrayList<FastAsset>();
+                for (FastAsset device : fastHostnameServiceDeviceMap.remove(hostname)) {
+                    if (device.getAttributes().getIndirizzoIP().equals(ipaddr)) {
                         log(device,FAST_DUPLICATED_IP);
                     } else {
                         survived.add(device);
@@ -569,14 +505,14 @@ public abstract class FastRunnable implements Runnable {
                 }
 
                 if (onmsDuplicatedForeignId.contains(hostname)) {
-                    for (FastServiceDevice device : fastHostnameServiceDeviceMap.get(hostname)) {
+                    for (FastAsset device : fastHostnameServiceDeviceMap.get(hostname)) {
                         log(device,FAST_DUPLICATED_ONMS_ID);
                     }
                     continue;
                 }
                 boolean duplicated=false;
-                for (FastServiceDevice device : fastHostnameServiceDeviceMap.get(hostname)) {
-                    if (onmsDuplicatedIpAddress.contains(device.getIpaddr())) {
+                for (FastAsset device : fastHostnameServiceDeviceMap.get(hostname)) {
+                    if (onmsDuplicatedIpAddress.contains(device.getAttributes().getIndirizzoIP())) {
                         log(device,FAST_DUPLICATED_ONMS_IP);
                         duplicated = true;
                     }
@@ -611,13 +547,7 @@ public abstract class FastRunnable implements Runnable {
                                   fastHostnameServiceDeviceMap.get(hostname));
                     continue;
                 }
-                List<FastServiceDevice> validFastServicesDevices = new ArrayList<>();
-                for (FastServiceDevice device:fastHostnameServiceDeviceMap.get(hostname)) {
-                    if (isValidFastDevice(device)) {
-                        validFastServicesDevices.add(device);
-                    }
-                }
-                FastServiceDevice refdevice = getRefFastServiceDevice(validFastServicesDevices);
+                FastAsset refdevice = getRefFastServiceDevice(validFastServicesDevices);
                 if (refdevice == null) {
                     for (FastServiceDevice device : validFastServicesDevices) {
                         log(device,FAST_NO_REF_DEVICE);
@@ -806,7 +736,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
     }
 
-    private void log(FastServiceDevice device, String description) {
+    private void log(FastAsset device, String description) {
         final JobLogEntry jloe = new JobLogEntry();
         if (device.getHostname() != null) {
             jloe.setHostname(device.getHostname());
@@ -829,7 +759,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         logger.info(jloe.toString());
     }
     
-    private String getNote(FastServiceDevice device) {
+    private String getNote(FastAsset device) {
         StringBuffer deviceNote = new StringBuffer("");
         if (device.getDeviceType() != null) {
             deviceNote.append(device.getDeviceType());
@@ -846,48 +776,11 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         return deviceNote.toString();
     }
 
-    private void log(FastServiceLink link, String description) {
-        final JobLogEntry jloe = new JobLogEntry();
-        if (link.getDeliveryDeviceClientSide() != null) {
-            jloe.setHostname(link.getDeliveryDeviceClientSide());
-        } else {
-            jloe.setHostname("NA");
-        }
-        jloe.setIpaddr("NA");
-        if (link.getOrderCode() != null) {
-            jloe.setOrderCode(link.getOrderCode());
-        } else {
-            jloe.setOrderCode("NA");
-            
-        }
-        jloe.setDescription(description);
-        jloe.setNote(getNote(link));
-        log(jloe);
-        logger.info(jloe.toString());
-    }
-
-    private String getNote(FastServiceLink link) {
-        StringBuffer deviceNote = new StringBuffer("");
-        if (link.getVrf() != null) {
-            deviceNote.append(link.getVrf());
-            deviceNote.append(" ");
-        }
-        if (link.getDeliveryDeviceNetworkSide() != null) {
-            deviceNote.append(link.getDeliveryDeviceNetworkSide());
-            deviceNote.append(" ");
-        }
-        if (link.getDeliveryCode() != null) {
-            deviceNote.append(link.getDeliveryCode());
-        }
-
-        return deviceNote.toString();
-    }
-
-    private void add(FastServiceDevice refdevice, 
+    private void add(FastAsset refdevice, 
                 Categoria vrf, 
                 String deliveryCode,
                 String siteCode,
-                List<FastServiceDevice> devices) {
+                List<FastAsset> devices) {
 
         TrentinoNetworkNode rnode = new TrentinoNetworkNode(refdevice.getHostname(),
                                                             vrf,
@@ -903,9 +796,9 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
     }
 
     private void updateNonFast(TrentinoNetworkNode rnode,
-            List<FastServiceDevice> devices) {
+            List<FastAsset> devices) {
         Set<String> fastipaddressonnode = new HashSet<String>();
-        for (FastServiceDevice device : devices) {
+        for (FastAsset device : devices) {
             fastipaddressonnode.add(device.getIpaddr());
             BasicInterface bi = rnode.getInterface(device.getIpaddr());
             if (bi == null) {
@@ -939,7 +832,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
     }
 
-    private TrentinoNetworkNode getnode(FastServiceDevice refdevice,
+    private TrentinoNetworkNode getnode(FastAsset refdevice,
             Categoria vrf , String deliveryCode, String siteCode,TrentinoNetworkNode rnode,
             Set<String> ipaddresses) {
         rnode.setDescr(DashBoardUtils.DESCR_FAST);
@@ -1002,11 +895,11 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
     }
 
     private void updateFastDevice(TrentinoNetworkNode rnode, 
-                    FastServiceDevice refdevice, 
+                    FastAsset refdevice, 
                     Categoria vrf,
                     String deliveryCode, 
                     String siteCode,
-            List<FastServiceDevice> devices) {
+            List<FastAsset> devices) {
         rnode = getnode(refdevice,
                         vrf, deliveryCode, siteCode,
                         rnode,devices.stream().map(device -> device.getIpaddr()).collect(Collectors.toSet()));
@@ -1020,7 +913,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         updateSnmp(refdevice);
     }
 
-    private void updateSnmp(FastServiceDevice refdevice) {
+    private void updateSnmp(FastAsset refdevice) {
         String snmpprofile = refdevice.getSnmpprofile();
         try {
             if (getService().saveSnmpProfile(refdevice.getIpaddr(),
