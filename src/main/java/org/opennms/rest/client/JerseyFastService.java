@@ -33,7 +33,7 @@ public class JerseyFastService implements FastService {
     }
 
     @Override
-    public FastAsset getAssetById(Integer id) {
+    public FastAsset getAssetById(Long id) {
         return m_jerseyClient.getJson(FastAsset[].class, ASSETS_PATH+id)[0];
     }
 
@@ -45,14 +45,14 @@ public class JerseyFastService implements FastService {
     }
 
     @Override
-    public FastAsset getAssetWithAttributesById(Integer id) {
+    public FastAsset getAssetWithAttributesById(Long id) {
         MultivaluedMap< String, String> queryParams = new MultivaluedMapImpl();
         queryParams.add("load_asset_attrs", "true");
         return m_jerseyClient.getJson(FastAsset[].class, ASSETS_PATH+id,queryParams)[0];
     }
 
     @Override
-    public FastAssetAttributes getFastAssetAttributesByIt(Integer id) {
+    public FastAssetAttributes getAssetAttributesById(Long id) {
         return m_jerseyClient.getJson(FastAssetAttributes.class, ASSETS_PATH+id+ATTRS_PATH);
     }
 

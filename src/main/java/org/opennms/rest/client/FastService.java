@@ -7,16 +7,11 @@ import org.opennms.rest.client.model.FastAssetAttributes;
 public interface FastService {
     
     FastAsset[] getAssets();
-    
-    FastAsset getAssetById(Integer id);
-
+    FastAsset getAssetById(Long id);
     FastAsset[] getAssetsWithAttributes();
-    
-    FastAsset getAssetWithAttributesById(Integer id);
-    
-    FastAssetAttributes getFastAssetAttributesByIt(Integer id);
-    
+    FastAssetAttributes getAssetAttributesById(Long id);
     FastAsset[] getAssetsByMeta(Meta meta);
+    FastAsset getAssetWithAttributesById(Long id);
     
 
 }

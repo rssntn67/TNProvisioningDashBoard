@@ -5,7 +5,6 @@ public class FastAsset {
     public enum Meta {
         Router,
         Switch,
-        Modem,
         Radio,
         MediaGW,
         Firewall,
@@ -22,6 +21,7 @@ public class FastAsset {
         HDSL,
         IPMux
     }
+
     private Long id;
     private Meta meta;
     private String t_date;

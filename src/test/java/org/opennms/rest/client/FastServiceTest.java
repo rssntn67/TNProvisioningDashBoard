@@ -30,6 +30,11 @@ package org.opennms.rest.client;
 
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,9 +42,12 @@ import org.junit.Test;
 import org.opennms.rest.client.model.FastAsset;
 import org.opennms.rest.client.model.FastAsset.Meta;
 import org.opennms.rest.client.model.FastAssetAttributes;
+import org.opennms.vaadin.provision.core.DashBoardUtils;
+import org.opennms.vaadin.provision.dashboard.FastRunnable;
 
 public class FastServiceTest {
     
+    private static final Logger logger = Logger.getLogger(FastRunnable.class.getName());
     private JerseyFastService m_fastservice;
     
     private JerseyClientImpl m_jerseyClient;
@@ -59,29 +67,38 @@ public class FastServiceTest {
     @Test
     public void testGetAssets() throws Exception {
            	FastAsset[] assets = m_fastservice.getAssets();
-           	assertNotNull(assets);
+                assertNotNull(assets);
+           	Set<Meta> meta = EnumSet.noneOf(Meta.class); 
            	for (FastAsset asset: assets) {
-           	    System.out.println(asset);
+           	    assertNotNull(asset.getMeta());
+                    assertNotNull(asset.getId());
+                    assertNull(asset.getAttributes());
+                    meta.add(asset.getMeta());
+                    if (asset.getMeta() == Meta.Internet) {
+                        System.out.println(m_fastservice.getAssetWithAttributesById(asset.getId()));
+                    }
            	}
+           	
+           	System.out.println(meta);
     }
     
     @Test
     public void testGetAssetById() throws Exception {
-                FastAsset asset = m_fastservice.getAssetById(198263);
+                FastAsset asset = m_fastservice.getAssetById(Long.valueOf(198263));
                 assertNotNull(asset);
                 System.out.println(asset);
     }
 
     @Test
     public void testGetAssetWithAttributesById() throws Exception {
-                FastAsset asset = m_fastservice.getAssetWithAttributesById(198263);
+                FastAsset asset = m_fastservice.getAssetWithAttributesById(Long.valueOf(198263));
                 assertNotNull(asset);
                 System.out.println(asset);
     }
 
     @Test
     public void testGetFastAssetAttributesById() throws Exception {
-                FastAssetAttributes attributes = m_fastservice.getFastAssetAttributesByIt(198263);
+                FastAssetAttributes attributes = m_fastservice.getAssetAttributesById(Long.valueOf(198263));
                 assertNotNull(attributes);
                 System.out.println(attributes);
     }
@@ -92,15 +109,181 @@ public class FastServiceTest {
         assertNotNull(result);
         System.out.println(result);
     }
+    
+    @Test
+    public void testValidRouter() throws Exception {
+        logger.info("run: loading fast Asset: " + Meta.Router);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Router)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.Router);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
+    
+    @Test
+    public void testValidSwitch() throws Exception {
+        logger.info("run: loading fast Asset: " + Meta.Switch);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Switch)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.Switch);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
 
     @Test
-    public void testGetByMetaFilter() throws Exception {
-        FastAsset[] assets = m_fastservice.getAssetsByMeta(Meta.Switch);
-        assertNotNull(assets);
-        for (FastAsset asset: assets) {
-            System.out.println(asset);
-        }
+    public void testValidFirewall() throws Exception {
 
+        logger.info("run: loading fast Asset: " + Meta.Firewall);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Firewall)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.Firewall);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
+        
+    @Test
+    public void testValidRadio() throws Exception {
+        logger.info("run: loading fast Asset: " + Meta.Radio);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Radio)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.Radio);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
+    @Test
+    public void testValidWireless() throws Exception {
+        logger.info("run: loading fast Asset: " + Meta.Wireless);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Wireless)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.Wireless);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
+    
+    @Test
+    public void testValidMediaGw() throws Exception {
+
+        logger.info("run: loading fast Asset: " + Meta.MediaGW);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.MediaGW)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.MediaGW);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
+
+    private boolean isValid(FastAsset device) {
+        boolean valid = true;
+        if (device.getAttributes().getIndirizzoIP() == null) {
+            System.err.println("Ip null: "+device);
+            valid = false;
+        }  else if (DashBoardUtils.hasInvalidIp(device.getAttributes().getIndirizzoIP())) {
+            System.err.println("Ip invalido: "+device);
+            valid = false;
+        } 
+        if (device.getAttributes().getHostName() == null) {
+            System.err.println("HostName null: "+device);
+            valid = false;
+        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getAttributes().getHostName())) {
+            System.err.println("HostName invalido: "+device);
+            valid = false;
+        } 
+
+        return valid;
+    }
+
+    private boolean checkFastAsset(FastAsset device) {
+        boolean valid = true;
+        if (device.getOrder_id() == null) {
+            System.out.println("OrderId: "+device);
+            valid = false;
+        }
+        if (device.getAttributes().getDominio() == null) {
+            System.out.println("Dominio: " + device);
+            valid = false;
+        }
+        
+        if (device.getAttributes().getProfiloSNMP() == null) {
+            System.out.println("Profilo SNMP: "+device);
+            valid = false;
+        }
+        if (device.getAttributes().getProfiloBackup() == null) {
+            System.out.println("Profilo Backup: " + device);
+                      valid = false;
+        }
+        return valid;
+        
     }
 
 }

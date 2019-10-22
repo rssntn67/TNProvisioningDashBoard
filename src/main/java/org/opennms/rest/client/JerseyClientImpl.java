@@ -5,6 +5,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.HostnameVerifier;
@@ -76,10 +77,10 @@ public class JerseyClientImpl {
     	try {
     		return m_webResource.path(relativePath).queryParams(queryParams).header("Accept", "application/xml").accept(MediaType.APPLICATION_XML_TYPE).get(new GenericType<T>(clazz));
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
@@ -88,10 +89,10 @@ public class JerseyClientImpl {
     	try {
     		return m_webResource.path(relativePath).accept(MediaType.APPLICATION_XML_TYPE).get(clazz);
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
@@ -100,10 +101,10 @@ public class JerseyClientImpl {
         try {
                 return m_webResource.path(relativePath).queryParams(queryParams).accept(MediaType.APPLICATION_JSON).get(clazz);
         } catch (UniformInterfaceException uie) {
-                logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+                logger.log(Level.SEVERE,"GET: + "+ relativePath + " error: " + uie.getLocalizedMessage(),uie);
                 throw uie;
         } catch (ClientHandlerException che) {
-                logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+                logger.log(Level.SEVERE,"GET: + "+ relativePath + " error: " + che.getLocalizedMessage(),che);
                 throw che;
         }
     }
@@ -112,10 +113,10 @@ public class JerseyClientImpl {
         try {
                 return m_webResource.path(relativePath).accept(MediaType.APPLICATION_JSON).get(clazz);
         } catch (UniformInterfaceException uie) {
-                logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+                logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
                 throw uie;
         } catch (ClientHandlerException che) {
-                logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+                logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
                 throw che;
         }
     }
@@ -124,10 +125,10 @@ public class JerseyClientImpl {
     	try {
     		return m_webResource.path(relativePath).accept(MediaType.APPLICATION_XML_TYPE).get(String.class);
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
