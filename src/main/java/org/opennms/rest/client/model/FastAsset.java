@@ -7,6 +7,7 @@ public class FastAsset {
         Switch,
         Radio,
         MediaGW,
+        Modem,
         Firewall,
         ADSL,
         OpticFiber,
@@ -29,7 +30,7 @@ public class FastAsset {
     private String username;
     private String nome;
     private String cognome;
-    private Integer order_id;
+    private Long order_id;
     private FastAssetAttributes attributes;
     public FastAssetAttributes getAttributes() {
         return attributes;
@@ -79,10 +80,10 @@ public class FastAsset {
     public void setCognome(String cognome) {
         this.cognome = cognome;
     }
-    public Integer getOrder_id() {
+    public Long getOrder_id() {
         return order_id;
     }
-    public void setOrder_id(Integer order_id) {
+    public void setOrder_id(Long order_id) {
         this.order_id = order_id;
     }
 

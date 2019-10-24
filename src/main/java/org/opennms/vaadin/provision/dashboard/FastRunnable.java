@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.opennms.rest.client.model.FastAsset;
 import org.opennms.rest.client.model.FastAsset.Meta;
+import org.opennms.rest.client.model.FastOrder;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.model.BackupProfile;
 import org.opennms.vaadin.provision.model.BasicInterface;
@@ -46,6 +47,8 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_INVALID_HOSTNAME ="FAST(error): Device Invalid Hostname";
     private final static String FAST_NULL_DOMAIN ="FAST(error): Device Null Domain";
     private final static String FAST_INVALID_DOMAIN ="FAST(error): Device Invalid Domain";
+    private final static String FAST_NULL_VRF ="FAST(error): Device Null Vrf";
+    private final static String FAST_INVALID_VRF ="FAST(error): Device Invalid Vrf";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Device Null Snmp Profile";
     private final static String FAST_INVALID_SNMP_PROFILE ="FAST(error): Device Invalid Snmp Profile";
     private final static String FAST_NULL_BACKUP_PROFILE ="FAST(error): Device Null Backup Profile";
@@ -247,11 +250,7 @@ public abstract class FastRunnable implements Runnable {
     
     private boolean checkFastAsset(FastAsset device) {
         boolean valid = true;
-        if (device.getOrder_id() == null) {
-            log(device,FAST_NULL_ORDER_CODE);
-            valid = false;
-        }
-        
+
         if (device.getAttributes().getDominio() == null) {
             log(device,FAST_NULL_DOMAIN);
             valid = false;
@@ -280,6 +279,10 @@ public abstract class FastRunnable implements Runnable {
             
     private boolean isValid(FastAsset device) {
         boolean valid = true;
+        if (device.getOrder_id() == null) {
+            log(device,FAST_NULL_ORDER_CODE);
+            valid = false;
+        }
         if (device.getAttributes().getIndirizzoIP() == null) {
             log(device,FAST_NULL_IP);
             valid = false;
@@ -294,6 +297,13 @@ public abstract class FastRunnable implements Runnable {
             log(device,FAST_INVALID_HOSTNAME);
             valid = false;
         } 
+        if (device.getAttributes().getVrf() == null) {
+            log(device,FAST_NULL_VRF);
+            valid = false;
+        } else if (hasUnSupportedDomain(device.getAttributes().getDominio())) {
+            log(device,FAST_INVALID_VRF+" :" + device.getAttributes().getDominio());
+            valid = false;            
+        }
 
         return valid;
     }
@@ -338,9 +348,17 @@ public abstract class FastRunnable implements Runnable {
             return;
         }
         
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
         List<FastAsset> assets = new ArrayList<>();
         
         try {
+
+            logger.info("run: loading fast Order");
+            for (FastOrder order: getService().getFastApiDao().getOrders()) {
+                fastOrderMap.put(order.getOrder_id(), order);
+            }
+            logger.info("run: loaded fast Order");
+
             logger.info("run: loading fast Asset: " + Meta.Router);
             assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Router));
             logger.info("run: loaded requisition: " + Meta.Router);
@@ -361,9 +379,9 @@ public abstract class FastRunnable implements Runnable {
             assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Wireless));
             logger.info("run: loaded requisition: " + Meta.Wireless);
                         
-            logger.info("run: loading fast Asset: " + Meta.MediaGW);
-            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.MediaGW));
-            logger.info("run: loaded requisition: " + Meta.MediaGW);
+            logger.info("run: loading fast Asset: " + Meta.Modem);
+            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Modem));
+            logger.info("run: loaded requisition: " + Meta.Modem);
             
         } catch (final UniformInterfaceException e) {
             fails(JOB_FAILS_FAST_API, e);
@@ -380,6 +398,13 @@ public abstract class FastRunnable implements Runnable {
                 continue;
             }
             if (!isValid(device)) {
+                continue;
+            }
+            if (!fastOrderMap.containsKey(device.getOrder_id())) {
+                log(device,"Not valid order id");
+                continue;
+            }
+            if (!fastOrderMap.get(device.getOrder_id()).produzione()) {
                 continue;
             }
 
@@ -894,6 +919,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         }
     }
 
+    //FIXME
     private boolean isManagedByFast(TrentinoNetworkNode rnode) {
         if (rnode.getNetworkCategory() != null
                 && DashBoardUtils.m_network_levels[2].equals(rnode.getNetworkCategory().getNetworklevel())) {

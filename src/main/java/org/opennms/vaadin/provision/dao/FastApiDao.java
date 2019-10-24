@@ -9,6 +9,7 @@ import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyFastService;
 import org.opennms.rest.client.model.FastAsset;
 import org.opennms.rest.client.model.FastAsset.Meta;
+import org.opennms.rest.client.model.FastOrder;
 
 public class FastApiDao {
 
@@ -32,5 +33,9 @@ public class FastApiDao {
 
 	public List<FastAsset> getAssetsByMeta(Meta meta) {
 	     return new ArrayList<>(Arrays.asList(m_fastService.getAssetsByMeta(meta)));
+	}
+	
+	public List<FastOrder> getOrders() {
+	    return new ArrayList<>(Arrays.asList(m_fastService.getOrders()));
 	}
 }

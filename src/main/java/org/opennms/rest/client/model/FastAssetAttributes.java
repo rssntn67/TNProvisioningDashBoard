@@ -12,6 +12,7 @@ public class FastAssetAttributes {
                 + isMaster + ", hostName=" + hostName + ", backup=" + backup
                 + ", indirizzoIP=" + indirizzoIP + ", profiloSNMP="
                 + profiloSNMP + ", profiloBackup=" + profiloBackup
+                + ", vrf" + vrf
                 + ", dominio=" + dominio + "]";
     }
     private Long asset_id;
@@ -21,7 +22,10 @@ public class FastAssetAttributes {
     
     @JsonProperty("HostName")
     private String hostName;
-    
+
+    @JsonProperty("VRF")
+    private String vrf;
+
     @JsonProperty("Backup")
     private Integer backup;
     
@@ -123,6 +127,12 @@ public class FastAssetAttributes {
     }
     public void setDominio(String dominio) {
         this.dominio = dominio;
+    }
+    public String getVrf() {
+        return vrf;
+    }
+    public void setVrf(String vrf) {
+        this.vrf = vrf;
     }
 
     public boolean monitorato() {

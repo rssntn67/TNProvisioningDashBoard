@@ -29,10 +29,12 @@
 package org.opennms.rest.client;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -42,6 +44,7 @@ import org.junit.Test;
 import org.opennms.rest.client.model.FastAsset;
 import org.opennms.rest.client.model.FastAsset.Meta;
 import org.opennms.rest.client.model.FastAssetAttributes;
+import org.opennms.rest.client.model.FastOrder;
 import org.opennms.vaadin.provision.core.DashBoardUtils;
 import org.opennms.vaadin.provision.dashboard.FastRunnable;
 
@@ -71,6 +74,7 @@ public class FastServiceTest {
            	Set<Meta> meta = EnumSet.noneOf(Meta.class); 
            	for (FastAsset asset: assets) {
            	    assertNotNull(asset.getMeta());
+                    assertNotNull(asset.getOrder_id());
                     assertNotNull(asset.getId());
                     assertNull(asset.getAttributes());
                     meta.add(asset.getMeta());
@@ -81,12 +85,36 @@ public class FastServiceTest {
            	
            	System.out.println(meta);
     }
-    
+
+    @Test
+    public void testGetOrders() throws Exception {
+                FastOrder[] orders = m_fastservice.getOrders();
+                assertNotNull(orders);
+                Set<String> meta = new HashSet<>(); 
+                for (FastOrder order: orders) {
+                    assertNotNull(order.getOrder_state());
+                    meta.add(order.getOrder_state());
+                    if (!order.produzione()) {
+                        System.out.println(order);
+                    }
+                }
+                
+                System.out.println(meta);
+    }
+
     @Test
     public void testGetAssetById() throws Exception {
                 FastAsset asset = m_fastservice.getAssetById(Long.valueOf(198263));
                 assertNotNull(asset);
+                assertEquals(220769, asset.getOrder_id().intValue());
                 System.out.println(asset);
+    }
+
+    @Test
+    public void testGetOrderById() throws Exception {
+                FastOrder order = m_fastservice.getOrderById(Long.valueOf(220769));
+                assertNotNull(order);
+                System.out.println(order);
     }
 
     @Test
@@ -115,21 +143,22 @@ public class FastServiceTest {
         logger.info("run: loading fast Asset: " + Meta.Router);
         int total = 0;
         int valid = 0;
-        int check = 0;
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Router)) {
             total++;
             assertNotNull(asset.getAttributes());
+            if (!asset.getAttributes().monitorato()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
-                if (checkFastAsset(asset)) {
-                    check++;
-                }
             }
         }
         logger.info("run: loaded requisition: " + Meta.Router);
         System.out.println("total: " + total);
         System.out.println("valid: " + valid);
-        System.out.println("check: " + check);
+        int check = total-valid;
+        System.out.println("error: " + check);
     }
     
     @Test
@@ -219,7 +248,29 @@ public class FastServiceTest {
         System.out.println("valid: " + valid);
         System.out.println("check: " + check);
     }
-    
+
+    @Test
+    public void testValidModem() throws Exception {
+        logger.info("run: loading fast Asset: " + Meta.Modem);
+        int total = 0;
+        int valid = 0;
+        int check = 0;
+        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Modem)) {
+            total++;
+            assertNotNull(asset.getAttributes());
+            if (isValid(asset)) {
+                valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
+            }
+        }
+        logger.info("run: loaded requisition: " + Meta.Modem);
+        System.out.println("total: " + total);
+        System.out.println("valid: " + valid);
+        System.out.println("check: " + check);
+    }
+
     @Test
     public void testValidMediaGw() throws Exception {
 
@@ -259,16 +310,20 @@ public class FastServiceTest {
             System.err.println("HostName invalido: "+device);
             valid = false;
         } 
+        if (device.getAttributes().getVrf() == null) {
+            System.err.println("Vrf: " + device);
+            valid = false;
+        }
+        if (device.getOrder_id() == null) {
+            System.err.println("OrderId: "+device);
+            valid = false;
+        }
 
         return valid;
     }
 
     private boolean checkFastAsset(FastAsset device) {
         boolean valid = true;
-        if (device.getOrder_id() == null) {
-            System.out.println("OrderId: "+device);
-            valid = false;
-        }
         if (device.getAttributes().getDominio() == null) {
             System.out.println("Dominio: " + device);
             valid = false;
