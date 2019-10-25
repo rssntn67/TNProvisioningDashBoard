@@ -560,10 +560,22 @@ public abstract class FastRunnable implements Runnable {
                         refdevice = device;
                         continue;
                     }
-                    if (refdevice.getAttributes().getBackup() == 0 && device.getAttributes().getBackup() == 1 ) {
+                    if (
+                            refdevice.getAttributes().getBackup() == null 
+                         && device.getAttributes().getBackup() != null 
+                            ) {
                         refdevice = device;
                         continue;
                     }
+                    if (
+                               refdevice.getAttributes().getBackup() != null 
+                            && refdevice.getAttributes().getBackup() == 0 
+                            && device.getAttributes().getBackup() != null 
+                            && device.getAttributes().getBackup() == 1 ) {
+                        refdevice = device;
+                        continue;
+                    }
+
                 }
                 FastOrder order = fastOrderMap.get(refdevice.getOrder_id());
                 if (!checkFastAsset(refdevice,order)) {
