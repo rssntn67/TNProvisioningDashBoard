@@ -89,10 +89,9 @@ public class FastAsset {
 
     @Override
     public String toString() {
-        return "FastAsset [id=" + id + ", meta=" + meta + ", t_date=" + t_date
+        return "FastAsset [id=" + id + ", order_id=" + order_id+ ", meta=" + meta + ", "+ attributes+ ", t_date=" + t_date
                 + ", t_time=" + t_time + ", username=" + username + ", nome="
-                + nome + ", cognome=" + cognome + ", order_id=" + order_id
-                + ", attributes=" + attributes + "]";
+                + nome + ", cognome=" + cognome +"]";
     }
     
     

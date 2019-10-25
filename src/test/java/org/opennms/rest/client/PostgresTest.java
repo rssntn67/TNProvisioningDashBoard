@@ -34,7 +34,6 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.vaadin.data.Container;
@@ -50,7 +49,7 @@ public class PostgresTest {
     @Before
     public void setUp() throws Exception {
     	try {
-			m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://172.25.200.36:5432/tnnet", "isi_writer", "Oof6Eezu");
+			m_pool = new SimpleJDBCConnectionPool("org.postgresql.Driver", "jdbc:postgresql://localhost:5432/tnnet", "isi_writer", "Oof6Eezu");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -62,8 +61,7 @@ public class PostgresTest {
     }
     
     @Test
-    @Ignore
-	@SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation")
     public void testSnmpProfiles() throws Exception {
     	List<String> primarykeys = new ArrayList<String>();
     	primarykeys.add("name");

@@ -8,12 +8,16 @@ public class FastAssetAttributes {
 
     @Override
     public String toString() {
-        return "FastAssetAttributes [asset_id=" + asset_id + ", isMaster="
-                + isMaster + ", hostName=" + hostName + ", backup=" + backup
-                + ", indirizzoIP=" + indirizzoIP + ", profiloSNMP="
-                + profiloSNMP + ", profiloBackup=" + profiloBackup
-                + ", vrf" + vrf
-                + ", dominio=" + dominio + "]";
+        return "FastAssetAttributes ["
+                + vrf
+                + ", " + getHostName()
+                + "." + getDominio()
+                + ", " + getIndirizzoIP() 
+                + ", snmp="+ profiloSNMP 
+                + ", bck=" + profiloBackup
+                + ", isMaster=" + isMaster
+                + ", backup=" + backup
+                + "]";
     }
     private Long asset_id;
 

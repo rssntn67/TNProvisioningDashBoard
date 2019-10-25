@@ -345,19 +345,11 @@ public abstract class FastRunnable implements Runnable {
             logger.info("run: loading fast Asset: " + Meta.Switch);
             assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Switch));
             logger.info("run: loaded requisition: " + Meta.Switch);
-            
-            logger.info("run: loading fast Asset: " + Meta.Firewall);
-            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Firewall));
-            logger.info("run: loaded requisition: " + Meta.Firewall);
-            
+                        
             logger.info("run: loading fast Asset: " + Meta.Radio);
             assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Radio));
             logger.info("run: loaded requisition: " + Meta.Radio);
-            
-            logger.info("run: loading fast Asset: " + Meta.Wireless);
-            assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Wireless));
-            logger.info("run: loaded requisition: " + Meta.Wireless);
-                        
+                                    
             logger.info("run: loading fast Asset: " + Meta.Modem);
             assets.addAll(getService().getFastApiDao().getAssetsByMeta(Meta.Modem));
             logger.info("run: loaded requisition: " + Meta.Modem);
