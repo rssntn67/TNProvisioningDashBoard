@@ -164,7 +164,7 @@ public class DashBoardSessionService extends VaadinSession implements Serializab
 		m_user = username;
 		m_url = url;
 		m_loggedin = true;
-		m_onmsDao.setJerseyClient(new JerseyClientImpl(m_config.getKFastApiUrl(), m_config.getFastApiUsername(), m_config.getFastApiPassword()));
+		m_fastApiDao.setJerseyClient(new JerseyClientImpl(m_config.getKFastApiUrl(), m_config.getFastApiUsername(), m_config.getFastApiPassword()));
 
 		TableQuery ipsnmptq = new TableQuery("ipsnmpprofile", m_pool);
 		ipsnmptq.setVersionColumn("versionid");
