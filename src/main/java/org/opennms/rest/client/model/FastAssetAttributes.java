@@ -93,7 +93,9 @@ public class FastAssetAttributes {
         this.isMaster = isMaster;
     }
     public String getHostName() {
-        return hostName;
+        if (hostName != null)
+            return hostName.trim();
+        return null;
     }
     public void setHostName(String hostName) {
         this.hostName = hostName;
@@ -105,7 +107,9 @@ public class FastAssetAttributes {
         this.backup = backup;
     }
     public String getIndirizzoIP() {
-        return indirizzoIP;
+        if (indirizzoIP != null)
+            return indirizzoIP.trim();
+        return null;
     }
     public void setIndirizzoIP(String indirizzoIP) {
         this.indirizzoIP = indirizzoIP;
@@ -123,10 +127,13 @@ public class FastAssetAttributes {
         this.profiloBackup = profiloBackup;
     }
     public String getDominio() {
-        return dominio;
+        if (dominio != null)
+            return dominio;
+        return null;
     }
+
     public void setDominio(String dominio) {
-        this.dominio = dominio;
+        this.dominio = dominio.trim();
     }
     public String getVrf() {
         return vrf;
@@ -146,6 +153,5 @@ public class FastAssetAttributes {
     public boolean eseguiBackUp() {
         return backup == 1;
     }
-
-    
+        
 }

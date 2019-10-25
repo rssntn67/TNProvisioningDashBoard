@@ -34,7 +34,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -140,9 +142,18 @@ public class FastServiceTest {
     
     @Test
     public void testValidRouter() throws Exception {
+        logger.info("run: loading fast orders");
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
+        for (FastOrder order : m_fastservice.getOrders()) {
+            fastOrderMap.put(order.getOrder_id(), order);
+        }
+        logger.info("run: loaded fast orders");
+
         logger.info("run: loading fast Asset: " + Meta.Router);
+        
         int total = 0;
         int valid = 0;
+        int check = 0;
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Router)) {
             total++;
             assertNotNull(asset.getAttributes());
@@ -150,19 +161,33 @@ public class FastServiceTest {
                 valid++;
                 continue;
             }
+            assertNotNull(fastOrderMap.get(asset.getOrder_id()));
+            if (!fastOrderMap.get(asset.getOrder_id()).produzione()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
+                if (checkFastAsset(asset)) {
+                    check++;
+                }
             }
         }
         logger.info("run: loaded requisition: " + Meta.Router);
         System.out.println("total: " + total);
         System.out.println("valid: " + valid);
-        int check = total-valid;
-        System.out.println("error: " + check);
+        System.out.println("check: " + check);
     }
     
     @Test
     public void testValidSwitch() throws Exception {
+        logger.info("run: loading fast orders");
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
+        for (FastOrder order : m_fastservice.getOrders()) {
+            fastOrderMap.put(order.getOrder_id(), order);
+        }
+        logger.info("run: loaded fast orders");
+
         logger.info("run: loading fast Asset: " + Meta.Switch);
         int total = 0;
         int valid = 0;
@@ -170,6 +195,15 @@ public class FastServiceTest {
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Switch)) {
             total++;
             assertNotNull(asset.getAttributes());
+            if (!asset.getAttributes().monitorato()) {
+                valid++;
+                continue;
+            }
+            assertNotNull(fastOrderMap.get(asset.getOrder_id()));
+            if (!fastOrderMap.get(asset.getOrder_id()).produzione()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
                 if (checkFastAsset(asset)) {
@@ -185,6 +219,12 @@ public class FastServiceTest {
 
     @Test
     public void testValidFirewall() throws Exception {
+        logger.info("run: loading fast orders");
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
+        for (FastOrder order : m_fastservice.getOrders()) {
+            fastOrderMap.put(order.getOrder_id(), order);
+        }
+        logger.info("run: loaded fast orders");
 
         logger.info("run: loading fast Asset: " + Meta.Firewall);
         int total = 0;
@@ -193,6 +233,15 @@ public class FastServiceTest {
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Firewall)) {
             total++;
             assertNotNull(asset.getAttributes());
+            if (!asset.getAttributes().monitorato()) {
+                valid++;
+                continue;
+            }
+            assertNotNull(fastOrderMap.get(asset.getOrder_id()));
+            if (!fastOrderMap.get(asset.getOrder_id()).produzione()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
                 if (checkFastAsset(asset)) {
@@ -208,6 +257,13 @@ public class FastServiceTest {
         
     @Test
     public void testValidRadio() throws Exception {
+        logger.info("run: loading fast orders");
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
+        for (FastOrder order : m_fastservice.getOrders()) {
+            fastOrderMap.put(order.getOrder_id(), order);
+        }
+        logger.info("run: loaded fast orders");
+
         logger.info("run: loading fast Asset: " + Meta.Radio);
         int total = 0;
         int valid = 0;
@@ -215,6 +271,15 @@ public class FastServiceTest {
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Radio)) {
             total++;
             assertNotNull(asset.getAttributes());
+            if (!asset.getAttributes().monitorato()) {
+                valid++;
+                continue;
+            }
+            assertNotNull(fastOrderMap.get(asset.getOrder_id()));
+            if (!fastOrderMap.get(asset.getOrder_id()).produzione()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
                 if (checkFastAsset(asset)) {
@@ -229,6 +294,13 @@ public class FastServiceTest {
     }
     @Test
     public void testValidWireless() throws Exception {
+        logger.info("run: loading fast orders");
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
+        for (FastOrder order : m_fastservice.getOrders()) {
+            fastOrderMap.put(order.getOrder_id(), order);
+        }
+        logger.info("run: loaded fast orders");
+
         logger.info("run: loading fast Asset: " + Meta.Wireless);
         int total = 0;
         int valid = 0;
@@ -236,6 +308,15 @@ public class FastServiceTest {
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Wireless)) {
             total++;
             assertNotNull(asset.getAttributes());
+            if (!asset.getAttributes().monitorato()) {
+                valid++;
+                continue;
+            }
+            assertNotNull(fastOrderMap.get(asset.getOrder_id()));
+            if (!fastOrderMap.get(asset.getOrder_id()).produzione()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
                 if (checkFastAsset(asset)) {
@@ -251,13 +332,28 @@ public class FastServiceTest {
 
     @Test
     public void testValidModem() throws Exception {
+        logger.info("run: loading fast orders");
+        Map<Long,FastOrder> fastOrderMap = new HashMap<>();
+        for (FastOrder order : m_fastservice.getOrders()) {
+            fastOrderMap.put(order.getOrder_id(), order);
+        }
+        logger.info("run: loaded fast orders");
+
         logger.info("run: loading fast Asset: " + Meta.Modem);
         int total = 0;
         int valid = 0;
         int check = 0;
         for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.Modem)) {
             total++;
-            assertNotNull(asset.getAttributes());
+            if (!asset.getAttributes().monitorato()) {
+                valid++;
+                continue;
+            }
+            assertNotNull(fastOrderMap.get(asset.getOrder_id()));
+            if (!fastOrderMap.get(asset.getOrder_id()).produzione()) {
+                valid++;
+                continue;
+            }
             if (isValid(asset)) {
                 valid++;
                 if (checkFastAsset(asset)) {
@@ -271,51 +367,28 @@ public class FastServiceTest {
         System.out.println("check: " + check);
     }
 
-    @Test
-    public void testValidMediaGw() throws Exception {
-
-        logger.info("run: loading fast Asset: " + Meta.MediaGW);
-        int total = 0;
-        int valid = 0;
-        int check = 0;
-        for (FastAsset asset: m_fastservice.getAssetsByMeta(Meta.MediaGW)) {
-            total++;
-            assertNotNull(asset.getAttributes());
-            if (isValid(asset)) {
-                valid++;
-                if (checkFastAsset(asset)) {
-                    check++;
-                }
-            }
-        }
-        logger.info("run: loaded requisition: " + Meta.MediaGW);
-        System.out.println("total: " + total);
-        System.out.println("valid: " + valid);
-        System.out.println("check: " + check);
-    }
-
     private boolean isValid(FastAsset device) {
         boolean valid = true;
         if (device.getAttributes().getIndirizzoIP() == null) {
             System.err.println("Ip null: "+device);
             valid = false;
-        }  else if (DashBoardUtils.hasInvalidIp(device.getAttributes().getIndirizzoIP())) {
+        }  else if (DashBoardUtils.hasInvalidIp(device.getAttributes().getIndirizzoIP().trim())) {
             System.err.println("Ip invalido: "+device);
             valid = false;
         } 
         if (device.getAttributes().getHostName() == null) {
             System.err.println("HostName null: "+device);
             valid = false;
-        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getAttributes().getHostName())) {
+        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getAttributes().getHostName().trim())) {
             System.err.println("HostName invalido: "+device);
             valid = false;
         } 
         if (device.getAttributes().getVrf() == null) {
-            System.err.println("Vrf: " + device);
+            System.err.println("Vrf null: " + device);
             valid = false;
         }
         if (device.getOrder_id() == null) {
-            System.err.println("OrderId: "+device);
+            System.err.println("Order null: "+device);
             valid = false;
         }
 
@@ -323,12 +396,7 @@ public class FastServiceTest {
     }
 
     private boolean checkFastAsset(FastAsset device) {
-        boolean valid = true;
-        if (device.getAttributes().getDominio() == null) {
-            System.out.println("Dominio: " + device);
-            valid = false;
-        }
-        
+        boolean valid = true;        
         if (device.getAttributes().getProfiloSNMP() == null) {
             System.out.println("Profilo SNMP: "+device);
             valid = false;

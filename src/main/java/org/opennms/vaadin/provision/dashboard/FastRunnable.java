@@ -40,13 +40,12 @@ import com.vaadin.data.util.sqlcontainer.query.QueryDelegate.RowIdChangeEvent;
 public abstract class FastRunnable implements Runnable {
 
     private final static String FAST_NULL_ORDER_CODE ="FAST(error): Device Null Order Code";
+    private final static String FAST_ASSET_ORPHAN_ORDER_CODE ="FAST(error): Asset Orphan Order Code";
     private final static String FAST_NULL_IP ="FAST(error): Device Null Ip Address";
     private final static String FAST_DUPLICATED_IP ="FAST(error): Device Duplicated Ip Address";
     private final static String FAST_NULL_HOSTNAME ="FAST(error): Device Null Hostname";
     private final static String FAST_INVALID_IP ="FAST(error): Device Invalid Ip Address";
     private final static String FAST_INVALID_HOSTNAME ="FAST(error): Device Invalid Hostname";
-    private final static String FAST_NULL_DOMAIN ="FAST(error): Device Null Domain";
-    private final static String FAST_INVALID_DOMAIN ="FAST(error): Device Invalid Domain";
     private final static String FAST_NULL_VRF ="FAST(error): Device Null Vrf";
     private final static String FAST_INVALID_VRF ="FAST(error): Device Invalid Vrf";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Device Null Snmp Profile";
@@ -58,6 +57,7 @@ public abstract class FastRunnable implements Runnable {
     private final static String ONMS_INVALID_IP ="ONMS(error): Invalid Ip Address";
     private final static String FAST_DUPLICATED_ONMS_ID = "FAST(warning): mapped to duplicated foreign id in requisition";
     private final static String FAST_DUPLICATED_ONMS_IP = "FAST(warning): mapped to duplicated ip address in requisition";
+    private final static String FAST_NO_REF_DEVICE = "FAST(error): no valid ref device"; 
     private final static String FAST_MISHMATCH_ONMS = "FAST(error): mismatch hostname/foreignIds";
     private final static String ONMS_ADDED_DEVICE = "ONMS(info): added device";
     private final static String ONMS_DELETED_DEVICE = "ONMS(info): deleted device";
@@ -248,73 +248,52 @@ public abstract class FastRunnable implements Runnable {
         
     }
     
-    private boolean checkFastAsset(FastAsset device) {
+    private boolean checkFastAsset(FastAsset asset, FastOrder order) {
         boolean valid = true;
 
-        if (device.getAttributes().getDominio() == null) {
-            log(device,FAST_NULL_DOMAIN);
+        if (asset.getAttributes().getProfiloSNMP() == null) {
+            log(asset,order,FAST_NULL_SNMP_PROFILE);
             valid = false;
-        } else if (hasUnSupportedDomain(device.getAttributes().getDominio())) {
-            log(device,FAST_INVALID_DOMAIN+" :" + device.getAttributes().getDominio());
-            valid = false;            
-        }
-        
-        if (device.getAttributes().getProfiloSNMP() == null) {
-            log(device,FAST_NULL_SNMP_PROFILE);
-            valid = false;
-        } else if (!m_snmp.containsKey(device.getAttributes().getProfiloSNMP())) {
-            log(device,FAST_INVALID_SNMP_PROFILE+ " :" +device.getAttributes().getProfiloSNMP());
+        } else if (!m_snmp.containsKey(asset.getAttributes().getProfiloSNMP())) {
+            log(asset,order,FAST_INVALID_SNMP_PROFILE+ " :" +asset.getAttributes().getProfiloSNMP());
             valid = false;
         } 
-        if (device.getAttributes().getProfiloBackup() == null) {
-            log(device,FAST_NULL_BACKUP_PROFILE);
+        if (asset.getAttributes().getProfiloBackup() == null) {
+            log(asset,order,FAST_NULL_BACKUP_PROFILE);
             valid = false;
-        } else if(!m_backup.containsKey(device.getAttributes().getProfiloBackup())) {
-            log(device,FAST_INVALID_BACKUP_PROFILE+ " :" +device.getAttributes().getProfiloBackup());
+        } else if(!m_backup.containsKey(asset.getAttributes().getProfiloBackup())) {
+            log(asset,order,FAST_INVALID_BACKUP_PROFILE+ " :" +asset.getAttributes().getProfiloBackup());
             valid = false;
         }
         return valid;
         
     }
             
-    private boolean isValid(FastAsset device) {
+    private boolean isValid(FastAsset device, FastOrder order) {
         boolean valid = true;
-        if (device.getOrder_id() == null) {
-            log(device,FAST_NULL_ORDER_CODE);
-            valid = false;
-        }
         if (device.getAttributes().getIndirizzoIP() == null) {
-            log(device,FAST_NULL_IP);
+            log(device,order,FAST_NULL_IP);
             valid = false;
         }  else if (DashBoardUtils.hasInvalidIp(device.getAttributes().getIndirizzoIP())) {
-            log(device,FAST_INVALID_IP);
+            log(device,order,FAST_INVALID_IP);
             valid = false;
         } 
         if (device.getAttributes().getHostName() == null) {
-            log(device,FAST_NULL_HOSTNAME);                
+            log(device,order,FAST_NULL_HOSTNAME);                
             valid = false;
         } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getAttributes().getHostName())) {
-            log(device,FAST_INVALID_HOSTNAME);
+            log(device,order,FAST_INVALID_HOSTNAME);
             valid = false;
         } 
         if (device.getAttributes().getVrf() == null) {
-            log(device,FAST_NULL_VRF);
+            log(device,order,FAST_NULL_VRF);
             valid = false;
-        } else if (hasUnSupportedDomain(device.getAttributes().getDominio())) {
-            log(device,FAST_INVALID_VRF+" :" + device.getAttributes().getDominio());
+        } else if (!m_vrf.containsKey(device.getAttributes().getVrf())) {
+            log(device,order,FAST_INVALID_VRF+" :" + device.getAttributes().getVrf());
             valid = false;            
         }
 
         return valid;
-    }
-
-    private boolean hasUnSupportedDomain(String dominio) {
-        for (Categoria vrf: m_vrf.values()) {
-            if (vrf.getDnsdomain().equalsIgnoreCase(dominio)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void sync() {
@@ -397,17 +376,22 @@ public abstract class FastRunnable implements Runnable {
             if (!device.getAttributes().monitorato()) {
                 continue;
             }
-            if (!isValid(device)) {
+            if (device.getOrder_id() == null) {
+                log(device,null,FAST_NULL_ORDER_CODE);
+                continue;
+            } else  if (!fastOrderMap.containsKey(device.getOrder_id())) {
+                log(device,null,FAST_ASSET_ORPHAN_ORDER_CODE);
                 continue;
             }
-            if (!fastOrderMap.containsKey(device.getOrder_id())) {
-                log(device,"Not valid order id");
-                continue;
-            }
-            if (!fastOrderMap.get(device.getOrder_id()).produzione()) {
+            FastOrder order = fastOrderMap.get(device.getOrder_id()); 
+            if (!order.produzione()) {
                 continue;
             }
 
+            if (!isValid(device,order)) {
+                continue;
+            }
+ 
             if (!fastHostnameServiceDeviceMap.containsKey(device.getAttributes().getHostName())) {
                 fastHostnameServiceDeviceMap.put(device.getAttributes().getHostName(),
                                                  new ArrayList<FastAsset>());
@@ -427,7 +411,8 @@ public abstract class FastRunnable implements Runnable {
                 List<FastAsset> survived = new ArrayList<FastAsset>();
                 for (FastAsset device : fastHostnameServiceDeviceMap.remove(hostname)) {
                     if (device.getAttributes().getIndirizzoIP().equals(ipaddr)) {
-                        log(device,FAST_DUPLICATED_IP);
+                        FastOrder order = fastOrderMap.get(device.getOrder_id()); 
+                        log(device,order,FAST_DUPLICATED_IP);
                     } else {
                         survived.add(device);
                     }
@@ -519,15 +504,17 @@ public abstract class FastRunnable implements Runnable {
                 }
 
                 if (onmsDuplicatedForeignId.contains(hostname)) {
-                    for (FastAsset device : fastHostnameServiceDeviceMap.get(hostname)) {
-                        log(device,FAST_DUPLICATED_ONMS_ID);
+                    for (FastAsset asset : fastHostnameServiceDeviceMap.get(hostname)) {
+                        FastOrder order = fastOrderMap.get(asset.getOrder_id()); 
+                        log(asset,order,FAST_DUPLICATED_ONMS_ID);
                     }
                     continue;
                 }
                 boolean duplicated=false;
-                for (FastAsset device : fastHostnameServiceDeviceMap.get(hostname)) {
-                    if (onmsDuplicatedIpAddress.contains(device.getAttributes().getIndirizzoIP())) {
-                        log(device,FAST_DUPLICATED_ONMS_IP);
+                for (FastAsset asset : fastHostnameServiceDeviceMap.get(hostname)) {
+                    if (onmsDuplicatedIpAddress.contains(asset.getAttributes().getIndirizzoIP())) {
+                        FastOrder order = fastOrderMap.get(asset.getOrder_id()); 
+                        log(asset,order,FAST_DUPLICATED_ONMS_IP);
                         duplicated = true;
                     }
                 }
@@ -552,12 +539,17 @@ public abstract class FastRunnable implements Runnable {
                 }
 
                 if (foreignIds.size() > 1) {
-                    fastHostnameServiceDeviceMap.get(hostname).stream().forEach(device -> log(device,FAST_MISHMATCH_ONMS));
+                    fastHostnameServiceDeviceMap
+                    .get(hostname)
+                    .forEach(asset -> {
+                        FastOrder order = fastOrderMap.get(asset.getOrder_id()); 
+                        log(asset,order,FAST_MISHMATCH_ONMS);   
+                    });
                     continue;                    
                 }
 
                 if (foreignIds.size() == 1 && !isManagedByFast(rnode)) {
-                    updateNonFast(rnode,
+                    updateNonFast(rnode, fastOrderMap,
                                   fastHostnameServiceDeviceMap.get(hostname));
                     continue;
                 }
@@ -565,14 +557,6 @@ public abstract class FastRunnable implements Runnable {
                 FastAsset refdevice = null; 
                 for (FastAsset device: fastHostnameServiceDeviceMap.get(hostname)) {
                     if (refdevice == null) {
-                        refdevice = device;
-                        continue;
-                    }
-                    if (refdevice.getAttributes().getDominio() == null && device.getAttributes().getDominio() != null) {
-                        refdevice = device;
-                        continue;
-                    }
-                    if (refdevice.getAttributes().getBackup() == 0 && device.getAttributes().getBackup() == 1 ) {
                         refdevice = device;
                         continue;
                     }
@@ -584,31 +568,23 @@ public abstract class FastRunnable implements Runnable {
                         refdevice = device;
                         continue;
                     }
-                    if (refdevice.getAttributes().getIsMaster() == 0 && device.getAttributes().getIsMaster() == 1) {
+                    if (refdevice.getAttributes().getBackup() == 0 && device.getAttributes().getBackup() == 1 ) {
                         refdevice = device;
                         continue;
                     }
                 }
-                
-                if (!checkFastAsset(refdevice)) {
+                FastOrder order = fastOrderMap.get(refdevice.getOrder_id());
+                if (!checkFastAsset(refdevice,order)) {
+                    log(refdevice,order,FAST_NO_REF_DEVICE);
                     continue;
                 }
                 
-                Categoria vrf = null;
-                for (Categoria cat: m_vrf.values()) {
-                    if (vrf == null) {
-                        vrf = cat;
-                    }
-                    if (cat.getDnsdomain().equalsIgnoreCase(refdevice.getAttributes().getDominio().trim())) {
-                        vrf = cat;
-                        break;
-                    }
-                }
-
+                Categoria vrf = m_vrf.get(refdevice.getAttributes().getVrf());
+                
                 if (foreignIds.size() == 0) {
-                    add(refdevice,vrf,fastHostnameServiceDeviceMap.get(hostname));
+                    add(refdevice,order,vrf,fastHostnameServiceDeviceMap.get(hostname));
                 } else  {
-                    updateFastDevice(rnode, refdevice, vrf,
+                    updateFastDevice(rnode, refdevice, order,vrf,
                                      fastHostnameServiceDeviceMap.get(hostname));
                 }
             }
@@ -758,43 +734,48 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
     }
 
-    private void log(FastAsset device, String description) {
+    private void log(FastAsset asset, FastOrder order, String description) {
         final JobLogEntry jloe = new JobLogEntry();
-        if (device.getAttributes().getHostName() != null) {
-            jloe.setHostname(device.getAttributes().getHostName());
+        if (asset.getAttributes().getHostName() != null) {
+            jloe.setHostname(asset.getAttributes().getHostName());
         } else {
             jloe.setHostname("NA");
         }
-        if (device.getAttributes().getIndirizzoIP() != null) {
-            jloe.setIpaddr(device.getAttributes().getIndirizzoIP());
+        if (asset.getAttributes().getIndirizzoIP() != null) {
+            jloe.setIpaddr(asset.getAttributes().getIndirizzoIP());
         } else {
             jloe.setIpaddr("NA");            
         }
-        if (device.getOrder_id() != null) {
-            jloe.setOrderCode(""+device.getOrder_id());
+        if (order != null ) {
+            jloe.setOrderCode(order.getOrder_code());
         } else {
             jloe.setOrderCode("NA");
         }
         jloe.setDescription(description);
-        jloe.setNote(getNote(device));
+        jloe.setNote(getNote(asset,order));
         log(jloe);        
         logger.info(jloe.toString());
     }
     
-    private String getNote(FastAsset device) {
+    private String getNote(FastAsset device, FastOrder order) {
         StringBuffer deviceNote = new StringBuffer("");
-        if (device.getMeta() != null) {
-            deviceNote.append(device.getMeta());
-            deviceNote.append(" ");
-        }
+        deviceNote.append(device.getMeta());
+        deviceNote.append(" ");
+        
         if (device.getAttributes().monitorato())
             deviceNote.append("monitored");
         else
             deviceNote.append("not_monitored");
+        
+        if (order != null) {
+            deviceNote.append(" ");
+            deviceNote.append(order.getOrder_customer());            
+        }
+        
         return deviceNote.toString();
     }
 
-    private void add(FastAsset refdevice,Categoria vrf, List<FastAsset> devices) {
+    private void add(FastAsset refdevice,FastOrder order, Categoria vrf, List<FastAsset> devices) {
 
         TrentinoNetworkNode rnode = new TrentinoNetworkNode(refdevice.getAttributes().getHostName(),
                                                             vrf,
@@ -802,15 +783,15 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         
         rnode.setHostname(refdevice.getAttributes().getHostName());
         rnode.setForeignId(refdevice.getAttributes().getHostName());
-        rnode = getnode(refdevice, vrf,rnode, devices.stream().map(device -> device.getAttributes().getIndirizzoIP()).collect(Collectors.toSet()));
+        rnode = getnode(refdevice, order,vrf,rnode, devices.stream().map(device -> device.getAttributes().getIndirizzoIP()).collect(Collectors.toSet()));
 
         getService().add(rnode);
         m_updates.add(rnode);
-        log(refdevice,ONMS_ADDED_DEVICE);
-        updateSnmp(refdevice);
+        log(refdevice,order,ONMS_ADDED_DEVICE);
+        updateSnmp(refdevice,order);
     }
 
-    private void updateNonFast(TrentinoNetworkNode rnode,
+    private void updateNonFast(TrentinoNetworkNode rnode,Map<Long,FastOrder> fastOrderMap,
             List<FastAsset> devices) {
         Set<String> fastipaddressonnode = new HashSet<String>();
         for (FastAsset device : devices) {
@@ -843,23 +824,31 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         getService().update(rnode);
         m_updates.add(rnode);
 
-        devices.forEach( device ->log(device,ONMS_UPDATED_NO_FAST_DEVICE));
+        devices.forEach( device ->log(device,fastOrderMap.get(device.getOrder_id()),ONMS_UPDATED_NO_FAST_DEVICE));
 
     }
 
-    private TrentinoNetworkNode getnode(FastAsset refdevice,
+    private TrentinoNetworkNode getnode(FastAsset refdevice, FastOrder order,
             Categoria vrf , TrentinoNetworkNode rnode,
             Set<String> ipaddresses) {
         rnode.setDescr(DashBoardUtils.DESCR_FAST);
-        rnode.setVrf(vrf.getDnsdomain());
+        if (refdevice.getAttributes().getDominio() == null 
+                || DashBoardUtils.hasInvalidDnsBind9Label(refdevice.getAttributes().getDominio())) {
+            rnode.setVrf(vrf.getDnsdomain());
+        } else {
+            rnode.setVrf(refdevice.getAttributes().getDominio());
+        }
         rnode.setPrimary(refdevice.getAttributes().getIndirizzoIP());
         rnode.setBackupProfile(refdevice.getAttributes().getProfiloBackup());
         rnode.setSnmpProfile(refdevice.getAttributes().getProfiloSNMP());
         rnode.setNetworkCategory(vrf);
         rnode.setNotifCategory(vrf.getNotifylevel());
         rnode.setThreshCategory(vrf.getThresholdlevel());
-
-
+        rnode.setCity(order.getCity());
+        rnode.setAddress1(order.getAddress());
+        rnode.setCircuitId(order.getOrder_code() + "-"+ order.getOrder_tariff());
+        rnode.setBuilding(refdevice.getMeta().name() + ": " + order.getOrder_customer()+ "-" +order.getOrder_billing());
+        
         for (String ip : ipaddresses) {
             if (ip.equals(refdevice.getAttributes().getIndirizzoIP()))
                 continue;
@@ -889,10 +878,10 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
     }
 
     private void updateFastDevice(TrentinoNetworkNode rnode, 
-                    FastAsset refdevice, 
+                    FastAsset refdevice, FastOrder order,
                     Categoria vrf,
             List<FastAsset> devices) {
-        rnode = getnode(refdevice,
+        rnode = getnode(refdevice, order,
                         vrf, 
                         rnode,devices.stream().map(device -> device.getAttributes().getIndirizzoIP()).collect(Collectors.toSet()));
 
@@ -901,16 +890,16 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
 
         getService().update(rnode);
         m_updates.add(rnode);
-        log(refdevice,ONMS_UPDATED_FAST_DEVICE);
-        updateSnmp(refdevice);
+        log(refdevice,order,ONMS_UPDATED_FAST_DEVICE);
+        updateSnmp(refdevice,order);
     }
 
-    private void updateSnmp(FastAsset refdevice) {
+    private void updateSnmp(FastAsset refdevice,FastOrder order) {
         String snmpprofile = refdevice.getAttributes().getProfiloSNMP();
         try {
             if (getService().saveSnmpProfile(refdevice.getAttributes().getIndirizzoIP(),
                                              snmpprofile)) {
-                log(refdevice,ONMS_UPDATE_SNMP_PROFILE+ ": " + snmpprofile);
+                log(refdevice,order,ONMS_UPDATE_SNMP_PROFILE+ ": " + snmpprofile);
             }
         } catch (SQLException e) {
             logger.log(Level.WARNING,
@@ -919,7 +908,6 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         }
     }
 
-    //FIXME
     private boolean isManagedByFast(TrentinoNetworkNode rnode) {
         if (rnode.getNetworkCategory() != null
                 && DashBoardUtils.m_network_levels[2].equals(rnode.getNetworkCategory().getNetworklevel())) {
