@@ -248,8 +248,15 @@ public abstract class FastRunnable implements Runnable {
         
     }
     
-    private boolean checkFastAsset(FastAsset asset, FastOrder order) {
+    private boolean checkManagedByFastAsset(FastAsset asset, FastOrder order) {
         boolean valid = true;
+        if (asset.getAttributes().getVrf() == null) {
+            log(asset,order,FAST_NULL_VRF);
+            valid = false;
+        } else if (!m_vrf.containsKey(asset.getAttributes().getVrf())) {
+            log(asset,order,FAST_INVALID_VRF+" :" + asset.getAttributes().getVrf());
+            valid = false;            
+        }
 
         if (asset.getAttributes().getProfiloSNMP() == null) {
             log(asset,order,FAST_NULL_SNMP_PROFILE);
@@ -269,29 +276,22 @@ public abstract class FastRunnable implements Runnable {
         
     }
             
-    private boolean isValid(FastAsset device, FastOrder order) {
+    private boolean isValidAsset(FastAsset asset, FastOrder order) {
         boolean valid = true;
-        if (device.getAttributes().getIndirizzoIP() == null) {
-            log(device,order,FAST_NULL_IP);
+        if (asset.getAttributes().getIndirizzoIP() == null) {
+            log(asset,order,FAST_NULL_IP);
             valid = false;
-        }  else if (DashBoardUtils.hasInvalidIp(device.getAttributes().getIndirizzoIP())) {
-            log(device,order,FAST_INVALID_IP);
-            valid = false;
-        } 
-        if (device.getAttributes().getHostName() == null) {
-            log(device,order,FAST_NULL_HOSTNAME);                
-            valid = false;
-        } else if (DashBoardUtils.hasInvalidDnsBind9Label(device.getAttributes().getHostName())) {
-            log(device,order,FAST_INVALID_HOSTNAME);
+        }  else if (DashBoardUtils.hasInvalidIp(asset.getAttributes().getIndirizzoIP())) {
+            log(asset,order,FAST_INVALID_IP);
             valid = false;
         } 
-        if (device.getAttributes().getVrf() == null) {
-            log(device,order,FAST_NULL_VRF);
+        if (asset.getAttributes().getHostName() == null) {
+            log(asset,order,FAST_NULL_HOSTNAME);                
             valid = false;
-        } else if (!m_vrf.containsKey(device.getAttributes().getVrf())) {
-            log(device,order,FAST_INVALID_VRF+" :" + device.getAttributes().getVrf());
-            valid = false;            
-        }
+        } else if (DashBoardUtils.hasInvalidDnsBind9Label(asset.getAttributes().getHostName())) {
+            log(asset,order,FAST_INVALID_HOSTNAME);
+            valid = false;
+        } 
 
         return valid;
     }
@@ -380,7 +380,7 @@ public abstract class FastRunnable implements Runnable {
                 continue;
             }
 
-            if (!isValid(device,order)) {
+            if (!isValidAsset(device,order)) {
                 continue;
             }
  
@@ -578,7 +578,7 @@ public abstract class FastRunnable implements Runnable {
 
                 }
                 FastOrder order = fastOrderMap.get(refdevice.getOrder_id());
-                if (!checkFastAsset(refdevice,order)) {
+                if (!checkManagedByFastAsset(refdevice,order)) {
                     log(refdevice,order,FAST_NO_REF_DEVICE);
                     continue;
                 }
