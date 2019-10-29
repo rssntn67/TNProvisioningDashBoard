@@ -55,6 +55,70 @@ public class FastServiceTest {
     private static final Logger logger = Logger.getLogger(FastRunnable.class.getName());
     private JerseyFastService m_fastservice;
     
+    private static boolean supportedDomain(String domain) {
+        for (String validomain: domains) {
+            if (domain.equals(validomain))
+                return true;
+        }
+        return false;
+    }
+    private static String[] domains = {
+            "acsm.tnnet.it",
+            "aglav.tnnet.it",
+            "apss.tnnet.it",
+            "bb.tnnet.it",
+            "biblio.tnnet.it",
+            "comunetn.tnnet.it",
+            "comuni.tnnet.it",
+            "conspro.tnnet.it",
+            "cue.tnnet.it",
+            "esterni.tnnet.it",
+            "fem.tnnet.it",
+            "geosis.tnnet.it",
+            "hq.tnnet.it",
+            "iasma.tnnet.it",
+            "info.tnnet.it",
+            "infotn.tnnet.it",
+            "internet-esterni.tnnet.it",
+            "internet.tnnet.it",
+            "medici.tnnet.it",
+            "mitt.tnnet.it",
+            "multivoce.tnnet.it",
+            "operaunitn.tnnet.it",
+            "pat.tnnet.it",
+            "patacquepub.tnnet.it",
+            "patdighe.tnnet.it",
+            "patvoce.tnnet.it",
+            "pat-tecnica.tnnet.it",
+            "phoenix.tnnet.it",
+            "reperibilitnet.tnnet.it",
+            "rsacivicatn.tnnet.it",
+            "rsaspes.tnnet.it",
+            "scuolematerne.tnnet.it",
+            "scuole.tnnet.it",
+            "serviziovds.tnnet.it",
+            "telpat-autonome.tnnet.it",
+            "unitn.tnnet.it",
+            "vdsrovereto.tnnet.it",
+            "winwinet.tnnet.it",
+            "wl.tnnet.it",
+            "lan.tnnet.it",
+            "noc.tnnet.it",
+            "ros.tnnet.it",
+            "infotnvoce.tnnet.it",
+            "pa.tnnet.it",
+            "si.tnnet.it",
+            "videoconf.provincia.tn.it",
+            "testbed.tnnet.it",
+            "trentinonetwork.it",
+            "tetra.tnnet.it",
+            "unitnvoce.tnnet.it",
+            "operavoce.tnnet.it",
+            "copvoce.tnnet.it",
+            "internetbb.tnnet.it",
+            "consrtaa.tnnet.it",
+            "win.hq.tnnet.it"
+    };
     private JerseyClientImpl m_jerseyClient;
     
     private class Stats {
@@ -64,23 +128,27 @@ public class FastServiceTest {
                     + "\nnot monitored=" + notmon
                     + "\nnot production=" + notpro 
                     + "\nvalid=" + valid 
-                    + "\nerrori vrf=" + evrf 
                     + "\nerrori hostname=" + ehos 
                     + "\nerrori ip="+ eip 
                     + "\ncheck=" + check 
+                    + "\nerrori vrf=" + evrf 
+                    + "\nerrori dominio=" + edom 
                     + "\nerrori profilo snmp="+ esnmp 
-                    + "\nerrori profilo backup="+ eback ;
+                    + "\nerrori profilo backup="+ eback 
+                    + "\n" + domini;
         }
         Integer total = 0;
         Integer notmon = 0;
         Integer notpro = 0; 
         Integer valid = 0;
         Integer check = 0;
+        Integer edom = 0;
         Integer evrf = 0;
         Integer ehos =0;
         Integer eip =0;
         Integer esnmp =0;
         Integer eback =0;
+        Set<String> domini = new HashSet<>();
     }
     
     @Before
@@ -287,16 +355,23 @@ public class FastServiceTest {
             System.err.println("HostName invalido: "+device);
             valid = false;
         } 
-        if (device.getAttributes().getVrf() == null) {
-            stats.evrf++;
-            System.err.println("Vrf null: " + device);
-            valid = false;
-        }
         return valid;
     }
 
     private void checkFastAsset(FastAsset device, Stats stats) {
         stats.check++;
+        if (device.getAttributes().getVrf() == null) {
+            stats.evrf++;
+            System.err.println("Vrf null: " + device);
+            stats.check--;
+        }
+        if (device.getAttributes().getDominio() != null && !supportedDomain(device.getAttributes().getDominio())) {
+            stats.edom++;
+            System.err.println("Dominio invalido: " + device);
+            stats.check--;
+        } else {
+            stats.domini.add(device.getAttributes().getDominio());
+        }
         if (device.getAttributes().getProfiloSNMP() == null) {
             System.out.println("Profilo SNMP: "+device.getAttributes());
             stats.esnmp++;

@@ -414,7 +414,7 @@ public class BasicNode implements Serializable {
 		String service = bs.getService();
 		if (!m_serviceMap.containsKey(ip))
 			return;
-		if (ip.equals(m_primary) && "ICMP".equals(service))
+		if (ip.getIp().equals(m_primary) && "ICMP".equals(service))
 			return;
 
 		if (!m_serviceMap.get(ip).remove(service))

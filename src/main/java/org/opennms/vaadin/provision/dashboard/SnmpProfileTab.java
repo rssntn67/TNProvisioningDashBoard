@@ -3,10 +3,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.SnmpProfileDao;
@@ -16,29 +13,27 @@ import org.opennms.vaadin.provision.model.SnmpProfile;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.Property;
-import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Validator;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.RowId;
-import com.vaadin.data.util.sqlcontainer.SQLContainer;
-import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification.Type;
 
 @Title("TNPD - Snmp Profiles")
 @Theme("runo")
@@ -59,8 +54,6 @@ public class SnmpProfileTab extends DashboardTab {
     private Button m_saveSnmpButton = new Button("Salva Modifiche");
     private Button m_removeSnmpButton = new Button("Elimina Profilo Snmp");
 
-    private Set<String> m_fastSnmpProfile = new HashSet<String>();
-
     private VerticalLayout m_editSnmpLayout = new VerticalLayout();
     TextField m_snmp_name = new TextField("Nome");
     final ComboBox snmpSearchComboBox = new ComboBox("Select Snmp Profile");
@@ -77,18 +70,6 @@ public class SnmpProfileTab extends DashboardTab {
         updateTabHead();
         m_snmpContainer = getService().getSnmpProfileContainer();
         m_snmpTable.setContainerDataSource(m_snmpContainer);
-        try {
-            SQLContainer fastSnmpName = new SQLContainer(new FreeformQuery("select distinct snmpprofiles from fastservicedevices",
-                                                                           getService().getPool()));
-            for (Iterator<?> i = fastSnmpName.getItemIds().iterator(); i.hasNext();) {
-                @SuppressWarnings("unchecked")
-                Property<String> snmpprofile = fastSnmpName.getItem(i.next()).getItemProperty("snmpprofiles");
-                m_fastSnmpProfile.add(snmpprofile.getValue());
-            }
-        } catch (SQLException e) {
-            logger.warning("Failed to load Snmp Fast Profiles");
-            Notification.show("Error Loading Tab", Type.HUMANIZED_MESSAGE);
-        }
         for (Object snmpname : m_snmpContainer.getItemIds()) {
             snmpSearchComboBox.addItem(((RowId) snmpname).toString());
         }
@@ -388,18 +369,9 @@ public class SnmpProfileTab extends DashboardTab {
         SnmpProfile snmp = m_snmpContainer.get(snmpId);
         m_editorFields.setItemDataSource(snmp);
         m_editSnmpLayout.setVisible(true);
-        if (m_fastSnmpProfile.contains(snmp.getName())) {
-            m_snmp_name.setEnabled(false);
-            m_saveSnmpButton.setEnabled(true);
-            m_removeSnmpButton.setEnabled(false);
-            Notification.show("Delete and Modify Name not permitted",
-                              "Name is referenced in Fast",
-                              Type.WARNING_MESSAGE);
-        } else {
-            m_snmp_name.setEnabled(true);
-            m_saveSnmpButton.setEnabled(true);
-            m_removeSnmpButton.setEnabled(true);
-        }
+        m_snmp_name.setEnabled(true);
+        m_saveSnmpButton.setEnabled(true);
+        m_removeSnmpButton.setEnabled(true);
     }
 
     class DuplicatedSnmpProfileValidator implements Validator {

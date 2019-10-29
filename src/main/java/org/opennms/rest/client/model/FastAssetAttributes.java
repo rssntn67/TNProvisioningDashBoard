@@ -10,9 +10,9 @@ public class FastAssetAttributes {
     public String toString() {
         return "FastAssetAttributes ["
                 + vrf
-                + ", " + getHostName()
-                + "." + getDominio()
-                + ", " + getIndirizzoIP() 
+                + ", host=" + getHostName()
+                + ", domain=" + getDominio()
+                + ",ip=" + getIndirizzoIP() 
                 + ", snmp="+ profiloSNMP 
                 + ", bck=" + profiloBackup
                 + ", isMaster=" + isMaster

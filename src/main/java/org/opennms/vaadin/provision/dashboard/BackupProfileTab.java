@@ -3,10 +3,7 @@ package org.opennms.vaadin.provision.dashboard;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.opennms.vaadin.provision.dao.BackupProfileDao;
@@ -16,29 +13,27 @@ import org.opennms.vaadin.provision.model.BasicNode;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.data.Property;
-import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Validator;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.sqlcontainer.RowId;
-import com.vaadin.data.util.sqlcontainer.SQLContainer;
-import com.vaadin.data.util.sqlcontainer.query.FreeformQuery;
 import com.vaadin.data.validator.RegexpValidator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification.Type;
 
 @Title("TNPD - Backup Profiles")
 @Theme("runo")
@@ -65,8 +60,6 @@ public class BackupProfileTab extends DashboardTab {
 
     private BeanFieldGroup<BackupProfile> m_editorFields = new BeanFieldGroup<BackupProfile>(BackupProfile.class);
 
-    private Set<String> m_fastBackupProfile = new HashSet<String>();
-
     private final ComboBox m_backupSearchComboBox = new ComboBox("Select Backup Profile");
 
     /**
@@ -79,18 +72,6 @@ public class BackupProfileTab extends DashboardTab {
         updateTabHead();
         m_backupContainer = getService().getBackupProfileContainer();
         m_backupTable.setContainerDataSource(m_backupContainer);
-        try {
-            SQLContainer fastBackupName = new SQLContainer(new FreeformQuery("select distinct backupprofiles from fastservicedevices",
-                                                                             getService().getPool()));
-            for (Iterator<?> i = fastBackupName.getItemIds().iterator(); i.hasNext();) {
-                @SuppressWarnings("unchecked")
-                Property<String> backupprofile = fastBackupName.getItem(i.next()).getItemProperty("backupprofiles");
-                m_fastBackupProfile.add(backupprofile.getValue());
-            }
-        } catch (SQLException e) {
-            logger.warning("Failed to load Backup Fast Profiles");
-            Notification.show("Error Loading Tab", Type.HUMANIZED_MESSAGE);
-        }
         m_backupTable.setVisibleColumns(new Object[] { "name" });
         for (Object backupname : m_backupContainer.getItemIds()) {
             m_backupSearchComboBox.addItem(((RowId) backupname).toString());
@@ -394,18 +375,9 @@ public class BackupProfileTab extends DashboardTab {
         BackupProfile backup = m_backupContainer.get(backupId);
         m_editorFields.setItemDataSource(backup);
         m_editBackupLayout.setVisible(true);
-        if (m_fastBackupProfile.contains(backup.getName())) {
-            m_backup_name.setEnabled(false);
-            m_saveBackupButton.setEnabled(true);
-            m_removeBackupButton.setEnabled(false);
-            Notification.show("Delete and Modify Name not permitted",
-                              "Name is referenced in Fast",
-                              Type.WARNING_MESSAGE);
-        } else {
-            m_backup_name.setEnabled(true);
-            m_saveBackupButton.setEnabled(true);
-            m_removeBackupButton.setEnabled(true);
-        }
+        m_backup_name.setEnabled(true);
+        m_saveBackupButton.setEnabled(true);
+        m_removeBackupButton.setEnabled(true);
 
     }
 

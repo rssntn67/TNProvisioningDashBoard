@@ -48,6 +48,7 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_INVALID_HOSTNAME ="FAST(error): Device Invalid Hostname";
     private final static String FAST_NULL_VRF ="FAST(error): Device Null Vrf";
     private final static String FAST_INVALID_VRF ="FAST(error): Device Invalid Vrf";
+    private final static String FAST_INVALID_DOMAIN ="FAST(error): Device Invalid Domain";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Device Null Snmp Profile";
     private final static String FAST_INVALID_SNMP_PROFILE ="FAST(error): Device Invalid Snmp Profile";
     private final static String FAST_NULL_BACKUP_PROFILE ="FAST(error): Device Null Backup Profile";
@@ -82,6 +83,8 @@ public abstract class FastRunnable implements Runnable {
     private Job m_job;
     private BeanItemContainer<JobLogEntry> m_logcontainer;
     boolean m_syncRequisition = false;
+
+    Set<String> m_domains;
 
     Map<String, Categoria> m_vrf;
 
@@ -258,6 +261,13 @@ public abstract class FastRunnable implements Runnable {
             valid = false;            
         }
 
+        if (asset.getAttributes().getDominio() 
+                != null 
+            && !DashBoardUtils.isSupportedDnsDomain(asset.getAttributes().getDominio(), m_domains)) {
+            log(asset,order,FAST_INVALID_DOMAIN);
+            valid = false;
+        }
+
         if (asset.getAttributes().getProfiloSNMP() == null) {
             log(asset,order,FAST_NULL_SNMP_PROFILE);
             valid = false;
@@ -297,7 +307,14 @@ public abstract class FastRunnable implements Runnable {
     }
 
     private void sync() {
-        
+
+        logger.info("run: loading table dnsdomain");
+        m_domains.clear();
+        for (String domain: getService().getDnsDomainContainer().getDomains()) {
+            m_domains.add(domain);
+        }
+        logger.info("run: loaded table dnsdomain");
+
         logger.info("run: loading table vrf");
         m_vrf = getService().getCatContainer().getCatMap();
         logger.info("run: loaded table vrf");

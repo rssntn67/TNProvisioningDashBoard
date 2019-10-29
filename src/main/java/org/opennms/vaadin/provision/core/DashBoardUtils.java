@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.core;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
@@ -316,6 +317,10 @@ public class DashBoardUtils {
 		return false;
 	}
 	
+	public static boolean isSupportedDnsDomain(String domain, Set<String> domains) {
+	    return domains.contains(domain);
+	}
+
 	public static boolean hasUnSupportedDnsDomain(String nodelabel, List<String> domains) {
 		for (String domain: domains ) {
 			if (nodelabel.endsWith(domain))
