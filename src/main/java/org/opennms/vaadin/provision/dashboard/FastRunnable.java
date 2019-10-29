@@ -84,13 +84,13 @@ public abstract class FastRunnable implements Runnable {
     private BeanItemContainer<JobLogEntry> m_logcontainer;
     boolean m_syncRequisition = false;
 
-    Set<String> m_domains;
+    private Set<String> m_domains = new HashSet<>();
 
-    Map<String, Categoria> m_vrf;
+    private Map<String, Categoria> m_vrf;
 
-    Map<String, BackupProfile> m_backup;
+    private Map<String, BackupProfile> m_backup;
 
-    Map<String, SnmpProfile> m_snmp;
+    private Map<String, SnmpProfile> m_snmp;
 
 
     public synchronized Job getJob() {
@@ -309,7 +309,7 @@ public abstract class FastRunnable implements Runnable {
     private void sync() {
 
         logger.info("run: loading table dnsdomain");
-        m_domains = new HashSet<>();
+        m_domains.clear();
         for (String domain: getService().getDnsDomainContainer().getDomains()) {
             m_domains.add(domain);
         }
