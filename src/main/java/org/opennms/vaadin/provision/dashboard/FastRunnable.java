@@ -309,7 +309,7 @@ public abstract class FastRunnable implements Runnable {
     private void sync() {
 
         logger.info("run: loading table dnsdomain");
-        m_domains.clear();
+        m_domains = new HashSet<>();
         for (String domain: getService().getDnsDomainContainer().getDomains()) {
             m_domains.add(domain);
         }
