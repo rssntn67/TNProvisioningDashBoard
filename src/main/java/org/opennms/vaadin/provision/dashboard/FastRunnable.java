@@ -540,7 +540,7 @@ public abstract class FastRunnable implements Runnable {
                 } 
                 
                 for (TrentinoNetworkNode tnnode : onmsForeignIdRequisitionNodeMap.values()) {
-                    if (tnnode.getNodeLabel().startsWith(hostname)) {
+                    if (tnnode.getNodeLabel().toLowerCase().startsWith(hostname)) {
                         foreignIds.add(tnnode.getForeignId());
                         rnode=tnnode;
                         logger.info("found foreignid="+ tnnode.getForeignId()+" for: " + hostname);

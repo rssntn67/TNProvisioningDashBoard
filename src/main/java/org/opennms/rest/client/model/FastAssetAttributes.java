@@ -98,7 +98,7 @@ public class FastAssetAttributes {
     }
     public String getHostName() {
         if (hostName != null)
-            return hostName.trim();
+            return hostName.trim().toLowerCase();
         return null;
     }
     public void setHostName(String hostName) {
