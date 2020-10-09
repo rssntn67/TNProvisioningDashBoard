@@ -168,6 +168,14 @@ public class DashBoardUtils {
 		"Dedicati"
 	};
 
+	public static boolean isLegalNotifLevel(String notifLevel) {
+	    for (String validlevel: m_notify_levels) {
+	        if (validlevel.equals(notifLevel))
+	            return true;
+	    }
+	    return false;
+	}
+	
 	public static final String[] m_notify_levels = {
 		"EMERGENCY_F0",
 		"EMERGENCY_F1",
@@ -328,7 +336,7 @@ public class DashBoardUtils {
 		}
 		return true;
 	}
-	public static boolean isValidNotifyLevel(String notifyLevel) {
+	public static boolean isValidFastNotifyLevel(String notifyLevel) {
 		for (String validnotifyLevel: m_notify_levels) {
 			if (validnotifyLevel.equals(notifyLevel))
 				return true;

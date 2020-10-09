@@ -49,6 +49,7 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_NULL_VRF ="FAST(error): Asset Null Vrf";
     private final static String FAST_INVALID_VRF ="FAST(error): Asset Invalid Vrf";
     private final static String FAST_INVALID_DOMAIN ="FAST(error): Asset Invalid Domain";
+    private final static String FAST_INVALID_NOTIFY_LEVEL ="FAST(error): Asset Invalid Domain";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Asset Null Snmp Profile";
     private final static String FAST_INVALID_SNMP_PROFILE ="FAST(error): Asset Invalid Snmp Profile";
     private final static String FAST_NULL_BACKUP_PROFILE ="FAST(error): Asset Null Backup Profile";
@@ -301,6 +302,9 @@ public abstract class FastRunnable implements Runnable {
         } else if (DashBoardUtils.hasInvalidDnsBind9Label(asset.getAttributes().getHostName())) {
             log(asset,order,FAST_INVALID_HOSTNAME);
             valid = false;
+        } 
+        if (asset.getAttributes().getNotifichePing() != null && DashBoardUtils.isValidFastNotifyLevel(asset.getAttributes().getNotifichePing())) {
+            log(asset,order,FAST_INVALID_NOTIFY_LEVEL);                
         } 
 
         return valid;
@@ -863,7 +867,7 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         rnode.setBackupProfile(refAsset.getAttributes().getProfiloBackup());
         rnode.setSnmpProfile(refAsset.getAttributes().getProfiloSNMP());
         rnode.setNetworkCategory(vrf);
-        if (refAsset.getAttributes().getNotifichePing() != null) 
+        if (refAsset.getAttributes().getNotifichePing() != null && DashBoardUtils.isLegalNotifLevel(refAsset.getAttributes().getNotifichePing())) 
             rnode.setNotifCategory(refAsset.getAttributes().getNotifichePing());
         else 
             rnode.setNotifCategory(vrf.getNotifylevel());
