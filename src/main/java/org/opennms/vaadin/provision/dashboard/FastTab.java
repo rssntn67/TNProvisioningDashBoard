@@ -185,7 +185,9 @@ public class FastTab extends DashboardTab {
 			}
 		});
 
-	    m_jobTable.setSortAscending(false);
+            m_jobTable.setSortContainerPropertyId("jobid");;
+	    m_jobTable.setSortEnabled(true);
+            m_jobTable.setSortAscending(false);
 	    m_progress.setEnabled(false);
 	    m_progress.setVisible(false);
             m_logTable.setVisible(false);
