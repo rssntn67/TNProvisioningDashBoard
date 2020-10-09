@@ -341,7 +341,7 @@ public class DashBoardUtils {
 			if (validnotifyLevel.equals(notifyLevel))
 				return true;
 		}
-		if (m_fast_default_notify.equals(notifyLevel))
+		if (m_fast_default_notify.equals(notifyLevel) || "".equals(notifyLevel))
 			return true;
 		return false;
 	}

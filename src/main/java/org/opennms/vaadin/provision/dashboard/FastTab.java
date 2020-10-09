@@ -185,9 +185,6 @@ public class FastTab extends DashboardTab {
 			}
 		});
 
-            m_jobTable.setSortContainerPropertyId("jobid");;
-	    m_jobTable.setSortEnabled(true);
-            m_jobTable.setSortAscending(false);
 	    m_progress.setEnabled(false);
 	    m_progress.setVisible(false);
             m_logTable.setVisible(false);
@@ -231,6 +228,9 @@ public class FastTab extends DashboardTab {
 		m_jobdao = getService().getJobContainer();
 		m_joblogdao = getService().getJobLogContainer();
 		m_jobTable.setContainerDataSource(m_jobdao);
+		m_jobTable.setSortContainerPropertyId("jobid");
+	        m_jobTable.setSortEnabled(true);
+	        m_jobTable.setSortAscending(false);
 		m_jobTable.setVisibleColumns(new Object[] {"jobid", "username", "jobstatus","jobstart","jobend"});
 	}
 

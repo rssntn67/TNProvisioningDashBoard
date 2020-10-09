@@ -49,7 +49,7 @@ public abstract class FastRunnable implements Runnable {
     private final static String FAST_NULL_VRF ="FAST(error): Asset Null Vrf";
     private final static String FAST_INVALID_VRF ="FAST(error): Asset Invalid Vrf";
     private final static String FAST_INVALID_DOMAIN ="FAST(error): Asset Invalid Domain";
-    private final static String FAST_INVALID_NOTIFY_LEVEL ="FAST(error): Asset Invalid Domain";
+    private final static String FAST_INVALID_NOTIFY_LEVEL ="FAST(error): Asset Invalid PingNotification";
     private final static String FAST_NULL_SNMP_PROFILE ="FAST(error): Asset Null Snmp Profile";
     private final static String FAST_INVALID_SNMP_PROFILE ="FAST(error): Asset Invalid Snmp Profile";
     private final static String FAST_NULL_BACKUP_PROFILE ="FAST(error): Asset Null Backup Profile";
@@ -303,7 +303,8 @@ public abstract class FastRunnable implements Runnable {
             log(asset,order,FAST_INVALID_HOSTNAME);
             valid = false;
         } 
-        if (asset.getAttributes().getNotifichePing() != null && DashBoardUtils.isValidFastNotifyLevel(asset.getAttributes().getNotifichePing())) {
+        if (asset.getAttributes().getNotifichePing() != null 
+                && DashBoardUtils.isValidFastNotifyLevel(asset.getAttributes().getNotifichePing())) {
             log(asset,order,FAST_INVALID_NOTIFY_LEVEL);                
         } 
 
