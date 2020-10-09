@@ -863,7 +863,10 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         rnode.setBackupProfile(refAsset.getAttributes().getProfiloBackup());
         rnode.setSnmpProfile(refAsset.getAttributes().getProfiloSNMP());
         rnode.setNetworkCategory(vrf);
-        rnode.setNotifCategory(vrf.getNotifylevel());
+        if (refAsset.getAttributes().getNotifichePing() != null) 
+            rnode.setNotifCategory(refAsset.getAttributes().getNotifichePing());
+        else 
+            rnode.setNotifCategory(vrf.getNotifylevel());
         rnode.setThreshCategory(vrf.getThresholdlevel());
         rnode.setCity(order.getCity());
         rnode.setAddress1(order.getAddress());

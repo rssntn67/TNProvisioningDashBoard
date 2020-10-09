@@ -16,6 +16,7 @@ public class FastAssetAttributes {
                 + ", snmp="+ profiloSNMP 
                 + ", bck=" + profiloBackup
                 + ", isMaster=" + isMaster
+                + ", NotifichePing=" + notifichePing
                 + ", backup=" + backup
                 + "]";
     }
@@ -45,9 +46,19 @@ public class FastAssetAttributes {
     @JsonProperty("Dominio")
     private String dominio;    
 
+    @JsonProperty("NotifichePing")
+    private String notifichePing;
+
     @JsonProperty("NonMonitorare")
     private Integer nonMonitorare;
-        
+
+    public String getNotifichePing() {
+        return notifichePing;
+    }
+    public void setNotifichePing(String notifichePing) {
+        this.notifichePing = notifichePing;
+    }
+
     public Integer getNonMonitorare() {
         return nonMonitorare;
     }
