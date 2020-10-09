@@ -308,7 +308,7 @@ public class BasicNode implements Serializable {
 			BasicInterface opi = new BasicInterface();
 			opi.setIp(oldprimary);
 			opi.setDescr(m_descr);
-			opi.setOnmsprimary(OnmsPrimary.P);
+			opi.setOnmsprimary(OnmsPrimary.N);
 			BasicService obs1 = new BasicService(opi);
 			obs1.setService("ICMP");
 			delService(obs1);

@@ -185,26 +185,27 @@ public class FastTab extends DashboardTab {
 			}
 		});
 
-        m_progress.setEnabled(false);
+	    m_jobTable.setSortAscending(false);
+	    m_progress.setEnabled(false);
 	    m_progress.setVisible(false);
-        m_logTable.setVisible(false);
-		m_fast.addClickListener(this);
-		m_syncfast.addClickListener(this);
+            m_logTable.setVisible(false);
+            m_fast.addClickListener(this);
+            m_syncfast.addClickListener(this);
 
-		getRightHead().addComponent(m_fast);
-		getRightHead().setComponentAlignment(m_fast, Alignment.MIDDLE_LEFT);
-		getRightHead().addComponent(m_syncfast);
-		getRightHead().setComponentAlignment(m_syncfast, Alignment.MIDDLE_RIGHT);
+            getRightHead().addComponent(m_fast);
+            getRightHead().setComponentAlignment(m_fast, Alignment.MIDDLE_LEFT);
+            getRightHead().addComponent(m_syncfast);
+            getRightHead().setComponentAlignment(m_syncfast, Alignment.MIDDLE_RIGHT);
 
-		getLeft().addComponent(new Panel("Log Search",searchlayout));
-		getLeft().addComponent(new Panel("Jobs",m_jobTable));
+            getLeft().addComponent(new Panel("Log Search",searchlayout));
+            getLeft().addComponent(new Panel("Jobs",m_jobTable));
 
-		getRight().addComponent(m_progress);
-		getRight().addComponent(m_panel);
-		VerticalLayout joblog = new VerticalLayout();
-		joblog.addComponent(m_loginfo);
-		joblog.addComponent(m_logTable);
-		getRight().addComponent(new Panel("Logs",joblog));
+            getRight().addComponent(m_progress);
+            getRight().addComponent(m_panel);
+            VerticalLayout joblog = new VerticalLayout();
+            joblog.addComponent(m_loginfo);
+            joblog.addComponent(m_logTable);
+            getRight().addComponent(new Panel("Logs",joblog));
 		
 	}
 	
