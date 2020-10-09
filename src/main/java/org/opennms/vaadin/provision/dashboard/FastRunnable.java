@@ -304,7 +304,7 @@ public abstract class FastRunnable implements Runnable {
             valid = false;
         } 
         if (asset.getAttributes().getNotifichePing() != null 
-                && DashBoardUtils.isValidFastNotifyLevel(asset.getAttributes().getNotifichePing())) {
+                && !DashBoardUtils.isValidFastNotifyLevel(asset.getAttributes().getNotifichePing())) {
             log(asset,order,FAST_INVALID_NOTIFY_LEVEL);                
         } 
 
@@ -783,12 +783,16 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
         logger.info(jloe.toString());
     }
     
-    private String getNote(FastAsset Asset, FastOrder order) {
+    private String getNote(FastAsset asset, FastOrder order) {
         StringBuffer AssetNote = new StringBuffer("");
-        AssetNote.append(Asset.getMeta());
+        AssetNote.append(asset.getMeta());
         AssetNote.append(" ");
-        
-        if (Asset.getAttributes().monitorato())
+
+        if (asset.getAttributes().getNotifichePing() != null 
+                && !DashBoardUtils.isValidFastNotifyLevel(asset.getAttributes().getNotifichePing()))
+            AssetNote.append(asset.getAttributes().getNotifichePing());
+
+        if (asset.getAttributes().monitorato())
             AssetNote.append("monitored");
         else
             AssetNote.append("not_monitored");
