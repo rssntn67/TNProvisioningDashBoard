@@ -13,7 +13,7 @@
 		<defaultVersion>${version}</defaultVersion>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.encoding>UTF-8</project.encoding>
-		<vaadin.version>7.7.7</vaadin.version>
+		<vaadin.version>8.12.4</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<jetty.plugin.version>9.4.0.v20161208</jetty.plugin.version>
 		<project.source.version>1.6</project.source.version>
