@@ -30,7 +30,6 @@ package org.opennms.rest.client;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.web.svclayer.model.SnmpInfo;
 
@@ -44,7 +43,7 @@ public class SnmpInfoServiceTest {
     public void setUp() throws Exception {
         m_snmpinfoservice = new JerseySnmpInfoService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
+                                                         "http://localhost:8980/opennms/rest/","admin","admin");
         m_snmpinfoservice.setJerseyClient(jerseyClient);
     }
 
@@ -53,45 +52,40 @@ public class SnmpInfoServiceTest {
     }
     
     @Test
-    @Ignore
-    public void testGet() throws Exception {
-    	SnmpInfo snmp = m_snmpinfoservice.get("172.25.140.97");
-    	assertEquals("ma14na165ge", snmp.getReadCommunity());
-    	assertEquals(161, snmp.getPort().intValue());
-    	assertEquals(1, snmp.getRetries().intValue());
-    	assertEquals(5000, snmp.getTimeout().intValue());
-    	assertEquals("v2c", snmp.getVersion());
-
-    }
-
-    @Test
-    @Ignore
-    public void testSet() throws Exception {
+    public void testSnmpconfig() throws Exception {
     	SnmpInfo snmp = new SnmpInfo();
-    	snmp.setReadCommunity("sarag8");
+    	snmp.setReadCommunity("sarag888v1");
     	snmp.setVersion("v1");
     	snmp.setTimeout(1890);
-    	m_snmpinfoservice.set("10.10.1.1", snmp);
+    	snmp.setRetries(5);
+    	snmp.setPort(161);
+        snmp.setMaxVarsPerPdu(2);
+    	m_snmpinfoservice.set("10.10.1.101", snmp);
     	
-    	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.1");
-    	assertEquals("sarag8", snmpstored.getReadCommunity());
+    	SnmpInfo snmpstored = m_snmpinfoservice.get("10.10.1.101");
+    	assertEquals("sarag888v1", snmpstored.getReadCommunity());
     	assertEquals(161, snmpstored.getPort().intValue());
-    	assertEquals(1, snmpstored.getRetries().intValue());
+    	assertEquals(5, snmpstored.getRetries().intValue());
     	assertEquals(1890, snmpstored.getTimeout().intValue());
     	assertEquals("v1", snmpstored.getVersion());
+        assertEquals(2, snmpstored.getMaxVarsPerPdu().intValue());
     	
     	SnmpInfo snmp2 = new SnmpInfo();
     	snmp2.setReadCommunity("sarag8");
-    	snmp2.setTimeout(1800);
+    	snmp2.setTimeout(1820);
     	snmp2.setVersion("v2c");
+        snmp2.setMaxVarsPerPdu(24);
+        snmp2.setRetries(6);
+        snmp2.setPort(161);
     	m_snmpinfoservice.set("10.10.1.1", snmp2);
     	
     	SnmpInfo snmpstored2 = m_snmpinfoservice.get("10.10.1.1");
     	assertEquals("sarag8", snmpstored2.getReadCommunity());
     	assertEquals(161, snmpstored2.getPort().intValue());
-    	assertEquals(1, snmpstored2.getRetries().intValue());
-    	assertEquals(1800, snmpstored2.getTimeout().intValue());
+    	assertEquals(6, snmpstored2.getRetries().intValue());
+    	assertEquals(1820, snmpstored2.getTimeout().intValue());
     	assertEquals("v2c", snmpstored2.getVersion());
+        assertEquals(24, snmpstored2.getMaxVarsPerPdu().intValue());
     	
     }
 }

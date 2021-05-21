@@ -1,5 +1,12 @@
 package org.opennms.vaadin.provision.dashboard;
 
+import java.util.Collection;
+import java.util.Map;
+
+import org.opennms.vaadin.provision.model.BasicNode;
+import org.opennms.vaadin.provision.model.BasicNode.OnmsSync;
+
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -9,6 +16,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
@@ -24,45 +32,42 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	 * 
 	 */
 	private static final long serialVersionUID = 4694567853140078034L;
-	private DashBoardSessionService m_service;
 	private VerticalLayout m_core;
 	private Panel m_headPanel;
-	private HorizontalLayout m_head = new HorizontalLayout();
+	private HorizontalLayout m_righthead = new HorizontalLayout();
+	HorizontalLayout m_lefthead = new HorizontalLayout();
 	private VerticalLayout m_left = new VerticalLayout();;
 	private VerticalLayout m_right = new VerticalLayout();;
     private Button m_logout = new Button("Logout");
     private Button m_info = new Button("Info");
-    private LoginBox m_loginBox;
+    private DashBoardSessionService m_session;
 
 	/*
 	 * After UI class is created, init() is executed. You should build and wire
 	 * up your user interface here.
 	 */
-	DashboardTab(LoginBox login, DashBoardSessionService service) {
-		m_loginBox = login;
+	DashboardTab() {
     	m_logout.addClickListener(this);
     	m_logout.setImmediate(true);
      	m_info.addClickListener(this);
     	m_info.setImmediate(true);
-		m_service = service;
 		m_core = new VerticalLayout();
 		setCompositionRoot(m_core);
 
-		HorizontalLayout head = new HorizontalLayout();
-		head.setSizeFull();
-		head.addComponent(m_info);	
-		head.addComponent(m_logout);	
-		head.setComponentAlignment(m_info, Alignment.MIDDLE_LEFT);
-		head.setComponentAlignment(m_logout, Alignment.MIDDLE_LEFT);
-		head.setMargin(true);
-		head.setSpacing(true);
+		m_lefthead.setSizeFull();
+		m_lefthead.addComponent(m_info);	
+		m_lefthead.addComponent(m_logout);	
+		m_lefthead.setComponentAlignment(m_info, Alignment.MIDDLE_LEFT);
+		m_lefthead.setComponentAlignment(m_logout, Alignment.MIDDLE_LEFT);
+		m_lefthead.setMargin(true);
+		m_lefthead.setSpacing(true);
 		
-		m_head.setMargin(true);
-		m_head.setSpacing(true);
+		m_righthead.setMargin(true);
+		m_righthead.setSpacing(true);
 		
 		HorizontalSplitPanel headsplitPanel = new HorizontalSplitPanel();
-		headsplitPanel.addComponent(head);
-		headsplitPanel.addComponent(m_head);
+		headsplitPanel.addComponent(m_lefthead);
+		headsplitPanel.addComponent(m_righthead);
 		headsplitPanel.setStyleName(Reindeer.SPLITPANEL_SMALL);
 		headsplitPanel.setSplitPosition(30,Unit.PERCENTAGE);
 
@@ -80,20 +85,52 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 
 	public abstract void load();	
 	public abstract String getName();
+	public abstract void resetUpdateMap();
+	public abstract Map<String, Collection<BasicNode>> getUpdatesMap();
 	
-	public DashBoardSessionService getService() {
-		return m_service;
+	public void clearUpdateMap(String requisition, BasicNode.OnmsSync sync) {
+		if (!getUpdatesMap().containsKey(requisition)) 
+			return;
+		for (BasicNode node: getUpdatesMap().get(requisition)) {
+			switch (sync) {
+			case TRUE:
+				node.setNoneState();
+				break;
+			case FALSE:
+				node.deleteOnmsSyncOperation(OnmsSync.FALSE);
+				break;
+			case DBONLY:
+				node.deleteOnmsSyncOperation(OnmsSync.DBONLY);
+				break;
+			}
+		}
+		resetUpdateMap();
 	}
-
+	
+	
+	public DashBoardSessionService getService(){
+		if (m_session != null)
+			return m_session;
+		return (DashBoardSessionService) VaadinSession.getCurrent();
+	}
+	
+	public void setSessionService(DashBoardSessionService session) {
+		m_session = session;
+	}
 	public void updateTabHead() {
 		m_headPanel.setCaption("User: " + getService().getUser() 
 				+". connected to: " + getService().getUrl());  
 	}
 	
-	public HorizontalLayout getHead() {
-		return m_head;
+	public HorizontalLayout getRightHead() {
+		return m_righthead;
+	}
+
+	public HorizontalLayout getLeftHead() {
+		return m_lefthead;
 	}
 	
+
 	public ComponentContainer getCore() {
 		return m_core;
 	}
@@ -101,9 +138,9 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	@Override
 	public void buttonClick(ClickEvent event) {
 		if (event.getButton() == m_logout) {
-	    	m_loginBox.logout();
+	    	((DashboardUI)getUI()).onLogout();
 	    } else if (event.getButton() == m_info) {
-	    	m_loginBox.info();
+	    	((DashboardUI)getUI()).onInfo();
 	    }
 	}
 	
@@ -113,6 +150,14 @@ public abstract class DashboardTab extends CustomComponent implements ClickListe
 	
 	public VerticalLayout getRight() {
 		return m_right;
+	}
+
+	public void sync(String requisitionName) {
+		SyncWindow subWindow = new SyncWindow(requisitionName);
+        subWindow.center();
+        subWindow.setWidth("600px");
+        subWindow.setCaption("Sincronizzazione dei nodi " + requisitionName);
+        UI.getCurrent().addWindow(subWindow);
 	}
 
 

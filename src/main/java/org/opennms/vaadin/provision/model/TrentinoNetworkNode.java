@@ -33,7 +33,7 @@ public class TrentinoNetworkNode extends BasicNode {
 	}
 	
 	public TrentinoNetworkNode(
-			Map<String,Set<String>> serviceMap,
+			Map<BasicInterface,Set<String>> serviceMap,
 			String descr, 
 			String hostname,
 			String vrf, 

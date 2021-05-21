@@ -36,7 +36,7 @@ public class SistemiInformativiNode extends BasicNode {
 	private String m_manufacturer;
 	
 	public SistemiInformativiNode(
-			Map<String, Set<String>> serviceMap, String descr, String hostname,
+			Map<BasicInterface, Set<String>> serviceMap, String descr, String hostname,
 			String parent, String parentId, String snmpProfile,
 			String vrf, String primary, String[] serverLevelCategory,
 			String managedByCategory, String notifCategory,

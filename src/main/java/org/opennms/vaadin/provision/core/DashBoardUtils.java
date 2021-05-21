@@ -3,6 +3,7 @@ package org.opennms.vaadin.provision.core;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
@@ -18,6 +19,7 @@ import com.vaadin.data.util.BeanItemContainer;
 public class DashBoardUtils {
 	
 	public static final String[] service_list = {
+		"Ceph",
 		"StrafePing",
 		"HTTP",
 		"HTTP-8080",
@@ -166,6 +168,14 @@ public class DashBoardUtils {
 		"Dedicati"
 	};
 
+	public static boolean isLegalNotifLevel(String notifLevel) {
+	    for (String validlevel: m_notify_levels) {
+	        if (validlevel.equals(notifLevel))
+	            return true;
+	    }
+	    return false;
+	}
+	
 	public static final String[] m_notify_levels = {
 		"EMERGENCY_F0",
 		"EMERGENCY_F1",
@@ -212,11 +222,12 @@ public class DashBoardUtils {
 	public static final String[] m_server_optional = {
 		"VoIP",
 		"Videoconferenza",
-		"VideoconferenzaTerminali",
 		"Videosorveglianza",
 		"ControlloAccessi",
+		"Tetra",
+		"TrentinoEmergenza",
 		"TrentinoWifi",
-		"Testbed",
+		"XIFI",
 		"Ydam"
 	};
 
@@ -262,7 +273,6 @@ public class DashBoardUtils {
 	public static final String PARENT = "parent";
 	public static final String VALID = "valid";
 	public static final String CITY    = "city";
-	public static final String BUILDING_SCALAR = "building_scalar";
 
 	public static final String DESCRIPTION = "description";
 	public static final String ADDRESS1 = "address1";
@@ -315,6 +325,10 @@ public class DashBoardUtils {
 		return false;
 	}
 	
+	public static boolean isSupportedDnsDomain(String domain, Set<String> domains) {
+	    return domains.contains(domain);
+	}
+
 	public static boolean hasUnSupportedDnsDomain(String nodelabel, List<String> domains) {
 		for (String domain: domains ) {
 			if (nodelabel.endsWith(domain))
@@ -322,12 +336,12 @@ public class DashBoardUtils {
 		}
 		return true;
 	}
-	public static boolean isValidNotifyLevel(String notifyLevel) {
+	public static boolean isValidFastNotifyLevel(String notifyLevel) {
 		for (String validnotifyLevel: m_notify_levels) {
 			if (validnotifyLevel.equals(notifyLevel))
 				return true;
 		}
-		if (m_fast_default_notify.equals(notifyLevel))
+		if (m_fast_default_notify.equals(notifyLevel) || "".equals(notifyLevel))
 			return true;
 		return false;
 	}
@@ -389,6 +403,8 @@ public class DashBoardUtils {
 	public static boolean valid(SistemiInformativiNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
 			return false;
+		if (node.getDescr() == null)
+			return false;
 		if (node.getNodeLabel() == null)
 			return false;
 		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
@@ -415,31 +431,45 @@ public class DashBoardUtils {
 	public static boolean valid(TrentinoNetworkNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
 			return false;
+		
+		if (node.getDescr() == null)
+			return false;
+		
 		if (node.getNodeLabel() == null)
 			return false;
 		else if (hasInvalidDnsBind9Label(node.getNodeLabel()))
 			return false;
+		
 		if (node.getVrf() == null) 
 			return false;
+		
 		if (node.getPrimary() == null)
 			return false;
 		else if (hasInvalidIp(node.getPrimary()))
 			return false;
+		
 		if (node.getNetworkCategory() == null)
 			return false;
+		
 		if (node.getNotifCategory() == null)
 			return false;
+		
 		if (node.getThreshCategory() == null)
 			return false;
+		
 		if (node.getBackupProfile() == null)
 			return false;
+		
 		if (hasUnSupportedDnsDomain(node.getNodeLabel(),subdomains))
 			return false;		
+		
 		return true;
 	}
 	
 	public static boolean valid(MediaGatewayNode node, List<String> subdomains) {
 		if (node.getForeignId() == null)
+			return false;
+		if (node.getDescr() == null)
 			return false;
 		if (node.getNodeLabel() == null)
 			return false;

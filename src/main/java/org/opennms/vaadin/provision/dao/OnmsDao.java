@@ -4,7 +4,6 @@ package org.opennms.vaadin.provision.dao;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.opennms.netmgt.model.OnmsNodeList;
-import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionAsset;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionCategory;
@@ -13,7 +12,6 @@ import org.opennms.netmgt.provision.persist.requisition.RequisitionMonitoredServ
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
 import org.opennms.rest.client.JerseyClientImpl;
 import org.opennms.rest.client.JerseyNodesService;
-import org.opennms.rest.client.JerseyProvisionForeignSourceService;
 import org.opennms.rest.client.JerseyProvisionRequisitionService;
 import org.opennms.rest.client.JerseySnmpInfoService;
 import org.opennms.rest.client.model.OnmsIpInterfaceList;
@@ -24,7 +22,6 @@ public class OnmsDao {
 	private JerseyClientImpl m_jerseyClient;
     
 	private JerseyProvisionRequisitionService m_provisionService;
-	private JerseyProvisionForeignSourceService m_foreignSourceService;
 	private JerseyNodesService m_nodeService;
 	private JerseySnmpInfoService m_snmpInfoService;
 
@@ -32,7 +29,6 @@ public class OnmsDao {
     	m_provisionService = new JerseyProvisionRequisitionService();
     	m_nodeService = new JerseyNodesService();
     	m_snmpInfoService = new JerseySnmpInfoService();
-    	m_foreignSourceService = new JerseyProvisionForeignSourceService();
 	}
 	
 	public JerseyClientImpl getJerseyClient() {
@@ -44,7 +40,6 @@ public class OnmsDao {
 	    m_nodeService.setJerseyClient(m_jerseyClient);
 		m_provisionService.setJerseyClient(m_jerseyClient);
 	    m_snmpInfoService.setJerseyClient(m_jerseyClient);
-	    m_foreignSourceService.setJerseyClient(m_jerseyClient);
 	}
 	
 	public Requisition getRequisition(String foreignSource) {
@@ -90,10 +85,6 @@ public class OnmsDao {
 	public void addRequisitionservice(String foreignSource,String foreignid, String ip,RequisitionMonitoredService service) {
 		m_provisionService.add(foreignSource, foreignid, ip,service);
 	}
-
-	public void addOrReplacePolicy(String foreignSource,PolicyWrapper policy) {
-		m_foreignSourceService.addOrReplace(foreignSource, policy);
-	}
 	
 	public void addRequisitionNode(String foreignSource, RequisitionNode node) {
 		m_provisionService.add(foreignSource, node);
@@ -114,11 +105,7 @@ public class OnmsDao {
 	public void deleteRequisitionCategory(String foreignSource,String foreignId, String category) {
 		m_provisionService.deleteCategory(foreignSource, foreignId, category);
 	}
-	
-	public void deletePolicy(String foreignSource, String policyName) {
-		m_foreignSourceService.deletePolicy(foreignSource, policyName);
-	}
-	
+		
 	public OnmsNodeList findNodes(MultivaluedMap<String, String> queryParams) {
 		return m_nodeService.find(queryParams);
 	}

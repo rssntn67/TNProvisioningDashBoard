@@ -22,7 +22,7 @@ public class MediaGatewayNode extends BasicNode {
 	}
 	
 	public MediaGatewayNode(
-			Map<String,Set<String>> serviceMap,
+			Map<BasicInterface,Set<String>> serviceMap,
 			String descr, 
 			String hostname,
 			String vrf, 

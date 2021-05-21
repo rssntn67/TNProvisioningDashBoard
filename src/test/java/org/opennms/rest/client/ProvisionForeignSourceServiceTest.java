@@ -31,7 +31,6 @@ package org.opennms.rest.client;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSource;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSourceCollection;
 import org.opennms.netmgt.provision.persist.foreignsource.PolicyWrapper;
@@ -46,7 +45,7 @@ public class ProvisionForeignSourceServiceTest {
     public void setUp() throws Exception {
         m_requisitionservice = new JerseyProvisionForeignSourceService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
+                                                         "http://localhost:8980/opennms/rest/","admin","admin");
         m_requisitionservice.setJerseyClient(jerseyClient);
     }
 
@@ -54,7 +53,6 @@ public class ProvisionForeignSourceServiceTest {
     public void tearDown() throws Exception {
     }
     
-    @Test
     @Ignore
     public void testList() throws Exception {
         ForeignSourceCollection nodelist = m_requisitionservice.getAll();
@@ -64,7 +62,6 @@ public class ProvisionForeignSourceServiceTest {
         }
     }
     
-    @Test
     @Ignore
     public void createPolicy() throws Exception {
     	String ip = "10.10.10.10";
@@ -77,7 +74,6 @@ public class ProvisionForeignSourceServiceTest {
     	m_requisitionservice.addOrReplace("UpdateTN", manage);
     }
 
-    @Test
     @Ignore
     public void deletePolicy() throws Exception {
     	String ip = "10.10.10.10";

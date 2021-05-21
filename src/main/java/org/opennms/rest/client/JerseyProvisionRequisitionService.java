@@ -209,7 +209,8 @@ public class JerseyProvisionRequisitionService extends JerseyAbstractService imp
 
 	@Override
 	public void sync(String name) {
-		getJerseyClient().put(null, buildImportPath(name));
+		MultivaluedMap<String, String> mvm = new MultivaluedMapImpl();
+		getJerseyClient().put(mvm, buildImportPath(name));
 	}
 
 	@Override

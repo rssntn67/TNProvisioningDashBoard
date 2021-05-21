@@ -1,10 +1,20 @@
 package org.opennms.rest.client;
 
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-
-import java.util.logging.Logger;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -16,6 +26,7 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.apache.ApacheHttpClient;
 import com.sun.jersey.client.apache.config.ApacheHttpClientConfig;
 import com.sun.jersey.client.apache.config.DefaultApacheHttpClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 public class JerseyClientImpl {
 
@@ -23,14 +34,32 @@ public class JerseyClientImpl {
 
     Client m_client;
 
-    DefaultApacheHttpClientConfig m_config;
+    DefaultApacheHttpClientConfig m_config =new DefaultApacheHttpClientConfig();
     
     String m_url; 
     WebResource m_webResource;
     
+
     public JerseyClientImpl(String url, String username, String password) {
     	
-        m_config = new DefaultApacheHttpClientConfig();
+        TrustManager[] trustAllCerts = { new InsecureTrustManager() };
+        SSLContext sc = null;
+        try {
+            sc = SSLContext.getInstance("TLSv1");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            System.setProperty("https.protocols", "TLSv1");
+        } catch (NoSuchAlgorithmException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+        } catch (KeyManagementException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+        }
+        HostnameVerifier allHostsValid = new InsecureHostnameVerifier();        
+
+        m_config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(allHostsValid, sc));
         m_config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,Boolean.TRUE);
         m_config.getProperties().put(ApacheHttpClientConfig.PROPERTY_PREEMPTIVE_AUTHENTICATION, Boolean.TRUE);
         m_config.getProperties().put(ApacheHttpClientConfig.FEATURE_DISABLE_XML_SECURITY, Boolean.TRUE);
@@ -43,15 +72,15 @@ public class JerseyClientImpl {
     public void destroy() {
     	m_client.destroy();
     }
-
+    
     public <T> T get(Class<T> clazz,String relativePath, MultivaluedMap<String, String> queryParams) {
     	try {
     		return m_webResource.path(relativePath).queryParams(queryParams).header("Accept", "application/xml").accept(MediaType.APPLICATION_XML_TYPE).get(new GenericType<T>(clazz));
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
@@ -60,22 +89,46 @@ public class JerseyClientImpl {
     	try {
     		return m_webResource.path(relativePath).accept(MediaType.APPLICATION_XML_TYPE).get(clazz);
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
-    
+
+    public <T> T getJson(Class<T> clazz,String relativePath,MultivaluedMap<String, String> queryParams) {
+        try {
+                return m_webResource.path(relativePath).queryParams(queryParams).accept(MediaType.APPLICATION_JSON).get(clazz);
+        } catch (UniformInterfaceException uie) {
+                logger.log(Level.SEVERE,"GET: + "+ relativePath + " error: " + uie.getLocalizedMessage(),uie);
+                throw uie;
+        } catch (ClientHandlerException che) {
+                logger.log(Level.SEVERE,"GET: + "+ relativePath + " error: " + che.getLocalizedMessage(),che);
+                throw che;
+        }
+    }
+
+    public <T> T getJson(Class<T> clazz,String relativePath) {
+        try {
+                return m_webResource.path(relativePath).accept(MediaType.APPLICATION_JSON).get(clazz);
+        } catch (UniformInterfaceException uie) {
+                logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
+                throw uie;
+        } catch (ClientHandlerException che) {
+                logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
+                throw che;
+        }
+    }
+
     public String getXml(String relativePath) {
     	try {
     		return m_webResource.path(relativePath).accept(MediaType.APPLICATION_XML_TYPE).get(String.class);
     	} catch (UniformInterfaceException uie) {
-    		logger.warning("GET: + "+ relativePath + "error: " + uie.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + uie.getLocalizedMessage());
     		throw uie;
      	} catch (ClientHandlerException che) {
-    		logger.warning("GET: + "+ relativePath + "error: " + che.getLocalizedMessage());
+    		logger.warning("GET: + "+ relativePath + " error: " + che.getLocalizedMessage());
     		throw che;
     	}
     }
@@ -174,5 +227,37 @@ public class JerseyClientImpl {
     	}
 
     }
+    
+    private class InsecureHostnameVerifier implements HostnameVerifier {
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    }
 
+    private class InsecureTrustManager implements X509TrustManager {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void checkClientTrusted(final X509Certificate[] chain, final String authType) throws CertificateException {
+            // Everyone is trusted!
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void checkServerTrusted(final X509Certificate[] chain, final String authType) throws CertificateException {
+            // Everyone is trusted!
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    }
 }

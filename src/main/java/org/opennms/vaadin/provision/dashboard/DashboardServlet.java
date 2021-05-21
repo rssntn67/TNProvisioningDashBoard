@@ -29,7 +29,10 @@ public class DashboardServlet extends VaadinServlet implements SessionDestroyLis
 
 	@Override 
 	protected DashBoardService createServletService(DeploymentConfiguration deploymentConfiguration) throws ServiceException  {
-		return new DashBoardService(this, deploymentConfiguration);
+		logger.info("creating Dashboard Servlet Service ");
+		DashBoardService service = new DashBoardService(this, deploymentConfiguration);
+		service.init();
+		return service;
 	}
 	
 	@Override
@@ -37,7 +40,6 @@ public class DashboardServlet extends VaadinServlet implements SessionDestroyLis
 		logger.info("cleaning Dashboard Session Service: " + event.getSession());
 		DashBoardService service = (DashBoardService) event.getService();
 		DashBoardSessionService sessionservice = (DashBoardSessionService) event.getSession();
-		sessionservice.logout();
 		service.unregisterSession(sessionservice);
     }
 }

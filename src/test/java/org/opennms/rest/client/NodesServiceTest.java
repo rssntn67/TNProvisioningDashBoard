@@ -32,7 +32,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
@@ -51,7 +50,7 @@ public class NodesServiceTest {
     public void setUp() throws Exception {
         m_nodesservice = new JerseyNodesService();
         JerseyClientImpl jerseyClient = new JerseyClientImpl(
-                                                         "http://demo.arsinfo.it:8980/opennms/rest/","admin","admin");
+                                                         "http://localhost:8980/opennms/rest/","admin","admin");
         m_nodesservice.setJerseyClient(jerseyClient);
     }
 
@@ -60,18 +59,14 @@ public class NodesServiceTest {
     }
     
     @Test
-    @Ignore
     public void testNodes() throws Exception {
         OnmsNodeList nodeslist = m_nodesservice.getAll();
-        assertEquals(21, nodeslist.getCount().intValue());
-        assertEquals(21,nodeslist.getTotalCount().intValue());
         for (OnmsNode node: nodeslist){
         	System.out.println(node);
         }
     }
 
     @Test
-    @Ignore
     public void testGetNodesByNodelabel() throws Exception {
     	MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     	queryParams.add("label", "TrentoNord-A9K-PE01.bb.tnnet.it");
@@ -84,7 +79,6 @@ public class NodesServiceTest {
     }
 
     @Test
-    @Ignore
     public void testGetNode() throws Exception {
         OnmsNode node = m_nodesservice.get(20);
         assertEquals(20, node.getId().intValue());
@@ -94,14 +88,13 @@ public class NodesServiceTest {
     }
 
     @Test
-    @Ignore
     public void testGetIpAddresses() throws Exception {
     	OnmsIpInterfaceList ips = m_nodesservice.getIpInterfaces(20);
     	assertEquals(86, ips.size());
     	for (OnmsIpInterface ip: ips.getIpInterfaces()) {
     		System.out.println(ip.getIpAddress());
     		if (ip.getSnmpInterface() != null)
-    			System.out.println(ip.getSnmpInterface().getNetMask());
+    			System.out.println(ip.getSnmpInterface().getIfAlias());
     		System.out.println(ip.getIpHostName());
     	}
     }

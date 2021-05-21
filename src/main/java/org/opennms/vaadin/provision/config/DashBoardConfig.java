@@ -3,14 +3,19 @@ package org.opennms.vaadin.provision.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DashBoardConfig {
+public class DashBoardConfig implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5792020022013510381L;
 	protected static final String PROPERTIES_FILE_PATH = "provision-dashboard.properties";
 	protected static final String[] PROPERTIES_FILE_PATHS = {
 		"/opt/opennms/etc/provision-dashboard.properties",
@@ -24,9 +29,9 @@ public class DashBoardConfig {
 	protected static final String PROPERTIES_DB_USER_KEY = "db_username";
 	protected static final String PROPERTIES_DB_PASS_KEY = "db_password";
 
-	protected static final String PROPERTIES_KETTLE_URL_KEY = "kettle_url";
-	protected static final String PROPERTIES_KETTLE_USER_KEY = "kettle_username";
-	protected static final String PROPERTIES_KETTLE_PASS_KEY = "kettle_password";
+	protected static final String PROPERTIES_FASTAPI_URL_KEY = "fastapi_url";
+	protected static final String PROPERTIES_FASTAPI_USER_KEY = "fastapi_username";
+	protected static final String PROPERTIES_FASTAPI_PASS_KEY = "fastapi_password";
 
 	protected static final String VERSION_FILE_PATH = "provision-version.properties";
 	protected static final String PROPERTIES_APP_NAME = "projectName";
@@ -92,7 +97,10 @@ public class DashBoardConfig {
     	return m_configuration.getProperty(PROPERTIES_APP_BUILD);
     }
 
-    
+    public String getUrl(String urlKey) {
+    	String key = PROPERTIES_URL_ROOT_KEY+urlKey;
+    	return m_configuration.getProperty(key,"http://localhost:8980/opennms/rest");
+    }
 
 	public String[] getUrls() {
 		List<String> urls = new ArrayList<String>();
@@ -131,23 +139,23 @@ public class DashBoardConfig {
 		
 	}
 
-	public String getKettleUrl() {
-		if (m_configuration.getProperty(PROPERTIES_KETTLE_URL_KEY) != null ) 
-			return m_configuration.getProperty(PROPERTIES_KETTLE_URL_KEY);
+	public String getKFastApiUrl() {
+		if (m_configuration.getProperty(PROPERTIES_FASTAPI_URL_KEY) != null ) 
+			return m_configuration.getProperty(PROPERTIES_FASTAPI_URL_KEY);
 		else 
-			return "http://localhost:8080/kettle/";
+			return "https://localhost/api/v1/fast/";
 	}
 	
-	public String getKettleUsername() {
-		if (m_configuration.getProperty(PROPERTIES_KETTLE_USER_KEY) != null ) 
-			return m_configuration.getProperty(PROPERTIES_KETTLE_USER_KEY);
+	public String getFastApiUsername() {
+		if (m_configuration.getProperty(PROPERTIES_FASTAPI_USER_KEY) != null ) 
+			return m_configuration.getProperty(PROPERTIES_FASTAPI_USER_KEY);
 		else 
 			return "admin";
 	}
 	
-	public String getKettlePassword() {
-		if (m_configuration.getProperty(PROPERTIES_KETTLE_PASS_KEY) != null ) 
-			return m_configuration.getProperty(PROPERTIES_KETTLE_PASS_KEY);
+	public String getFastApiPassword() {
+		if (m_configuration.getProperty(PROPERTIES_FASTAPI_PASS_KEY) != null ) 
+			return m_configuration.getProperty(PROPERTIES_FASTAPI_PASS_KEY);
 		else 
 			return "admin";
 	}

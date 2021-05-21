@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
-    <display-name>Trentino Network OpenNMS provisioning dashboard 2.0</display-name>
+    <display-name>Trentino Network OpenNMS provisioning dashboard</display-name>
 	<session-config>
     	<session-timeout>30</session-timeout>
 	</session-config>
@@ -24,13 +24,7 @@
     </servlet>
     <servlet>
 		<servlet-name>FAST</servlet-name>
-		<servlet-class>
-			com.vaadin.server.VaadinServlet
-		</servlet-class>
-		<init-param>
-		<param-name>UI</param-name>
-		<param-value>org.opennms.vaadin.provision.dashboard.FastUI</param-value>
-	</init-param>
+        <servlet-class>org.opennms.vaadin.provision.dashboard.FastUI</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>FAST</servlet-name>
