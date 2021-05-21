@@ -839,14 +839,18 @@ FID:            for (String foreignId : onmsForeignIdRequisitionNodeMap.keySet()
             }
         }
 
+        List<BasicService> serviceToDelete = new ArrayList<>();
         for (BasicInterface bi : rnode.getServiceMap().keySet()) {
             if (bi.getDescr().contains("FAST")
                     && !fastipaddressonnode.contains(bi.getIp())) {
                 BasicService bs = new BasicService(bi);
                 bs.setService("ICMP");
-                rnode.delService(bs);
-                log(rnode, bi, ONMS_DELETED_IP);
+                serviceToDelete.add(bs);
             }
+        }
+        for (BasicService bs: serviceToDelete) {
+            rnode.delService(bs);
+            log(rnode, bs.getInterface(), ONMS_DELETED_IP);
         }
 
         if (rnode.getOnmstate() == OnmsState.NONE)
